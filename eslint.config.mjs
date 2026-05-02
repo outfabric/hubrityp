@@ -62,6 +62,11 @@ const config = [
           selector: 'TSEnumDeclaration',
           message: 'Do not use enum. Use a union of string literals or `as const` object instead.',
         },
+        {
+          selector: "MemberExpression[object.name='process'][property.name='env']",
+          message:
+            'Do not access `process.env` outside `lib/env.ts`. Import the validated `serverEnv` or `clientEnv` instead.',
+        },
       ],
       'no-restricted-imports': [
         'error',
@@ -89,6 +94,32 @@ const config = [
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
+  },
+  // `lib/env.ts` is the validation boundary itself; CLI files run outside the
+  // Next.js bundle and therefore cannot import `server-only` to reach
+  // `serverEnv`. Both are allowed to read `process.env` directly.
+  {
+    files: [
+      'lib/env.ts',
+      'lib/env/client.ts',
+      'drizzle.config.ts',
+      'db/migrate.ts',
+      'vitest.setup.ts',
+      'playwright.config.ts',
+      '__tests__/integration/setup/**',
+      'e2e/global-setup.ts',
+      'e2e/global-teardown.ts',
+      'e2e/auth.setup.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSEnumDeclaration',
+          message: 'Do not use enum. Use a union of string literals or `as const` object instead.',
+        },
+      ],
     },
   },
   prettierConfig,

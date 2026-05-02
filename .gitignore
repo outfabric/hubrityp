@@ -145,3 +145,8 @@ vite.config.ts.timestamp-*
 # /dev-cycle orchestrator artifacts (review/QA reports, fix-iter logs)
 # Lives inside each per-change worktree at <worktree>/.dev-cycle/
 .dev-cycle/
+
+# Playwright artifacts
+e2e/.auth/
+playwright-report/
+test-results/

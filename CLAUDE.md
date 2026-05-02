@@ -134,7 +134,7 @@ Features novas e refactors não triviais seguem o ciclo:
 
 - Server Actions: sempre validar com Zod, autenticar via session, autorizar com dados da session (nunca do input).
 - Nunca confie em IDs vindos do cliente para autorização.
-- Separe env vars em `serverEnv` e `clientEnv` com validação Zod. `NEXT_PUBLIC_*` é exposto.
+- Separe env vars em `serverEnv` e `clientEnv` com validação Zod. `NEXT_PUBLIC_*` é exposto. Acesso direto a `process.env.*` fora de `lib/env.ts` (e poucos arquivos CLI: `drizzle.config.ts`, `db/migrate.ts`, `lib/env/client.ts`, setups de teste) é bloqueado por ESLint — importe `serverEnv`/`clientEnv` em vez disso.
 - Headers de segurança em `next.config.ts`: HSTS, X-Frame-Options, CSP, Referrer-Policy.
 - Queries parametrizadas sempre. `$queryRawUnsafe` é proibido.
 - Rate limiting em rotas públicas e endpoints sensíveis.

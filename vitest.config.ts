@@ -14,11 +14,29 @@ export default defineConfig({
     ],
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'e2e', 'coverage', '.claude', 'openspec', '.temp'],
+    exclude: [
+      'node_modules',
+      '.next',
+      'e2e',
+      '__tests__/integration',
+      'coverage',
+      '.claude',
+      'openspec',
+      '.temp',
+    ],
+    server: {
+      deps: {
+        // `server-only` always throws when required outside Next's bundler.
+        // Inline it so we can stub it via the alias below in unit tests.
+        inline: ['server-only'],
+      },
+    },
   },
   resolve: {
     alias: {
       '@': rootDir,
+      // No-op stub: tests can import modules guarded with `import 'server-only'`.
+      'server-only': path.resolve(rootDir, 'test/stubs/server-only.ts'),
     },
   },
 });

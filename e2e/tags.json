@@ -1,1 +1,5 @@
-{}
+{
+  "@health": "Health endpoints",
+  "@auth": "Auth flow — default suite, simulated cookie via storageState",
+  "@auth-real": "Auth flow — wave 3, real gotrue (no test exists yet)"
+}

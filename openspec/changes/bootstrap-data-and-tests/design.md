@@ -38,9 +38,11 @@ The downstream change `smoke-health-feature` will introduce the first real auth 
 
 ### D1 — Local Supabase via CLI, Testcontainers Postgres for tests (hybrid)
 
-Local dev uses the official Supabase CLI (`supabase start`), which boots a complete local stack (Postgres, GoTrue, Storage, Realtime, Studio) on Docker. Tests use a Postgres-only container via `@testcontainers/postgresql` with the `supabase/postgres` image. The two coexist; CI uses Testcontainers exclusively for speed. `supabase start` is a developer-machine concern.
+Local dev uses the official Supabase CLI (`supabase start`), which boots a complete local stack (Postgres, GoTrue, Storage, Realtime, Studio) on Docker. Tests use a Postgres-only container via `@testcontainers/postgresql` with the standard `postgres:16-alpine` image plus a programmatic bootstrap (`bootstrapAuthSchema` in `__tests__/integration/setup/postgres-container.ts`) that installs the minimum Supabase Auth surface RLS depends on (`authenticated`/`anon`/`service_role` roles, the `auth` schema, an `auth.uid()` function reading from `request.jwt.claims`, and a minimal `auth.users` table). The two coexist; CI uses Testcontainers exclusively for speed. `supabase start` is a developer-machine concern.
 
-**Rationale:** the integration-tests skill already states this preference. Testcontainers boots in ~5–10s with `.withReuse()` and supports schema-level parallelism; `supabase start` boots in ~30–60s and is shared, so it does not parallelize cleanly across test files. For dev, the loss of the real Studio/Auth UI in tests is acceptable because tests simulate auth via JWT claims at the connection level.
+**Implementation note:** the original plan used the `supabase/postgres` image directly. We switched during implementation because the supabase image boots ~30s, weighs ~2GB, and its entrypoint requires several mandatory env vars (JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY) that Testcontainers' `PostgreSqlContainer` does not pass — surfaced as a `409 container stopped/paused` error during boot. The `postgres:16-alpine` image with our 30-line bootstrap boots in ~2s on a warm cache and is fully reproducible.
+
+**Rationale:** the integration-tests skill already states this preference. Testcontainers boots in ~2s with `.withReuse()` and supports schema-level parallelism; `supabase start` boots in ~30–60s and is shared, so it does not parallelize cleanly across test files. For dev, the loss of the real Studio/Auth UI in tests is acceptable because tests simulate auth via JWT claims at the connection level.
 
 **Alternatives considered:** a pure docker-compose with hand-rolled Postgres + GoTrue + Storage. Rejected because `supabase` CLI handles the same plumbing officially and survives Supabase upgrades.
 
