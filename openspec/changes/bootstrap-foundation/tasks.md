@@ -76,8 +76,8 @@
 - [x] 10.1 Create `.github/workflows/ci.yml` with triggers `pull_request` and `push: { branches: [main] }`
 - [x] 10.2 Single job `quality` running on `ubuntu-latest`: checkout, `setup-node@v4` with `node-version-file: .nvmrc` and `cache: npm`, `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:unit`
 - [x] 10.3 Add `permissions: { contents: read }` at workflow level
-- [ ] 10.4 Manual smoke: push the branch, open a draft PR, confirm the workflow runs and is green
-- [ ] 10.5 Manual smoke: introduce a deliberate type error in a temporary commit, confirm CI fails, then revert
+- [x] 10.4 Manual smoke: push the branch, open a draft PR, confirm the workflow runs and is green
+- [x] 10.5 Manual smoke: introduce a deliberate type error in a temporary commit, confirm CI fails, then revert
 
 ## 11. Documentation
 
@@ -90,5 +90,5 @@
 - [x] 12.1 Run `npm run check` end-to-end on a clean checkout; expect exit 0
 - [x] 12.2 Run `npm run test:unit`; expect exit 0
 - [x] 12.3 Run `npm run dev` and curl `/`; expect 200 + security headers
-- [ ] 12.4 Open the PR for this change and confirm the CI `quality` job is green
+- [x] 12.4 Open the PR for this change and confirm the CI `quality` job is green
 - [ ] 12.5 Merge to `main`; verify `bootstrap-data-and-tests` has a clean foundation to build on
