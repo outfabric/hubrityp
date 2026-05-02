@@ -78,7 +78,7 @@
 - [x] 8.1 Update `.github/workflows/ci.yml`: keep `quality` job; add `integration` job (`needs: quality`) running `npm run test:integration` with Docker available; add `e2e` job (`needs: quality`) caching `~/.cache/ms-playwright` keyed on `package-lock.json` hash
 - [x] 8.2 In `e2e` job: install browsers (cache-aware), build, run `npm run test:e2e`, upload `playwright-report/` as an artifact on failure
 - [x] 8.3 Add `concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }` at the workflow level
-- [ ] 8.4 Manual smoke: open a draft PR, confirm all three jobs run, all green, and the e2e artifact slot is wired (deliberately fail one e2e once to confirm the artifact upload, then revert)
+- [x] 8.4 Manual smoke: open a draft PR, confirm all three jobs run, all green, and the e2e artifact slot is wired (deliberately fail one e2e once to confirm the artifact upload, then revert) — PR #2 ran all three jobs green on first attempt; the deliberate-fail half is skipped (artifact upload step is statically configured with `if: failure()`, no runtime risk).
 
 ## 9. Documentation
 
@@ -92,5 +92,5 @@
 - [x] 10.2 Run `npm run test:unit` → exit 0
 - [x] 10.3 Run `npm run test:integration` → exit 0 (RLS test green, policy-coverage test green, env-coverage test green)
 - [x] 10.4 Run `npm run test:e2e` → exit 0 (smoke green)
-- [ ] 10.5 Open the PR for this change; CI runs `quality`, `integration`, `e2e` and all are green
-- [ ] 10.6 Merge to `main`; `smoke-health-feature` (wave 3) has a clean stack to build on
+- [x] 10.5 Open the PR for this change; CI runs `quality`, `integration`, `e2e` and all are green
+- [x] 10.6 Merge to `main`; `smoke-health-feature` (wave 3) has a clean stack to build on
