@@ -30,53 +30,74 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 ```css
 :root {
   /* Backgrounds */
-  --color-background:        #FAFAF9;
-  --color-surface:           #FFFFFF;
-  --color-surface-muted:     #F5F5F4;
-  --color-surface-sunken:    #F0EFEC;
+  --color-background: #fafaf9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f4;
+  --color-surface-sunken: #f0efec;
 
   /* Borders */
-  --color-border:            #E7E5E4;
-  --color-border-strong:     #D6D3D1;
-  --color-border-subtle:     #EFEDEB;
+  --color-border: #e7e5e4;
+  --color-border-strong: #d6d3d1;
+  --color-border-subtle: #efedeb;
 
   /* Text */
-  --color-text-primary:      #1C1917;
-  --color-text-secondary:    #57534E;
-  --color-text-tertiary:     #78716C;
-  --color-text-disabled:     #A8A29E;
-  --color-text-inverse:      #FAFAF9;
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-tertiary: #78716c;
+  --color-text-disabled: #a8a29e;
+  --color-text-inverse: #fafaf9;
 
   /* Brand — verde-sálvia */
-  --color-brand-50:          #F2F5F1;
-  --color-brand-100:         #E1E8DE;
-  --color-brand-200:         #C2D1BC;
-  --color-brand-300:         #A0B89A;
-  --color-brand-400:         #7E9E78;
-  --color-brand-500:         #6B8A66;
-  --color-brand-600:         #587355;
-  --color-brand-700:         #475D45;
-  --color-brand-800:         #364937;
-  --color-brand-900:         #2A382B;
+  --color-brand-50: #f2f5f1;
+  --color-brand-100: #e1e8de;
+  --color-brand-200: #c2d1bc;
+  --color-brand-300: #a0b89a;
+  --color-brand-400: #7e9e78;
+  --color-brand-500: #6b8a66;
+  --color-brand-600: #587355;
+  --color-brand-700: #475d45;
+  --color-brand-800: #364937;
+  --color-brand-900: #2a382b;
 
   /* Semânticas */
-  --color-success-50:  #F0F7F1;  --color-success-500:  #5C8C61;  --color-success-700:  #3F6644;
-  --color-warning-50:  #FBF6EC;  --color-warning-500:  #C28A3D;  --color-warning-700:  #8C6128;
-  --color-danger-50:   #FBF1EF;  --color-danger-500:   #B0594B;  --color-danger-700:   #813F33;
-  --color-info-50:     #EFF3F6;  --color-info-500:     #5B7A93;  --color-info-700:     #3F5870;
+  --color-success-50: #f0f7f1;
+  --color-success-500: #5c8c61;
+  --color-success-700: #3f6644;
+  --color-warning-50: #fbf6ec;
+  --color-warning-500: #c28a3d;
+  --color-warning-700: #8c6128;
+  --color-danger-50: #fbf1ef;
+  --color-danger-500: #b0594b;
+  --color-danger-700: #813f33;
+  --color-info-50: #eff3f6;
+  --color-info-500: #5b7a93;
+  --color-info-700: #3f5870;
 
   /* Tipografia */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Espaçamento — base 4px */
-  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
-  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
-  --space-12: 3rem; --space-16: 4rem; --space-20: 5rem; --space-24: 6rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
 
   /* Radius */
-  --radius-sm: 0.25rem; --radius-md: 0.5rem; --radius-lg: 0.625rem;
-  --radius-xl: 0.75rem; --radius-2xl: 1rem; --radius-full: 9999px;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
 
   /* Shadows — sutis, neutras, nunca coloridas */
   --shadow-xs: 0 1px 2px 0 rgb(28 25 23 / 0.04);
@@ -86,35 +107,45 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
   --shadow-focus: 0 0 0 3px rgb(107 138 102 / 0.2);
 
   /* Animação */
-  --duration-fast: 150ms; --duration-base: 200ms; --duration-slow: 300ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"] {
-  --color-background:        #1C1917;
-  --color-surface:           #292524;
-  --color-surface-muted:     #1F1D1B;
-  --color-surface-sunken:    #14110F;
-  --color-border:            #3A3633;
-  --color-border-strong:     #4D4845;
-  --color-border-subtle:     #2D2A28;
-  --color-text-primary:      #FAFAF9;
-  --color-text-secondary:    #D6D3D1;
-  --color-text-tertiary:     #A8A29E;
-  --color-text-disabled:     #6B6663;
-  --color-text-inverse:      #1C1917;
-  --color-brand-50:  #2A382B;  --color-brand-100: #364937;
-  --color-brand-500: #8AAB85;  --color-brand-600: #9DBE98;  --color-brand-700: #B0D1AB;
-  --color-success-50: #1F2D22; --color-success-500: #7DA682;
-  --color-warning-50: #2A2418; --color-warning-500: #D9A55A;
-  --color-danger-50:  #2A1814; --color-danger-500:  #C97565;
-  --color-info-50:    #1A2330; --color-info-500:    #7B97AE;
+[data-theme='dark'] {
+  --color-background: #1c1917;
+  --color-surface: #292524;
+  --color-surface-muted: #1f1d1b;
+  --color-surface-sunken: #14110f;
+  --color-border: #3a3633;
+  --color-border-strong: #4d4845;
+  --color-border-subtle: #2d2a28;
+  --color-text-primary: #fafaf9;
+  --color-text-secondary: #d6d3d1;
+  --color-text-tertiary: #a8a29e;
+  --color-text-disabled: #6b6663;
+  --color-text-inverse: #1c1917;
+  --color-brand-50: #2a382b;
+  --color-brand-100: #364937;
+  --color-brand-500: #8aab85;
+  --color-brand-600: #9dbe98;
+  --color-brand-700: #b0d1ab;
+  --color-success-50: #1f2d22;
+  --color-success-500: #7da682;
+  --color-warning-50: #2a2418;
+  --color-warning-500: #d9a55a;
+  --color-danger-50: #2a1814;
+  --color-danger-500: #c97565;
+  --color-info-50: #1a2330;
+  --color-info-500: #7b97ae;
 }
 ```
 
 ## Regras de uso de cor
 
 **Brand (verde-sálvia) APENAS em:**
+
 - Botão primário
 - Item ativo de sidebar/nav
 - Indicador de estado "ativo" (toggle on, checkbox checked)
@@ -123,6 +154,7 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 - Avatar fallback
 
 **Brand NUNCA em:**
+
 - Headers ou banners decorativos
 - Cards normais
 - Tabelas
@@ -130,6 +162,7 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 - Cor de fundo de página
 
 **Semânticas (success/warning/danger/info) APENAS em:**
+
 - Mensagens de feedback contextual
 - Badges de status
 - Alertas
@@ -165,6 +198,7 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 ## Espaçamento
 
 Tudo múltiplo de 4. Convenções:
+
 - Padding interno input/botão (vertical): `space-2` a `space-3`
 - Padding de card: `space-6`
 - Padding de modal: `space-8` (mobile: `space-6`)
@@ -177,14 +211,14 @@ Tudo múltiplo de 4. Convenções:
 
 ## Radius
 
-| Token | Tamanho | Uso |
-|---|---|---|
-| `sm` | 4px | Badges, tags pequenas |
-| `md` | 8px | Inputs, botões pequenos |
-| `lg` | 10px | Botões padrão, cards pequenos |
-| `xl` | 12px | Cards padrão |
-| `2xl` | 16px | Modais, painéis grandes |
-| `full` | 9999px | Avatares, pills |
+| Token  | Tamanho | Uso                           |
+| ------ | ------- | ----------------------------- |
+| `sm`   | 4px     | Badges, tags pequenas         |
+| `md`   | 8px     | Inputs, botões pequenos       |
+| `lg`   | 10px    | Botões padrão, cards pequenos |
+| `xl`   | 12px    | Cards padrão                  |
+| `2xl`  | 16px    | Modais, painéis grandes       |
+| `full` | 9999px  | Avatares, pills               |
 
 ## Animação
 
@@ -193,9 +227,12 @@ Tudo múltiplo de 4. Convenções:
 **Easing:** `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out) é o default.
 
 **Sempre respeitar `prefers-reduced-motion`:**
+
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
@@ -206,14 +243,14 @@ Tudo múltiplo de 4. Convenções:
 
 ### Button
 
-| Variante | Visual | Uso |
-|---|---|---|
-| `primary` | bg `brand-500`, text `inverse` | Ação principal — 1 por contexto |
-| `secondary` | bg `surface`, border `border-strong`, text `primary` | Ações secundárias |
-| `ghost` | transparent, hover bg `surface-muted` | Toolbars, ações terciárias |
-| `outline` | transparent + border, text `primary` | Alternativa ao secondary |
-| `danger` | bg `danger-500`, text `inverse` | Deletar, cancelar |
-| `link` | sem fundo, text `brand-700`, underline em hover | Navegação textual |
+| Variante    | Visual                                               | Uso                             |
+| ----------- | ---------------------------------------------------- | ------------------------------- |
+| `primary`   | bg `brand-500`, text `inverse`                       | Ação principal — 1 por contexto |
+| `secondary` | bg `surface`, border `border-strong`, text `primary` | Ações secundárias               |
+| `ghost`     | transparent, hover bg `surface-muted`                | Toolbars, ações terciárias      |
+| `outline`   | transparent + border, text `primary`                 | Alternativa ao secondary        |
+| `danger`    | bg `danger-500`, text `inverse`                      | Deletar, cancelar               |
+| `link`      | sem fundo, text `brand-700`, underline em hover      | Navegação textual               |
 
 **Tamanhos:** sm (32px h, 13px font), md (40px h, 15px font — default), lg (48px h, 16px font).
 
@@ -310,30 +347,31 @@ Tudo múltiplo de 4. Convenções:
 
 **Mapa fixo conceito → ícone:**
 
-| Conceito | Ícone |
-|---|---|
-| Paciente / Pacientes | `User` / `Users` |
-| Sessão / Agenda | `Calendar` |
-| Prontuário | `FileText` |
-| Financeiro | `Wallet` |
-| Receita Saúde / Recibo | `Receipt` |
-| WhatsApp | `MessageCircle` |
-| Vídeo | `Video` |
-| IA | `Sparkles` |
-| Configurações | `Settings` |
-| Notificações | `Bell` |
-| Buscar / Filtrar | `Search` / `SlidersHorizontal` |
-| Editar / Deletar | `Pencil` / `Trash2` |
-| Mais opções | `MoreHorizontal` |
-| Confirmar / Cancelar | `Check` / `X` |
-| Voltar / Próximo | `ArrowLeft` / `ArrowRight` |
-| Expandir | `ChevronDown` |
-| Adicionar | `Plus` |
-| Save / Download / Upload | `Save` / `Download` / `Upload` |
+| Conceito                      | Ícone                                                     |
+| ----------------------------- | --------------------------------------------------------- |
+| Paciente / Pacientes          | `User` / `Users`                                          |
+| Sessão / Agenda               | `Calendar`                                                |
+| Prontuário                    | `FileText`                                                |
+| Financeiro                    | `Wallet`                                                  |
+| Receita Saúde / Recibo        | `Receipt`                                                 |
+| WhatsApp                      | `MessageCircle`                                           |
+| Vídeo                         | `Video`                                                   |
+| IA                            | `Sparkles`                                                |
+| Configurações                 | `Settings`                                                |
+| Notificações                  | `Bell`                                                    |
+| Buscar / Filtrar              | `Search` / `SlidersHorizontal`                            |
+| Editar / Deletar              | `Pencil` / `Trash2`                                       |
+| Mais opções                   | `MoreHorizontal`                                          |
+| Confirmar / Cancelar          | `Check` / `X`                                             |
+| Voltar / Próximo              | `ArrowLeft` / `ArrowRight`                                |
+| Expandir                      | `ChevronDown`                                             |
+| Adicionar                     | `Plus`                                                    |
+| Save / Download / Upload      | `Save` / `Download` / `Upload`                            |
 | Aviso / Erro / Sucesso / Info | `AlertTriangle` / `AlertCircle` / `CheckCircle2` / `Info` |
-| Privado / Sair / Ajuda | `Lock` / `LogOut` / `HelpCircle` |
+| Privado / Sair / Ajuda        | `Lock` / `LogOut` / `HelpCircle`                          |
 
 **Regras:**
+
 - Nunca emoji em substituição a ícone funcional
 - Nunca colorir ícones com cores não-semânticas
 - Ícones decorativos: `aria-hidden="true"`
@@ -342,6 +380,7 @@ Tudo múltiplo de 4. Convenções:
 ## Microcopy
 
 **Glossário fixo (não trocar):**
+
 - "Sessão" — não "consulta", não "atendimento"
 - "Paciente" — neutro (configurável para "cliente")
 - "Evolução" — não "anotação clínica" no botão
@@ -353,6 +392,7 @@ Tudo múltiplo de 4. Convenções:
 - "Configurações" — não "preferências"
 
 **Tom:**
+
 - Direto, não burocrático ("Salvar" não "Confirmar e prosseguir")
 - Humano, não corporativo ("Algo deu errado" não "Erro inesperado")
 - Profissional, não infantil (sem emojis, sem gírias)
@@ -360,6 +400,7 @@ Tudo múltiplo de 4. Convenções:
 **Botões:** começam com verbo no infinitivo ("Salvar", "Adicionar paciente"). Confirmações destrutivas usam verbo específico ("Excluir definitivamente" não "Confirmar").
 
 **Mensagens de erro humanas:**
+
 - ❌ `ValidationError: field 'phone' invalid format`
 - ✅ `Telefone inválido. Use o formato (11) 98765-4321.`
 
@@ -376,6 +417,7 @@ Tudo múltiplo de 4. Convenções:
 **Empty state:** sempre 3 partes — o que está faltando, por que importa, o que fazer agora. Ícone Lucide em `text-tertiary`, headline h4, descrição em `text-secondary`, 1 CTA primário.
 
 **Quando usar:**
+
 - **Página dedicada:** listas, edição complexa, wizards, visualização de dados
 - **Modal:** confirmações, forms simples, edição rápida
 - **Drawer:** detalhes sem perder contexto, filtros avançados, comparações lado-a-lado
@@ -399,14 +441,17 @@ Tudo múltiplo de 4. Convenções:
 **Breakpoints (Tailwind defaults):** sm 640, md 768, lg 1024, xl 1280, 2xl 1536.
 
 **Mobile-first sempre.** CSS escrito do menor para o maior:
+
 ```html
 <!-- ❌ ruim -->
 <div class="text-2xl lg:text-xl">
-<!-- ✅ bom -->
-<div class="text-lg md:text-xl lg:text-2xl">
+  <!-- ✅ bom -->
+  <div class="text-lg md:text-xl lg:text-2xl"></div>
+</div>
 ```
 
 **Padrões de adaptação:**
+
 - Sidebar fixa → bottom nav ou hamburger
 - Tabela → cards stackados
 - Modal → sheet bottom-up
@@ -447,32 +492,64 @@ const config: Config = {
           inverse: 'var(--color-text-inverse)',
         },
         brand: {
-          50: 'var(--color-brand-50)', 100: 'var(--color-brand-100)',
-          200: 'var(--color-brand-200)', 300: 'var(--color-brand-300)',
-          400: 'var(--color-brand-400)', 500: 'var(--color-brand-500)',
-          600: 'var(--color-brand-600)', 700: 'var(--color-brand-700)',
-          800: 'var(--color-brand-800)', 900: 'var(--color-brand-900)',
+          50: 'var(--color-brand-50)',
+          100: 'var(--color-brand-100)',
+          200: 'var(--color-brand-200)',
+          300: 'var(--color-brand-300)',
+          400: 'var(--color-brand-400)',
+          500: 'var(--color-brand-500)',
+          600: 'var(--color-brand-600)',
+          700: 'var(--color-brand-700)',
+          800: 'var(--color-brand-800)',
+          900: 'var(--color-brand-900)',
         },
-        success: { 50: 'var(--color-success-50)', 500: 'var(--color-success-500)', 700: 'var(--color-success-700)' },
-        warning: { 50: 'var(--color-warning-50)', 500: 'var(--color-warning-500)', 700: 'var(--color-warning-700)' },
-        danger:  { 50: 'var(--color-danger-50)',  500: 'var(--color-danger-500)',  700: 'var(--color-danger-700)' },
-        info:    { 50: 'var(--color-info-50)',    500: 'var(--color-info-500)',    700: 'var(--color-info-700)' },
+        success: {
+          50: 'var(--color-success-50)',
+          500: 'var(--color-success-500)',
+          700: 'var(--color-success-700)',
+        },
+        warning: {
+          50: 'var(--color-warning-50)',
+          500: 'var(--color-warning-500)',
+          700: 'var(--color-warning-700)',
+        },
+        danger: {
+          50: 'var(--color-danger-50)',
+          500: 'var(--color-danger-500)',
+          700: 'var(--color-danger-700)',
+        },
+        info: {
+          50: 'var(--color-info-50)',
+          500: 'var(--color-info-500)',
+          700: 'var(--color-info-700)',
+        },
       },
       borderRadius: {
-        sm: 'var(--radius-sm)', md: 'var(--radius-md)', lg: 'var(--radius-lg)',
-        xl: 'var(--radius-xl)', '2xl': 'var(--radius-2xl)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
       },
       boxShadow: {
-        xs: 'var(--shadow-xs)', sm: 'var(--shadow-sm)',
-        md: 'var(--shadow-md)', lg: 'var(--shadow-lg)',
+        xs: 'var(--shadow-xs)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
         focus: 'var(--shadow-focus)',
       },
       transitionDuration: {
-        fast: 'var(--duration-fast)', base: 'var(--duration-base)', slow: 'var(--duration-slow)',
+        fast: 'var(--duration-fast)',
+        base: 'var(--duration-base)',
+        slow: 'var(--duration-slow)',
       },
     },
   },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography'), require('tailwindcss-animate')],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('tailwindcss-animate'),
+  ],
 };
 
 export default config;
@@ -490,6 +567,7 @@ npx shadcn-ui@latest add dropdown-menu navigation-menu breadcrumb command popove
 ## Decisão de quando aplicar
 
 Toda nova UI deve:
+
 1. Usar tokens (CSS vars / Tailwind classes) — nunca cores hardcoded
 2. Verificar contraste WCAG 2.1 AA antes de commitar
 3. Implementar dark mode em paralelo (não depois)

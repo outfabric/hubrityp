@@ -7,14 +7,13 @@ SaaS web para psicólogos autônomos brasileiros (consultório, online ou híbri
 ## Stack
 
 - **TypeScript** + **Next.js 16+** (App Router)
-- **Node.js 20 LTS**
+- **Node.js 22 LTS**
 - API via **Next.js API Routes / Server Actions** (sem backend separado)
 - **Supabase** (Postgres + Auth + Storage), região `sa-east-1` (São Paulo)
 - Deploy na **Vercel**, região `gru1` (São Paulo)
 - Pacotes: **npm**
 
 Latência e residência de dados em SP são requisitos — não sugerir outras regiões/provedores sem justificativa explícita.
-
 
 ## Diagrama de arquitetura
 
@@ -87,11 +86,11 @@ docker compose down      # derrubar
   ```
 
   Atalho: `npm run check` roda os três em sequência. Se algum script ainda não existir no `package.json`, adicione-o em vez de pular a etapa.
+
 - **Pre-commit**: Husky + lint-staged já rodam lint/format/type-check em arquivos staged. Não use `--no-verify`.
 - **Server Actions** preferidas sobre Route Handlers para mutations vindas do app; Route Handlers para webhooks e integrações externas.
 - **Supabase RLS sempre habilitado** em qualquer tabela nova — psicólogo só acessa dados dos próprios pacientes. Migrations sem policy RLS devem ser tratadas como bug.
 - Dados sensíveis (prontuário, transcrições, áudios) seguem LGPD: nunca logar conteúdo, nunca enviar para serviços fora do Brasil sem aprovação explícita.
-
 
 ## Workflow de change (dev-cycle)
 
@@ -111,10 +110,10 @@ Features novas e refactors não triviais seguem o ciclo:
 
 **Documentação completa**: `docs/dev-cycle.md`.
 
-
 ## Padrões de engenharia
 
 ### Manutenibilidade
+
 - Estruture código por domínio (`modules/billing/`), não por tipo técnico (`components/`, `services/`).
 - Use branded types para IDs e valores semânticos (`UserId`, `Email`) em vez de `string` genérico.
 - Modele estados como discriminated unions; evite combinações inválidas (`loading + data + error` no mesmo objeto).
@@ -122,6 +121,7 @@ Features novas e refactors não triviais seguem o ciclo:
 - Comentários explicam **por quê**, nunca **o quê**.
 
 ### Performance (Next.js)
+
 - Server Components por padrão; `'use client'` só nas folhas que precisam de hooks/eventos.
 - Use `<Suspense>` para streaming; nunca bloqueie a página esperando o dado mais lento.
 - Paralelize fetches independentes com `Promise.all`. Nunca crie waterfalls.
@@ -131,6 +131,7 @@ Features novas e refactors não triviais seguem o ciclo:
 - `dynamic(() => import(...))` para componentes pesados ou raramente usados.
 
 ### Segurança
+
 - Server Actions: sempre validar com Zod, autenticar via session, autorizar com dados da session (nunca do input).
 - Nunca confie em IDs vindos do cliente para autorização.
 - Separe env vars em `serverEnv` e `clientEnv` com validação Zod. `NEXT_PUBLIC_*` é exposto.
@@ -141,6 +142,7 @@ Features novas e refactors não triviais seguem o ciclo:
 - Nunca logue senhas, tokens, PII. Logue presença (`hasPassword: true`), não valor.
 
 ### Redução de complexidade
+
 - YAGNI. Não abstraia por especulação.
 - Regra de três: duplique até a terceira ocorrência antes de extrair.
 - Evite arquitetura em camadas excessivas (`controller → service → use-case → repository → mapper`) em CRUDs simples.
@@ -148,18 +150,18 @@ Features novas e refactors não triviais seguem o ciclo:
 - Composição (`<Table><TableHeader/></Table>`) > configuração (`<Table showHeader/>`).
 
 ### Princípios transversais
+
 - Código e docstrings devem ser escritos em inglês
 - Reversibilidade primeiro: decisões reversíveis decidem rápido, irreversíveis (DB, contratos públicos, auth) merecem investimento.
 - Otimize para leitura. Código claro e verboso > clever e conciso.
 - Boundaries (APIs, tipos exportados) estáveis; interior pragmático.
 
-
 ### TypeScript — não negociável
+
 - `strict: true` sempre.
 - `tsc --noEmit` na CI bloqueia merge.
 - Sem `any`. `unknown` + narrowing quando o tipo é genuinamente desconhecido.
 - Sem `@ts-ignore` sem comentário justificando e issue de follow-up.
-
 
 ## Testes — OBRIGATÓRIOS
 

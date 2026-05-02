@@ -1,0 +1,10 @@
+.next/
+node_modules/
+coverage/
+package-lock.json
+.husky/_/
+.claude/
+prd/
+openspec/
+.temp/
+next-env.d.ts
