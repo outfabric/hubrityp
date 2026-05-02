@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 // We mock the Server Action module so importing `LoginForm` (which imports
@@ -89,5 +89,35 @@ describe('LoginForm', () => {
     expect(label).toHaveAttribute('for', 'login-password');
     const password = screen.getByTestId('login-form-password');
     expect(password).toHaveAttribute('id', 'login-password');
+  });
+
+  it('hides the server-side error region once a client-side field error appears', async () => {
+    // Render with a stale server error from a previous failed submit.
+    render(<LoginForm initialState={{ ok: false, error: 'invalid_credentials' }} />);
+
+    expect(screen.getByTestId('login-form-error')).toBeInTheDocument();
+
+    // RHF is configured with `mode: 'onBlur'`. Typing an invalid email and
+    // blurring the field surfaces the inline pt-BR validation message; at
+    // that point the server-error region must hide so the user does not see
+    // two competing messages stacked.
+    const email = screen.getByTestId('login-form-email');
+    fireEvent.change(email, { target: { value: 'not-an-email' } });
+    fireEvent.blur(email);
+
+    await waitFor(() => {
+      expect(screen.getByText('E-mail inválido.')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('login-form-error')).not.toBeInTheDocument();
+  });
+
+  it('keeps the server-side error visible while no client-side field errors are present', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'invalid_credentials' }} />);
+
+    // No interaction → no client-side errors → server error stays.
+    expect(screen.getByTestId('login-form-error')).toBeInTheDocument();
+    expect(screen.queryByText('E-mail inválido.')).not.toBeInTheDocument();
+    expect(screen.queryByText('A senha deve ter pelo menos 8 caracteres.')).not.toBeInTheDocument();
   });
 });

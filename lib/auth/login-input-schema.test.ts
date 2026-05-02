@@ -66,4 +66,37 @@ describe('loginInputSchema', () => {
     expect(fieldErrors.email?.length ?? 0).toBeGreaterThan(0);
     expect(fieldErrors.password?.length ?? 0).toBeGreaterThan(0);
   });
+
+  it('emits the pt-BR message for a malformed email', () => {
+    const result = loginInputSchema.safeParse({
+      email: 'not-an-email',
+      password: '12345678',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const fieldErrors = result.error.flatten().fieldErrors;
+    expect(fieldErrors.email).toContain('E-mail inválido.');
+  });
+
+  it('emits the pt-BR message for a too-short password', () => {
+    const result = loginInputSchema.safeParse({
+      email: 'a@b.co',
+      password: 'short',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const fieldErrors = result.error.flatten().fieldErrors;
+    expect(fieldErrors.password).toContain('A senha deve ter pelo menos 8 caracteres.');
+  });
+
+  it('emits the pt-BR "informe seu e-mail" message for an empty email', () => {
+    const result = loginInputSchema.safeParse({ email: '', password: '12345678' });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const fieldErrors = result.error.flatten().fieldErrors;
+    expect(fieldErrors.email).toContain('Informe seu e-mail.');
+  });
 });

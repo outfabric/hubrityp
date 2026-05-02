@@ -43,9 +43,18 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
     defaultValues: { email: '', password: '' },
   });
 
-  const errorMessage = state && !state.ok ? ERROR_MESSAGES[state.error] : null;
   const emailFieldError = errors.email?.message;
   const passwordFieldError = errors.password?.message;
+
+  // Hide the server-side error region whenever a client-side field error is
+  // showing. Without this gate, a failed login followed by editing a field
+  // leaves both messages stacked — the server "E-mail ou senha incorretos"
+  // alongside the field-level "E-mail inválido" — confusing the user about
+  // which problem to fix first. The server error remains source-of-truth
+  // for the previous attempt; it just yields visual priority to whatever
+  // the user is currently typing.
+  const hasFieldError = Boolean(emailFieldError ?? passwordFieldError);
+  const errorMessage = state && !state.ok && !hasFieldError ? ERROR_MESSAGES[state.error] : null;
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
