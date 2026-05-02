@@ -73,5 +73,5 @@
 - [x] 10.3 `npm run test:integration` → exit 0
 - [x] 10.4 `npm run test:e2e` → exit 0 (default suite, simulated)
 - [x] 10.5 `npm run test:e2e:real` → exit 0 (real GoTrue suite)
-- [ ] 10.6 `/dev-cycle smoke-health-feature` runs to completion: tasks all `[x]`, review and QA loops converge in ≤3 iterations, semantic commits are created, PR is opened against `main` via `gh`
-- [ ] 10.7 CI on the resulting PR: `quality`, `integration`, `e2e`, `e2e-real` all green
+- [x] 10.6 `/dev-cycle smoke-health-feature` runs to completion: tasks all `[x]`, review and QA loops converge in ≤3 iterations, semantic commits are created, PR is opened against `main` via `gh`
+- [x] 10.7 CI on the resulting PR: `quality`, `integration`, `e2e`, `e2e-real` all green
