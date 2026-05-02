@@ -107,10 +107,14 @@ const config = [
       'db/migrate.ts',
       'vitest.setup.ts',
       'playwright.config.ts',
+      'playwright.auth-real.config.ts',
       '__tests__/integration/setup/**',
       'e2e/global-setup.ts',
       'e2e/global-teardown.ts',
       'e2e/auth.setup.ts',
+      'e2e/start-server.ts',
+      'e2e-auth-real/global-setup.ts',
+      'e2e-auth-real/global-teardown.ts',
     ],
     rules: {
       'no-restricted-syntax': [

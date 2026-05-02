@@ -1,44 +1,52 @@
-import { randomUUID } from 'node:crypto';
-
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { healthPings } from '@/db/schema/health/tables';
 
-import { applyMigrations, bootPostgres } from '../__tests__/integration/setup/postgres-container';
+import { readSeedState } from './seed-state';
 
-// Boots Testcontainers Postgres (same image + `.withReuse()` as integration),
-// applies migrations, seeds one auth.users row + one health_ping row, and
-// exposes the connection string to the spawned `webServer` via
-// `process.env.E2E_DATABASE_URL` (read back by playwright.config.ts).
+// Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
+// Playwright's `runner/tasks.ts::createGlobalSetupTasks`), so by the time
+// we get here the wrapper at `e2e/start-server.ts` has already:
+//
+//   • booted the Testcontainers Postgres,
+//   • applied Drizzle migrations,
+//   • started the mock GoTrue,
+//   • written `e2e/.auth/seed-state.json`,
+//   • spawned `next start` with the resolved env vars.
+//
+// All this hook does is seed the user + ping rows that the auth and health
+// flows rely on. We keep this seeding here (rather than in start-server) so
+// failures during seeding surface in Playwright's globalSetup logs and the
+// run aborts cleanly instead of leaving the webServer dangling on a
+// half-seeded DB.
 export default async function globalSetup() {
-  const { connectionString } = await bootPostgres();
-  await applyMigrations(connectionString);
+  const seed = await readSeedState();
 
-  const sql = postgres(connectionString, { max: 1, onnotice: () => {} });
+  const sql = postgres(seed.databaseUrl, { max: 1, onnotice: () => {} });
   const db = drizzle(sql);
   try {
-    const userId = randomUUID();
-    // The supabase/postgres image ships an `auth.users` table; insert a
-    // minimal row so any FK or RLS rule that references it has a live anchor.
+    // `auth.users` is bootstrapped by the postgres-container helper — the
+    // schema already exists. We seed the deterministic UUID + email the
+    // mock GoTrue echoes back from `GET /auth/v1/user`. `ON CONFLICT`
+    // keeps the seed idempotent across reused containers.
     await sql`
       INSERT INTO auth.users (id, instance_id, aud, role, email)
-      VALUES (${userId}, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'seed@example.com')
+      VALUES (
+        ${seed.userId},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${seed.email}
+      )
       ON CONFLICT (id) DO NOTHING;
     `;
 
     await db
       .insert(healthPings)
-      .values({ ownerId: userId, note: 'e2e-seed ping' })
+      .values({ ownerId: seed.userId, note: 'e2e-seed ping' })
       .onConflictDoNothing();
   } finally {
     await sql.end();
   }
-
-  process.env.E2E_DATABASE_URL = connectionString;
-  process.env.DATABASE_URL = connectionString;
-  process.env.LOG_LEVEL = 'silent';
-  process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://127.0.0.1:54321';
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'e2e-anon-key';
-  process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'e2e-service-key';
 }

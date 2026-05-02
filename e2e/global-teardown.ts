@@ -1,13 +1,13 @@
 // Playwright global teardown.
 //
-// We intentionally do NOT stop the Testcontainers Postgres here: bootPostgres
-// uses `.withReuse()` so the container survives between local runs (saves
-// ~10s of boot time on every iteration). On CI the runner is destroyed at
-// the end of the job, which removes the container along with everything
-// else.
+// We deliberately do NOT stop the Testcontainers Postgres or the mock
+// GoTrue here. Both are owned by the webServer wrapper process
+// (`e2e/start-server.ts`); Playwright reaps that process at end-of-run,
+// which closes the mock socket. The Postgres container survives via
+// `.withReuse()` so subsequent local runs skip the ~10s boot.
 //
-// To force a clean slate locally: `docker rm -f $(docker ps -a -q --filter
-// label=org.testcontainers=true)`.
+// To force a clean slate locally:
+//   docker rm -f $(docker ps -a -q --filter label=org.testcontainers=true)
 export default async function globalTeardown() {
   // no-op
 }
