@@ -30,7 +30,7 @@ Um **SaaS web** voltado para **psicólogos autônomos brasileiros** que atendem 
 
 > Estas escolhas são recomendações, não obrigatórias. Se você (dev) tiver razão técnica para mudar, documente.
 
-- **Frontend:** Next.js 14+ (App Router) com TypeScript, Tailwind CSS e shadcn/ui.
+- **Frontend:** Next.js 16+ (App Router) com TypeScript, Tailwind CSS e shadcn/ui.
 - **Backend:** Next.js API Routes (mesma base).
 - **Banco de dados:** PostgreSQL via Supabase (inclui auth, storage, realtime).
 - **Hospedagem:** Vercel (frontend) + Supabase (DB) — ambos com região São Paulo (`sa-east-1`) por exigência de LGPD em saúde.

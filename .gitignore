@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# /dev-cycle orchestrator artifacts (review/QA reports, fix-iter logs)
+# Lives inside each per-change worktree at <worktree>/.dev-cycle/
+.dev-cycle/
