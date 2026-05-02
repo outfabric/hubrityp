@@ -9,7 +9,7 @@ import { signOut } from './actions';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="border-border bg-surface flex items-center justify-between border-b px-6 py-3">
+      <header className="border-border bg-card flex items-center justify-between border-b px-6 py-3">
         <span className="text-lg font-semibold">HubrityP</span>
         <form action={signOut}>
           <Button type="submit" variant="ghost" data-testid="dashboard-logout">

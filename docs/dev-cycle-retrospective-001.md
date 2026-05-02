@@ -20,11 +20,8 @@ so the next change runs with fewer surprises.
 | Sections      | 10                                                                             |
 | Tests added   | 11 unit files, 8 integration files, 2 default e2e specs, 1 real-stack e2e spec |
 
-Numbers reflect the state at the moment section 9 was implemented. Sections 10.1–10.7
-finalise the change; their counts (final test totals, reviewer/QA iteration counts) will be
-backfilled by the orchestrator when section 10 closes.
-
-<!-- TODO: section 10 fills in final test counts and reviewer/QA iteration counts -->
+Numbers were backfilled by the orchestrator after sections 10–7c closed. See section 5
+("Numbers") for the final tallies including reviewer and QA iteration counts.
 
 ## 2. What worked
 
@@ -228,20 +225,24 @@ infrastructure debt does not hide behind feature work.
 
 ## 5. Numbers
 
-| Metric                            | Value                                     |
-| --------------------------------- | ----------------------------------------- |
-| Total tasks                       | 44                                        |
-| Sections                          | 10                                        |
-| Unit test files added (this wave) | 11 (cumulative; some pre-wave-3)          |
-| Integration test files added      | 8 (cumulative; some pre-wave-3)           |
-| Default e2e specs                 | 2 (`auth.spec.ts`, `smoke.spec.ts`)       |
-| Real-stack e2e specs              | 1 (`e2e-auth-real/auth.spec.ts`)          |
-| Iterations needed per section     | 1 (single-pass PASS for sections 1–8)     |
-| Reviewer/QA iterations            | TBD (reviewer/QA loops run in section 10) |
-| Bugs surfaced by `code-reviewer`  | TBD                                       |
-| Bugs surfaced by `qa-tester`      | TBD                                       |
-
-<!-- TODO: section 10 fills in final test counts and reviewer/QA iteration counts -->
+| Metric                            | Value                                 |
+| --------------------------------- | ------------------------------------- |
+| Total tasks                       | 44                                    |
+| Sections                          | 10                                    |
+| Unit test files added (this wave) | 11 (cumulative; some pre-wave-3)      |
+| Integration test files added      | 8 (cumulative; some pre-wave-3)       |
+| Default e2e specs                 | 2 (`auth.spec.ts`, `smoke.spec.ts`)   |
+| Real-stack e2e specs              | 1 (`e2e-auth-real/auth.spec.ts`)      |
+| Iterations needed per section     | 1 (single-pass PASS for sections 1–8) |
+| Code-reviewer iterations          | 1 main + 1 short post-QA (cap 3)      |
+| QA-tester iterations              | 2 (issues-found → clean) (cap 3)      |
+| Final unit tests                  | 78 across 9 files                     |
+| Final integration tests           | 42 across 8 files                     |
+| Default e2e tests                 | 7 (`@auth` + `@health`)               |
+| Real-stack e2e tests              | 1 (`@auth-real` round-trip)           |
+| Bugs surfaced by `code-reviewer`  | 0 BLOCKER, 0 HIGH, 4 MEDIUM, 9 NIT    |
+| Bugs surfaced by `qa-tester`      | 0 CRÍTICO, 1 ALTO, 2 MÉDIO, 2 BAIXO   |
+| Final commits on the branch       | 4 (feat + 3 fix)                      |
 
 ## 6. Closing note
 
