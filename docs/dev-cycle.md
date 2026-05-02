@@ -72,6 +72,7 @@ Sem argumento:
 ```
 
 Comportamento:
+
 - Tenta inferir o nome da change pelo contexto da conversa.
 - Se ambíguo, executa `openspec list --json` e usa **AskUserQuestion** para o usuário escolher entre as changes ativas.
 
@@ -90,12 +91,12 @@ Em `openspec/changes/<name>/tasks.md`, cada task é uma linha checkbox. Você po
 
 Convenção:
 
-| Tag | Significa |
-|---|---|
-| `[unit]` | Cria/atualiza testes Vitest unitários para essa task. |
-| `[integration]` | Cria/atualiza testes Vitest + Testcontainers contra Postgres real. |
-| `[e2e]` | Cria/atualiza testes Playwright cobrindo o fluxo. Devem receber tag `@<dominio>` (ex.: `@patients`, `@billing`). |
-| _(sem tag)_ | Default `[unit]`. |
+| Tag             | Significa                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `[unit]`        | Cria/atualiza testes Vitest unitários para essa task.                                                            |
+| `[integration]` | Cria/atualiza testes Vitest + Testcontainers contra Postgres real.                                               |
+| `[e2e]`         | Cria/atualiza testes Playwright cobrindo o fluxo. Devem receber tag `@<dominio>` (ex.: `@patients`, `@billing`). |
+| _(sem tag)_     | Default `[unit]`.                                                                                                |
 
 O `fullstack-developer` recebe essas tags e sabe quais skills (`unit-tests`, `integration-tests`, `e2e-tests`) consultar e quais comandos rodar.
 
@@ -104,24 +105,30 @@ O `fullstack-developer` recebe essas tags e sabe quais skills (`unit-tests`, `in
 ## 6. Pipeline detalhado
 
 ### Step 1 — Validação da change
+
 ```bash
 openspec status --change "<name>" --json
 ```
+
 - Confirma schema = `spec-driven`.
 - Lê `proposal.md`, `tasks.md`, `design.md`, e tudo em `specs/`.
 - Anuncia: "Using change: <name> (schema: spec-driven). Tasks: M total, K already complete."
 
 ### Step 2 — Setup do worktree
+
 ```bash
 git fetch origin main
 git worktree add ../hubrityp-<name> -b feature/<name> origin/main
 mkdir -p ../hubrityp-<name>/.dev-cycle
 ```
+
 - Reusa worktree existente se já houver um para essa change (idempotência).
 - Adiciona `.dev-cycle/` ao `.gitignore` se ausente.
 
 ### Step 3 — Loop por task (sequencial)
+
 Para cada task `- [ ]`, em ordem do arquivo:
+
 1. **Parse das tags de teste** (`[unit]`/`[integration]`/`[e2e]`; default `[unit]`).
 2. **Invoca `fullstack-developer`** via Agent tool com:
    - `worktree_path` (absoluto)
@@ -134,7 +141,9 @@ Para cada task `- [ ]`, em ordem do arquivo:
 4. **FAIL** → pausa, mostra logs em `.dev-cycle/task-<n>-fail.log`, espera o usuário.
 
 ### Step 4 — Loop dev ↔ code-reviewer (cap 3)
+
 Quando todas as tasks estão `[x]`:
+
 1. Invoca `code-reviewer` com worktree path + base = `main`. Persiste em `.dev-cycle/review-<N>.md`.
 2. Lê linha `VERDICT:`:
    - `approve` ou `approve-with-comments` → step 5.
@@ -144,6 +153,7 @@ Quando todas as tasks estão `[x]`:
      - Senão: invoca `fullstack-developer` em **modo fix** (passa o caminho do `review-<N>.md`, mais `changed_files` e `affected_e2e_tags` calculados pelo orquestrador). Aplica re-validação escopada. Volta a invocar `code-reviewer`.
 
 ### Step 5 — Loop dev ↔ qa-tester (cap 3)
+
 1. Garante app no ar:
    ```bash
    curl -sf http://localhost:3000 || docker compose up -d
@@ -159,6 +169,7 @@ Quando todas as tasks estão `[x]`:
      - Senão: invoca `fullstack-developer` em modo fix. Reinvoca `code-reviewer` (review curto sobre o novo diff). Se review limpo → reinvoca `qa-tester`.
 
 ### Step 6 — Commits semânticos + PR
+
 1. **Commits per-task** (default): para cada task em `tasks.md`, identifica os arquivos exclusivamente tocados por aquela task e cria um commit com Conventional Commits:
    - `feat: <task title>` (default)
    - `fix: <task title>` se a task contém `fix`/`bug`/`corrige`
@@ -180,12 +191,12 @@ Cada fix pós-feedback (do `code-reviewer` ou do `qa-tester`) modifica código q
 
 ### As 4 camadas (ordem fixa, falha-rápido)
 
-| # | Camada | Comando | Por quê |
-|---|---|---|---|
-| 1 | Lint + typecheck (full) | `npm run lint && npm run typecheck` | Cheap, mandatório no CLAUDE.md. Falha aqui = parar antes de tocar testes. |
-| 2 | Unit (full) | `npm run test:unit` | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar. |
-| 3 | Integration (escopado) | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados. |
-| 4 | E2E (escopado) | `npm run test:e2e -- --grep "@<flow-tags>"` | Playwright filtra por tags `@<dominio>` mantidas em `e2e/tags.json` (ou inferidas da estrutura de `app/`). |
+| #   | Camada                  | Comando                                                | Por quê                                                                                                    |
+| --- | ----------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Falha aqui = parar antes de tocar testes.                                  |
+| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar.     |
+| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.           |
+| 4   | E2E (escopado)          | `npm run test:e2e -- --grep "@<flow-tags>"`            | Playwright filtra por tags `@<dominio>` mantidas em `e2e/tags.json` (ou inferidas da estrutura de `app/`). |
 
 `$CHANGED_FILES` = `git -C <worktree> diff <fix-base>...HEAD --name-only`, calculado pelo orquestrador e passado ao agent.
 
@@ -202,13 +213,13 @@ O agent deve nomear explicitamente o sinal acionado no resumo pré-`VERDICT`.
 
 ### Custo esperado por iteração de fix (estimado)
 
-| Camada | Escopado | Full |
-|---|---|---|
-| Lint + typecheck | ~10s | ~10s |
-| Unit | ~30s | ~30s |
-| Integration | ~20s | ~2min |
-| E2E | ~1min | ~10min |
-| **Total** | **~2min** | **~13min** |
+| Camada           | Escopado  | Full       |
+| ---------------- | --------- | ---------- |
+| Lint + typecheck | ~10s      | ~10s       |
+| Unit             | ~30s      | ~30s       |
+| Integration      | ~20s      | ~2min      |
+| E2E              | ~1min     | ~10min     |
+| **Total**        | **~2min** | **~13min** |
 
 Com cap de 3 iters por loop e dois loops (reviewer + QA), pior caso ≈ 12min de re-validação por change — aceitável.
 
@@ -222,14 +233,15 @@ Com cap de 3 iters por loop e dois loops (reviewer + QA), pior caso ≈ 12min de
 
 ## 8. Loop prevention
 
-| Loop | Cap | Ação ao bater |
-|---|---|---|
-| Tentativas internas do dev por task (testes/lint falhando) | 3 | Pausa, mostra logs (`.dev-cycle/task-<n>-fail.log`), espera usuário. |
-| Ciclo dev ↔ code-reviewer pós-tasks | 3 | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`. |
-| Ciclo dev ↔ qa-tester | 3 | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`. |
-| Mesmo finding repete 2× consecutivas (review ou QA) | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
+| Loop                                                       | Cap      | Ação ao bater                                                                                      |
+| ---------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| Tentativas internas do dev por task (testes/lint falhando) | 3        | Pausa, mostra logs (`.dev-cycle/task-<n>-fail.log`), espera usuário.                               |
+| Ciclo dev ↔ code-reviewer pós-tasks                        | 3        | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`.                                    |
+| Ciclo dev ↔ qa-tester                                      | 3        | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`.                                        |
+| Mesmo finding repete 2× consecutivas (review ou QA)        | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
 
 Quando um cap é atingido, o orquestrador imprime:
+
 - A última iteração rodada (`REVIEW_ITER` / `QA_ITER`).
 - A lista de issues persistentes.
 - Caminho dos relatórios.
@@ -239,18 +251,19 @@ Quando um cap é atingido, o orquestrador imprime:
 
 ## 9. Onde os artefatos vivem
 
-| Artefato | Caminho |
-|---|---|
-| Worktree da change | `../hubrityp-<name>/` (sibling do repo) |
-| Branch da change | `feature/<name>` (criada do `origin/main`) |
-| Relatórios de review | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ... |
-| Relatórios de QA | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ... |
-| Logs de falhas de task | `<worktree>/.dev-cycle/task-<n>-fail.log` |
-| Pasta `.dev-cycle/` | gitignored (via `.gitignore` na raiz do repo) |
-| Commits | dentro do worktree, na branch `feature/<name>` |
-| PR | aberto via `gh pr create` contra `main` |
+| Artefato               | Caminho                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| Worktree da change     | `../hubrityp-<name>/` (sibling do repo)                 |
+| Branch da change       | `feature/<name>` (criada do `origin/main`)              |
+| Relatórios de review   | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ... |
+| Relatórios de QA       | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...         |
+| Logs de falhas de task | `<worktree>/.dev-cycle/task-<n>-fail.log`               |
+| Pasta `.dev-cycle/`    | gitignored (via `.gitignore` na raiz do repo)           |
+| Commits                | dentro do worktree, na branch `feature/<name>`          |
+| PR                     | aberto via `gh pr create` contra `main`                 |
 
 Após o merge, limpe o worktree:
+
 ```bash
 git worktree remove ../hubrityp-<name>
 git branch -d feature/<name>
@@ -267,6 +280,7 @@ git branch -d feature/<name>
 ```
 
 O orquestrador:
+
 - Detecta o worktree existente e reusa.
 - Pula tasks já marcadas `[x]` em `tasks.md`.
 - Conta os arquivos `review-N.md` e `qa-N.md` existentes em `.dev-cycle/` para inicializar `REVIEW_ITER` e `QA_ITER` corretamente (não reinicia o cap a cada retomada).
@@ -275,15 +289,15 @@ O orquestrador:
 
 ## 11. Troubleshooting
 
-| Sintoma | Causa provável | Resolução |
-|---|---|---|
-| "docker compose up failed" no step QA | Docker daemon não está de pé | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop. |
-| "gh: command not found" ou "not authenticated" no step PR | `gh` ausente ou sem login | Instale GitHub CLI; rode `gh auth login`. |
-| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import) | O agent faz fallback automático para suíte full integration e anuncia. |
-| Mapping path → e2e tag retorna vazio | Path mudado não está em `e2e/tags.json` nem segue a convenção `app/(dashboard)/<dominio>/**` | O agent faz fallback para suíte e2e completa. Considere atualizar `e2e/tags.json`. |
-| Cap de 3 iterações atingido no loop dev↔reviewer | Issues estruturais que o agent não consegue resolver autonomamente | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque. |
-| Worktree em estado sujo de invocação anterior | `/dev-cycle` foi interrompido com mudanças não commitadas | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
-| `qa-tester` aborta porque não há cenários | `specs/` vazio E `proposal.md` sem critérios de aceite | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque. |
+| Sintoma                                                              | Causa provável                                                                               | Resolução                                                                                                                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "docker compose up failed" no step QA                                | Docker daemon não está de pé                                                                 | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop.                                                                                                           |
+| "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                    | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
+| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                           | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
+| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `e2e/tags.json` nem segue a convenção `app/(dashboard)/<dominio>/**` | O agent faz fallback para suíte e2e completa. Considere atualizar `e2e/tags.json`.                                                                                       |
+| Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                           | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
+| Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                    | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
+| `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                       | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |
 
 ---
 
