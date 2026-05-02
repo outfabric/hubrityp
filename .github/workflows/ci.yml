@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# Cancel in-progress runs for the same ref so a force-push doesn't double-bill
+# the runner pool.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -25,4 +31,75 @@ jobs:
 
       - run: npm run typecheck
 
+      - run: npm run format:check
+
       - run: npm run test:unit
+
+  integration:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verify Docker is available (Testcontainers prereq)
+        run: docker info
+
+      - run: npm run test:integration
+
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          # Keyed on the lockfile so the cache invalidates whenever the
+          # Playwright version changes (which is what determines the binary
+          # version).
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify Docker is available (Testcontainers prereq)
+        run: docker info
+
+      # Build needs env vars at parse time (lib/env.ts validates on import).
+      # Real DATABASE_URL is provided per-run by Playwright globalSetup; the
+      # build only needs valid placeholders.
+      - name: Build the app
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-build-service-key
+          LOG_LEVEL: silent
+        run: npm run build
+
+      - run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

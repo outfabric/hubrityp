@@ -1,0 +1,37 @@
+# HubrityP — local development compose.
+#
+# Convention: the Supabase CLI (`npm run supabase:start`) owns Postgres, GoTrue,
+# Storage, Realtime, and Studio. This file only declares the Next.js dev
+# container and bridges it onto the network the CLI manages
+# (`supabase_network_<project_id>` — see `supabase/config.toml`).
+#
+# Start order:
+#   1. `npm run supabase:start`   # boots the Supabase stack and creates the network
+#   2. `docker compose up`        # boots the Next.js dev container on that network
+
+services:
+  app:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --hostname 0.0.0.0"
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - app-node-modules:/app/node_modules
+    environment:
+      # Reach the Supabase Postgres via the CLI-managed container hostname
+      # (resolvable on `supabase_network_hubrityp`). Override locally via .env
+      # if you point the app at a different stack.
+      DATABASE_URL: postgresql://postgres:postgres@supabase_db_hubrityp:5432/postgres
+      NEXT_PUBLIC_SUPABASE_URL: http://supabase_kong_hubrityp:8000
+    networks:
+      - supabase
+
+volumes:
+  app-node-modules:
+
+networks:
+  supabase:
+    name: supabase_network_hubrityp
+    external: true
