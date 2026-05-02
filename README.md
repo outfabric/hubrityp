@@ -93,26 +93,27 @@ Pre-commit hooks (Husky + lint-staged) run `eslint --fix`, `prettier --write` on
 
 ## Scripts
 
-| Script                     | Purpose                                                               |
-| -------------------------- | --------------------------------------------------------------------- |
-| `npm run dev`              | Start Next.js dev server on `localhost:3000`.                         |
-| `npm run build`            | Production build.                                                     |
-| `npm run start`            | Serve the production build.                                           |
-| `npm run lint`             | ESLint flat config (Next core-web-vitals + TS type-checked).          |
-| `npm run format`           | Prettier `--write` over the repo.                                     |
-| `npm run format:check`     | Prettier `--check` (no rewrites).                                     |
-| `npm run typecheck`        | `tsc --noEmit` strict mode.                                           |
-| `npm run check`            | `lint && format:check && typecheck`.                                  |
-| `npm run test:unit`        | Vitest run (jsdom for `*.test.tsx`, node for `*.test.ts`).            |
-| `npm run test:integration` | Vitest + Testcontainers Postgres (`*.int.test.ts`).                   |
-| `npm run test:e2e`         | Playwright (boots app + Testcontainers, runs `e2e/*.spec.ts`).        |
-| `npm run supabase:start`   | Boot the local Supabase stack via the CLI.                            |
-| `npm run supabase:stop`    | Stop the local Supabase stack.                                        |
-| `npm run supabase:reset`   | Destroy + recreate the local DB.                                      |
-| `npm run db:generate`      | Regenerate SQL migrations from `db/schema/**`.                        |
-| `npm run db:migrate`       | Apply pending migrations to the configured database.                  |
-| `npm run db:push`          | Push schema directly (prototyping only — bypasses migration history). |
-| `npm run db:studio`        | Open Drizzle Studio.                                                  |
+| Script                     | Purpose                                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`              | Start Next.js dev server on `localhost:3000`.                                                                         |
+| `npm run build`            | Production build.                                                                                                     |
+| `npm run start`            | Serve the production build.                                                                                           |
+| `npm run lint`             | ESLint flat config (Next core-web-vitals + TS type-checked).                                                          |
+| `npm run format`           | Prettier `--write` over the repo.                                                                                     |
+| `npm run format:check`     | Prettier `--check` (no rewrites).                                                                                     |
+| `npm run typecheck`        | `tsc --noEmit` strict mode.                                                                                           |
+| `npm run check`            | `lint && format:check && typecheck`.                                                                                  |
+| `npm run test:unit`        | Vitest run (jsdom for `*.test.tsx`, node for `*.test.ts`).                                                            |
+| `npm run test:integration` | Vitest + Testcontainers Postgres (`*.int.test.ts`).                                                                   |
+| `npm run test:e2e`         | Playwright (boots app + Testcontainers, runs `e2e/*.spec.ts`).                                                        |
+| `npm run test:e2e:real`    | Playwright `@auth-real` suite against a real Supabase stack started via `npx supabase start` (must be running first). |
+| `npm run supabase:start`   | Boot the local Supabase stack via the CLI.                                                                            |
+| `npm run supabase:stop`    | Stop the local Supabase stack.                                                                                        |
+| `npm run supabase:reset`   | Destroy + recreate the local DB.                                                                                      |
+| `npm run db:generate`      | Regenerate SQL migrations from `db/schema/**`.                                                                        |
+| `npm run db:migrate`       | Apply pending migrations to the configured database.                                                                  |
+| `npm run db:push`          | Push schema directly (prototyping only — bypasses migration history).                                                 |
+| `npm run db:studio`        | Open Drizzle Studio.                                                                                                  |
 
 ## Project layout
 

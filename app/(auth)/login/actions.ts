@@ -58,6 +58,12 @@ export async function signIn(formData: FormData): Promise<SignInResult> {
     return { ok: false, error: 'invalid_credentials' };
   }
 
+  // Contract: `redirectTo` is forwarded by `app/(auth)/login/page.tsx` →
+  // `LoginForm` → `<input type="hidden" name="redirectTo">` → this FormData.
+  // We deliberately read from FormData (NOT from headers/query) so the value
+  // is bound to the submitted form, not to the request context. Any custom
+  // login form that replaces `LoginForm` MUST forward the same hidden input,
+  // or post-auth redirects silently fall back to `DEFAULT_TARGET`.
   const rawTarget = formData.get('redirectTo');
   const target = safeRedirect(typeof rawTarget === 'string' ? rawTarget : null, DEFAULT_TARGET);
 

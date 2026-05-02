@@ -55,8 +55,15 @@ function readSupabaseStatus(): SupabaseStatus {
       encoding: 'utf8',
     });
   } catch (err) {
+    // `execSync` attaches the child process's stderr (Buffer) on the thrown
+    // error. Surface it explicitly — without this, `(err as Error).message`
+    // collapses to "Command failed: ..." and the actual diagnostic from the
+    // Supabase CLI is silently dropped, defeating debuggability.
+    const stderr = (err as { stderr?: Buffer | string }).stderr;
+    const stderrText = stderr ? String(stderr).trim() : '';
     throw new Error(
-      'Supabase stack is not running. Run `npx supabase start` before `npm run test:e2e:real`. ' +
+      'Supabase stack is not running. Run `npx supabase start` before `npm run test:e2e:real`.\n' +
+        (stderrText ? `Underlying stderr:\n${stderrText}\n` : '') +
         `(Original error: ${(err as Error).message})`,
     );
   }

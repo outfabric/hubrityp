@@ -109,6 +109,23 @@ describe('safeRedirect', () => {
       // path's first segment indicate a scheme.
       expect(safeRedirect('/dashboard/foo?ts=12:34', FALLBACK)).toBe('/dashboard/foo?ts=12:34');
     });
+
+    it('allows a colon in the query string of a root-level path with no internal slash', () => {
+      // Regression: previous implementation scanned the query string when no
+      // internal `/` existed, rejecting legitimate values like `/dashboard?ts=12:34`.
+      expect(safeRedirect('/dashboard?ts=12:34', FALLBACK)).toBe('/dashboard?ts=12:34');
+    });
+
+    it('allows a colon in the fragment of a root-level path with no internal slash', () => {
+      // Same regression class as the query-string case, exercised via the fragment.
+      expect(safeRedirect('/dashboard#anchor:1', FALLBACK)).toBe('/dashboard#anchor:1');
+    });
+
+    it('rejects a scheme-bearing colon in the first path segment even with a query string', () => {
+      // The colon lives in the path's first segment, so trimming the query
+      // string must NOT mask it. Pin that the trim is for query/fragment only.
+      expect(safeRedirect('/javascript:alert(1)?ok=1', FALLBACK)).toBe(FALLBACK);
+    });
   });
 
   describe('backslash-bearing paths fall back', () => {
