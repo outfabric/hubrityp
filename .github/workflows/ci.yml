@@ -103,3 +103,82 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  # The @auth-real suite exercises the full GoTrue handshake against the real
+  # Supabase stack (`supabase start`), not the mock-GoTrue + Testcontainers
+  # used by the default e2e job. We gate it behind `e2e` so a failing default
+  # suite short-circuits this slower job and saves runner minutes. Because
+  # both suites bind a server to port 54321, they cannot run concurrently —
+  # `needs: e2e` enforces sequencing in CI as well.
+  e2e-real:
+    needs: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify Docker is available (Supabase prereq)
+        run: docker info
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # `NEXT_PUBLIC_SUPABASE_URL` is inlined into the edge bundle at BUILD
+      # time, so the build-time URL must match the address `supabase start`
+      # will bind to (default `127.0.0.1:54321`). The other env vars are only
+      # needed to satisfy the Zod env validator at module-load time during
+      # the build — runtime keys come from `playwright.auth-real.config.ts`,
+      # which reads `supabase status -o json` after the stack is up.
+      - name: Build the app
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-build-service-key
+          LOG_LEVEL: silent
+        run: npm run build
+
+      # Order matters: the auth-real Playwright config shells out to
+      # `supabase status -o json` at config-load time to discover runtime
+      # keys / URLs / DB URL. The stack must be up before `test:e2e:real`
+      # spawns Playwright.
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Run @auth-real Playwright suite
+        run: npm run test:e2e:real
+
+      # Always stop Supabase to release Docker resources, even when the
+      # test step fails — otherwise the runner can leak containers across
+      # retries. `--no-backup` skips the local DB dump (~10s, not useful
+      # in CI where state is ephemeral).
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup
+
+      - name: Upload Playwright @auth-real report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-auth-real
+          path: playwright-report-auth-real/
+          retention-days: 14

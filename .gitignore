@@ -148,5 +148,8 @@ vite.config.ts.timestamp-*
 
 # Playwright artifacts
 e2e/.auth/
+e2e-auth-real/.auth/
 playwright-report/
+playwright-report-auth-real/
 test-results/
+test-results-auth-real/

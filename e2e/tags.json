@@ -1,5 +1,5 @@
 {
   "@health": "Health endpoints",
   "@auth": "Auth flow — default suite, simulated cookie via storageState",
-  "@auth-real": "Auth flow — wave 3, real gotrue (no test exists yet)"
+  "@auth-real": "Auth flow — dedicated real-GoTrue suite via `npm run test:e2e:real` (lives under e2e-auth-real/)"
 }
