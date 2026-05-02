@@ -91,4 +91,4 @@
 - [x] 12.2 Run `npm run test:unit`; expect exit 0
 - [x] 12.3 Run `npm run dev` and curl `/`; expect 200 + security headers
 - [x] 12.4 Open the PR for this change and confirm the CI `quality` job is green
-- [ ] 12.5 Merge to `main`; verify `bootstrap-data-and-tests` has a clean foundation to build on
+- [x] 12.5 Merge to `main`; verify `bootstrap-data-and-tests` has a clean foundation to build on
