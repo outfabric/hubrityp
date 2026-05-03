@@ -1,13 +1,16 @@
 // Esqueleto AAA para Server Action / função com dependências mockadas.
 // Copie e adapte: renomeie módulo sob teste, dependências mockadas e cenários.
+//
+// Localização canônica: src/__tests__/unit/<mirror-of-source-path>.test.ts
+// Exemplo: src/__tests__/unit/modules/agenda/server/agendar-consulta.test.ts
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 1) Hoisted mocks — declarar ANTES de qualquer import do módulo sob teste.
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn(),
 }));
-vi.mock('@/lib/inngest/client', () => ({
+vi.mock('@/shared/lib/inngest/client', () => ({
   inngest: { send: vi.fn() },
 }));
 vi.mock('next/cache', () => ({
@@ -15,10 +18,10 @@ vi.mock('next/cache', () => ({
 }));
 
 // 2) Imports reais — vêm depois dos vi.mock por convenção.
-import { createServerClient } from '@/lib/supabase/server';
-import { inngest } from '@/lib/inngest/client';
+import { createServerClient } from '@/shared/supabase/server';
+import { inngest } from '@/shared/lib/inngest/client';
 import { revalidatePath } from 'next/cache';
-import { funcaoSobTeste } from './arquivo';
+import { funcaoSobTeste } from '@/modules/agenda/server/agendar-consulta';
 
 describe('funcaoSobTeste', () => {
   beforeEach(() => {

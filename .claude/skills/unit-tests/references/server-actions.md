@@ -9,20 +9,36 @@ Server Actions e Route Handlers são as **fronteiras** do app. O teste unitário
 
 Não cobrir aqui: render real, RLS de fato, fluxo end-to-end. Isso é integração/E2E.
 
+## Onde mora a Server Action no HubrityP
+
+A Server Action **real** vive em `src/modules/<dominio>/server/<acao>.ts`. O arquivo em `src/app/(...)/.../actions.ts` é só um shell `'use server'` que delega:
+
+```ts
+// src/app/(auth)/login/actions.ts (route shell)
+'use server';
+export { signIn } from '@/modules/auth';
+
+// src/modules/auth/server/login.ts (implementação real, sem 'use server')
+export async function signInImpl(formData: FormData): Promise<SignInResult> { /* ... */ }
+```
+
+Para teste unitário, importe **direto do módulo** (sem o shell). Para teste de integração você pode importar do shell (`@/app/(auth)/login/actions`), o que é especialmente útil porque o shell já tem `'use server'` e simula o entrypoint real.
+
 ## Estrutura sugerida
 
 ```ts
+// src/__tests__/unit/modules/agenda/server/agendar.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/lib/supabase/server', () => ({ createServerClient: vi.fn() }));
+vi.mock('@/shared/supabase/server', () => ({ createServerClient: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
-vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn() } }));
+vi.mock('@/shared/lib/inngest/client', () => ({ inngest: { send: vi.fn() } }));
 
 import { revalidatePath } from 'next/cache';
-import { inngest } from '@/lib/inngest/client';
-import { createServerClient } from '@/lib/supabase/server';
-import { mockSupabaseQuery } from '@/__tests__/helpers/supabase';
-import { agendar } from './actions';
+import { inngest } from '@/shared/lib/inngest/client';
+import { createServerClient } from '@/shared/supabase/server';
+import { mockSupabaseQuery } from '@/__tests__/unit/_helpers/supabase';
+import { agendar } from '@/modules/agenda/server/agendar';
 
 describe('agendar (Server Action)', () => {
   beforeEach(() => {
@@ -58,9 +74,9 @@ describe('agendar (Server Action)', () => {
 Teste o schema separadamente. Mais rápido, mais expressivo:
 
 ```ts
-// app/(app)/pacientes/schema.test.ts
+// src/__tests__/unit/modules/pacientes/lib/criar-paciente-schema.test.ts
 import { describe, it, expect } from 'vitest';
-import { criarPacienteSchema } from './schema';
+import { criarPacienteSchema } from '@/modules/pacientes/lib/criar-paciente-schema';
 
 describe('criarPacienteSchema', () => {
   it('aceita payload mínimo válido', () => {
@@ -88,6 +104,7 @@ Use `safeParse` quando quiser inspecionar `issues`; `parse` quando esperar suces
 Trate o handler como função `async (req: Request) => Response`. Construa `Request` nativo:
 
 ```ts
+// src/__tests__/unit/app/api/webhooks/twilio/route.test.ts
 import { POST } from '@/app/api/webhooks/twilio/route';
 
 it('responde 401 quando assinatura Twilio é inválida', async () => {
@@ -134,8 +151,14 @@ await expect(fn()).rejects.toMatchObject({
 Centralize em um helper para evitar repetição:
 
 ```ts
-// __tests__/helpers/auth.ts
-export function mockUsuarioLogado(supabase: ReturnType<typeof createServerClient>, userId = 'u_1') {
+// src/__tests__/unit/_helpers/auth.ts
+import { vi } from 'vitest';
+import type { createServerClient } from '@/shared/supabase/server';
+
+export function mockUsuarioLogado(
+  supabase: ReturnType<typeof createServerClient>,
+  userId = 'u_1'
+) {
   vi.mocked(supabase.auth.getUser).mockResolvedValue({
     data: { user: { id: userId, email: 'test@hubrityp.com' } as never },
     error: null,
@@ -147,7 +170,7 @@ Teste explicitamente o caso "não autenticado" → Server Action deve lançar er
 
 ## O que NÃO testar aqui
 
-- Que o RLS impede acesso → integração contra Supabase local.
+- Que o RLS impede acesso → integração contra Postgres real.
 - Que o componente de UI mostra o erro → E2E Playwright.
 - Que a função do Inngest processa o evento → integração da função Inngest.
 

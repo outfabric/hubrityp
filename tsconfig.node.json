@@ -8,7 +8,8 @@
     "next.config.ts",
     "vitest.config.ts",
     "vitest.setup.ts",
-    "playwright.config.ts",
+    "playwright.seeded.config.ts",
+    "playwright.real.config.ts",
     "tailwind.config.ts",
     "postcss.config.mjs",
     "eslint.config.mjs"

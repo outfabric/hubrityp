@@ -53,7 +53,7 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
 
 > **Notas**:
 >
-> - `qa-tester` é skipado automaticamente quando uma heurística de 3 sinais conclui que a change é backend-only (sem tags `[e2e]`, sem keywords UI em scenarios, sem paths em `app/(app)/`, `app/(auth)/` ou `components/`). Veja seção 7.bis. Force com `/dev-cycle <name> --force-qa`.
+> - `qa-tester` é skipado automaticamente quando uma heurística de 3 sinais conclui que a change é backend-only (sem tags `[e2e]`, sem keywords UI em scenarios, sem paths em `src/app/(app)/`, `src/app/(auth)/` ou `src/modules/<dominio>/components/`). Veja seção 7.bis. Force com `/dev-cycle <name> --force-qa`.
 > - O **archive** é feito dentro do worktree, na branch `feature/<name>`, antes do push — então o PR já vem com a change movida para `openspec/changes/archive/`, specs sincronizados e `docs/<cap>.md` atualizados. `/opsx:archive` ainda existe para uso ad-hoc fora do `/dev-cycle`.
 
 ---
@@ -285,21 +285,21 @@ Cada fix pós-feedback (do `code-reviewer` ou do `qa-tester`) modifica código q
 
 ### As 4 camadas (ordem fixa, falha-rápido)
 
-| #   | Camada                  | Comando                                                | Por quê                                                                                                    |
-| --- | ----------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Falha aqui = parar antes de tocar testes.                                  |
-| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar.     |
-| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.           |
-| 4   | E2E (escopado)          | `npm run test:e2e -- --grep "@<flow-tags>"`            | Playwright filtra por tags `@<dominio>` mantidas em `e2e/tags.json` (ou inferidas da estrutura de `app/`). |
+| #   | Camada                  | Comando                                                | Por quê                                                                                                                             |
+| --- | ----------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Falha aqui = parar antes de tocar testes.                                                           |
+| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar.                              |
+| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                    |
+| 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>` mantidas em `src/__tests__/e2e/seeded/tags.json` (ou inferidas da estrutura de `src/app/`). |
 
 `$CHANGED_FILES` = `git -C <worktree> diff <fix-base>...HEAD --name-only`, calculado pelo orquestrador e passado ao agent.
 
 ### Sinais que forçam fallback para suítes completas
 
-Qualquer um basta para acionar `npm run test:integration` full + `npm run test:e2e` full:
+Qualquer um basta para acionar `npm run test:integration` full + `npm run test:e2e:seeded` full:
 
-- Mudou `db/schema/**`, `lib/types/**`, ou `lib/env.ts` (schema/tipos globais).
-- Mudou `lib/utils/**` ou `lib/auth/**` (utilitários compartilhados).
+- Mudou `src/shared/db/schema/**`, `src/shared/lib/types/**`, ou `src/shared/env/**` (schema/tipos globais).
+- Mudou `src/shared/lib/utils/**` ou `src/modules/auth/**` (utilitários compartilhados / módulo de auth).
 - Mudou `next.config.ts`, `tailwind.config.*`, ou `drizzle.config.*` (config).
 - Mais de 10 arquivos modificados no fix (proxy de "mudança ampla").
 
@@ -331,22 +331,22 @@ O `qa-tester` usa Playwright em browser real (~2–5min/iteração, cap 3 = até
 
 ### Os 3 sinais (logical AND)
 
-| #   | Sinal                                                                  | Comando                                                                                                                         |
-| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Nenhuma tag `[e2e]` em `tasks.md`                                      | `! grep -qE '\[e2e\]' openspec/changes/<name>/tasks.md`                                                                         |
-| 2   | Nenhuma keyword UI em blocos `#### Scenario:` dos `specs/`             | `! grep -irE -A 6 '^#### Scenario:' specs/ \| grep -iqE 'visits\|renders\|clicks\|sees\|visual\|navigates\|page\|form\|button'` |
-| 3   | Diff `main...HEAD` não toca `app/(app)/`, `app/(auth)/`, `components/` | `! git diff main...HEAD --name-only \| grep -qE '^(app/\(app\)/\|app/\(auth\)/\|components/)'`                                  |
+| #   | Sinal                                                                                                              | Comando                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Nenhuma tag `[e2e]` em `tasks.md`                                                                                  | `! grep -qE '\[e2e\]' openspec/changes/<name>/tasks.md`                                                                                  |
+| 2   | Nenhuma keyword UI em blocos `#### Scenario:` dos `specs/`                                                         | `! grep -irE -A 6 '^#### Scenario:' specs/ \| grep -iqE 'visits\|renders\|clicks\|sees\|visual\|navigates\|page\|form\|button'`          |
+| 3   | Diff `main...HEAD` não toca `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/` | `! git diff main...HEAD --name-only \| grep -qE '^(src/app/\(app\)/\|src/app/\(auth\)/\|src/modules/[^/]+/components/\|src/shared/ui/)'` |
 
 A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-positivo (existem changes UI sem `[e2e]` e com scenarios escritos em linguagem neutra). O sinal 3 (paths tocados) é o catch-all que pega esses casos.
 
 ### Exemplos com changes arquivadas reais
 
-| Change                     | S1  | S2  | S3  | Decisão                                                   |
-| -------------------------- | --- | --- | --- | --------------------------------------------------------- |
-| `bootstrap-foundation`     | ✓   | ✓   | ✓   | **Skip** (infra/tooling, sem UI)                          |
-| `bootstrap-data-and-tests` | ✓   | ✓   | ✓   | **Skip** (db/lib/test stack)                              |
-| `smoke-health-feature`     | ✓   | ✗   | ✗   | **Roda** (toca `app/(auth)/login`, `app/(app)/dashboard`) |
-| `dev-cycle-followups-001`  | ✓   | ✓   | ✓\* | **Skip** (refactor de orquestrador, sem UI)               |
+| Change                     | S1  | S2  | S3  | Decisão                                                           |
+| -------------------------- | --- | --- | --- | ----------------------------------------------------------------- |
+| `bootstrap-foundation`     | ✓   | ✓   | ✓   | **Skip** (infra/tooling, sem UI)                                  |
+| `bootstrap-data-and-tests` | ✓   | ✓   | ✓   | **Skip** (db/lib/test stack)                                      |
+| `smoke-health-feature`     | ✓   | ✗   | ✗   | **Roda** (toca `src/app/(auth)/login`, `src/app/(app)/dashboard`) |
+| `dev-cycle-followups-001`  | ✓   | ✓   | ✓\* | **Skip** (refactor de orquestrador, sem UI)                       |
 
 \*Quando a heurística retorna PASS para uma change que mexe em UI por engano, use `--force-qa`.
 
@@ -357,7 +357,7 @@ A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-posi
 ### Mensagens
 
 - **Skip**: lista os 3 sinais com PASS e instrui o usuário a re-invocar com `--force-qa` se discordar.
-- **Run após heurística falhar**: nomeia qual sinal disparou (ex.: "Signal 3 failed: diff touches `components/Button.tsx`").
+- **Run após heurística falhar**: nomeia qual sinal disparou (ex.: "Signal 3 failed: diff touches `src/shared/ui/button.tsx`").
 - **Run forçado**: "QA forced by --force-qa flag (heuristic would have skipped/run)".
 
 ---
@@ -424,15 +424,15 @@ O orquestrador:
 
 ## 11. Troubleshooting
 
-| Sintoma                                                              | Causa provável                                                                               | Resolução                                                                                                                                                                |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| "docker compose up failed" no step QA                                | Docker daemon não está de pé                                                                 | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop.                                                                                                           |
-| "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                    | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
-| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                           | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
-| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `e2e/tags.json` nem segue a convenção `app/(dashboard)/<dominio>/**` | O agent faz fallback para suíte e2e completa. Considere atualizar `e2e/tags.json`.                                                                                       |
-| Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                           | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
-| Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                    | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
-| `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                       | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |
+| Sintoma                                                              | Causa provável                                                                                                  | Resolução                                                                                                                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "docker compose up failed" no step QA                                | Docker daemon não está de pé                                                                                    | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop.                                                                                                           |
+| "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                                       | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
+| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                                              | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
+| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `src/__tests__/e2e/seeded/tags.json` nem segue a convenção `src/app/(app)/<dominio>/**` | O agent faz fallback para suíte e2e completa. Considere atualizar `src/__tests__/e2e/seeded/tags.json`.                                                                  |
+| Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                                              | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
+| Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                                       | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
+| `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                                          | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |
 
 ---
 
@@ -460,23 +460,23 @@ O orquestrador:
 
 ## 14. Gotchas
 
-Armadilhas reais encontradas durante a primeira invocação do `/dev-cycle` (ver `docs/dev-cycle-retrospective-001.md`, seções 3.4–3.6). Todas se manifestam ao mexer em infraestrutura de e2e ou auth. Leia antes de tocar `playwright.config.ts`, `playwright.auth-real.config.ts`, `e2e/start-server.ts` ou qualquer caminho que envolva `supabase.auth.getUser()` no servidor.
+Armadilhas reais encontradas durante a primeira invocação do `/dev-cycle` (ver `docs/dev-cycle-retrospective-001.md`, seções 3.4–3.6). Todas se manifestam ao mexer em infraestrutura de e2e ou auth. Leia antes de tocar `playwright.seeded.config.ts`, `playwright.real.config.ts`, `src/__tests__/e2e/seeded/setup/start-server.ts` ou qualquer caminho que envolva `supabase.auth.getUser()` no servidor.
 
 ### `NEXT_PUBLIC_*` é inlinado no edge runtime em build time
 
-`middleware.ts` roda no edge runtime, e o Next inlina o valor de `NEXT_PUBLIC_SUPABASE_URL` no bundle no momento do `next build`. Não dá para sobrescrever via `webServer.env` em runtime — o middleware sempre vai bater no host/porta que o build viu. Por isso o mock GoTrue do suite e2e default precisa ouvir na **mesma porta hardcoded** que o build conhece (`127.0.0.1:54321`, idem ao `supabase start`). Helper canônico em `lib/test-utils/mock-gotrue.ts` (`startMockGotrue({ port })` aceita override mas defaulta para `54321` justamente por isso). Consequência prática: o suite mock-GoTrue e o suite `@auth-real` não rodam concorrentemente — disputam a mesma porta.
+`src/middleware.ts` roda no edge runtime, e o Next inlina o valor de `NEXT_PUBLIC_SUPABASE_URL` no bundle no momento do `next build`. Não dá para sobrescrever via `webServer.env` em runtime — o middleware sempre vai bater no host/porta que o build viu. Por isso o mock GoTrue do suite seeded precisa ouvir na **mesma porta hardcoded** que o build conhece (`127.0.0.1:54321`, idem ao `supabase start`). Helper canônico em `src/__tests__/e2e/seeded/setup/mock-gotrue.ts` (`startMockGotrue({ port })` aceita override mas defaulta para `54321` justamente por isso). Consequência prática: a suíte seeded (mock GoTrue) e a suíte `@auth-real` não rodam concorrentemente — disputam a mesma porta.
 
 ### Playwright sobe `webServer` ANTES de `globalSetup`
 
-Verificável em `node_modules/playwright/lib/runner/tasks.js::createGlobalSetupTasks`. Qualquer coisa que `globalSetup` escreve em `process.env` (URL dinâmica do Testcontainers Postgres, porta efêmera de mock) é invisível ao Next.js spawnado — `webServer.env` é capturado no config-load. Workaround canônico: `e2e/start-server.ts` faz o boot dinâmico (Postgres + mock GoTrue) e só então `exec`a `next start`, garantindo env completo no momento certo. Esse é o pattern reusável para qualquer suite futuro que precise de recursos efêmeros antes do servidor.
+Verificável em `node_modules/playwright/lib/runner/tasks.js::createGlobalSetupTasks`. Qualquer coisa que `globalSetup` escreve em `process.env` (URL dinâmica do Testcontainers Postgres, porta efêmera de mock) é invisível ao Next.js spawnado — `webServer.env` é capturado no config-load. Workaround canônico: `src/__tests__/e2e/seeded/setup/start-server.ts` faz o boot dinâmico (Postgres + mock GoTrue) e só então `exec`a `next start`, garantindo env completo no momento certo. Esse é o pattern reusável para qualquer suite futuro que precise de recursos efêmeros antes do servidor.
 
-### `playwright.auth-real.config.ts` chama `execSync` no top-level
+### `playwright.real.config.ts` chama `execSync` no top-level
 
-Mesmo problema da seção anterior em outra fantasia. Como `webServer.env` é capturado em config-load e o suite `@auth-real` depende de URLs/keys que só existem depois de `npx supabase start`, `playwright.auth-real.config.ts` faz `execSync('npx supabase status -o json')` sincronamente no top-level — _não_ em `globalSetup`. **Não tente "consertar" movendo para `globalSetup`**: vai parecer mais limpo e quebrar exatamente como descrito acima, porque o Next spawnado não enxerga as vars. Se a infra de auth-real evoluir, o caminho de fix é o mesmo do mock suite (wrapper de boot tipo `start-server.ts`), não `globalSetup`.
+Mesmo problema da seção anterior em outra fantasia. Como `webServer.env` é capturado em config-load e o suite `@auth-real` depende de URLs/keys que só existem depois de `npx supabase start`, `playwright.real.config.ts` faz `execSync('npx supabase status -o json')` sincronamente no top-level — _não_ em `globalSetup`. **Não tente "consertar" movendo para `globalSetup`**: vai parecer mais limpo e quebrar exatamente como descrito acima, porque o Next spawnado não enxerga as vars. Se a infra de auth-real evoluir, o caminho de fix é o mesmo do mock suite (wrapper de boot tipo `start-server.ts`), não `globalSetup`.
 
 ### `supabase status -o json` usa `SCREAMING_SNAKE_CASE`
 
-Quirk do CLI: o payload estruturado usa `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` (uppercase + underscore), não camelCase como em outras saídas do `supabase` CLI. Ver o tipo `SupabaseStatus` em `playwright.auth-real.config.ts`:
+Quirk do CLI: o payload estruturado usa `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` (uppercase + underscore), não camelCase como em outras saídas do `supabase` CLI. Ver o tipo `SupabaseStatus` em `playwright.real.config.ts`:
 
 ```ts
 type SupabaseStatus = {

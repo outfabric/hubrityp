@@ -97,7 +97,7 @@ Archive a completed change in the experimental workflow.
    b. Write or update `docs/<cap>.md` (in pt-BR, matching the existing docs style; code identifiers, file paths, and shell commands stay in English):
 
       - **Resumo** — 1–2 sentences on what this capability is and why it exists.
-      - **Onde mora o código** — bullet list of the main files/folders implementing it, with relative paths (e.g., `app/api/health/route.ts`, `lib/health/db-probe.ts`).
+      - **Onde mora o código** — bullet list of the main files/folders implementing it, with relative paths (e.g., `src/app/api/health/route.ts`, `src/modules/health/lib/db-probe.ts`).
       - **Superfície pública** — routes, server actions, exported components/utilities, env vars consumed/exposed, and any contract surface (response shapes, event names) downstream consumers depend on.
       - **Comportamento e invariantes** — edge cases, gotchas, and assumptions worth knowing before changing this code (e.g., "endpoint must remain unauthenticated", "transcrição nunca pode sair do Brasil", RLS policies, idempotency keys).
       - **Testes** — test files covering the capability and the layer of each (unit/integration/e2e), with relative paths.

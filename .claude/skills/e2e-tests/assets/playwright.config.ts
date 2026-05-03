@@ -1,15 +1,28 @@
+// Reference template for a Playwright config wired to Testcontainers + a
+// programmatic-auth setup project. The HubrityP repo splits this into TWO
+// configs at the repo root (matched to the two e2e suites):
+//
+//   - playwright.seeded.config.ts → testDir: ./src/__tests__/e2e/seeded
+//   - playwright.real.config.ts   → testDir: ./src/__tests__/e2e/real
+//
+// Use this asset as a starting point, then specialise per suite. Read
+// `references/setup.md` for the actual shape used by the project.
+
 import { defineConfig, devices } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const STORAGE = resolve(__dirname, 'playwright/.auth/user.json');
-const PORT = Number(process.env.E2E_PORT ?? 3100);
+const STORAGE = resolve(
+  __dirname,
+  '../../src/__tests__/e2e/seeded/setup/.auth/state.json'
+);
+const PORT = Number(process.env.E2E_PORT ?? 3000);
 
 export default defineConfig({
-  testDir: './e2e',
-  testMatch: /.*\.spec\.ts/,
-  outputDir: 'playwright/results',
+  testDir: './src/__tests__/e2e/seeded',
+  testMatch: ['**/*.spec.ts', '**/*.setup.ts'],
+  outputDir: 'test-results',
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
@@ -18,10 +31,11 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'playwright/report', open: 'never' }],
+    ['html', { open: 'never' }],
     ...(process.env.CI ? ([['github']] as const) : []),
   ],
-  globalSetup: require.resolve('./e2e/global-setup.ts'),
+  globalSetup: './src/__tests__/e2e/seeded/setup/global-setup.ts',
+  globalTeardown: './src/__tests__/e2e/seeded/setup/global-teardown.ts',
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
@@ -33,7 +47,7 @@ export default defineConfig({
     locale: 'pt-BR',
   },
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: 'setup', testMatch: /auth\.setup\.ts$/ },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: STORAGE },
@@ -41,19 +55,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run build && npm run start -- -p ${PORT}`,
+    // The wrapper boots Testcontainers Postgres + mock GoTrue and only then
+    // spawns `next start`. Doing the boot inside `globalSetup` would not
+    // work — Playwright starts `webServer` before `globalSetup`.
+    command: 'npx tsx src/__tests__/e2e/seeded/setup/start-server.ts',
     url: `http://localhost:${PORT}`,
-    timeout: 120_000,
+    timeout: 180_000,
     reuseExistingServer: !process.env.CI,
-    env: {
-      NODE_ENV: 'test',
-      DATABASE_URL: process.env.E2E_DATABASE_URL ?? '',
-      NEXT_PUBLIC_SUPABASE_URL:
-        process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://localhost:54321',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY:
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'test-anon-key',
-      SUPABASE_JWT_SECRET:
-        process.env.SUPABASE_JWT_SECRET ?? 'super-secret-jwt-token-for-tests',
-    },
   },
 });

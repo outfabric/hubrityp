@@ -4,149 +4,186 @@
 
 ```bash
 npm i -D @playwright/test @testcontainers/postgresql testcontainers \
-        drizzle-orm pg
+        drizzle-orm postgres
 npx playwright install --with-deps chromium
 ```
 
 `--with-deps` instala bibliotecas do sistema necessárias no Linux/CI. Em dev local pode ser só `npx playwright install chromium`.
 
-## `playwright.config.ts`
+## Os dois Playwright configs
+
+O HubrityP separa as duas suítes em **dois configs na raiz do repo**, cada um com seu `testDir`:
+
+| Config | `testDir` | Suíte | webServer |
+|---|---|---|---|
+| `playwright.seeded.config.ts` | `./src/__tests__/e2e/seeded` | Mock GoTrue + storageState | Wrapper `start-server.ts` que boota Postgres + mock GoTrue + spawn `next start` |
+| `playwright.real.config.ts` | `./src/__tests__/e2e/real` | Real Supabase (`supabase start`) | `npm run start` direto, com env injetado a partir de `npx supabase status -o json` lido em config-load |
+
+Comandos:
+
+```bash
+npm run test:e2e:seeded
+npm run test:e2e:real     # exige `npx supabase start` rodando
+```
+
+> **Conflito de porta**: as duas suítes não rodam concorrentemente — ambas usam `127.0.0.1:54321`. Pare uma antes da outra.
+
+## `playwright.seeded.config.ts` (suíte default)
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const STORAGE = resolve(__dirname, 'playwright/.auth/user.json');
-const PORT = 3100;
 
 export default defineConfig({
-  testDir: './e2e',
-  testMatch: /.*\.spec\.ts/,
-  outputDir: 'playwright/results',
-  timeout: 30_000,
-  expect: { timeout: 5_000 },
+  testDir: './src/__tests__/e2e/seeded',
+  testMatch: ['**/*.spec.ts', '**/*.setup.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright/report', open: 'never' }],
-    process.env.CI ? ['github'] : ['null'],
-  ],
-  globalSetup: require.resolve('./e2e/global-setup.ts'),
+  workers: process.env.CI ? 2 : 4,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    actionTimeout: 10_000,
-    navigationTimeout: 15_000,
   },
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: 'setup', testMatch: /auth\.setup\.ts$/ },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: STORAGE },
+      use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
     },
   ],
   webServer: {
-    command: 'npm run build && npm run start -- -p 3100',
-    url: `http://localhost:${PORT}`,
-    timeout: 120_000,
+    // The wrapper boots Testcontainers Postgres + mock GoTrue and only then
+    // spawns `next start`. Doing the boot inside `globalSetup` would not
+    // work — Playwright starts `webServer` before `globalSetup`.
+    command: 'npx tsx src/__tests__/e2e/seeded/setup/start-server.ts',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    env: {
-      DATABASE_URL: process.env.E2E_DATABASE_URL ?? '',
-      NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-      NODE_ENV: 'test',
-    },
+    timeout: 180_000,
   },
+  globalSetup: './src/__tests__/e2e/seeded/setup/global-setup.ts',
+  globalTeardown: './src/__tests__/e2e/seeded/setup/global-teardown.ts',
 });
 ```
 
 Pontos chave:
 
-- **`globalSetup`** sobe o container Postgres antes do `webServer` e exporta `E2E_DATABASE_URL`.
-- **`webServer`** roda o Next.js de produção (`build` + `start`) na porta 3100. Não use `next dev` em E2E — comportamento difere de produção.
-- **`projects`**: `setup` autentica e salva `storageState`; `chromium` carrega esse estado em todo teste. Adicione `firefox`/`webkit` apenas para fluxos onde divergência cross-browser importa.
+- **`webServer.command`** aponta para o wrapper `start-server.ts` (não `npm run start` direto). O wrapper boota o container Postgres compartilhado + mock GoTrue antes de spawn `next start`, garantindo que o env do Next tenha `DATABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` resolvidos.
+- **`globalSetup`** roda **depois** do `webServer`. Use só para seed de dados (após o container já existir).
+- **`projects`**: `setup` autentica e salva `storageState` em `src/__tests__/e2e/seeded/setup/.auth/state.json`; o `chromium` não declara `storageState` no nível do projeto — testes opt-in via `test.use({ storageState: STORAGE_STATE_PATH })` (importado de `./setup/seed-state.ts`). Padrão por opt-in evita falhas em testes anônimos (ex.: redirect para `/login`).
 - **`fullyParallel: true`** com `workers: 2` no CI; ajuste se a suite começar a brigar pelo DB.
 - **`retries: 2` no CI**: reduz flakiness de rede/timing. Se um teste passa só com retry, **investigue** — ele provavelmente está mal escrito.
 
-## `global-setup.ts`
+## `playwright.real.config.ts` (suíte `@auth-real`)
+
+A suíte real é deliberadamente standalone — NÃO espalha o seeded config. Ela:
+
+- Lê `npx supabase status -o json` no top-level (em config-load) para descobrir `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`.
+- Rejeita iniciar se `supabase start` não estiver rodando, com mensagem acionável.
+- Usa `webServer.command: 'npm run start'` direto (sem wrapper) — o env vem inteiro do supabase status.
+- `outputDir: 'test-results-real'` e `playwright-report-real` para não colidir com a suíte seeded.
 
 ```ts
-import {
-  PostgreSqlContainer,
-  type StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { Client } from 'pg';
+// playwright.real.config.ts (resumido — ver o config real para o execSync de supabase status)
+export default defineConfig({
+  testDir: './src/__tests__/e2e/real',
+  testMatch: ['**/*.spec.ts'],
+  workers: 1,
+  outputDir: 'test-results-real',
+  // ...
+  webServer: {
+    command: 'npm run start',
+    url: 'http://localhost:3000',
+    env: {
+      DATABASE_URL: status.DB_URL,
+      NEXT_PUBLIC_SUPABASE_URL: status.API_URL,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: status.ANON_KEY,
+      SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY,
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'production',
+    },
+  },
+  globalSetup: './src/__tests__/e2e/real/setup/global-setup.ts',
+  globalTeardown: './src/__tests__/e2e/real/setup/global-teardown.ts',
+});
+```
 
-let container: StartedPostgreSqlContainer | undefined;
+## O wrapper `start-server.ts`
 
-export default async function globalSetup() {
-  container = await new PostgreSqlContainer('supabase/postgres:15.6.1.146')
-    .withDatabase('hubrityp_e2e')
-    .withUsername('postgres')
-    .withPassword('postgres')
-    .withReuse()
-    .start();
+```ts
+// src/__tests__/e2e/seeded/setup/start-server.ts (resumido)
+import { spawn } from 'node:child_process';
+import { applyMigrations, bootPostgres } from '@/__tests__/e2e/_shared/postgres-container';
+import { startMockGotrue, buildFixedJwt } from './mock-gotrue';
+import { writeSeedState } from './seed-state';
 
-  const url = container.getConnectionUri();
-  process.env.E2E_DATABASE_URL = url;
+async function main() {
+  const { connectionString } = await bootPostgres();
+  await applyMigrations(connectionString);
 
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  await client.query(`CREATE ROLE authenticated NOLOGIN;`).catch(() => undefined);
-  await client.query(`CREATE ROLE anon NOLOGIN;`).catch(() => undefined);
-  await client.query(`GRANT USAGE ON SCHEMA public TO authenticated, anon;`);
-  const db = drizzle(client);
-  await migrate(db, { migrationsFolder: './drizzle' });
-  await client.end();
+  const accessToken = buildFixedJwt({ sub: SEED_USER_ID, email: SEED_EMAIL, /* ... */ });
+  const mock = await startMockGotrue({ port: 54321, fixedToken: accessToken, user: { /* ... */ } });
+  const supabaseUrl = `http://127.0.0.1:${mock.port}`;
 
-  return async () => {
-    if (process.env.CI) await container?.stop();
-  };
+  await writeSeedState({
+    userId: SEED_USER_ID,
+    email: SEED_EMAIL,
+    accessToken,
+    refreshToken: 'mock-refresh-token',
+    supabaseUrl,
+    databaseUrl: connectionString,
+  });
+
+  const child = spawn('npx', ['next', 'start'], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      DATABASE_URL: connectionString,
+      NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key',
+      SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-key',
+      LOG_LEVEL: 'silent',
+      NODE_ENV: 'production',
+    },
+  });
+  // ... forward signals, exit cleanly
 }
 ```
 
-`globalSetup` retorna função de teardown. Em CI para o container; em dev local usa `.withReuse()` para boot quase instantâneo.
+## Container compartilhado
 
-## Como o `webServer` enxerga o DB
+`bootPostgres` + `applyMigrations` vivem em `src/__tests__/e2e/_shared/postgres-container.ts` e são consumidos por **dois caminhos**:
 
-`globalSetup` roda **antes** do `webServer`. A config injeta `DATABASE_URL: process.env.E2E_DATABASE_URL` no env do Next, então o cliente Drizzle do app aponta para o container. Para que isso funcione, o módulo de env validado por Zod do app deve aceitar a URL gerada (sem prefixo de validação restritivo em modo `test`).
+1. `vitest.integration.config.ts` → `src/__tests__/integration/setup/global-setup.ts` (suíte de integração).
+2. `playwright.seeded.config.ts` → `src/__tests__/e2e/seeded/setup/start-server.ts` (suíte e2e seeded).
+
+Mude o boot/bootstrap LÁ — não duplique nesta suíte.
 
 ## Scripts no `package.json`
 
 ```json
 {
   "scripts": {
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "PWDEBUG=1 playwright test",
-    "test:e2e:report": "playwright show-report playwright/report"
+    "test:e2e:seeded": "playwright test --config playwright.seeded.config.ts",
+    "test:e2e:real": "playwright test --config playwright.real.config.ts"
   }
 }
 ```
 
 ## Diferenças de ambiente
 
-- **Dev local**: `webServer.reuseExistingServer: true` permite `npm run start -- -p 3100` em outro terminal e reaproveitar.
+- **Dev local**: `webServer.reuseExistingServer: true` permite ter `next start` em outro terminal e reaproveitar.
 - **CI**: força build/start fresco a cada run; sem reuse de container; `workers: 2` é seguro com TRUNCATE entre testes.
 - **PR preview**: opcionalmente rodar smoke subset apontando `baseURL` para a URL do preview da Vercel + `globalSetup` que nem sobe container (testes não precisam de DB próprio).
 
 ## `.gitignore`
 
 ```
-playwright/.auth/
-playwright/report/
-playwright/results/
-test-results/
+src/__tests__/e2e/seeded/setup/.auth/
+playwright-report*/
+test-results*/
+playwright/.cache/
 ```
 
 Storage de auth contém tokens de seed users — não comitar.

@@ -12,33 +12,40 @@ A config recomendada já gera:
 
 - **screenshot** (`screenshot: 'only-on-failure'`) — PNG do estado final.
 - **video** (`video: 'retain-on-failure'`) — `.webm` da execução.
-- **report HTML** (`reporter: html`) — resumo navegável; `npx playwright show-report`.
+- **report HTML** — `playwright-report/` (suíte seeded) e `playwright-report-real/` (suíte real).
 
-Todos vão para `playwright/results/` e `playwright/report/`.
+Outputs:
+
+| Suíte | `outputDir` (results) | Report folder |
+|---|---|---|
+| seeded | `test-results/` | `playwright-report/` |
+| real | `test-results-real/` | `playwright-report-real/` |
 
 ## Subindo artifacts no GitHub Actions
 
 ```yaml
 # .github/workflows/e2e.yml
-- name: Run Playwright tests
-  run: npm run test:e2e
+- name: Run Playwright (seeded)
+  run: npm run test:e2e:seeded
 
-- name: Upload report
+- name: Upload seeded report
   if: always()
   uses: actions/upload-artifact@v4
   with:
-    name: playwright-report
-    path: playwright/report/
+    name: playwright-report-seeded
+    path: playwright-report/
     retention-days: 14
 
-- name: Upload traces
+- name: Upload seeded traces
   if: failure()
   uses: actions/upload-artifact@v4
   with:
-    name: playwright-traces
-    path: playwright/results/
+    name: playwright-traces-seeded
+    path: test-results/
     retention-days: 14
 ```
+
+Para a suíte real, use os paths `playwright-report-real/` e `test-results-real/`.
 
 ## Sharding (paralelismo entre máquinas)
 
@@ -49,7 +56,7 @@ strategy:
   matrix:
     shard: [1/3, 2/3, 3/3]
 steps:
-  - run: npx playwright test --shard=${{ matrix.shard }}
+  - run: npx playwright test --config playwright.seeded.config.ts --shard=${{ matrix.shard }}
 ```
 
 `workers: 2` já paraleliza dentro de uma máquina; sharding adiciona paralelismo entre máquinas. Só vale quando a suite passa de ~10min em uma máquina.
@@ -68,16 +75,19 @@ Filtre nos relatórios. Se um teste passa só com retry mais de 5x em 100 runs, 
 
 ```bash
 # UI mode: explora interativo, time-travel
-npm run test:e2e:ui
+npx playwright test --config playwright.seeded.config.ts --ui
 
 # Inspector: pausa em cada step, sugere locator
-PWDEBUG=1 npx playwright test e2e/flows/agendamento.spec.ts
+PWDEBUG=1 npx playwright test --config playwright.seeded.config.ts src/__tests__/e2e/seeded/agendamento.spec.ts
 
 # Headed (vê o navegador, sem inspector)
-npx playwright test --headed --workers=1
+npx playwright test --config playwright.seeded.config.ts --headed --workers=1
 
-# Um único teste
-npx playwright test -g "agenda consulta"
+# Um único teste por nome
+npx playwright test --config playwright.seeded.config.ts -g "agenda consulta"
+
+# Filtrar por tag de domínio
+npx playwright test --config playwright.seeded.config.ts --grep "@agenda"
 ```
 
 ## `test.fixme` / `test.skip` / `test.fail`
@@ -98,7 +108,7 @@ test.fail('docs dizem que falha aqui — quando passar, remover .fail', async ()
 
 Métricas para acompanhar mensalmente:
 
-- **Tempo total no CI**: alvo <8min para 15 testes.
+- **Tempo total no CI**: alvo <8min para 15 testes (suíte seeded).
 - **Taxa de retry**: <2% dos testes precisam de retry para passar.
 - **Falsos positivos** (teste passa mas feature está quebrada): zero tolerância — investigue cada caso reportado.
 - **Tempo médio por teste**: <30s. Se subir, geralmente é login pela UI ou esperas escondidas.

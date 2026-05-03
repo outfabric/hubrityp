@@ -5,8 +5,8 @@ Mantenha o escopo pequeno: hook isolado, componente puro, lógica de form. Rende
 ## Pré-requisitos no arquivo
 
 ```ts
-// @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+// O sufixo .test.tsx já dispara jsdom via environmentMatchGlobs do vitest.config.
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 ```
@@ -16,8 +16,9 @@ import userEvent from '@testing-library/user-event';
 ## Hook isolado com `renderHook`
 
 ```ts
+// src/__tests__/unit/modules/agenda/hooks/use-contador.test.ts
 import { renderHook, act } from '@testing-library/react';
-import { useContador } from './useContador';
+import { useContador } from '@/modules/agenda/hooks/use-contador';
 
 describe('useContador', () => {
   it('incrementa de 1 em 1 a partir do valor inicial', () => {
@@ -45,7 +46,10 @@ const { result } = renderHook(() => usePaciente('p_1'), { wrapper });
 Prefira `getByRole`/`getByLabelText` em vez de `getByTestId` ou seletores CSS. Isso mantém o teste alinhado a como o usuário (e leitores de tela) percebem a UI.
 
 ```tsx
-import { BotaoSalvar } from './BotaoSalvar';
+// src/__tests__/unit/modules/agenda/components/botao-salvar.test.tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { BotaoSalvar } from '@/modules/agenda/components/botao-salvar';
 
 it('chama onSubmit quando clicado', async () => {
   const user = userEvent.setup();
@@ -65,6 +69,9 @@ Use `userEvent` (não `fireEvent`) — simula sequência real de eventos do nave
 Teste **comportamento do form**, não internals do RHF:
 
 ```tsx
+// src/__tests__/unit/modules/pacientes/components/formulario-paciente.test.tsx
+import { FormularioPaciente } from '@/modules/pacientes/components/formulario-paciente';
+
 it('mostra erro quando CPF é inválido e bloqueia submit', async () => {
   const user = userEvent.setup();
   const onSubmit = vi.fn();
@@ -80,14 +87,32 @@ it('mostra erro quando CPF é inválido e bloqueia submit', async () => {
 
 `findBy*` aguarda elementos que aparecem assincronamente (validação async, transitions). `getBy*` falha se não está presente já.
 
+## Client Components que importam Server Actions
+
+Client Components consomem Server Actions a partir do **route shell** (`@/app/(auth)/login/actions`), não do barrel do módulo (`@/modules/auth`). O barrel arrasta `server-only` no grafo, e o RSC checker do Next quebra o build.
+
+Em teste unitário do componente cliente, mocke a action **pelo caminho que o componente usa**:
+
+```ts
+// O componente importa de '@/app/(auth)/login/actions'
+vi.mock('@/app/(auth)/login/actions', () => ({
+  signIn: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
+import { signIn } from '@/app/(auth)/login/actions';
+import { LoginForm } from '@/modules/auth/components/login-form';
+```
+
+Mockar o caminho do barrel (`@/modules/auth`) **não** vai funcionar — o componente não importa por ali.
+
 ## React Server Components (RSC)
 
 RSC com `async` e acesso a banco/headers **não roda** no Vitest (é uma camada do Next que exige bundler/server real). Estratégias:
 
 1. **Extraia a lógica** do RSC para um módulo puro e teste o módulo.
    ```ts
-   // app/(app)/agenda/page.tsx → fina; chama buscarAgendaDoDia()
-   // lib/agenda/queries.ts     → testável (mockando Supabase)
+   // src/app/(app)/agenda/page.tsx → fina; chama buscarAgendaDoDia()
+   // src/modules/agenda/lib/queries.ts → testável (mockando Supabase)
    ```
 2. Para a parte JSX puramente apresentacional, exporte um **Client Component** filho que recebe dados via props e teste-o com Testing Library.
 3. Não tente "renderizar a página" no Vitest — isso é trabalho do E2E Playwright.

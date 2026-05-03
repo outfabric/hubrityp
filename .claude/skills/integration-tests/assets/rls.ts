@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '@/lib/db/schema';
+import * as schema from '@/shared/db/schema';
 import { rawPool } from './db';
 
 type ScopedDb = ReturnType<typeof drizzle<typeof schema>>;

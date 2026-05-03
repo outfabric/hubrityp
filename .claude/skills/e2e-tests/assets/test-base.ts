@@ -1,9 +1,14 @@
 import { test as base, expect } from '@playwright/test';
 import { eq } from 'drizzle-orm';
-import { db, truncateAllExceptSeed } from '../helpers/db';
-import { psicologos } from '@/lib/db/schema';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 
-const SEED_PSICOLOGO_ID = '00000000-0000-0000-0000-000000000001';
+import { psicologos } from '@/shared/db/schema';
+
+import { readSeedState, STORAGE_STATE_PATH } from '../seeded/setup/seed-state';
+import { truncateAllExceptSeed } from './db-helpers';
+
+const SEED_PSICOLOGO_ID = '00000000-0000-4000-8000-000000000001';
 
 type Fixtures = {
   dr: { id: string; nome: string };
@@ -11,12 +16,21 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
+  storageState: STORAGE_STATE_PATH,
+
   dr: async ({}, use) => {
-    const [row] = await db
-      .select()
-      .from(psicologos)
-      .where(eq(psicologos.id, SEED_PSICOLOGO_ID));
-    await use({ id: row.id, nome: row.nome });
+    const seed = await readSeedState();
+    const client = postgres(seed.databaseUrl, { max: 1 });
+    const db = drizzle(client);
+    try {
+      const [row] = await db
+        .select()
+        .from(psicologos)
+        .where(eq(psicologos.id, SEED_PSICOLOGO_ID));
+      await use({ id: row.id, nome: row.nome });
+    } finally {
+      await client.end();
+    }
   },
 
   twilioCalls: [

@@ -19,7 +19,7 @@ Use Vitest para o que cabe na pirâmide de testes como base:
 Não use Vitest para:
 
 - Fluxo end-to-end de UI → use **Playwright** (E2E).
-- Queries reais contra Supabase, RLS, migrations → use **testes de integração** contra Supabase local via Docker.
+- Queries reais contra Supabase, RLS, migrations → use **testes de integração** contra Postgres real via Docker (Testcontainers).
 - Renderização visual/snapshot pesada → prefira asserções de comportamento.
 
 ## Princípios
@@ -37,7 +37,7 @@ Não use Vitest para:
 Antes de declarar a tarefa concluída:
 
 ```bash
-npm run test:unit          # Vitest (pasta unit/, ambiente node ou jsdom conforme suite)
+npm run test:unit          # Vitest (suíte unitária centralizada em src/__tests__/unit)
 npm run lint
 npm run typecheck
 ```
@@ -46,34 +46,60 @@ Se algum script estiver faltando no `package.json`, adicione (não pule). Não u
 
 ## Estrutura de arquivos
 
-Co-localize testes unitários ao lado do arquivo testado, com sufixo `.test.ts` / `.test.tsx`. Reserve `__tests__/` apenas para fixtures e helpers compartilhados.
+Testes unitários vivem **centralizados** em `src/__tests__/unit/`, com a árvore espelhando a árvore de `src/`. Sufixo é `.test.ts` para lógica/server e `.test.tsx` para componentes/hooks (jsdom).
 
 ```
-lib/
-  cpf/
-    validate.ts
-    validate.test.ts
-app/
-  (app)/agenda/
-    actions.ts
-    actions.test.ts
-__tests__/
-  fixtures/
-  helpers/
+src/
+  shared/
+    lib/
+      utils.ts                                          # source
+    env/
+      schemas.ts
+  modules/
+    auth/
+      lib/
+        login-input-schema.ts
+        safe-redirect.ts
+      components/
+        login-form.tsx
+  __tests__/
+    unit/
+      shared/
+        lib/
+          utils.test.ts                                  # mirrors src/shared/lib/utils.ts
+        env/
+          schemas.test.ts
+      modules/
+        auth/
+          lib/
+            login-input-schema.test.ts
+            safe-redirect.test.ts
+          components/
+            login-form.test.tsx
+      e2e/
+        seeded/
+          setup/
+            mock-gotrue.test.ts                          # unit test for an e2e helper
 ```
 
-Ambiente por suíte (declarado no topo do arquivo):
+> **Por que centralizado e não colocado**: decisão registrada na change `reorganize-folder-structure`. O custo é uma jornada extra do editor entre source e teste; o ganho é "todos os testes em um único glob" e nenhum `*.test.ts` perdido sob `src/`.
+
+> **Helper de teste vs. teste do helper**: o helper `mock-gotrue.ts` mora em `src/__tests__/e2e/seeded/setup/` (é parte da infra de e2e), mas seu **teste unitário** mora em `src/__tests__/unit/e2e/seeded/setup/mock-gotrue.test.ts` (espelhando o caminho em `src/__tests__/`, não em `src/`). Esse é o padrão para testar arquivos que vivem fora de `src/<domain>` — espelhe o caminho real.
+
+Ambiente por suíte (declarado no topo do arquivo, quando o default não bastar):
 
 ```ts
 // @vitest-environment jsdom   ← apenas para hooks/componentes que usam DOM
 // @vitest-environment node    ← padrão para lógica/server
 ```
 
+O `vitest.config.ts` do projeto já configura `environmentMatchGlobs` para resolver `.test.tsx → jsdom` e `.test.ts → node` automaticamente.
+
 ## Escolha de mock por situação
 
 | Situação | Ferramenta | Por quê |
 |---|---|---|
-| Substituir módulo inteiro (ex.: cliente Supabase, Resend) | `vi.mock('@/lib/supabase/server', () => ({...}))` | Hoisted; evita execução real do módulo |
+| Substituir módulo inteiro (ex.: cliente Supabase, Resend) | `vi.mock('@/shared/supabase/server', () => ({...}))` | Hoisted; evita execução real do módulo |
 | Espionar método de objeto existente preservando original | `vi.spyOn(obj, 'metodo')` | Restaurável com `mockRestore()` |
 | Função descartável passada como argumento | `vi.fn()` | Captura chamadas e retorno |
 | Tempo / cron / setTimeout | `vi.useFakeTimers()` + `vi.advanceTimersByTime(ms)` | Controle determinístico |
@@ -85,9 +111,9 @@ Sempre limpar entre testes (configurar uma vez no `vitest.config.ts` via `clearM
 ## Exemplo canônico (lógica pura + Zod)
 
 ```ts
-// lib/cpf/validate.test.ts
+// src/__tests__/unit/modules/pacientes/lib/cpf.test.ts
 import { describe, it, expect } from 'vitest';
-import { validateCpf } from './validate';
+import { validateCpf } from '@/modules/pacientes/lib/cpf';
 
 describe('validateCpf', () => {
   it.each([
@@ -105,15 +131,15 @@ describe('validateCpf', () => {
 ## Exemplo canônico (Server Action com Supabase mockado)
 
 ```ts
-// app/(app)/pacientes/actions.test.ts
+// src/__tests__/unit/modules/pacientes/server/criar-paciente.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn(),
 }));
 
-import { createServerClient } from '@/lib/supabase/server';
-import { criarPaciente } from './actions';
+import { createServerClient } from '@/shared/supabase/server';
+import { criarPaciente } from '@/modules/pacientes/server/criar-paciente';
 
 describe('criarPaciente', () => {
   const insert = vi.fn();
@@ -144,6 +170,8 @@ describe('criarPaciente', () => {
 });
 ```
 
+> **Importações**: o alias `@/*` resolve para `src/*`. Nunca importe da árvore de testes (`@/__tests__/...`) dentro de código de produção. Para utilities compartilhadas entre testes, viva sob `src/__tests__/unit/_helpers/` (ou outro prefixo `_`).
+
 ## Antipadrões a evitar
 
 - Testar implementação interna (nomes de variáveis privadas, ordem de chamadas irrelevante).
@@ -153,17 +181,18 @@ describe('criarPaciente', () => {
 - Compartilhar estado mutável entre testes (`let` no escopo do `describe` sem reset).
 - Esperar tempo real (`await new Promise(r => setTimeout(r, 100))`).
 - Snapshot gigante de DOM ou JSON — quebra por mudanças irrelevantes.
+- Importar Server Actions por meio do barrel do módulo (`@/modules/auth`) em testes de **Client Component** — o barrel arrasta `server-only` no grafo. Use `@/app/(auth)/login/actions` (route shell) em vez disso. Para teste de servidor, importar do barrel ou direto do `server/` é seguro.
 
 ## Referências detalhadas
 
 Carregue conforme a tarefa exigir:
 
-- `references/setup.md` — `vitest.config.ts`, aliases `@/`, jsdom vs node, scripts no `package.json`, integração com Husky.
+- `references/setup.md` — `vitest.config.ts`, aliases `@/`, `environmentMatchGlobs`, scripts no `package.json`, integração com Husky, stub de `server-only`.
 - `references/mocks.md` — receitas para Supabase, Inngest, Resend, Twilio, fetch, timers e env.
 - `references/server-actions.md` — testando Server Actions, Route Handlers e validação Zod nas fronteiras.
 - `references/hooks-componentes.md` — `renderHook`, Testing Library, `userEvent`, RSC vs Client.
 
 ## Templates
 
-- `assets/vitest.config.ts` — configuração base pronta para copiar.
+- `assets/vitest.config.ts` — configuração base pronta para copiar (já alinhada à estrutura `src/__tests__/unit/`).
 - `assets/exemplo.test.ts` — esqueleto AAA com mocks limpos por teste.

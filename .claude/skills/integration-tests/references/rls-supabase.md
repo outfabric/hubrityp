@@ -19,11 +19,11 @@ Em teste, simulamos isso na conexão.
 ## Helper `runAsUser`
 
 ```ts
-// __tests__/integration/setup/rls.ts
+// src/__tests__/integration/setup/rls.ts
 import { sql } from 'drizzle-orm';
 import { rawPool } from './db';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '@/lib/db/schema';
+import * as schema from '@/shared/db/schema';
 
 export async function runAsUser<T>(
   userId: string,
@@ -76,7 +76,7 @@ Essas asserções valem mais que checar SQL da policy — elas provam o **efeito
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db } from '@/__tests__/integration/setup/db';
 import { runAsUser, runAsService, truncateAll } from '@/__tests__/integration/setup/rls';
-import { pacientes } from '@/lib/db/schema';
+import { pacientes } from '@/shared/db/schema';
 import { createPsicologo } from '@/__tests__/integration/factories/psicologo';
 
 describe('RLS pacientes', () => {

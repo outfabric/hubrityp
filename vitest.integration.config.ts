@@ -9,9 +9,17 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['**/*.int.test.ts'],
-    exclude: ['node_modules', '.next', 'e2e', 'coverage', '.claude', 'openspec', '.temp'],
-    globalSetup: ['./__tests__/integration/setup/global-setup.ts'],
+    include: ['src/__tests__/integration/**/*.int.test.ts'],
+    exclude: [
+      'node_modules',
+      '.next',
+      'src/__tests__/e2e',
+      'coverage',
+      '.claude',
+      'openspec',
+      '.temp',
+    ],
+    globalSetup: ['./src/__tests__/integration/setup/global-setup.ts'],
     // Boot of Testcontainers Postgres + migrations can take ~30s on the cold
     // path; keep this generous so the suite never flakes on first run.
     testTimeout: 30_000,
@@ -24,9 +32,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': rootDir,
+      '@': path.resolve(rootDir, 'src'),
       // No-op the `server-only` package — see vitest.config.ts for context.
-      'server-only': path.resolve(rootDir, 'test/stubs/server-only.ts'),
+      'server-only': path.resolve(rootDir, 'src/__tests__/stubs/server-only.ts'),
     },
   },
 });

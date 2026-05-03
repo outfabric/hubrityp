@@ -10,11 +10,11 @@
 ```ts
 const { mockedSend } = vi.hoisted(() => ({ mockedSend: vi.fn() }));
 
-vi.mock('@/lib/email/resend', () => ({
+vi.mock('@/shared/lib/email/resend', () => ({
   sendEmail: mockedSend,
 }));
 
-import { enviarBoasVindas } from './onboarding';
+import { enviarBoasVindas } from '@/modules/onboarding/server/enviar-boas-vindas';
 // ... agora `mockedSend` está disponível nos testes
 ```
 
@@ -23,8 +23,8 @@ import { enviarBoasVindas } from './onboarding';
 Preserve exports não relevantes com `importActual`:
 
 ```ts
-vi.mock('@/lib/utils/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/utils/date')>();
+vi.mock('@/shared/lib/utils/date', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/lib/utils/date')>();
   return {
     ...actual,
     agora: vi.fn(() => new Date('2026-05-01T12:00:00-03:00')),
@@ -37,7 +37,7 @@ vi.mock('@/lib/utils/date', async (importOriginal) => {
 Use `vi.mocked` para acessar o mock com tipos preservados:
 
 ```ts
-import { sendEmail } from '@/lib/email/resend';
+import { sendEmail } from '@/shared/lib/email/resend';
 vi.mocked(sendEmail).mockResolvedValue({ id: 'msg_1' });
 expect(vi.mocked(sendEmail)).toHaveBeenCalledWith(/* ... */);
 ```
@@ -47,7 +47,7 @@ expect(vi.mocked(sendEmail)).toHaveBeenCalledWith(/* ... */);
 O builder do Supabase é encadeado (`from().select().eq().single()`). Crie um helper que retorna um proxy chainable:
 
 ```ts
-// __tests__/helpers/supabase.ts
+// src/__tests__/unit/_helpers/supabase.ts
 import { vi } from 'vitest';
 
 export function mockSupabaseQuery<T>(result: { data: T | null; error: unknown }) {
@@ -67,12 +67,12 @@ export function mockSupabaseQuery<T>(result: { data: T | null; error: unknown })
 Uso:
 
 ```ts
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn(),
 }));
 
-import { createServerClient } from '@/lib/supabase/server';
-import { mockSupabaseQuery } from '@/__tests__/helpers/supabase';
+import { createServerClient } from '@/shared/supabase/server';
+import { mockSupabaseQuery } from '@/__tests__/unit/_helpers/supabase';
 
 vi.mocked(createServerClient).mockReturnValue({
   from: () => mockSupabaseQuery({ data: [{ id: 'p_1' }], error: null }),
@@ -82,7 +82,7 @@ vi.mocked(createServerClient).mockReturnValue({
 ## Inngest
 
 ```ts
-vi.mock('@/lib/inngest/client', () => ({
+vi.mock('@/shared/lib/inngest/client', () => ({
   inngest: { send: vi.fn().mockResolvedValue({ ids: ['evt_1'] }) },
 }));
 ```
@@ -134,7 +134,7 @@ it('agenda lembrete 24h antes da consulta', async () => {
 
 ```ts
 beforeEach(() => {
-  vi.stubEnv('SUPABASE_URL', 'http://localhost:54321');
+  vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://localhost:54321');
   vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'fake-key');
 });
 // reset automático via `unstubEnvs: true` no config
@@ -143,7 +143,7 @@ beforeEach(() => {
 ## Spy preservando original
 
 ```ts
-import * as logger from '@/lib/logger';
+import * as logger from '@/shared/lib/logger';
 
 const spy = vi.spyOn(logger, 'info');
 // ...

@@ -11,10 +11,10 @@ import {
 } from '@/__tests__/integration/setup/rls';
 import { createPsicologo } from '@/__tests__/integration/factories/psicologo';
 import { createPaciente } from '@/__tests__/integration/factories/paciente';
-import { agendamentos } from '@/lib/db/schema';
-import { agendarConsulta } from './actions';
+import { agendamentos } from '@/shared/db/schema';
+import { agendarConsulta } from '@/modules/agenda/server/agendar-consulta';
 
-vi.mock('@/lib/inngest/client', () => ({
+vi.mock('@/shared/lib/inngest/client', () => ({
   inngest: { send: vi.fn().mockResolvedValue({ ids: ['evt_1'] }) },
 }));
 vi.mock('next/cache', () => ({
@@ -22,7 +22,7 @@ vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
 }));
 
-import { inngest } from '@/lib/inngest/client';
+import { inngest } from '@/shared/lib/inngest/client';
 import { revalidatePath } from 'next/cache';
 
 describe('agendarConsulta — integração', () => {
