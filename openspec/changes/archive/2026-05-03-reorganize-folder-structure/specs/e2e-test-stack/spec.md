@@ -1,3 +1,10 @@
+## RENAMED Requirements
+
+- FROM: Tag registry exists at `e2e/tags.json`
+  TO: Tag registry exists at `src/__tests__/e2e/seeded/tags.json`
+- FROM: Reusable mock GoTrue helper at `lib/test-utils/mock-gotrue.ts`
+  TO: Reusable mock GoTrue helper at `src/__tests__/e2e/seeded/setup/mock-gotrue.ts`
+
 ## MODIFIED Requirements
 
 ### Requirement: Playwright e2e runner is operational
@@ -52,7 +59,7 @@ The system SHALL provide `src/__tests__/e2e/seeded/setup/auth.setup.ts` as a Pla
 - **WHEN** the seeded smoke test runs
 - **THEN** it does not require `storageState` and succeeds without any session
 
-### Requirement: Tag registry exists at `src/__tests__/e2e/seeded/tags.json`
+### Requirement: Tag registry exists at `e2e/tags.json`
 
 The system SHALL maintain `src/__tests__/e2e/seeded/tags.json` as a JSON object mapping tag names to short descriptions. The registry MUST include at minimum `@health` and `@auth` (the active mock-GoTrue tags). The `@auth-real` tag is documented in the e2e-auth-real-suite spec and MAY be cross-referenced here.
 
@@ -75,7 +82,7 @@ The system SHALL include at least one passing Playwright test (`src/__tests__/e2
 - **WHEN** `npm run test:e2e:seeded` runs after this change merges
 - **THEN** the smoke test passes, demonstrating the entire pipeline (Testcontainers boot, migrations, app build, app serve, browser navigate, assertion)
 
-### Requirement: Reusable mock GoTrue helper at `src/__tests__/e2e/seeded/setup/mock-gotrue.ts`
+### Requirement: Reusable mock GoTrue helper at `lib/test-utils/mock-gotrue.ts`
 
 The system SHALL expose a reusable, in-process mock GoTrue server as a module at `src/__tests__/e2e/seeded/setup/mock-gotrue.ts`. The module MUST export a function `startMockGotrue` (or an equivalent named export) whose return value, after awaiting, exposes at minimum:
 

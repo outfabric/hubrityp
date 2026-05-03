@@ -22,12 +22,12 @@ Route shells under `src/app/(auth)/login/` and `src/app/(app)/` MUST delegate to
 #### Scenario: Route shell wires `signIn` to the module implementation
 
 - **WHEN** a contributor reads `src/app/(auth)/login/actions.ts`
-- **THEN** the file declares `'use server'` and exports `signIn` (and any login-page actions) as wrappers around `signInImpl` imported from `@/modules/auth/server/login`; the wrapper is at most one or two lines that pass `formData` through
+- **THEN** the file declares `'use server'` and exports `signIn` (and any login-page actions) as wrappers around `signInImpl` imported from `@/modules/auth` (the module barrel — see `code-organization`); the wrapper is at most one or two lines that pass `formData` through
 
 #### Scenario: Route shell wires `signOut` similarly
 
 - **WHEN** a contributor reads `src/app/(app)/actions.ts`
-- **THEN** the file declares `'use server'` and exports `signOut` as a wrapper around `signOutImpl` imported from `@/modules/auth/server/logout`
+- **THEN** the file declares `'use server'` and exports `signOut` as a wrapper around `signOutImpl` imported from `@/modules/auth` (the module barrel — see `code-organization`)
 
 #### Scenario: Login page imports `<LoginForm/>` from the module
 

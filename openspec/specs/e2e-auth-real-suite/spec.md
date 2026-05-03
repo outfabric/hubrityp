@@ -5,26 +5,24 @@ Define the dedicated Playwright suite that exercises the full sign-in /
 sign-out handshake against a real Supabase stack started via `supabase start`,
 keeping it isolated from the default Postgres-only e2e suite both at runtime
 and in CI. Created by archiving change `smoke-health-feature`.
-
 ## Requirements
-
 ### Requirement: Separate Playwright suite exercises real GoTrue handshake
 
-The system SHALL provide a Playwright invocation distinct from the default e2e suite that runs against a real Supabase stack started via `supabase start` and validates the full sign-in / sign-out handshake against GoTrue.
+The system SHALL provide a Playwright invocation distinct from the seeded e2e suite that runs against a real Supabase stack started via `supabase start` and validates the full sign-in / sign-out handshake against GoTrue. The dedicated config MUST be `playwright.real.config.ts` and the suite directory MUST be `src/__tests__/e2e/real/`. The legacy filename `playwright.auth-real.config.ts` and the legacy directory `e2e-auth-real/` MUST NOT exist.
 
 #### Scenario: Suite runs against `supabase start`, not Testcontainers
 
 - **WHEN** the `@auth-real` suite executes
-- **THEN** the test target is the local Supabase stack started via `supabase start` (not the Postgres-only Testcontainers used by the default suite)
+- **THEN** the test target is the local Supabase stack started via `supabase start` (not the Postgres-only Testcontainers used by the seeded suite)
 
 #### Scenario: npm script invokes the dedicated config
 
 - **WHEN** a developer runs `npm run test:e2e:real`
-- **THEN** Playwright loads `playwright.auth-real.config.ts` (or equivalent) and only executes tests under `e2e-auth-real/`
+- **THEN** Playwright loads `playwright.real.config.ts` and only executes tests under `src/__tests__/e2e/real/`
 
 ### Requirement: User is seeded via Supabase Admin API
 
-The system SHALL seed the test user for the `@auth-real` suite via `supabase.auth.admin.createUser` (with `email_confirm: true`) inside the suite's `globalSetup`. The credentials MUST be exposed to the test as fixture data.
+The system SHALL seed the test user for the real suite via `supabase.auth.admin.createUser` (with `email_confirm: true`) inside the suite's `globalSetup` at `src/__tests__/e2e/real/setup/global-setup.ts`. The credentials MUST be exposed to the test as fixture data (e.g., via `src/__tests__/e2e/real/setup/credentials.ts`).
 
 #### Scenario: Setup creates a confirmed user
 
@@ -38,7 +36,7 @@ The system SHALL seed the test user for the `@auth-real` suite via `supabase.aut
 
 ### Requirement: Full real-auth flow is covered
 
-The system SHALL include at least one Playwright test in `e2e-auth-real/` tagged `@auth-real` that performs the complete login → dashboard → logout flow against the real stack.
+The system SHALL include at least one Playwright test under `src/__tests__/e2e/real/` tagged `@auth-real` that performs the complete login → dashboard → logout flow against the real stack.
 
 #### Scenario: Full handshake passes
 
@@ -48,15 +46,15 @@ The system SHALL include at least one Playwright test in `e2e-auth-real/` tagged
 #### Scenario: Failure produces an HTML report
 
 - **WHEN** any step in the flow fails
-- **THEN** Playwright writes an HTML report under `playwright-report-auth-real/` and the workflow uploads it as an artifact
+- **THEN** Playwright writes an HTML report under `playwright-report-real/` (renamed from `playwright-report-auth-real/` for symmetry with the seeded suite's `playwright-report/`) and the workflow uploads it as an artifact
 
 ### Requirement: CI runs the real suite as a gated job
 
-The system SHALL extend `.github/workflows/ci.yml` with a new job `e2e-real` that depends on the `e2e` job passing. The job MUST start `supabase start`, run `npm run test:e2e:real`, and stop Supabase in a `if: always()` step.
+The system SHALL extend `.github/workflows/ci.yml` with a job `e2e-real` that depends on the `e2e` job (which now runs the seeded suite) passing. The job MUST start `supabase start`, run `npm run test:e2e:real`, and stop Supabase in a `if: always()` step.
 
-#### Scenario: e2e-real runs only after e2e passes
+#### Scenario: e2e-real runs only after e2e (seeded) passes
 
-- **WHEN** the `e2e` job fails on a PR
+- **WHEN** the `e2e` (seeded) job fails on a PR
 - **THEN** `e2e-real` does not run
 
 #### Scenario: e2e-real cleans up Supabase on failure
@@ -71,9 +69,10 @@ The system SHALL extend `.github/workflows/ci.yml` with a new job `e2e-real` tha
 
 ### Requirement: Tag registry reflects the active suite
 
-The system SHALL update `e2e/tags.json` so that the `@auth-real` entry's description marks it as active in this wave (no longer "reserved for wave 3").
+The system SHALL document the `@auth-real` tag in the seeded suite's tag registry (`src/__tests__/e2e/seeded/tags.json`) as a cross-reference to the real suite, OR in a real-suite-local tag registry at `src/__tests__/e2e/real/tags.json`. Either location MUST describe `@auth-real` as the dedicated real-GoTrue suite (not as reserved or future).
 
 #### Scenario: Registry marks @auth-real active
 
-- **WHEN** a contributor reads `e2e/tags.json` after this wave merges
-- **THEN** the entry for `@auth-real` describes it as the dedicated real-GoTrue suite, not as reserved
+- **WHEN** a contributor reads the relevant tags registry after this change merges
+- **THEN** the entry for `@auth-real` describes it as the dedicated real-GoTrue suite running under `src/__tests__/e2e/real/`
+
