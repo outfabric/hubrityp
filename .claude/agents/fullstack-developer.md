@@ -168,6 +168,9 @@ Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta 
 - `changed_files` (modo fix) — lista de paths já calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`); use exatamente esta lista no `--related` do Vitest.
 - `affected_e2e_tags` (modo fix) — lista de tags `@<dominio>` para passar a `--grep` do Playwright. Se a lista estiver vazia, faça fallback para suíte E2E completa.
 
+> [!IMPORTANT]
+> **Não toque em `tasks.md`:** Você NÃO deve modificar nenhum arquivo que case com `openspec/changes/*/tasks.md`. Marcar tasks `[x]` é responsabilidade exclusiva do orquestrador `/dev-cycle`. Esta regra vale mesmo se a task atual parecer concluída — devolva apenas o `VERDICT: PASS` e deixe o orquestrador atualizar o checkbox.
+
 **Contrato de saída (obrigatório, parseável):**
 
 Termine sua resposta com **exatamente uma** das linhas:
