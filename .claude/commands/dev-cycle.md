@@ -126,7 +126,7 @@ SIGNAL_2=$(! grep -irE -A 6 '^#### Scenario:' "$WORKTREE/openspec/changes/<name>
 
 # Signal 3: diff main...HEAD doesn't touch UI paths
 CHANGED=$(git -C "$WORKTREE" diff main...HEAD --name-only)
-SIGNAL_3=$(! echo "$CHANGED" | grep -qE '^(app/\(app\)/|app/\(auth\)/|components/)' && echo PASS || echo FAIL)
+SIGNAL_3=$(! echo "$CHANGED" | grep -qE '^(src/app/\(app\)/|src/app/\(auth\)/|src/modules/[^/]+/components/|src/shared/ui/)' && echo PASS || echo FAIL)
 ```
 
 Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orchestrator computes there.
@@ -147,7 +147,7 @@ Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orc
 Heuristic concluded this change does not require browser QA:
   - Signal 1 (no [e2e] tags in tasks.md):                               PASS
   - Signal 2 (no UI keywords in spec scenarios):                        PASS
-  - Signal 3 (diff doesn't touch app/(app)/, app/(auth)/, components/): PASS
+  - Signal 3 (diff doesn't touch src/app/(app)/, src/app/(auth)/, src/modules/<dom>/components/, src/shared/ui/): PASS
 
 Skipping qa-tester. Proceeding to step 7 (archive) and step 8 (commits + PR).
 To force QA on this change, re-invoke as: /dev-cycle <name> --force-qa
@@ -210,15 +210,15 @@ When invoking `fullstack-developer` to address feedback:
   2. Run `npm run lint` and `npm run typecheck` (full). If either fails → fix and retry (internal cap 3).
   3. Run `npm run test:unit` (full suite). If fails → fix and retry.
   4. Run `npm run test:integration -- --related $CHANGED`. If `--related` produces no test files OR Vitest cannot resolve, fall back to full integration. If fails → fix and retry.
-  5. Run `npm run test:e2e -- --grep "@<flow-tags>"` where `<flow-tags>` is the orchestrator-supplied list. If empty/ambiguous, fall back to full E2E.
+  5. Run `npm run test:e2e:seeded -- --grep "@<flow-tags>"` where `<flow-tags>` is the orchestrator-supplied list. If empty/ambiguous, fall back to full E2E.
   6. **Forced fallback to full suites** when any of these signals applies (announce which signal triggered it):
-     - Changed any file under `db/schema/**`, `lib/types/**`, `lib/env.ts`
-     - Changed any file under `lib/utils/**`, `lib/auth/**`
+     - Changed any file under `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`
+     - Changed any file under `src/shared/lib/utils/**`, `src/modules/auth/**`
      - Changed any of `next.config.ts`, `tailwind.config.*`, `drizzle.config.*`
      - Changed more than 10 files
 - **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b. On PASS, also print the re-validation summary (which suites ran, scoped or full, and pass/fail).
 
-The orchestrator computes `changed_files` and `affected_e2e_tags` itself before invoking the agent — the agent receives them as plain lists in the prompt. Tag mapping comes from `e2e/tags.json` if it exists, else inferred from the path (e.g., `app/(dashboard)/patients/**` → `@patients`).
+The orchestrator computes `changed_files` and `affected_e2e_tags` itself before invoking the agent — the agent receives them as plain lists in the prompt. Tag mapping comes from `src/__tests__/e2e/seeded/tags.json` if it exists, else inferred from the path (e.g., `src/app/(app)/patients/**` → `@patients`).
 
 ### 7. Archive in-place
 

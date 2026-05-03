@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines how HubrityP's GitHub Actions workflow gates every PR with three jobs (`quality` → `integration` + `e2e`), caches Playwright browsers across runs, and uploads diagnostic artifacts on failure. Created by archiving change `bootstrap-data-and-tests`.
-
 ## Requirements
-
 ### Requirement: CI runs unit, integration, and e2e jobs on every PR
 
 The system SHALL extend the GitHub Actions workflow `.github/workflows/ci.yml` to run three jobs on every `pull_request` and every `push` to `main`: `quality` (unit + lint + typecheck), `integration`, and `e2e`. The `integration` and `e2e` jobs MUST be gated on `quality` passing first via the `needs` field.
@@ -27,7 +25,7 @@ The system SHALL extend the GitHub Actions workflow `.github/workflows/ci.yml` t
 
 ### Requirement: Integration job runs Testcontainers against Docker
 
-The system SHALL configure the `integration` CI job with Docker available on the runner and SHALL run `npm run test:integration` after `npm ci`.
+The system SHALL configure the `integration` CI job with Docker available on the runner and SHALL run `npm run test:integration` after `npm ci`. The job MUST exercise the integration suite at `src/__tests__/integration/` (not at the legacy root-level `__tests__/integration/`).
 
 #### Scenario: Docker is available
 
@@ -37,7 +35,7 @@ The system SHALL configure the `integration` CI job with Docker available on the
 #### Scenario: Integration job applies migrations and runs the suite
 
 - **WHEN** the `integration` job runs
-- **THEN** Vitest globalSetup boots Postgres via Testcontainers, applies migrations, runs every `*.int.test.ts`, and reports the suite result
+- **THEN** Vitest globalSetup boots Postgres via Testcontainers (using the shared module under `src/__tests__/e2e/_shared/`), applies migrations from `src/shared/db/migrations/`, runs every `*.int.test.ts` under `src/__tests__/integration/`, and reports the suite result
 
 ### Requirement: E2E job caches Playwright browsers
 
@@ -55,14 +53,15 @@ The system SHALL configure the `e2e` CI job to cache `~/.cache/ms-playwright` ac
 
 ### Requirement: E2E job builds and runs the app, executes the suite
 
-The system SHALL configure the `e2e` CI job to run `npm ci`, install browsers (cached), build the app via `npm run build`, and execute `npm run test:e2e`.
+The system SHALL configure the `e2e` CI job to run `npm ci`, install browsers (cached), build the app via `npm run build`, and execute `npm run test:e2e:seeded`. The job MUST exercise the seeded suite under `src/__tests__/e2e/seeded/` via `playwright.seeded.config.ts`.
 
-#### Scenario: E2E job runs Playwright
+#### Scenario: E2E job runs Playwright seeded suite
 
 - **WHEN** the `e2e` job runs
-- **THEN** Playwright `webServer` starts the production server, runs every `*.spec.ts` under `e2e/`, and reports the result
+- **THEN** Playwright `webServer` starts the production server, runs every `*.spec.ts` under `src/__tests__/e2e/seeded/`, and reports the result
 
 #### Scenario: Playwright HTML report is uploaded on failure
 
 - **WHEN** the `e2e` job fails
 - **THEN** the workflow uploads the `playwright-report/` directory as an artifact attached to the job for inspection
+

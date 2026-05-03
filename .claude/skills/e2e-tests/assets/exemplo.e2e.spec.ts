@@ -1,9 +1,13 @@
 // Esqueleto de spec E2E. Copie e adapte: jornada, asserções e mocks pontuais.
+//
+// Localização canônica: src/__tests__/e2e/seeded/<dominio>.spec.ts
+// Tag de domínio (`@<dominio>`) é OBRIGATÓRIA — o orquestrador do dev-cycle
+// usa essas tags para filtrar a suíte com `--grep` em re-validação escopada.
 
 import { test, expect } from '../fixtures/test-base';
 import { createPaciente } from '../helpers/db';
 
-test.describe('Agendamento de consulta', () => {
+test.describe('@agenda agendamento de consulta', () => {
   test('psicólogo agenda consulta, vê na agenda e dispara lembrete', async ({
     page,
     dr,

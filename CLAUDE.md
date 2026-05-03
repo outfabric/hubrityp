@@ -89,7 +89,7 @@ docker compose down      # derrubar
 
 - **Pre-commit**: Husky + lint-staged já rodam lint/format/type-check em arquivos staged. Não use `--no-verify`.
 - **Server Actions** preferidas sobre Route Handlers para mutations vindas do app; Route Handlers para webhooks e integrações externas.
-- **Supabase RLS sempre habilitado** em qualquer tabela nova — psicólogo só acessa dados dos próprios pacientes. Migrations sem policy RLS devem ser tratadas como bug.
+- **Supabase RLS sempre habilitado** em qualquer tabela nova — psicólogo só acessa dados dos próprios pacientes. Migrations sem policy RLS devem ser tratadas como bug. Schema e migrations vivem em `src/shared/db/schema/**` e `src/shared/db/migrations/`; o CLI de migration mora em `scripts/db-migrate.ts`.
 - Dados sensíveis (prontuário, transcrições, áudios) seguem LGPD: nunca logar conteúdo, nunca enviar para serviços fora do Brasil sem aprovação explícita.
 - **Consultas a docs de libs/frameworks/SDKs/CLIs/serviços usam o MCP Context7.** Sempre que precisar verificar API, sintaxe, configuração, migração de versão, setup ou comportamento de uma ferramenta/lib/pacote (Next.js, Supabase, Drizzle, shadcn/ui, Inngest, Tailwind, Zod, Twilio, Asaas, etc.), invoque `mcp__context7__resolve-library-id` seguido de `mcp__context7__query-docs` antes de escrever ou recomendar código — mesmo para libs que parecem familiares, já que o conhecimento de treinamento pode estar desatualizado. Prefira Context7 a web search para documentação. Não usar para refactor, lógica de negócio, code review ou conceitos gerais de programação.
 
@@ -127,7 +127,7 @@ Detalhes operacionais completos do step (ordem, fontes a consultar, template) fi
 
 ### Manutenibilidade
 
-- Estruture código por domínio (`modules/billing/`), não por tipo técnico (`components/`, `services/`).
+- Estruture código por domínio (`src/modules/billing/`), não por tipo técnico (`src/components/`, `src/services/`). Cada módulo expõe sua superfície via `src/modules/<dominio>/index.ts` (barrel) — consumidores importam de `@/modules/<dominio>`, nunca de paths internos.
 - Use branded types para IDs e valores semânticos (`UserId`, `Email`) em vez de `string` genérico.
 - Modele estados como discriminated unions; evite combinações inválidas (`loading + data + error` no mesmo objeto).
 - Funções devem ter propósito único. Se o nome contém "and", divida.
@@ -147,7 +147,7 @@ Detalhes operacionais completos do step (ordem, fontes a consultar, template) fi
 
 - Server Actions: sempre validar com Zod, autenticar via session, autorizar com dados da session (nunca do input).
 - Nunca confie em IDs vindos do cliente para autorização.
-- Separe env vars em `serverEnv` e `clientEnv` com validação Zod. `NEXT_PUBLIC_*` é exposto. Acesso direto a `process.env.*` fora de `lib/env.ts` (e poucos arquivos CLI: `drizzle.config.ts`, `db/migrate.ts`, `lib/env/client.ts`, setups de teste) é bloqueado por ESLint — importe `serverEnv`/`clientEnv` em vez disso.
+- Separe env vars em `serverEnv` e `clientEnv` com validação Zod. `NEXT_PUBLIC_*` é exposto. Acesso direto a `process.env.*` fora de `src/shared/env/**` (e poucos arquivos CLI: `drizzle.config.ts`, `scripts/db-migrate.ts`, `src/shared/env/client.ts`, setups de teste) é bloqueado por ESLint — importe `serverEnv`/`clientEnv` em vez disso.
 - Headers de segurança em `next.config.ts`: HSTS, X-Frame-Options, CSP, Referrer-Policy.
 - Queries parametrizadas sempre. `$queryRawUnsafe` é proibido.
 - Rate limiting em rotas públicas e endpoints sensíveis.
@@ -188,4 +188,53 @@ Teste comportamento, não implementação. Testing Library > snapshots de estrut
 
 ## Estrutura
 
-Repo ainda em estágio inicial. Ao introduzir a estrutura de código, siga convenções padrão do Next.js App Router (`app/`, `lib/`, `components/`) e atualize este arquivo com decisões não óbvias.
+A árvore canônica do repositório (estabelecida pela change `reorganize-folder-structure`):
+
+```
+src/
+  app/                                     # Next.js App Router (rotas, layouts, route handlers)
+    (auth)/login/                          # rotas públicas — shells finos que delegam para módulos
+    (app)/dashboard/                       # shell autenticado da app
+    api/                                   # Route Handlers (ex.: /api/health, /api/me)
+  middleware.ts                            # edge middleware (gating de auth)
+  modules/<dominio>/                       # código por domínio, uma pasta por capability
+    auth/
+      components/                          # componentes (client/server) do módulo
+      server/                              # implementação das Server Actions (sem `'use server'`)
+      lib/                                 # validators, mappers, branded types
+      index.ts                             # API PÚBLICA do módulo
+    health/
+  shared/                                  # concerns cross-módulo (não depende de modules/)
+    ui/                                    # primitivos shadcn/ui (era components/ui)
+    lib/                                   # utils, logger
+    env/                                   # env validado por Zod (server + client splits)
+    supabase/                              # clientes Supabase (browser, server, middleware)
+    db/                                    # Drizzle: client.ts + schema/ + migrations/
+  __tests__/                               # TODOS os testes vivem aqui (centralizados)
+    unit/                                  # Vitest unit (espelha a árvore de src/)
+    integration/                           # Vitest + Testcontainers (*.int.test.ts)
+      setup/, factories/
+    e2e/
+      _shared/postgres-container.ts        # módulo de boot COMPARTILHADO entre integration e seeded e2e
+      seeded/                              # Playwright + mock GoTrue + Testcontainers
+      real/                                # Playwright contra `supabase start`
+    stubs/                                 # no-ops (ex.: server-only)
+scripts/
+  db-migrate.ts                            # CLI usado por `npm run db:migrate`
+docs/                                      # docs humanas (inclui docs/prd/)
+openspec/                                  # tracker de changes OpenSpec (ativas + arquivadas)
+playwright.seeded.config.ts                # suíte e2e default
+playwright.real.config.ts                  # suíte @auth-real
+vitest.config.ts                           # unit
+vitest.integration.config.ts               # integration
+```
+
+Pontos não-óbvios (leia antes de mexer):
+
+- **Alias `@/*`**: resolve para `./src/*`. Nunca importe relativo (`../../...`).
+- **Módulo expõe pelo `index.ts`**: consumidores importam de `@/modules/<dominio>`, não de paths internos (`@/modules/<dominio>/lib/...`). O barrel é o contrato; o interior é privado.
+- **Client Component NÃO importa Server Action do barrel do módulo**: importar `signIn` de `@/modules/auth` em uma Client Component arrasta `server-only` no grafo (logger, supabase server client) e o RSC boundary checker quebra o build. **Para Client Components, importe a action do route shell** (`@/app/(auth)/login/actions`) — o Next compila isso num RPC stub seguro para o cliente. Para uso server-side (outros módulos de servidor, testes de servidor), o barrel é OK.
+- **Route shells são finos**: `src/app/(auth)/login/actions.ts` é só `'use server'; export { signIn } from '@/modules/auth';`. A implementação real vive em `src/modules/auth/server/login.ts` como módulo regular (sem `'use server'` no topo) — o shell é o que torna a função uma Server Action endereçável pelo Next.
+- **Container Postgres compartilhado**: `src/__tests__/e2e/_shared/postgres-container.ts` é importado tanto pelo `globalSetup` da integração quanto pelo wrapper do seeded e2e. Mudanças no boot/bootstrap vão lá, não duplique.
+- **Tests centralizados, não colocados**: todo `*.test.ts(x)` vive em `src/__tests__/unit/<mirror>/`, todo `*.int.test.ts` vive em `src/__tests__/integration/`. O glob `src/__tests__/unit/**` cobre 100% da suíte unitária.
+- **Skills de teste atualizadas**: `.claude/skills/{unit,integration,e2e}-tests/` refletem essa estrutura. Quando criar/revisar testes, consulte a skill apropriada.

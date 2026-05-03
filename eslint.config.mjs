@@ -15,11 +15,10 @@ const config = [
       '.next/**',
       'node_modules/**',
       'coverage/**',
-      'e2e/.cache/**',
+      'playwright/.cache/**',
       'next-env.d.ts',
       '.husky/**',
       '.claude/**',
-      'prd/**',
       'openspec/**',
       'docs/**',
       '.temp/**',
@@ -65,7 +64,7 @@ const config = [
         {
           selector: "MemberExpression[object.name='process'][property.name='env']",
           message:
-            'Do not access `process.env` outside `lib/env.ts`. Import the validated `serverEnv` or `clientEnv` instead.',
+            'Do not access `process.env` outside `src/shared/env/`. Import the validated `serverEnv` or `clientEnv` instead.',
         },
       ],
       'no-restricted-imports': [
@@ -96,25 +95,22 @@ const config = [
       '@typescript-eslint/no-unsafe-member-access': 'off',
     },
   },
-  // `lib/env.ts` is the validation boundary itself; CLI files run outside the
-  // Next.js bundle and therefore cannot import `server-only` to reach
+  // `src/shared/env/` is the validation boundary itself; CLI files run outside
+  // the Next.js bundle and therefore cannot import `server-only` to reach
   // `serverEnv`. Both are allowed to read `process.env` directly.
   {
     files: [
-      'lib/env.ts',
-      'lib/env/client.ts',
+      'src/shared/env/index.ts',
+      'src/shared/env/client.ts',
       'drizzle.config.ts',
-      'db/migrate.ts',
+      'scripts/db-migrate.ts',
       'vitest.setup.ts',
-      'playwright.config.ts',
-      'playwright.auth-real.config.ts',
-      '__tests__/integration/setup/**',
-      'e2e/global-setup.ts',
-      'e2e/global-teardown.ts',
-      'e2e/auth.setup.ts',
-      'e2e/start-server.ts',
-      'e2e-auth-real/global-setup.ts',
-      'e2e-auth-real/global-teardown.ts',
+      'playwright.seeded.config.ts',
+      'playwright.real.config.ts',
+      'src/__tests__/integration/setup/**',
+      'src/__tests__/e2e/_shared/**',
+      'src/__tests__/e2e/seeded/setup/**',
+      'src/__tests__/e2e/real/setup/**',
     ],
     rules: {
       'no-restricted-syntax': [

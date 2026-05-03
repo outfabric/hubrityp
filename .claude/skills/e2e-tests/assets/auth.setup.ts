@@ -1,65 +1,58 @@
+// Programmatic signin for the seeded e2e suite.
+//
+// Uses `@supabase/ssr` to talk to the mock GoTrue (started by
+// `start-server.ts` on port 54321). The library writes the cookies in the
+// expected format/encoding via the captured `setAll` callback, which we
+// then persist as a Playwright `storageState` JSON. Tests opt in via:
+//   test.use({ storageState: STORAGE_STATE_PATH })
+
+import { writeFile } from 'node:fs/promises';
+
 import { test as setup } from '@playwright/test';
-import { SignJWT } from 'jose';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import { authUsers, psicologos } from '@/lib/db/schema';
-import { resolve } from 'node:path';
-import { mkdir } from 'node:fs/promises';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-const AUTH_FILE = resolve(__dirname, 'playwright/.auth/user.json');
-const SEED_USER = {
-  id: '00000000-0000-0000-0000-000000000001',
-  email: 'dr.seed@hubrityp.test',
-  nome: 'Dr. Seed',
-  crp: '06/000000',
-};
+import { readSeedState, STORAGE_STATE_PATH } from './seed-state';
 
-setup('autentica psicólogo seed', async ({ page, baseURL }) => {
-  await mkdir(resolve(AUTH_FILE, '..'), { recursive: true });
+setup('write simulated auth state', async () => {
+  const seed = await readSeedState();
 
-  const pool = new Pool({ connectionString: process.env.E2E_DATABASE_URL });
-  const db = drizzle(pool);
+  type CapturedCookie = { name: string; value: string; options: CookieOptions };
+  const captured: CapturedCookie[] = [];
 
-  await db
-    .insert(authUsers)
-    .values({ id: SEED_USER.id, email: SEED_USER.email })
-    .onConflictDoNothing();
-  await db
-    .insert(psicologos)
-    .values({ id: SEED_USER.id, nome: SEED_USER.nome, crp: SEED_USER.crp })
-    .onConflictDoNothing();
-  await pool.end();
-
-  const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
-  const token = await new SignJWT({
-    sub: SEED_USER.id,
-    email: SEED_USER.email,
-    role: 'authenticated',
-    aud: 'authenticated',
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('2h')
-    .sign(secret);
-
-  const projectRef =
-    new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname.split('.')[0] ??
-    'localhost';
-  const cookieValue = JSON.stringify({
-    access_token: token,
-    token_type: 'bearer',
-    user: { id: SEED_USER.id, email: SEED_USER.email },
+  const supabase = createServerClient(seed.supabaseUrl, 'e2e-anon-key', {
+    cookies: {
+      getAll(): { name: string; value: string }[] {
+        return [];
+      },
+      setAll(cookiesToSet): void {
+        captured.push(...cookiesToSet);
+      },
+    },
   });
 
-  await page.context().addCookies([
-    {
-      name: `sb-${projectRef}-auth-token`,
-      value: encodeURIComponent(cookieValue),
-      url: baseURL!,
-    },
-  ]);
+  const { error } = await supabase.auth.setSession({
+    access_token: seed.accessToken,
+    refresh_token: seed.refreshToken,
+  });
+  if (error) throw new Error(`auth.setup: setSession failed — ${error.message}`);
+  if (captured.length === 0) {
+    throw new Error('auth.setup: setSession completed but no cookies were captured');
+  }
 
-  await page.goto('/dashboard');
-  await page.waitForURL(/\/dashboard/);
-  await page.context().storageState({ path: AUTH_FILE });
+  const cookies = captured.map((c) => ({
+    name: c.name,
+    value: c.value,
+    domain: 'localhost',
+    path: c.options.path ?? '/',
+    expires: Math.floor(Date.now() / 1000) + (c.options.maxAge ?? 60 * 60 * 24),
+    httpOnly: c.options.httpOnly ?? false,
+    secure: false,
+    sameSite: 'Lax' as const,
+  }));
+
+  await writeFile(
+    STORAGE_STATE_PATH,
+    JSON.stringify({ cookies, origins: [] }, null, 2),
+    'utf8'
+  );
 });

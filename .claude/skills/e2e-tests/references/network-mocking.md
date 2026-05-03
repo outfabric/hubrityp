@@ -25,7 +25,7 @@ Aplica-se a chamadas feitas **pelo navegador**. Se a integração roda no servid
 Centralize mocks "sempre ligados" no `test-base`:
 
 ```ts
-// e2e/fixtures/test-base.ts
+// src/__tests__/e2e/seeded/fixtures/test-base.ts
 import { test as base, expect } from '@playwright/test';
 
 export const test = base.extend<{ twilioCalls: string[] }>({
@@ -118,7 +118,7 @@ test('cobrança vira "paga" quando webhook do Asaas chega', async ({ page, reque
 
 `page.route()` **não vê** chamadas feitas pelo Next.js no servidor. Estratégias:
 
-1. **Env var apontando para mock**: app lê `RESEND_BASE_URL` (ou similar) que em test aponta para `http://localhost:3101`. Suba um pequeno servidor mock nesse port no `globalSetup`.
+1. **Env var apontando para mock**: app lê `RESEND_BASE_URL` (ou similar) que em test aponta para `http://localhost:3101`. Suba um pequeno servidor mock nesse port no wrapper `start-server.ts` (mesmo padrão do `mock-gotrue.ts`).
 2. **`vi.mock` no nível do módulo do app não funciona em E2E** — Playwright não tem hook nesse nível.
 3. **Mock provider via DI no app**: se o app aceita injeção do cliente externo (ex.: `getResendClient()` lê env e retorna real ou stub), force stub em `NODE_ENV=test`.
 4. **Ignorar** se a integração é puramente lateral e o teste consegue asseverar o efeito visível (ex.: app marca `email_enviado: true` no DB — basta checar isso).

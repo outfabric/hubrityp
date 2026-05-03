@@ -5,29 +5,29 @@ Em integração, a Server Action / Route Handler roda **com Drizzle real contra 
 ## Server Action — fluxo padrão
 
 ```ts
-// app/(app)/agenda/actions.int.test.ts
+// src/__tests__/integration/app/(app)/agenda/actions.int.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/__tests__/integration/setup/msw-server';
 import { db } from '@/__tests__/integration/setup/db';
 import { runAsUser, runAsService, truncateAll } from '@/__tests__/integration/setup/rls';
-import { agendamentos } from '@/lib/db/schema';
+import { agendamentos } from '@/shared/db/schema';
 import { eq } from 'drizzle-orm';
-import { agendarConsulta } from './actions';
+import { agendarConsulta } from '@/modules/agenda/server/agendar-consulta';
 import { createPsicologo } from '@/__tests__/integration/factories/psicologo';
 import { createPaciente } from '@/__tests__/integration/factories/paciente';
 
-vi.mock('@/lib/inngest/client', () => ({
+vi.mock('@/shared/lib/inngest/client', () => ({
   inngest: { send: vi.fn().mockResolvedValue({ ids: ['evt_1'] }) },
 }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
-vi.mock('@/lib/supabase/server', async () => {
+vi.mock('@/shared/supabase/server', async () => {
   // Faz a Server Action enxergar a conexão escopada do helper runAsUser
   const { getScopedClient } = await import('@/__tests__/integration/setup/rls');
   return { createServerClient: () => getScopedClient() };
 });
 
-import { inngest } from '@/lib/inngest/client';
+import { inngest } from '@/shared/lib/inngest/client';
 
 describe('agendarConsulta', () => {
   beforeEach(() => truncateAll(db));
@@ -73,7 +73,7 @@ describe('agendarConsulta', () => {
 });
 ```
 
-Observe: o teste **não** mocka o DB, **não** mocka Drizzle, **não** mocka a policy. Apenas as fronteiras de saída (Inngest, revalidatePath) e a função que cria o cliente Supabase (para usar a conexão escopada do helper).
+Observe: o teste **não** mocka o DB, **não** mocka Drizzle, **não** mocka a policy. Apenas as fronteiras de saída (Inngest, revalidatePath) e a função que cria o cliente Supabase (para usar a conexão escopada do helper). Importe a Server Action **direto do módulo** (`@/modules/agenda/server/...`) — o route shell em `src/app/(app)/agenda/actions.ts` é só um wrapper `'use server'` que delega.
 
 ## Route Handler de webhook (Twilio/Asaas)
 

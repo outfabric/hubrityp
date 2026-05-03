@@ -22,7 +22,7 @@
     ],
     "types": ["node"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -32,5 +32,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", "coverage", "e2e/.cache"]
+  "exclude": ["node_modules", ".next", "coverage", "playwright/.cache"]
 }

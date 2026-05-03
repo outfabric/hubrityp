@@ -92,8 +92,8 @@ dist
 # vuepress build output
 .vuepress/dist
 
-# vuepress v2.x temp directory
-.temp
+# vuepress v2.x temp directory / local working scratch dir
+.temp/
 
 # Sveltekit cache directory
 .svelte-kit/
@@ -147,9 +147,8 @@ vite.config.ts.timestamp-*
 .dev-cycle/
 
 # Playwright artifacts
-e2e/.auth/
-e2e-auth-real/.auth/
-playwright-report/
-playwright-report-auth-real/
-test-results/
-test-results-auth-real/
+src/__tests__/e2e/seeded/setup/.auth/
+src/__tests__/e2e/real/setup/.auth/
+playwright-report*/
+test-results*/
+playwright/.cache/

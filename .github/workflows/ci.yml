@@ -82,9 +82,9 @@ jobs:
       - name: Verify Docker is available (Testcontainers prereq)
         run: docker info
 
-      # Build needs env vars at parse time (lib/env.ts validates on import).
-      # Real DATABASE_URL is provided per-run by Playwright globalSetup; the
-      # build only needs valid placeholders.
+      # Build needs env vars at parse time (src/shared/env/index.ts validates
+      # on import). Real DATABASE_URL is provided per-run by Playwright
+      # globalSetup; the build only needs valid placeholders.
       - name: Build the app
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
@@ -94,7 +94,7 @@ jobs:
           LOG_LEVEL: silent
         run: npm run build
 
-      - run: npm run test:e2e
+      - run: npm run test:e2e:seeded
 
       - name: Upload Playwright report on failure
         if: failure()
@@ -146,8 +146,8 @@ jobs:
       # time, so the build-time URL must match the address `supabase start`
       # will bind to (default `127.0.0.1:54321`). The other env vars are only
       # needed to satisfy the Zod env validator at module-load time during
-      # the build — runtime keys come from `playwright.auth-real.config.ts`,
-      # which reads `supabase status -o json` after the stack is up.
+      # the build — runtime keys come from `playwright.real.config.ts`, which
+      # reads `supabase status -o json` after the stack is up.
       - name: Build the app
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
@@ -179,6 +179,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-auth-real
-          path: playwright-report-auth-real/
+          name: playwright-report-real
+          path: playwright-report-real/
           retention-days: 14

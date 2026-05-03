@@ -5,9 +5,9 @@ Fábricas tipadas reduzem repetição e mantêm os testes legíveis. Derive os t
 ## Padrão básico
 
 ```ts
-// __tests__/integration/factories/psicologo.ts
+// src/__tests__/integration/factories/psicologo.ts
 import { runAsService } from '@/__tests__/integration/setup/rls';
-import { psicologos, authUsers } from '@/lib/db/schema';
+import { psicologos, authUsers } from '@/shared/db/schema';
 import type { InferInsertModel } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -41,14 +41,16 @@ Pontos importantes:
 - **`Override` derivado do `InferInsertModel`** mantém tipo sincronizado com o schema.
 - **`returning()`** para devolver a linha completa, útil em assertions seguintes.
 
+> **Tipo do schema**: para tabelas que já exportam um `New<X>` (ex.: `NewHealthPing` em `@/shared/db/schema/health/tables`), use o alias direto em vez de re-derivar com `InferInsertModel` — fica mais legível e tipa contra exatamente o que o app insere.
+
 ## Composição
 
 ```ts
-// __tests__/integration/factories/agendamento.ts
+// src/__tests__/integration/factories/agendamento.ts
 import { createPsicologo } from './psicologo';
 import { createPaciente } from './paciente';
 import { runAsService } from '@/__tests__/integration/setup/rls';
-import { agendamentos } from '@/lib/db/schema';
+import { agendamentos } from '@/shared/db/schema';
 
 export async function createAgendamento(overrides: Partial<{
   psicologoId: string;
@@ -76,7 +78,7 @@ export async function createAgendamento(overrides: Partial<{
 
 ## Dados realistas (PT-BR)
 
-Para CPF/CNPJ válidos, mantenha um pequeno banco de strings pré-calculadas em `__tests__/integration/factories/_fixtures.ts`:
+Para CPF/CNPJ válidos, mantenha um pequeno banco de strings pré-calculadas em `src/__tests__/integration/factories/_fixtures.ts`:
 
 ```ts
 export const CPFS_VALIDOS = [

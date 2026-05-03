@@ -1,38 +1,41 @@
-import {
-  PostgreSqlContainer,
-  type StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { Client } from 'pg';
+// Playwright globalSetup for the seeded e2e suite.
+//
+// IMPORTANT: Playwright runs `globalSetup` AFTER it boots `webServer`. By the
+// time we get here, `start-server.ts` has already booted the Testcontainers
+// Postgres, applied migrations, started the mock GoTrue, and spawned
+// `next start` with the resolved env. All this hook does is seed the rows
+// the suite depends on (auth users, base data) so the assertions in
+// `*.spec.ts` have something to query.
 
-let container: StartedPostgreSqlContainer | undefined;
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+import { healthPings } from '@/shared/db/schema/health/tables';
+import { readSeedState } from './seed-state';
 
 export default async function globalSetup() {
-  container = await new PostgreSqlContainer('supabase/postgres:15.6.1.146')
-    .withDatabase('hubrityp_e2e')
-    .withUsername('postgres')
-    .withPassword('postgres')
-    .withReuse()
-    .start();
+  const seed = await readSeedState();
 
-  const url = container.getConnectionUri();
-  process.env.E2E_DATABASE_URL = url;
+  const sql = postgres(seed.databaseUrl, { max: 1, onnotice: () => {} });
+  const db = drizzle(sql);
+  try {
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email)
+      VALUES (
+        ${seed.userId},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${seed.email}
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
 
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  await client.query(`CREATE ROLE authenticated NOLOGIN;`).catch(() => undefined);
-  await client.query(`CREATE ROLE anon NOLOGIN;`).catch(() => undefined);
-  await client.query(`GRANT USAGE ON SCHEMA public TO authenticated, anon;`);
-  await client.query(`
-    GRANT SELECT, INSERT, UPDATE, DELETE
-      ON ALL TABLES IN SCHEMA public TO authenticated;
-  `);
-  const db = drizzle(client);
-  await migrate(db, { migrationsFolder: './drizzle' });
-  await client.end();
-
-  return async () => {
-    if (process.env.CI) await container?.stop();
-  };
+    await db
+      .insert(healthPings)
+      .values({ ownerId: seed.userId, note: 'e2e-seed ping' })
+      .onConflictDoNothing();
+  } finally {
+    await sql.end();
+  }
 }

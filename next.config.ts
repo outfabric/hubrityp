@@ -36,6 +36,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Next.js auto-detects `src/app/` as the App Router root, so no `app` config is needed here.
+  // Defense-in-depth: ensure test files never leak into the production bundle even if a stray
+  // import sneaks in. Tests are dead code from the bundler's perspective (no route imports them).
+  outputFileTracingExcludes: {
+    '/**': ['**/__tests__/**'],
+  },
   headers() {
     return Promise.resolve([
       {

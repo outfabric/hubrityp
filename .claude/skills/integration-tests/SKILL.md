@@ -19,7 +19,7 @@ Use este nível de teste para validar:
 
 Não use este nível para:
 
-- Lógica pura, validators, helpers → **Vitest unitário** (skill `testes-unitarios-vitest`).
+- Lógica pura, validators, helpers → **Vitest unitário** (skill `unit-tests`).
 - Fluxo navegacional completo no browser, captura de screenshots, multi-tab → **Playwright E2E**.
 - Performance/carga → ferramenta dedicada, fora do escopo.
 
@@ -50,31 +50,44 @@ Se Docker não estiver disponível no ambiente, **declare explicitamente** — n
 
 ## Estrutura recomendada
 
-Separe configs de unit e integration. Sufixo `.int.test.ts` evita rodar acidentalmente na suite unitária.
+Todos os testes vivem **centralizados** sob `src/__tests__/`. Integração usa o sufixo `.int.test.ts` para o filtro do Vitest pegar só essa camada.
 
 ```
-vitest.config.ts                  # unit (rápido, sem container)
-vitest.integration.config.ts      # integration (globalSetup + container)
-__tests__/
-  integration/
-    setup/
-      global-setup.ts             # sobe Postgres + aplica migrations
-      db.ts                       # exporta cliente Drizzle conectado
-      rls.ts                      # helpers para rodar como usuário X
-      msw-server.ts               # servidor MSW para mockar HTTP externo
-    factories/
-      paciente.ts
-      agendamento.ts
-app/(app)/pacientes/
-  actions.int.test.ts
-lib/db/queries/
-  pacientes.int.test.ts
+vitest.config.ts                                  # unit (rápido, sem container)
+vitest.integration.config.ts                      # integration (globalSetup + container)
+src/
+  __tests__/
+    integration/
+      setup/
+        global-setup.ts                           # Vitest globalSetup: chama bootPostgres + applyMigrations
+        db.ts                                     # client Drizzle / openClient() para o container
+        run-as-user.ts                            # helper RLS: SET LOCAL role + jwt.claims
+        run-as-service.ts                         # bypassa RLS para preparar dados
+        msw-server.ts                             # servidor MSW para mockar HTTP externo
+      factories/
+        health-pings.ts                           # factory tipada do schema Drizzle
+      api-health.int.test.ts                     # exemplo: Route Handler contra DB real
+      auth-signin.int.test.ts                    # exemplo: Server Action de domínio
+      app/(app)/pacientes/                        # mirror do source quando o teste é de uma rota
+        actions.int.test.ts
+    e2e/
+      _shared/
+        postgres-container.ts                     # CONTAINER COMPARTILHADO entre integration e seeded e2e
+      seeded/...
+      real/...
+    stubs/
+      server-only.ts                              # no-op para imports de `server-only`
+src/
+  modules/<domain>/server/...                     # Server Actions sob teste
+  shared/db/schema/...                            # schema Drizzle alvo das migrations
 ```
+
+> **Container Postgres compartilhado**: `src/__tests__/e2e/_shared/postgres-container.ts` é o módulo único que sobe Postgres + bootstrap do schema `auth` + roda migrations Drizzle. Tanto `vitest.integration.config.ts` (via `src/__tests__/integration/setup/global-setup.ts`) quanto o seeded e2e (via `src/__tests__/e2e/seeded/setup/start-server.ts`) importam dali. Não duplique: se precisar mexer no boot, mexa lá.
 
 ## Workflow padrão (fluxo enxuto)
 
 1. **Identifique a fronteira sob teste**: Server Action? Route Handler? Query? Componente integrado?
-2. **Suba o ambiente uma vez** via `globalSetup`: container Postgres com `supabase/postgres`, migrations Drizzle aplicadas, extensões habilitadas.
+2. **Suba o ambiente uma vez** via `globalSetup`: container Postgres com `supabase/postgres` (ou `postgres:16-alpine` + bootstrap manual do schema `auth`, como o `_shared/postgres-container.ts` faz hoje), migrations Drizzle aplicadas, extensões habilitadas.
 3. **Isole dados entre testes** com a estratégia escolhida (ver `references/data-isolation.md`). Default: `TRUNCATE` em `beforeEach` das tabelas tocadas — rápido e previsível.
 4. **Mocke apenas integrações externas** (Twilio, Resend, Receita Saúde). Banco é real.
 5. **Para RLS**, conecte como `authenticated` e seta `request.jwt.claims` no nível da sessão. Veja `references/rls-supabase.md`.
@@ -86,18 +99,19 @@ lib/db/queries/
 2. **Determinismo > velocidade**: prefira `TRUNCATE` explícito a depender de ordem de execução.
 3. **Cobertura de RLS é obrigatória** para qualquer Server Action que toque tabela com policy. Teste pelo menos: dono lê, dono escreve, **outro psicólogo NÃO lê**, **outro psicólogo NÃO escreve**.
 4. **MSW na rede, não monkeypatch**: substitua `fetch` por handler MSW; mantém o código sob teste idêntico ao de produção.
-5. **Factories tipadas** (`createPaciente()`, `createAgendamento()`) reutilizáveis em todas as suítes — derive os tipos do schema Drizzle.
+5. **Factories tipadas** (`createPaciente()`, `createAgendamento()`) reutilizáveis em todas as suítes — derive os tipos do schema Drizzle (`InferInsertModel`, `NewHealthPing`, etc.).
 6. **Falha por motivo claro**: se um teste de RLS quebra, deve ser óbvio se foi a query ou a policy.
 7. **Não logue PII em saída de teste**: configure Pino com level `silent` no setup global.
 
 ## Exemplo canônico (Server Action contra DB real, com RLS)
 
 ```ts
-// app/(app)/pacientes/actions.int.test.ts
+// src/__tests__/integration/app/(app)/pacientes/actions.int.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db } from '@/__tests__/integration/setup/db';
-import { runAsUser, truncateAll } from '@/__tests__/integration/setup/rls';
-import { criarPaciente, listarPacientes } from './actions';
+import { runAsUser } from '@/__tests__/integration/setup/run-as-user';
+import { truncateAll } from '@/__tests__/integration/setup/run-as-service';
+import { criarPaciente, listarPacientes } from '@/modules/pacientes/server/actions';
 import { createPsicologo } from '@/__tests__/integration/factories/psicologo';
 
 describe('pacientes — integração', () => {
@@ -118,6 +132,8 @@ describe('pacientes — integração', () => {
 });
 ```
 
+> **Importações**: o alias `@/*` resolve para `src/*` (post-`reorganize-folder-structure`). O Server Action sob teste vem do módulo (`@/modules/pacientes/server/actions`), não do route shell em `@/app/(app)/.../actions` — o shell é apenas um wrapper `'use server'` que delega.
+
 ## Antipadrões
 
 - Mockar `db` ou `drizzle` em teste de integração.
@@ -127,12 +143,13 @@ describe('pacientes — integração', () => {
 - Testar UI integrada chamando rede real (sem MSW) — flaky no CI.
 - Snapshot de DOM gigante — quebra por mudança irrelevante de Tailwind.
 - Validar RLS testando "se a policy SQL existe" em vez de provar o **comportamento**: outro usuário recebe lista vazia, ou erro `42501`.
+- Importar do barrel do módulo (`@/modules/auth`) dentro de uma Client Component — arrasta `server-only` pro bundle. Para Server Actions usadas em forms, importe do route shell (`@/app/(auth)/login/actions`); para uso server-side, o barrel é OK.
 
 ## Referências detalhadas
 
 Carregue conforme a tarefa exigir:
 
-- `references/testcontainers-setup.md` — `globalSetup` com Postgres, imagem `supabase/postgres`, migrations Drizzle, reuse de container, env de teste.
+- `references/testcontainers-setup.md` — `globalSetup` apoiado em `@/__tests__/e2e/_shared/postgres-container`, imagem do container, bootstrap do schema `auth`, migrations Drizzle (`src/shared/db/migrations`), reuse de container, env de teste.
 - `references/data-isolation.md` — comparativo: TRUNCATE vs transação com rollback vs schema-por-suite. Quando usar cada um.
 - `references/rls-supabase.md` — receitas para conectar como `authenticated`, setar `request.jwt.claims`, helper `runAsUser`, casos obrigatórios.
 - `references/server-actions-rotas.md` — testar Server Actions e Route Handlers (webhooks) contra DB real, mocks de fronteiras externas.
@@ -142,7 +159,7 @@ Carregue conforme a tarefa exigir:
 ## Templates
 
 - `assets/vitest.integration.config.ts` — config separada da unit, com `globalSetup`, timeout maior e `pool: 'forks'`.
-- `assets/global-setup.ts` — sobe container, aplica migrations, expõe `DATABASE_URL` via `provide`.
+- `assets/global-setup.ts` — chama `bootPostgres()` + `applyMigrations()` do módulo compartilhado e expõe `DATABASE_URL` via `process.env`.
 - `assets/db.ts` — cliente Drizzle único reutilizado nos testes.
 - `assets/rls.ts` — helpers `runAsUser`, `truncateAll`.
 - `assets/msw-server.ts` — bootstrap MSW para Node (test env).

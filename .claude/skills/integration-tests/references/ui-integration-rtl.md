@@ -2,7 +2,7 @@
 
 Diferença para teste unitário de componente:
 
-| Critério | Unitário (skill `testes-unitarios-vitest`) | Integração (esta skill) |
+| Critério | Unitário (skill `unit-tests`) | Integração (esta skill) |
 |---|---|---|
 | Providers | Mínimos / mockados | **Reais** (TanStack Query, Theme, Toaster) |
 | Camada HTTP | `vi.mock` / `vi.stubGlobal('fetch')` | **MSW** (handler por request) |
@@ -14,7 +14,7 @@ Diferença para teste unitário de componente:
 ## Setup do MSW
 
 ```ts
-// __tests__/integration/setup/msw-server.ts
+// src/__tests__/integration/setup/msw-server.ts
 import { setupServer } from 'msw/node';
 export const server = setupServer();
 ```
@@ -24,11 +24,11 @@ Já registrado no `setup.ts` do Vitest com `onUnhandledRequest: 'error'` (ver `r
 ## Renderizador com providers reais
 
 ```tsx
-// __tests__/integration/setup/render.tsx
+// src/__tests__/integration/setup/render.tsx
 import { ReactNode } from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/shared/ui/sonner';
 
 export function renderWithProviders(ui: ReactNode, opts?: RenderOptions) {
   const qc = new QueryClient({
@@ -51,15 +51,15 @@ export function renderWithProviders(ui: ReactNode, opts?: RenderOptions) {
 A Server Action é importada **real**, mas a fronteira de DB pode ser mockada via MSW (se a action chama uma Route Handler interna) ou via DB real (se a action usa Drizzle direto). Para fluxo de UI, **prefira mockar a Server Action via MSW** — o teste foca na UI, não no banco.
 
 ```tsx
-// app/(app)/pacientes/novo-paciente-form.int.test.tsx
+// src/__tests__/integration/modules/pacientes/components/novo-paciente-form.int.test.tsx
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/__tests__/integration/setup/render';
 import { server } from '@/__tests__/integration/setup/msw-server';
-import { NovoPacienteForm } from './novo-paciente-form';
+import { NovoPacienteForm } from '@/modules/pacientes/components/novo-paciente-form';
 
 describe('NovoPacienteForm — integração', () => {
   it('submete, mostra toast de sucesso e limpa o form', async () => {
@@ -136,7 +136,7 @@ Se quiser ir além, integre `axe-core` via `vitest-axe` em uma única suíte de 
 
 ## Não fazer
 
-- Render de página inteira (`app/(app)/agenda/page.tsx`) com providers do Next — isso é E2E. Prefira renderizar o **componente cliente** principal com props.
+- Render de página inteira (`src/app/(app)/agenda/page.tsx`) com providers do Next — isso é E2E. Prefira renderizar o **componente cliente** principal com props.
 - Snapshots grandes — quebram por mudanças de Tailwind / texto.
 - Testar lib de terceiros (shadcn/ui, RHF) — confie nos testes deles.
 - Esperar com `setTimeout`. Sempre `findBy*` ou `waitFor`.

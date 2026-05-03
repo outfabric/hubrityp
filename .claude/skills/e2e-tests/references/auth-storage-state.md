@@ -1,105 +1,99 @@
 # Autenticação reutilizável com `storageState`
 
-Login via UI em todo teste é a maior fonte de lentidão e flakiness. A receita: autenticar **uma vez** em um setup project, salvar cookies/localStorage em arquivo, reutilizar em todos os testes.
+Login via UI em todo teste é a maior fonte de lentidão e flakiness. A receita: autenticar **uma vez** em um setup project, salvar cookies/localStorage em arquivo, reutilizar em todos os testes que precisarem.
 
-## Fluxo geral
+## Fluxo geral (suíte seeded)
 
-1. `globalSetup` sobe container e aplica migrations.
-2. Setup project (`auth.setup.ts`) cria seed user no DB e simula login → grava `storageState`.
-3. Project `chromium` declara `dependencies: ['setup']` e `use.storageState`. Cada teste já abre logado.
+1. `webServer.command` → `src/__tests__/e2e/seeded/setup/start-server.ts` boota Postgres compartilhado, aplica migrations, inicia mock GoTrue e spawn `next start`.
+2. Playwright `globalSetup` (`src/__tests__/e2e/seeded/setup/global-setup.ts`) seed os usuários em `auth.users` + dados base.
+3. Setup project (`src/__tests__/e2e/seeded/setup/auth.setup.ts`) faz signin programático contra o mock GoTrue → grava `storageState` em `src/__tests__/e2e/seeded/setup/.auth/state.json`.
+4. Testes opt-in via `test.use({ storageState: STORAGE_STATE_PATH })`. Cada teste já abre logado em <100ms.
 
-## Signin programático contra Supabase Auth (simulado)
+## Signin programático contra mock GoTrue
 
-Em E2E com Testcontainers Postgres-only (sem gotrue), a auth é simulada por:
+Em E2E seeded a auth é simulada por:
 
-1. Inserir o usuário em `auth.users` com `id` conhecido.
-2. Gerar um JWT válido com a mesma `JWT_SECRET` que o app usa em modo test.
-3. Setar o cookie `sb-<ref>-auth-token` que `@supabase/ssr` lê no servidor.
+1. Mock GoTrue HTTP server (em `src/__tests__/e2e/seeded/setup/mock-gotrue.ts`) ouvindo em `127.0.0.1:54321` (porta hardcoded — ver "Notas críticas" no SKILL.md).
+2. `start-server.ts` constrói um JWT válido (HS256, payload com `sub`, `email`, `aud`, `role`, `exp` no futuro) e configura o mock pra retornar esse mesmo token + user em `GET /auth/v1/user`.
+3. Inserção do user em `auth.users` (com o mesmo `sub` UUID) feita pelo `globalSetup`.
+4. `auth.setup.ts` usa `@supabase/ssr` para chamar `supabase.auth.setSession({ access_token, refresh_token })`. A lib chama `setAll` com os cookies no formato esperado; capturamos e gravamos no `storageState`.
 
 ```ts
-// e2e/auth.setup.ts
+// src/__tests__/e2e/seeded/setup/auth.setup.ts
+import { writeFile } from 'node:fs/promises';
 import { test as setup } from '@playwright/test';
-import { SignJWT } from 'jose';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import { authUsers, psicologos } from '@/lib/db/schema';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { readSeedState, STORAGE_STATE_PATH } from './seed-state';
 
-const SEED_USER = {
-  id: '00000000-0000-0000-0000-000000000001',
-  email: 'dr.seed@hubrityp.test',
-};
+setup('write simulated auth state', async () => {
+  const seed = await readSeedState();
+  const captured: { name: string; value: string; options: CookieOptions }[] = [];
 
-setup('autentica psicólogo seed', async ({ page, baseURL }) => {
-  const pool = new Pool({ connectionString: process.env.E2E_DATABASE_URL });
-  const db = drizzle(pool);
-
-  await db
-    .insert(authUsers)
-    .values({ id: SEED_USER.id, email: SEED_USER.email })
-    .onConflictDoNothing();
-  await db
-    .insert(psicologos)
-    .values({ id: SEED_USER.id, nome: 'Dr. Seed', crp: '06/000000' })
-    .onConflictDoNothing();
-  await pool.end();
-
-  const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
-  const token = await new SignJWT({
-    sub: SEED_USER.id,
-    email: SEED_USER.email,
-    role: 'authenticated',
-    aud: 'authenticated',
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('2h')
-    .sign(secret);
-
-  const cookieValue = JSON.stringify({
-    access_token: token,
-    token_type: 'bearer',
-    user: { id: SEED_USER.id, email: SEED_USER.email },
+  const supabase = createServerClient(seed.supabaseUrl, 'e2e-anon-key', {
+    cookies: {
+      getAll: () => [],
+      setAll: (cookiesToSet) => { captured.push(...cookiesToSet); },
+    },
   });
 
-  await page.context().addCookies([
-    {
-      name: `sb-${process.env.SUPABASE_PROJECT_REF}-auth-token`,
-      value: encodeURIComponent(cookieValue),
-      url: baseURL!,
-    },
-  ]);
+  const { error } = await supabase.auth.setSession({
+    access_token: seed.accessToken,
+    refresh_token: seed.refreshToken,
+  });
+  if (error) throw new Error(`auth.setup: ${error.message}`);
 
-  await page.goto('/dashboard');
-  await page.waitForURL(/\/dashboard/);   // confirma que ficou logado
+  const cookies = captured.map((c) => ({
+    name: c.name,
+    value: c.value,
+    domain: 'localhost',
+    path: c.options.path ?? '/',
+    expires: Math.floor(Date.now() / 1000) + (c.options.maxAge ?? 86_400),
+    httpOnly: c.options.httpOnly ?? false,
+    secure: false,            // baseURL é http (sem TLS); cookie Secure seria descartado
+    sameSite: 'Lax' as const,
+  }));
 
-  await page.context().storageState({ path: 'e2e/playwright/.auth/user.json' });
+  await writeFile(STORAGE_STATE_PATH, JSON.stringify({ cookies, origins: [] }, null, 2));
 });
 ```
 
-O nome exato do cookie depende da configuração do `@supabase/ssr` — verifique no app a função que cria o cliente server-side.
+A vantagem de delegar pra `@supabase/ssr` em vez de hand-rolling o cookie: o nome (`sb-<projectRef>-auth-token`), encoding (`base64-` + base64url) e estratégia de chunking ficam corretos sem que o teste precise saber.
 
-## Múltiplos perfis de usuário
+## Suíte real (`@auth-real`)
+
+A suíte real opera contra o GoTrue do `supabase start` e não usa `storageState` global. Cada spec faz o login via a UI ou via API (`supabase.auth.signInWithPassword`), valida o caminho real ponta-a-ponta, e o cookie real do GoTrue carrega o estado para o resto do fluxo.
+
+`src/__tests__/e2e/real/setup/credentials.ts` mantém os emails/passwords dos seed users que o `globalSetup` cria via `supabase.auth.admin.createUser` (usando o `SERVICE_ROLE_KEY` lido no config-load).
+
+## Múltiplos perfis de usuário (suíte seeded)
 
 Se a suite precisa de "psicólogo A" e "psicólogo B" (ex.: testar isolamento), crie um setup project para cada e múltiplos `storageState`:
 
 ```ts
-// playwright.config.ts
+// playwright.seeded.config.ts
 projects: [
   { name: 'setup-dr-a', testMatch: /auth-dr-a\.setup\.ts/ },
   { name: 'setup-dr-b', testMatch: /auth-dr-b\.setup\.ts/ },
   {
     name: 'chromium',
-    use: { ...devices['Desktop Chrome'], storageState: 'e2e/playwright/.auth/dr-a.json' },
+    use: { ...devices['Desktop Chrome'] },                  // sem storageState aqui
     dependencies: ['setup-dr-a', 'setup-dr-b'],
   },
 ];
 ```
 
-Dentro de um teste específico, troque para o outro estado:
+Cada teste opt-in para o estado que precisa:
 
 ```ts
-test('dr-b não vê dados do dr-a', async ({ browser }) => {
-  const ctx = await browser.newContext({ storageState: 'e2e/playwright/.auth/dr-b.json' });
+import { STORAGE_STATE_PATH_A, STORAGE_STATE_PATH_B } from './setup/seed-state';
+
+test.describe('isolamento por psicólogo', () => {
+  test.use({ storageState: STORAGE_STATE_PATH_A });
+  test('dr_a vê só seus pacientes', /* ... */);
+});
+
+test('dr_b não vê dados de dr_a', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH_B });
   const page = await ctx.newPage();
   // ...
 });
@@ -126,8 +120,9 @@ test('redireciona para /login quando token expira', async ({ browser, baseURL })
 
 ## Checklist
 
-- [ ] `auth.setup.ts` é idempotente (`onConflictDoNothing`).
-- [ ] `playwright/.auth/` está no `.gitignore`.
-- [ ] `SUPABASE_JWT_SECRET` é o mesmo no app e no setup (env de teste).
+- [ ] `auth.setup.ts` é idempotente (insert do seed user usa `ON CONFLICT DO NOTHING`).
+- [ ] `src/__tests__/e2e/seeded/setup/.auth/` está no `.gitignore`.
+- [ ] Cookies escritos com `domain: 'localhost'` + `secure: false` (baseURL HTTP em dev/CI).
 - [ ] Seed user nunca é alterado por testes (não delete em TRUNCATE).
 - [ ] Logout/expiração testados com `storageState: undefined`, não tocando o arquivo global.
+- [ ] Constantes `STORAGE_STATE_PATH` etc. importadas de `./setup/seed-state.ts`, não hardcoded.

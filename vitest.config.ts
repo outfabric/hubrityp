@@ -13,12 +13,12 @@ export default defineConfig({
       ['**/*.test.ts', 'node'],
     ],
     setupFiles: ['./vitest.setup.ts'],
-    include: ['**/*.test.{ts,tsx}'],
+    include: ['src/__tests__/unit/**/*.test.ts', 'src/__tests__/unit/**/*.test.tsx'],
     exclude: [
       'node_modules',
       '.next',
-      'e2e',
-      '__tests__/integration',
+      'src/__tests__/e2e',
+      'src/__tests__/integration',
       'coverage',
       '.claude',
       'openspec',
@@ -34,9 +34,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': rootDir,
+      // All source now lives under `src/`, so `@/*` resolves there directly.
+      // The transitional `customResolver` that probed both `src/` and the
+      // repo root has been removed (see openspec/changes/reorganize-folder-structure).
+      '@': path.resolve(rootDir, 'src'),
       // No-op stub: tests can import modules guarded with `import 'server-only'`.
-      'server-only': path.resolve(rootDir, 'test/stubs/server-only.ts'),
+      'server-only': path.resolve(rootDir, 'src/__tests__/stubs/server-only.ts'),
     },
   },
 });

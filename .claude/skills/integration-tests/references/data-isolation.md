@@ -5,7 +5,7 @@ Container compartilhado precisa de uma estratégia para evitar contaminação en
 ## 1. TRUNCATE em `beforeEach` (default)
 
 ```ts
-// __tests__/integration/setup/rls.ts
+// src/__tests__/integration/setup/rls.ts
 import { sql } from 'drizzle-orm';
 import type { db as Db } from './db';
 
@@ -88,11 +88,11 @@ await db.insert(agendamentos).values({
 
 Com `pool: 'forks'` cada arquivo roda em processo isolado, mas todos batem no **mesmo container**. Se o teste cria/lê em tabelas distintas, o paralelismo é seguro. Se compartilha tabela e usa TRUNCATE, **um teste pode truncar o estado de outro**. Soluções:
 
-1. Limitar `maxForks: 1` para a suite (mais lento, sempre seguro).
+1. Limitar `maxForks: 1` para a suite (mais lento, sempre seguro). É o default no `vitest.integration.config.ts` do HubrityP via `fileParallelism: false`.
 2. Usar schema-por-arquivo (opção 3 acima).
 3. Marcar suítes que dividem tabela com `describe.sequential` (Vitest >= 1.4) — não resolve entre arquivos, só dentro.
 
-**Recomendação prática:** comece com `maxForks: 1` + TRUNCATE. Suba só se a suite ficar lenta o suficiente para justificar a complexidade.
+**Recomendação prática:** começar com `fileParallelism: false` + TRUNCATE. Subir só se a suite ficar lenta o suficiente para justificar a complexidade.
 
 ## Limpeza de arquivos / Storage
 
