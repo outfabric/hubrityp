@@ -7,13 +7,16 @@ tags: [workflow, openspec, agents, hubrityp]
 
 Closed-loop development workflow that consumes an existing OpenSpec change and orchestrates the three project subagents (`fullstack-developer`, `code-reviewer`, `qa-tester`) until the change is implemented, reviewed, QA-validated, committed, and opened as a PR.
 
-**Input**: `/dev-cycle <change-name>` (kebab-case). If omitted, infer from conversation context. If ambiguous, run `openspec list --json` and use **AskUserQuestion** to let the user pick.
+**Input**: `/dev-cycle <change-name> [flags]` (kebab-case). If `<change-name>` omitted, infer from conversation context. If ambiguous, run `openspec list --json` and use **AskUserQuestion** to let the user pick.
+
+**Flags**:
+- `--force-qa`: bypass the skip-QA heuristic in step 5.0 and always run `qa-tester`. Default: false (heuristic decides).
 
 **Pre-conditions** (verify upfront, abort with a clear message if missing):
 - Change exists at `openspec/changes/<name>/` with at least `tasks.md` and `proposal.md`.
 - `git` working tree on `main` is clean (no uncommitted changes that would conflict with worktree creation).
 - `gh` is authenticated (`gh auth status`) — required for PR creation at the end.
-- `docker` is available — required for QA step (the agent will start `docker compose` if needed).
+- `docker` is available — required for QA step (the agent will start `docker compose` if needed AND the heuristic doesn't skip QA).
 
 ---
 
@@ -106,6 +109,52 @@ Increment `REVIEW_ITER` after the agent returns.
 
 Initialize `QA_ITER=0`.
 
+#### 5.0 Skip-QA decision gate
+
+Before bringing up the app, evaluate the skip-QA heuristic. The goal is to avoid the cost of `qa-tester` (Playwright browser, ~2–5 min per iteration, cap 3 = up to 15 min) on backend-only changes.
+
+**Skip QA if all three signals pass** (logical AND):
+
+```bash
+# Signal 1: no [e2e] tags in tasks.md
+SIGNAL_1=$(! grep -qE '\[e2e\]' "$WORKTREE/openspec/changes/<name>/tasks.md" && echo PASS || echo FAIL)
+
+# Signal 2: no UI keywords in #### Scenario: blocks under specs/
+UI_KEYWORDS='visits|renders|clicks|sees|visual|navigates|page|form|button'
+SIGNAL_2=$(! grep -irE -A 6 '^#### Scenario:' "$WORKTREE/openspec/changes/<name>/specs/" 2>/dev/null \
+  | grep -iqE "$UI_KEYWORDS" && echo PASS || echo FAIL)
+
+# Signal 3: diff main...HEAD doesn't touch UI paths
+CHANGED=$(git -C "$WORKTREE" diff main...HEAD --name-only)
+SIGNAL_3=$(! echo "$CHANGED" | grep -qE '^(app/\(app\)/|app/\(auth\)/|components/)' && echo PASS || echo FAIL)
+```
+
+Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orchestrator computes there.
+
+**Decision matrix**:
+
+| `--force-qa` | Heuristic | Action |
+|---|---|---|
+| true | (any) | Run QA. Print: `QA forced by --force-qa flag (heuristic would have <skipped|run>: signals=<1>/<2>/<3>).` |
+| false | all 3 PASS | Skip QA. Print the skip message below. Jump to step 7. |
+| false | any FAIL | Run QA. Print: `QA running — signal X failed: <reason>.` |
+
+**Skip message** (printed when QA is skipped):
+
+```
+## QA Skipped — <change>
+
+Heuristic concluded this change does not require browser QA:
+  - Signal 1 (no [e2e] tags in tasks.md):                               PASS
+  - Signal 2 (no UI keywords in spec scenarios):                        PASS
+  - Signal 3 (diff doesn't touch app/(app)/, app/(auth)/, components/): PASS
+
+Skipping qa-tester. Proceeding to step 7 (archive) and step 8 (commits + PR).
+To force QA on this change, re-invoke as: /dev-cycle <name> --force-qa
+```
+
+If skipping, do not initialize Docker (no `docker compose up`). Proceed directly to step 7.
+
 #### 5a. Bring up the app
 
 ```bash
@@ -171,11 +220,80 @@ When invoking `fullstack-developer` to address feedback:
 
 The orchestrator computes `changed_files` and `affected_e2e_tags` itself before invoking the agent — the agent receives them as plain lists in the prompt. Tag mapping comes from `e2e/tags.json` if it exists, else inferred from the path (e.g., `app/(dashboard)/patients/**` → `@patients`).
 
-### 7. Commits and PR
+### 7. Archive in-place
 
-Once both reviewer and QA are clean:
+Trigger only when reviewer is clean AND (QA is clean OR QA was skipped at step 5.0). The change is archived inside the worktree on `feature/<name>` so the move + sync + docs land in the same PR as the implementation. **No prompts to the user** — this step is fully non-interactive (defaults below); failures hard-stop before any commits/PR are created.
 
-#### 7a. Semantic commits per task
+This step is the inline equivalent of `/opsx:archive` running with all confirmations auto-accepted as "proceed". The standalone `/opsx:archive` command continues to exist for ad-hoc archives outside `/dev-cycle`.
+
+#### 7.1 Validate
+
+```bash
+openspec status --change "<name>" --json
+```
+
+- If any artifact ≠ `done`: hard error (this should never happen at this point — flag as orchestrator bug and abort).
+- If any task in `tasks.md` is `- [ ]`: hard error (step 3 of `/dev-cycle` guarantees all tasks are `[x]`; flag as bug and abort).
+
+#### 7.2 Sync delta specs → main specs
+
+If `openspec/changes/<name>/specs/` is empty: skip (docs-only change, no sync needed). Announce: "No delta specs found — sync skipped."
+
+Otherwise, invoke `fullstack-developer` with a sync prompt (semantically equivalent to `/opsx:sync` in non-interactive mode):
+
+- **Scope marker**: same worktree path constraint as other agent invocations.
+- **Sync instruction**: "For each capability dir under `openspec/changes/<name>/specs/`, compare the delta spec with `openspec/specs/<capability>/spec.md` and apply ADDED/MODIFIED/REMOVED/RENAMED operations to bring the main spec in line with the delta. Do not ask for confirmation — apply all changes."
+- **Output**: persist a summary to `<worktree>/.dev-cycle/sync-summary.md` listing capabilities touched and operations applied.
+- **Reporting contract**: end with `VERDICT: PASS — sync applied` or `VERDICT: FAIL — <reason>`.
+
+If FAIL: pause and show `sync-summary.md`. Do **not** default to skip-sync — sync was promised to the user.
+
+#### 7.3 Move directory
+
+```bash
+cd "$WORKTREE"
+mkdir -p openspec/changes/archive
+DATED="openspec/changes/archive/$(date +%F)-<name>"
+if [ -d "$DATED" ]; then
+  echo "Archive target already exists at $DATED"
+  echo "Options: rename existing archive, delete it (if duplicate), or wait until a different date."
+  exit 1
+fi
+mv "openspec/changes/<name>" "$DATED"
+```
+
+Hard-stop on collision (same policy as `/opsx:archive`).
+
+#### 7.4 Generate or update `docs/<capability>.md`
+
+For each capability dir under `$DATED/specs/`, generate or update `docs/<cap>.md` (pt-BR prose, code identifiers/paths/commands stay in English). Source material to read:
+
+- `openspec/specs/<cap>/spec.md` (post-sync source of truth; fall back to the archived delta if 7.2 was skipped).
+- The archived `proposal.md`, `design.md` (if present), `tasks.md`.
+- Existing `docs/<cap>.md` if present (preserve manual edits and prior history entries).
+
+Template sections (same as the standalone archive skill):
+
+- **Resumo** — 1–2 sentences on what this capability is and why it exists.
+- **Onde mora o código** — bullet list of main files/folders with relative paths.
+- **Superfície pública** — routes, server actions, exported components/utilities, env vars, contract surface.
+- **Comportamento e invariantes** — edge cases, gotchas, RLS/LGPD/idempotency notes.
+- **Testes** — test files covering the capability with layer (unit/integration/e2e) and relative paths.
+- **Histórico de changes** — bullet list, **newest first**, of the form `- YYYY-MM-DD <change-name> — <one-line summary>` linking to `../openspec/changes/archive/<dated>/`. Prepend the just-archived change; never drop prior entries.
+
+**Update vs. create**: when `docs/<cap>.md` already exists, edit in place — refresh stale sections, prepend the change to the history, preserve manual content (especially custom sections outside the template above).
+
+If write fails for any capability: pause, list the failed capability(ies). **Do not** rollback the `mv` from 7.3 — the change is semantically archived; the doc can be corrected manually before the commit in 8b.
+
+#### 7.5 Pre-commit safety check
+
+Run `git -C "$WORKTREE" status --short` and `git -C "$WORKTREE" diff --stat docs/` to verify the doc edits look reasonable. If any pre-existing `docs/<cap>.md` shows a destructive diff (e.g., manual sections deleted, history truncated), pause and ask the user before proceeding to step 8.
+
+### 8. Commits and PR
+
+Once archive (step 7) completed without unresolved errors:
+
+#### 8a. Semantic commits per task
 
 Strategy:
 1. For each task in the original `tasks.md` order, compute the set of files exclusively touched by that task. Use `git -C <worktree> log --reverse --oneline` if intermediate commits were already made by the dev agent during the per-task loop; otherwise, replay by reading the worktree's reflog.
@@ -191,7 +309,32 @@ All commits include in the body:
 - Co-author trailer if appropriate (per repo convention; check existing log)
 - No `--no-verify`. If pre-commit hooks fail, treat as a fix-iteration trigger (route back to step 6).
 
-#### 7b. Push and open PR
+#### 8b. Dedicated archive commit
+
+After 8a, stage and commit everything the archive step (7) produced as a single dedicated commit:
+
+```bash
+cd "$WORKTREE"
+git add \
+  openspec/changes/archive/$(date +%F)-<name>/ \
+  openspec/specs/ \
+  docs/
+git commit -m "chore(openspec): archive <name> + sync specs + docs
+
+OpenSpec change: <name>
+- Archived to openspec/changes/archive/$(date +%F)-<name>/
+- Synced delta specs into openspec/specs/<cap>/spec.md (see .dev-cycle/sync-summary.md)
+- Updated docs/<cap>.md for each touched capability"
+```
+
+Notes:
+- The `mv` from step 7.3 shows up as a rename in `git status`; `git add openspec/changes/archive/<dated>/` stages the rename plus any modifications.
+- `git add openspec/specs/` picks up sync edits from step 7.2.
+- `git add docs/` picks up doc edits from step 7.4.
+- If `git status` shows untracked files outside these paths, **do not** stage them blindly — pause and ask the user.
+- If pre-commit hooks fail, treat as a fix-iteration trigger (route back to step 6, scoped re-validation).
+
+#### 8c. Push and open PR
 
 ```bash
 git -C "$WORKTREE" push -u origin "$BRANCH"
@@ -203,7 +346,7 @@ gh pr create \
   --body "$(cat <<'EOF'
 ## OpenSpec change
 - Name: <name>
-- Path: openspec/changes/<name>/
+- Archived to: openspec/changes/archive/YYYY-MM-DD-<name>/
 
 ## Summary
 <extracted from proposal.md>
@@ -211,9 +354,13 @@ gh pr create \
 ## Tasks completed
 <bulleted list from tasks.md, all checked>
 
+## Archive
+- Specs synced: <list of openspec/specs/<cap>/spec.md touched, or "none — docs-only change">
+- Docs updated: <list of docs/<cap>.md created or updated>
+
 ## Evidence
 - Code review: .dev-cycle/review-N.md (final iteration)
-- QA report: .dev-cycle/qa-N.md (final iteration)
+- QA report: .dev-cycle/qa-N.md (final iteration, or "skipped — backend-only heuristic" / "skipped — --force-qa override")
 - Re-validation iterations: dev↔reviewer X/3, dev↔QA Y/3
 EOF
 )"
@@ -229,9 +376,12 @@ EOF
 Tasks: M/M complete
 Worktree: ../hubrityp-<name>/ (branch: feature/<name>)
 Review iterations: X/3
-QA iterations: Y/3
-Commits created: <count> (<strategy: per-task | single>)
-Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ...}
+QA: <Y/3 | skipped (backend-only heuristic) | skipped (--force-qa override)>
+Archive: openspec/changes/archive/YYYY-MM-DD-<name>/
+  - Specs synced: <list or "none">
+  - Docs updated: <list or "none">
+Commits created: <count> per-task + 1 archive commit (<strategy: per-task | single>)
+Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md}
 PR: <url>
 ```
 

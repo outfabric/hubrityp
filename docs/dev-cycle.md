@@ -30,20 +30,31 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
 ┌────────────────┐         ┌────────────────┐         ┌────────────────┐
 │ fullstack-     │  loop   │ code-reviewer  │  loop   │ qa-tester      │
 │ developer      │◀──fix───│  (1× pós-tasks)│◀──fix───│ (1× pós-review)│
-└────────────────┘         └────────────────┘         └────────────────┘
-        │                          │                          │
-        │ per task                 │ feedback estruturado     │ feedback estruturado
-        ▼                          │ (BLOCKER/HIGH)           │ (CRÍTICO/ALTO)
-   impl → unit → integration       │                          │
+└────────────────┘         └────────────────┘         └─── skip if ────┘
+        │                          │                  backend-only
+        │ per task                 │ feedback estruturado     │
+        ▼                          │ (BLOCKER/HIGH)           │ feedback estruturado
+   impl → unit → integration       │                          │ (CRÍTICO/ALTO)
    → e2e → lint+typecheck          ▼                          ▼
                               dev corrige                dev corrige
                               + re-validação             + re-validação
                               escopada                   escopada
                                                               │
                                                               ▼
+                                                       archive in-place
+                                                       (sync specs + mv +
+                                                        docs/<cap>.md)
+                                                              │
+                                                              ▼
                                                        commits semânticos
+                                                       (per-task + 1 archive)
                                                        + push + gh pr create
 ```
+
+> **Notas**:
+>
+> - `qa-tester` é skipado automaticamente quando uma heurística de 3 sinais conclui que a change é backend-only (sem tags `[e2e]`, sem keywords UI em scenarios, sem paths em `app/(app)/`, `app/(auth)/` ou `components/`). Veja seção 7.bis. Force com `/dev-cycle <name> --force-qa`.
+> - O **archive** é feito dentro do worktree, na branch `feature/<name>`, antes do push — então o PR já vem com a change movida para `openspec/changes/archive/`, specs sincronizados e `docs/<cap>.md` atualizados. `/opsx:archive` ainda existe para uso ad-hoc fora do `/dev-cycle`.
 
 ---
 
@@ -71,10 +82,17 @@ Sem argumento:
 /dev-cycle
 ```
 
+Forçando QA mesmo quando a heurística do step 5.0 skiparia:
+
+```
+/dev-cycle add-patient-crud --force-qa
+```
+
 Comportamento:
 
 - Tenta inferir o nome da change pelo contexto da conversa.
 - Se ambíguo, executa `openspec list --json` e usa **AskUserQuestion** para o usuário escolher entre as changes ativas.
+- `--force-qa` é a única flag suportada hoje. Sem ela, a heurística da seção 7.bis decide se `qa-tester` roda.
 
 ---
 
@@ -154,6 +172,16 @@ Quando todas as tasks estão `[x]`:
 
 ### Step 5 — Loop dev ↔ qa-tester (cap 3)
 
+#### Step 5.0 — Decisão skip-QA
+
+Antes de qualquer custo (Docker, browser), o orquestrador avalia a heurística de 3 sinais (detalhada na seção 7.bis):
+
+- Se `--force-qa` foi passado → roda QA (anuncia que heurística teria skipado/rodado).
+- Se os 3 sinais resultam em PASS → skipa `qa-tester`, anuncia o motivo, e pula direto para o step 6 (Archive in-place). O Docker NÃO é inicializado.
+- Caso contrário → roda QA normalmente.
+
+#### Step 5.1 — Loop QA (quando 5.0 não skipa)
+
 1. Garante app no ar:
    ```bash
    curl -sf http://localhost:3000 || docker compose up -d
@@ -168,7 +196,67 @@ Quando todas as tasks estão `[x]`:
      - Loop guard idêntico ao do reviewer (se CRÍTICO/ALTO repetem entre iterações, escala).
      - Senão: invoca `fullstack-developer` em modo fix. Reinvoca `code-reviewer` (review curto sobre o novo diff). Se review limpo → reinvoca `qa-tester`.
 
-### Step 6 — Commits semânticos + PR
+### Step 6 — Archive in-place
+
+Roda quando reviewer está limpo E (QA está limpo OU QA foi skipado no 5.0). Acontece **dentro do worktree, na branch `feature/<name>`**, antes do push — assim o PR já vem com a change movida, specs sincronizados e `docs/<cap>.md` atualizados.
+
+**Princípio**: equivale a `/opsx:archive` rodando com todas as confirmações auto-aceitas como "proceed". Totalmente não-interativo; falhas hard-stopam antes de qualquer commit/PR.
+
+#### 6.1 — Validate
+
+```bash
+openspec status --change "<name>" --json
+```
+
+Hard error se algum artifact ≠ `done` ou se algum `- [ ]` resta em `tasks.md` (não deveria acontecer; sinal de bug do orquestrador).
+
+#### 6.2 — Sync delta specs → main specs
+
+Se `openspec/changes/<name>/specs/` estiver vazio: skip (docs-only change). Anuncia "No delta specs — sync skipped".
+
+Caso contrário, invoca `fullstack-developer` com prompt equivalente a `/opsx:sync` em modo não-interativo:
+
+- "Para cada capability sob `specs/`, comparar com `openspec/specs/<cap>/spec.md` e aplicar ADDED/MODIFIED/REMOVED/RENAMED. Não pedir confirmação."
+- Persiste sumário em `<worktree>/.dev-cycle/sync-summary.md`.
+- Reporting: `VERDICT: PASS — sync applied` ou `VERDICT: FAIL — <razão>`.
+
+Se FAIL: pausa e mostra o sumário. **Não defaulta para skip-sync** — o sync foi prometido.
+
+#### 6.3 — Move directory
+
+```bash
+mkdir -p openspec/changes/archive
+DATED="openspec/changes/archive/$(date +%F)-<name>"
+[ -d "$DATED" ] && { echo "Archive target exists at $DATED"; exit 1; }
+mv "openspec/changes/<name>" "$DATED"
+```
+
+Hard-stop em colisão (mesma política do `/opsx:archive`).
+
+#### 6.4 — Generate / update `docs/<cap>.md`
+
+Para cada capability em `$DATED/specs/`, gera ou atualiza `docs/<cap>.md` (pt-BR; identifiers/paths/comandos em inglês). Template fixo: Resumo, Onde mora o código, Superfície pública, Comportamento e invariantes, Testes, Histórico de changes (newest first, com link para `../openspec/changes/archive/<dated>/`).
+
+- Se `docs/<cap>.md` já existe: edit in-place — refrescar seções obsoletas, prepend a nova entrada no histórico, **preservar edições manuais** (especialmente seções fora do template).
+- Se write falha para alguma capability: pausa, lista as falhas. **Não rollback** do `mv` — a change está semanticamente arquivada; o doc pode ser corrigido manualmente antes do commit em 7.b.
+
+#### 6.5 — Pre-commit safety check
+
+`git status --short` + `git diff --stat docs/`. Se algum `docs/<cap>.md` mostra diff destrutivo (seções manuais deletadas, histórico truncado), pausa antes de seguir para o step 7.
+
+#### Política de falhas (resumo)
+
+| Sub-passo      | Falha → ação                                                          |
+| -------------- | --------------------------------------------------------------------- |
+| 6.1 (validate) | Hard error — sinal de bug                                             |
+| 6.2 (sync)     | Pausa, mostra `sync-summary.md`, pede decisão. Não defaulta para skip |
+| 6.3 (mv)       | Hard error com mensagem                                               |
+| 6.4 (docs gen) | Pausa, lista capability falhada. **Não** rollback do `mv`             |
+| 6.5 (safety)   | Pausa para revisão manual                                             |
+
+Princípio: antes do `mv` (6.3), qualquer falha é recuperável e sem efeito colateral; depois do `mv`, abortar é pausar e pedir intervenção, não desfazer.
+
+### Step 7 — Commits semânticos + PR
 
 1. **Commits per-task** (default): para cada task em `tasks.md`, identifica os arquivos exclusivamente tocados por aquela task e cria um commit com Conventional Commits:
    - `feat: <task title>` (default)
@@ -176,12 +264,18 @@ Quando todas as tasks estão `[x]`:
    - `test: <task title>` se for puramente sobre testes
    - `chore: <task title>` para infra/config
 2. **Fallback**: se isolar arquivos por task for inviável (overlap), cria um commit único `feat(<change>): <change title>` e anuncia o fallback.
-3. **Push + PR**:
+3. **Commit dedicado de archive** (sempre, depois dos per-task):
+   ```bash
+   git add openspec/changes/archive/$(date +%F)-<name>/ openspec/specs/ docs/
+   git commit -m "chore(openspec): archive <name> + sync specs + docs"
+   ```
+   Justificativa do commit isolado: auditável no PR (reviewer vê 1 commit infra separado dos commits de feature), bisectável (sync mau-feito é localizável), rebatível (retry/fix do archive não toca os commits de feature).
+4. **Push + PR**:
    ```bash
    git push -u origin feature/<name>
    gh pr create --base main --title "<change title>" --body "..."
    ```
-   O body inclui referência à change OpenSpec, resumo do proposal, checklist de tasks, e links para `review-N.md` e `qa-N.md` como evidência.
+   O body inclui referência à change OpenSpec (com path do archive datado), seções "Archive" (specs synced + docs touched) e "Evidence" (reports de review/QA — ou "QA skipped" quando aplicável), e checklist de tasks.
 
 ---
 
@@ -231,6 +325,43 @@ Com cap de 3 iters por loop e dois loops (reviewer + QA), pior caso ≈ 12min de
 
 ---
 
+## 7.bis Skip-QA — heurística
+
+O `qa-tester` usa Playwright em browser real (~2–5min/iteração, cap 3 = até 15min). Para changes backend-only o custo não se justifica. O step 5.0 do pipeline avalia 3 sinais; se todos derem PASS, `qa-tester` é skipado (e o Docker não é nem inicializado).
+
+### Os 3 sinais (logical AND)
+
+| #   | Sinal                                                                  | Comando                                                                                                                         |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Nenhuma tag `[e2e]` em `tasks.md`                                      | `! grep -qE '\[e2e\]' openspec/changes/<name>/tasks.md`                                                                         |
+| 2   | Nenhuma keyword UI em blocos `#### Scenario:` dos `specs/`             | `! grep -irE -A 6 '^#### Scenario:' specs/ \| grep -iqE 'visits\|renders\|clicks\|sees\|visual\|navigates\|page\|form\|button'` |
+| 3   | Diff `main...HEAD` não toca `app/(app)/`, `app/(auth)/`, `components/` | `! git diff main...HEAD --name-only \| grep -qE '^(app/\(app\)/\|app/\(auth\)/\|components/)'`                                  |
+
+A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-positivo (existem changes UI sem `[e2e]` e com scenarios escritos em linguagem neutra). O sinal 3 (paths tocados) é o catch-all que pega esses casos.
+
+### Exemplos com changes arquivadas reais
+
+| Change                     | S1  | S2  | S3  | Decisão                                                   |
+| -------------------------- | --- | --- | --- | --------------------------------------------------------- |
+| `bootstrap-foundation`     | ✓   | ✓   | ✓   | **Skip** (infra/tooling, sem UI)                          |
+| `bootstrap-data-and-tests` | ✓   | ✓   | ✓   | **Skip** (db/lib/test stack)                              |
+| `smoke-health-feature`     | ✓   | ✗   | ✗   | **Roda** (toca `app/(auth)/login`, `app/(app)/dashboard`) |
+| `dev-cycle-followups-001`  | ✓   | ✓   | ✓\* | **Skip** (refactor de orquestrador, sem UI)               |
+
+\*Quando a heurística retorna PASS para uma change que mexe em UI por engano, use `--force-qa`.
+
+### Override
+
+`/dev-cycle <name> --force-qa` desliga a heurística e força o loop QA, anunciando o que o skip teria decidido.
+
+### Mensagens
+
+- **Skip**: lista os 3 sinais com PASS e instrui o usuário a re-invocar com `--force-qa` se discordar.
+- **Run após heurística falhar**: nomeia qual sinal disparou (ex.: "Signal 3 failed: diff touches `components/Button.tsx`").
+- **Run forçado**: "QA forced by --force-qa flag (heuristic would have skipped/run)".
+
+---
+
 ## 8. Loop prevention
 
 | Loop                                                       | Cap      | Ação ao bater                                                                                      |
@@ -251,16 +382,20 @@ Quando um cap é atingido, o orquestrador imprime:
 
 ## 9. Onde os artefatos vivem
 
-| Artefato               | Caminho                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| Worktree da change     | `../hubrityp-<name>/` (sibling do repo)                 |
-| Branch da change       | `feature/<name>` (criada do `origin/main`)              |
-| Relatórios de review   | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ... |
-| Relatórios de QA       | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...         |
-| Logs de falhas de task | `<worktree>/.dev-cycle/task-<n>-fail.log`               |
-| Pasta `.dev-cycle/`    | gitignored (via `.gitignore` na raiz do repo)           |
-| Commits                | dentro do worktree, na branch `feature/<name>`          |
-| PR                     | aberto via `gh pr create` contra `main`                 |
+| Artefato                 | Caminho                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| Worktree da change       | `../hubrityp-<name>/` (sibling do repo)                  |
+| Branch da change         | `feature/<name>` (criada do `origin/main`)               |
+| Relatórios de review     | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ...  |
+| Relatórios de QA         | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...          |
+| Sumário do sync de specs | `<worktree>/.dev-cycle/sync-summary.md`                  |
+| Logs de falhas de task   | `<worktree>/.dev-cycle/task-<n>-fail.log`                |
+| Pasta `.dev-cycle/`      | gitignored (via `.gitignore` na raiz do repo)            |
+| Change arquivada         | `openspec/changes/archive/YYYY-MM-DD-<name>/`            |
+| Specs principais sincr.  | `openspec/specs/<cap>/spec.md` (editado no step 6.2)     |
+| Docs técnicas            | `docs/<cap>.md` (gerado/atualizado no step 6.4)          |
+| Commits                  | per-task + 1 commit `chore(openspec): archive ...`       |
+| PR                       | aberto via `gh pr create` contra `main` (já com archive) |
 
 Após o merge, limpe o worktree:
 
@@ -306,7 +441,7 @@ O orquestrador:
 - **Schema OpenSpec**: apenas `spec-driven`.
 - **Sem paralelismo**: tasks são sequenciais por design (ordem importa em OpenSpec). Se você quer paralelismo, divida em changes independentes.
 - **Local-first**: precisa de Docker + `gh` + Playwright local. Não roda em CI.
-- **Custo de QA**: cada iteração do `qa-tester` consome tempo de browser real. Caps de 3 são intencionais; se você precisa de mais, é sinal de problema estrutural.
+- **Custo de QA**: cada iteração do `qa-tester` consome tempo de browser real (~2–5min). Caps de 3 são intencionais; se você precisa de mais, é sinal de problema estrutural. A heurística do step 5.0 (seção 7.bis) skipa QA em changes backend-only para evitar esse custo quando seguro; use `--force-qa` se quiser desligar a heurística.
 - **Commits per-task** dependem de isolar arquivos por task com confiança. Se as tasks compartilham muitos arquivos, o orquestrador cai para um commit único e anuncia.
 
 ---
@@ -318,6 +453,8 @@ O orquestrador:
 - CLAUDE.md: seção "Workflow de change (dev-cycle)"
 - OpenSpec: `/opsx:new`, `/opsx:ff`, `/opsx:apply`, `/opsx:verify`, `/opsx:archive`
 - Skills relacionadas: `unit-tests`, `integration-tests`, `e2e-tests`
+- Skill `openspec-archive-change` (`.claude/skills/openspec-archive-change/SKILL.md`): a versão interativa do archive, espelhada inline no step 6 do `/dev-cycle`. Continua disponível via `/opsx:archive` para uso ad-hoc fora do `/dev-cycle` (changes manuais, fixes pós-merge, retries).
+- Skill `openspec-sync-specs` (`.claude/skills/openspec-sync-specs/SKILL.md`): a lógica de sync que o step 6.2 invoca em modo não-interativo.
 
 ---
 
