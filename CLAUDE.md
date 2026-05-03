@@ -101,9 +101,9 @@ Features novas e refactors não triviais seguem o ciclo:
 2. **Executar a change** com `/dev-cycle <name>`. O comando orquestra o ciclo fechado:
    - Cria um git worktree dedicado em `../hubrityp-<name>/` na branch `feature/<name>`.
    - Para cada task em ordem: invoca `fullstack-developer` → ele implementa, escreve testes (camadas indicadas pelas tags `[unit]` `[integration]` `[e2e]`), roda `npm run check`. Próxima task só inicia quando todos os gates da atual passam.
-   - Quando todas as tasks estão `[x]`: invoca `code-reviewer` (loop dev↔reviewer com cap de 3 iterações) e depois `qa-tester` (loop dev↔QA com cap de 3 iterações). Cada fix pós-feedback executa re-validação escopada (lint+typecheck → unit full → integration `--related` → e2e `--grep`) com fallback para suítes completas em sinais amplos (schema/types/utils/auth/config/>10 arquivos).
-   - Quando reviewer e QA estão limpos: cria commits semânticos (Conventional Commits, idealmente um por task), faz push e abre PR via `gh`.
-3. **Revisar o PR**, mergear, e arquivar a change com `/opsx:archive`.
+   - Quando todas as tasks estão `[x]`: invoca `code-reviewer` (loop dev↔reviewer com cap de 3 iterações) e depois decide se roda `qa-tester` via heurística (tags `[e2e]`, keywords UI em scenarios, paths tocados — skipa em changes backend-only; force com `/dev-cycle <name> --force-qa`). Quando QA roda, é loop dev↔QA com cap de 3. Cada fix pós-feedback executa re-validação escopada (lint+typecheck → unit full → integration `--related` → e2e `--grep`) com fallback para suítes completas em sinais amplos (schema/types/utils/auth/config/>10 arquivos).
+   - Quando reviewer e QA (ou skip) estão limpos: **arquiva a change in-place** dentro do worktree — sync de delta specs → main specs, `mv openspec/changes/<name> → openspec/changes/archive/YYYY-MM-DD-<name>/`, e atualiza `docs/<cap>.md` para cada capability tocada. Em seguida cria commits semânticos per-task + 1 commit dedicado `chore(openspec): archive <name>`, faz push e abre PR via `gh`.
+3. **Revisar e mergear o PR**. O archive já está no PR — não precisa rodar `/opsx:archive` separadamente. `/opsx:archive` segue disponível para uso ad-hoc fora do `/dev-cycle` (changes manuais, fixes, retries).
 
 **Convenção de tags em `tasks.md`**: cada linha de task pode terminar em `[unit]`, `[integration]`, `[e2e]` (qualquer subconjunto). Default se ausente: `[unit]`. As tags determinam quais camadas de teste o `fullstack-developer` deve criar/atualizar para aquela task.
 
@@ -115,13 +115,13 @@ Features novas e refactors não triviais seguem o ciclo:
 
 Toda change do OpenSpec arquivada deve deixar atrás de si um arquivo de documentação técnica em `docs/<capability>.md` — **um doc por capability**, atualizado em vez de duplicado quando a capability evolui ao longo de várias changes. O objetivo é dar a desenvolvedores e agentes um mapa enxuto da capability sem precisar reler todo o histórico de specs e arquivos arquivados.
 
-- **Quando**: gerado/atualizado automaticamente pelo step de docs do `/opsx:archive` (e do `/opsx:bulk-archive`), depois do `mv` para `openspec/changes/archive/` e do sync de specs.
+- **Quando**: gerado/atualizado automaticamente pelo step de archive do `/dev-cycle` (step 6.4 — equivalente inline do step de docs do `/opsx:archive`), depois do sync de specs e do `mv` para `openspec/changes/archive/`. Também rodado por `/opsx:archive` e `/opsx:bulk-archive` quando usados ad-hoc.
 - **Granularidade**: 1 arquivo por capability presente em `openspec/changes/<name>/specs/`. Changes sem delta specs (ex.: docs-only) pulam o step.
 - **Fonte da verdade**: o spec formal continua sendo `openspec/specs/<cap>/spec.md`. O `docs/<cap>.md` é o resumo legível com **propósito**, **onde mora o código** (paths reais), **superfície pública** (rotas/Server Actions/components/env vars), **comportamento e invariantes** (RLS, LGPD, contratos com integrações externas), **testes** (arquivos por camada) e **histórico de changes** (newest first, com link para `../openspec/changes/archive/<dated>/`).
 - **Idioma**: prosa em pt-BR para ficar consistente com `docs/dev-cycle.md` e demais docs; identificadores de código, paths e comandos de shell em inglês.
 - **Atualização**: quando o doc já existe, editar **in place** — refrescar seções obsoletas e prepender a nova entrada no histórico, preservando edições manuais (especialmente seções fora do template padrão).
 
-Detalhes operacionais completos do step (ordem, fontes a consultar, template) ficam no command/skill do archive: `.claude/commands/opsx/archive.md` e `.claude/skills/openspec-archive-change/SKILL.md`.
+Detalhes operacionais completos do step (ordem, fontes a consultar, template) ficam no command/skill do archive: `.claude/commands/opsx/archive.md` e `.claude/skills/openspec-archive-change/SKILL.md`. A versão inline do `/dev-cycle` está no step 6 do `.claude/commands/dev-cycle.md`.
 
 ## Padrões de engenharia
 

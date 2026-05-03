@@ -7,6 +7,8 @@ tags: [workflow, archive, experimental]
 
 Archive a completed change in the experimental workflow.
 
+> **Note**: If you used `/dev-cycle` to ship the change, archive is already performed automatically (step 6 — Archive in-place — runs before commits + PR open). Use `/opsx:archive` for ad-hoc archives outside `/dev-cycle`: changes implemented manually, fixes after merge, retries, or any case where the integrated archive in step 6 was skipped or failed.
+
 **Input**: Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
