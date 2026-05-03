@@ -17,6 +17,12 @@
 //     init in some configurations; harmless 200 keeps the SDK quiet.
 //
 // Anything else returns 404 so a missing handler is loud, not silent.
+//
+// Public surface (Decision 2 of dev-cycle-followups-001):
+//   `startMockGotrue(options?)` resolves to `{ port, stop, jwt, url }`. The
+//   `jwt` is built once at start time using a default-good payload so the
+//   80% caller does not also need to import `buildFixedJwt`. Callers that
+//   need to mint additional/custom tokens can still import `buildFixedJwt`.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -37,18 +43,33 @@ export type MockGoTrueUser = {
 };
 
 export type MockGoTrueHandle = {
+  // The port the mock is listening on. Preferred over `url` for callers
+  // that need to compose URLs differently (e.g., env validation expects a
+  // full URL string, but a sibling helper might want the raw port).
+  port: number;
+  // Tear down the entire mock and release the listening socket. After this
+  // resolves, the same port is re-bindable.
+  stop: () => Promise<void>;
+  // A valid JWT the mock will accept on `/auth/v1/user`. Built once at
+  // start time so consumers do not need to also call `buildFixedJwt`.
+  jwt: string;
+  // Convenience: full origin string `http://127.0.0.1:<port>`. Equivalent
+  // to `\`http://127.0.0.1:${handle.port}\`` — kept here so call sites can
+  // pass it straight to `createServerClient` / `NEXT_PUBLIC_SUPABASE_URL`.
   url: string;
-  close: () => Promise<void>;
 };
 
 export type MockGoTrueOptions = {
   // The bearer token value that authorises the seeded user. Any other token
-  // (or no token) yields 401, matching the real GoTrue behaviour.
-  fixedToken: string;
+  // (or no token) yields 401, matching the real GoTrue behaviour. If
+  // omitted, a long-lived JWT is minted from the (defaulted) `user` and
+  // exposed on the handle as `jwt`.
+  fixedToken?: string;
   // The user payload returned by `GET /auth/v1/user`. Built from the same
   // seed row inserted by `globalSetup` so the dashboard greeting matches the
-  // value asserted in `auth.spec.ts`.
-  user: MockGoTrueUser;
+  // value asserted in `auth.spec.ts`. Defaults to a stable seeded user when
+  // omitted (matching the identity used by `e2e/start-server.ts`).
+  user?: MockGoTrueUser;
   // Port to bind to. We use a fixed port (rather than `0` for ephemeral)
   // because Next.js inlines `NEXT_PUBLIC_SUPABASE_URL` into the EDGE bundle
   // at build time — middleware code that calls `supabase.auth.getUser()`
@@ -56,15 +77,32 @@ export type MockGoTrueOptions = {
   // mock URL. By binding the mock to the same port as the placeholder,
   // both the (Node) server runtime AND the edge runtime reach the right
   // server without rebuilding for every run.
-  port: number;
+  //
+  // Defaults to `54321` (the same port a local `supabase start` exposes
+  // and the value `lib/env/client.ts` validates for in CI builds).
+  port?: number;
 };
 
-export async function startMockGotrue(options: MockGoTrueOptions): Promise<MockGoTrueHandle> {
-  const server = createServer((req, res) => handleRequest(req, res, options));
+// Defaults wired in when the caller does not supply overrides. Picking a
+// stable UUID (rather than `randomUUID()`) keeps assertions deterministic
+// across runs and lets reused infrastructure skip re-seeding identical rows.
+const DEFAULT_PORT = 54321;
+const DEFAULT_USER_ID = '00000000-0000-4000-8000-000000000001';
+const DEFAULT_EMAIL = 'seed@example.com';
+
+export async function startMockGotrue(options: MockGoTrueOptions = {}): Promise<MockGoTrueHandle> {
+  const port = options.port ?? DEFAULT_PORT;
+  const user = options.user ?? buildDefaultUser();
+  // Mint a long-lived JWT whose payload matches the (defaulted) user. `exp`
+  // is set far in the future so `setSession` does not detour through
+  // `_callRefreshToken`. Reused verbatim if the caller passed `fixedToken`.
+  const jwt = options.fixedToken ?? buildDefaultJwt(user);
+
+  const server = createServer((req, res) => handleRequest(req, res, { fixedToken: jwt, user }));
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(options.port, '127.0.0.1', () => {
+    server.listen(port, '127.0.0.1', () => {
       server.removeListener('error', reject);
       resolve();
     });
@@ -76,19 +114,26 @@ export async function startMockGotrue(options: MockGoTrueOptions): Promise<MockG
     throw new Error('mock-gotrue: failed to bind to the requested port');
   }
 
-  const { port }: AddressInfo = address;
-  const url = `http://127.0.0.1:${port}`;
+  const { port: boundPort }: AddressInfo = address;
+  const url = `http://127.0.0.1:${boundPort}`;
 
   return {
+    port: boundPort,
+    stop: () => closeServer(server),
+    jwt,
     url,
-    close: () => closeServer(server),
   };
 }
+
+type ResolvedRequestContext = {
+  fixedToken: string;
+  user: MockGoTrueUser;
+};
 
 function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  options: MockGoTrueOptions,
+  context: ResolvedRequestContext,
 ): void {
   const method = req.method ?? 'GET';
   const rawUrl = req.url ?? '/';
@@ -100,9 +145,9 @@ function handleRequest(
   // the real GoTrue gates on, and it keeps the mock body-parser-free.
   if (method === 'GET' && path === '/auth/v1/user') {
     const header = req.headers.authorization ?? '';
-    const expected = `Bearer ${options.fixedToken}`;
+    const expected = `Bearer ${context.fixedToken}`;
     if (header === expected) {
-      respondJson(res, 200, options.user);
+      respondJson(res, 200, context.user);
       return;
     }
     respondJson(res, 401, { code: 401, msg: 'invalid token' });
@@ -139,6 +184,39 @@ function closeServer(server: Server): Promise<void> {
       if (err) reject(err);
       else resolve();
     });
+  });
+}
+
+function buildDefaultUser(): MockGoTrueUser {
+  const nowIso = new Date().toISOString();
+  return {
+    id: DEFAULT_USER_ID,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: DEFAULT_EMAIL,
+    email_confirmed_at: nowIso,
+    phone: '',
+    confirmed_at: nowIso,
+    last_sign_in_at: nowIso,
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: {},
+    identities: [],
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+}
+
+function buildDefaultJwt(user: MockGoTrueUser): string {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return buildFixedJwt({
+    sub: user.id,
+    email: user.email,
+    aud: user.aud,
+    role: user.role,
+    // 30 days out — long enough to outlast any test run without going
+    // through `_callRefreshToken`, short enough to be obviously bogus.
+    exp: nowSec + 60 * 60 * 24 * 30,
+    iat: nowSec,
   });
 }
 

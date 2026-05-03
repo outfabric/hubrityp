@@ -20,9 +20,10 @@
 // the mock is GC'd along with everything else.
 import { spawn } from 'node:child_process';
 
+import { buildFixedJwt, startMockGotrue } from '@/lib/test-utils/mock-gotrue';
+
 import { applyMigrations, bootPostgres } from '../__tests__/integration/setup/postgres-container';
 
-import { buildFixedJwt, startMockGotrue } from './mock-gotrue';
 import { writeSeedState } from './seed-state';
 
 // Stable seed identity. Picking a fixed UUID (rather than `randomUUID()`)
@@ -80,6 +81,12 @@ async function main(): Promise<void> {
     },
   });
 
+  // Compose the mock URL from the `port` exposed by the relocated helper's
+  // public contract. The handle also exposes a convenience `url`, but we
+  // build it ourselves here so this call site stays aligned with the
+  // `{ port, stop, jwt }` shape the spec promises.
+  const supabaseUrl = `http://127.0.0.1:${mock.port}`;
+
   // Persist seed metadata so `globalSetup` (which seeds rows) and
   // `auth.setup.ts` (which writes the storageState) can pick it up
   // without coordinating through environment variables.
@@ -88,7 +95,7 @@ async function main(): Promise<void> {
     email: SEED_EMAIL,
     accessToken,
     refreshToken,
-    supabaseUrl: mock.url,
+    supabaseUrl,
     databaseUrl: connectionString,
   });
 
@@ -100,7 +107,7 @@ async function main(): Promise<void> {
     env: {
       ...process.env,
       DATABASE_URL: connectionString,
-      NEXT_PUBLIC_SUPABASE_URL: mock.url,
+      NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key',
       SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-key',
       LOG_LEVEL: 'silent',
@@ -118,7 +125,7 @@ async function main(): Promise<void> {
 
   child.on('exit', (code) => {
     // Best-effort: stop the mock cleanly so the port is released.
-    void mock.close().finally(() => process.exit(code ?? 0));
+    void mock.stop().finally(() => process.exit(code ?? 0));
   });
 }
 
