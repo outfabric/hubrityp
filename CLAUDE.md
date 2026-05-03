@@ -91,6 +91,7 @@ docker compose down      # derrubar
 - **Server Actions** preferidas sobre Route Handlers para mutations vindas do app; Route Handlers para webhooks e integrações externas.
 - **Supabase RLS sempre habilitado** em qualquer tabela nova — psicólogo só acessa dados dos próprios pacientes. Migrations sem policy RLS devem ser tratadas como bug.
 - Dados sensíveis (prontuário, transcrições, áudios) seguem LGPD: nunca logar conteúdo, nunca enviar para serviços fora do Brasil sem aprovação explícita.
+- **Consultas a docs de libs/frameworks/SDKs/CLIs/serviços usam o MCP Context7.** Sempre que precisar verificar API, sintaxe, configuração, migração de versão, setup ou comportamento de uma ferramenta/lib/pacote (Next.js, Supabase, Drizzle, shadcn/ui, Inngest, Tailwind, Zod, Twilio, Asaas, etc.), invoque `mcp__context7__resolve-library-id` seguido de `mcp__context7__query-docs` antes de escrever ou recomendar código — mesmo para libs que parecem familiares, já que o conhecimento de treinamento pode estar desatualizado. Prefira Context7 a web search para documentação. Não usar para refactor, lógica de negócio, code review ou conceitos gerais de programação.
 
 ## Workflow de change (dev-cycle)
 
@@ -109,6 +110,18 @@ Features novas e refactors não triviais seguem o ciclo:
 **Artefatos do orquestrador**: relatórios de review e QA são persistidos em `<worktree>/.dev-cycle/{review-N.md, qa-N.md, ...}` (gitignored). O worktree é descartável e pode ser removido com `git worktree remove ../hubrityp-<name>` após o merge do PR.
 
 **Documentação completa**: `docs/dev-cycle.md`.
+
+## Documentação técnica em `docs/`
+
+Toda change do OpenSpec arquivada deve deixar atrás de si um arquivo de documentação técnica em `docs/<capability>.md` — **um doc por capability**, atualizado em vez de duplicado quando a capability evolui ao longo de várias changes. O objetivo é dar a desenvolvedores e agentes um mapa enxuto da capability sem precisar reler todo o histórico de specs e arquivos arquivados.
+
+- **Quando**: gerado/atualizado automaticamente pelo step de docs do `/opsx:archive` (e do `/opsx:bulk-archive`), depois do `mv` para `openspec/changes/archive/` e do sync de specs.
+- **Granularidade**: 1 arquivo por capability presente em `openspec/changes/<name>/specs/`. Changes sem delta specs (ex.: docs-only) pulam o step.
+- **Fonte da verdade**: o spec formal continua sendo `openspec/specs/<cap>/spec.md`. O `docs/<cap>.md` é o resumo legível com **propósito**, **onde mora o código** (paths reais), **superfície pública** (rotas/Server Actions/components/env vars), **comportamento e invariantes** (RLS, LGPD, contratos com integrações externas), **testes** (arquivos por camada) e **histórico de changes** (newest first, com link para `../openspec/changes/archive/<dated>/`).
+- **Idioma**: prosa em pt-BR para ficar consistente com `docs/dev-cycle.md` e demais docs; identificadores de código, paths e comandos de shell em inglês.
+- **Atualização**: quando o doc já existe, editar **in place** — refrescar seções obsoletas e prepender a nova entrada no histórico, preservando edições manuais (especialmente seções fora do template padrão).
+
+Detalhes operacionais completos do step (ordem, fontes a consultar, template) ficam no command/skill do archive: `.claude/commands/opsx/archive.md` e `.claude/skills/openspec-archive-change/SKILL.md`.
 
 ## Padrões de engenharia
 

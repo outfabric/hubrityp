@@ -127,8 +127,10 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
       ```
 
-   c. **Track outcome** for each change:
-      - Success: archived successfully
+   c. **Generate or update technical docs (`docs/<capability>.md`)** — same contract as `/opsx:archive` step 6 (one doc per capability touched). Skip when the change has no delta specs. Record which `docs/<cap>.md` files were created/updated so they can appear in the final summary.
+
+   d. **Track outcome** for each change:
+      - Success: archived successfully (record any docs files touched)
       - Failed: error during archive (record error)
       - Skipped: user chose not to archive (if applicable)
 
