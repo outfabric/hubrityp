@@ -1,30 +1,65 @@
+import { randomUUID } from 'node:crypto';
+
+import { sql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { runAsService } from '@/__tests__/integration/setup/run-as-service';
+import { authResendLog } from '@/shared/db/schema/auth/auth-resend-log';
+import { crpValidationQueue } from '@/shared/db/schema/auth/crp-validation-queue';
+import { psychologistProfiles } from '@/shared/db/schema/auth/psychologist-profiles';
+
 // `signIn` is exercised against a mocked `@supabase/ssr` boundary so every
-// scenario (success, invalid credentials, malformed input, unknown failure,
-// open-redirect attempts) can be staged without a real GoTrue. The action
-// itself runs unmocked — the assertions cover its behaviour, not Supabase's.
+// scenario (success, invalid credentials, malformed input, status-aware
+// redirect, terminal-status sign-out, etc.) can be staged without a real
+// GoTrue. The action itself runs unmocked against the real Postgres test
+// container — the DB-driven status branch needs a real `psychologist_profiles`
+// row for `getAccountStatus` to read.
 //
 // Successful sign-in calls `redirect()`, which throws a special
 // `NEXT_REDIRECT` marker carrying the target on `error.digest`. Tests assert
-// that target is parsed from the digest. Failures must NOT throw — they
-// resolve to a typed `SignInResult` so the page can render an inline error.
+// that target is parsed from the digest. Failures (typed `SignInResult`)
+// resolve normally and the page renders an inline error.
 
 const signInWithPasswordMock = vi.fn();
+const signOutMock = vi.fn();
 
 vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn().mockResolvedValue({
     auth: {
       signInWithPassword: signInWithPasswordMock,
+      signOut: signOutMock,
     },
   }),
 }));
 
+const warnSpy = vi.fn();
+
+vi.mock('@/shared/lib/logger', () => ({
+  logger: {
+    warn: (...args: unknown[]): void => {
+      warnSpy(...args);
+    },
+    error: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+  redactPaths: [],
+}));
+
 beforeEach(() => {
   signInWithPasswordMock.mockReset();
+  signOutMock.mockReset();
+  signOutMock.mockResolvedValue({ error: null });
+  warnSpy.mockReset();
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await runAsService(async (db) => {
+    await db.delete(authResendLog);
+    await db.delete(crpValidationQueue);
+    await db.delete(psychologistProfiles);
+    await db.execute(sql`DELETE FROM auth.users`);
+  });
   vi.resetModules();
 });
 
@@ -41,7 +76,6 @@ function extractRedirectTarget(error: unknown): string {
     throw new Error(`expected NEXT_REDIRECT digest, got: ${String(digest)}`);
   }
   const parts = digest.split(';');
-  // Layout: ['NEXT_REDIRECT', <kind>, <target>, ...]
   const target = parts[2];
   if (!target) throw new Error(`could not parse target from digest: ${digest}`);
   return target;
@@ -53,10 +87,49 @@ function buildFormData(fields: Record<string, string>): FormData {
   return fd;
 }
 
+async function seedAuthUser(userId: string, email: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.execute(
+      sql`INSERT INTO auth.users (id, email, raw_app_meta_data)
+          VALUES (${userId}, ${email}, '{}'::jsonb)
+          ON CONFLICT (id) DO NOTHING`,
+    );
+  });
+}
+
+async function seedProfile(userId: string, status: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(psychologistProfiles).values({
+      userId,
+      fullName: 'Test User',
+      crpNumber: `06/${String(Math.floor(100000 + Math.random() * 900000))}`,
+      crpUf: 'SP',
+      status,
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
+      sensitiveDataConsentAt: new Date(),
+      termsVersion: '2026-05',
+      privacyVersion: '2026-05',
+      sensitiveDataConsentVersion: '2026-05',
+    });
+  });
+}
+
+// Helper: stage a successful Supabase signin returning the given user id.
+function mockSignInOk(userId: string): void {
+  signInWithPasswordMock.mockResolvedValue({
+    data: { user: { id: userId, email: 'doctor@example.com' } },
+    error: null,
+  });
+}
+
 describe('signIn Server Action (integration)', () => {
-  describe('success path', () => {
-    it('writes session via @supabase/ssr and redirects to /dashboard by default', async () => {
-      signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
+  describe('success path — status-aware redirect', () => {
+    it('redirects active user to /dashboard by default', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'active');
+      mockSignInOk(userId);
 
       const { signIn } = await import('@/app/(auth)/login/actions');
 
@@ -67,20 +140,21 @@ describe('signIn Server Action (integration)', () => {
         caught = err;
       }
 
-      // `signInWithPassword` was the only call into Supabase, with the
-      // exact validated payload (no extra fields, no formData artifacts).
       expect(signInWithPasswordMock).toHaveBeenCalledTimes(1);
       expect(signInWithPasswordMock).toHaveBeenCalledWith({
         email: 'doctor@example.com',
         password: 'correct-horse',
       });
-
-      // The action threw a NEXT_REDIRECT for /dashboard.
       expect(extractRedirectTarget(caught)).toBe('/dashboard');
+      // Active user MUST NOT be signed out.
+      expect(signOutMock).not.toHaveBeenCalled();
     });
 
-    it('honours a same-origin redirectTo of "/patients"', async () => {
-      signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
+    it('honours a same-origin redirectTo of "/patients" for active users', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'active');
+      mockSignInOk(userId);
 
       const { signIn } = await import('@/app/(auth)/login/actions');
 
@@ -100,8 +174,11 @@ describe('signIn Server Action (integration)', () => {
       expect(extractRedirectTarget(caught)).toBe('/patients');
     });
 
-    it('honours a deeper same-origin redirectTo like "/dashboard/settings"', async () => {
-      signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
+    it('honours a deeper same-origin redirectTo like "/dashboard/settings" for active users', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'active');
+      mockSignInOk(userId);
 
       const { signIn } = await import('@/app/(auth)/login/actions');
 
@@ -120,6 +197,97 @@ describe('signIn Server Action (integration)', () => {
 
       expect(extractRedirectTarget(caught)).toBe('/dashboard/settings');
     });
+
+    it('redirects pending_verification user to /auth/verify-email even when redirectTo is set', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'pending_verification');
+      mockSignInOk(userId);
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      let caught: unknown = null;
+      try {
+        await signIn(
+          buildFormData({
+            email: 'doctor@example.com',
+            password: 'correct-horse',
+            redirectTo: '/dashboard',
+          }),
+        );
+      } catch (err) {
+        caught = err;
+      }
+
+      // Bloqueante page wins over the requested redirect.
+      expect(extractRedirectTarget(caught)).toBe('/auth/verify-email');
+      // Pending users keep their session — only suspended/cancelled get
+      // signed out at login.
+      expect(signOutMock).not.toHaveBeenCalled();
+    });
+
+    it('redirects pending_crp_validation user to /auth/crp-review even when redirectTo is set', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'pending_crp_validation');
+      mockSignInOk(userId);
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      let caught: unknown = null;
+      try {
+        await signIn(
+          buildFormData({
+            email: 'doctor@example.com',
+            password: 'correct-horse',
+            redirectTo: '/dashboard',
+          }),
+        );
+      } catch (err) {
+        caught = err;
+      }
+
+      expect(extractRedirectTarget(caught)).toBe('/auth/crp-review');
+      expect(signOutMock).not.toHaveBeenCalled();
+    });
+
+    it('signs out suspended user and redirects to /login?reason=suspended', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'suspended');
+      mockSignInOk(userId);
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      let caught: unknown = null;
+      try {
+        await signIn(buildFormData({ email: 'doctor@example.com', password: 'correct-horse' }));
+      } catch (err) {
+        caught = err;
+      }
+
+      expect(extractRedirectTarget(caught)).toBe('/login?reason=suspended');
+      expect(signOutMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('signs out cancelled user and redirects to /login?reason=cancelled', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'doctor@example.com');
+      await seedProfile(userId, 'cancelled');
+      mockSignInOk(userId);
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      let caught: unknown = null;
+      try {
+        await signIn(buildFormData({ email: 'doctor@example.com', password: 'correct-horse' }));
+      } catch (err) {
+        caught = err;
+      }
+
+      expect(extractRedirectTarget(caught)).toBe('/login?reason=cancelled');
+      expect(signOutMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('redirectTo validation (open-redirect defense)', () => {
@@ -133,9 +301,12 @@ describe('signIn Server Action (integration)', () => {
     ];
 
     it.each(hostileTargets)(
-      'falls back to /dashboard when redirectTo is $label',
+      'falls back to /dashboard when redirectTo is $label (active user)',
       async ({ value }) => {
-        signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
+        const userId = randomUUID();
+        await seedAuthUser(userId, 'doctor@example.com');
+        await seedProfile(userId, 'active');
+        mockSignInOk(userId);
 
         const { signIn } = await import('@/app/(auth)/login/actions');
 
@@ -171,9 +342,6 @@ describe('signIn Server Action (integration)', () => {
       );
 
       expect(result).toEqual({ ok: false, error: 'invalid_credentials' });
-      // Crucially: no redirect happened. If `redirect()` had been called the
-      // line above would have thrown NEXT_REDIRECT and we would never reach
-      // this assertion.
       expect(signInWithPasswordMock).toHaveBeenCalledTimes(1);
     });
   });
@@ -222,9 +390,6 @@ describe('signIn Server Action (integration)', () => {
       );
 
       expect(result).toEqual({ ok: false, error: 'unknown' });
-      // The exception was swallowed (logged) — it MUST NOT propagate to the
-      // form, which would surface a generic Next.js error overlay instead of
-      // an inline message.
     });
 
     it('does not redirect when an unexpected error occurs', async () => {
@@ -234,7 +399,6 @@ describe('signIn Server Action (integration)', () => {
 
       // No try/catch: if `redirect()` were called inside the unknown branch
       // it would throw NEXT_REDIRECT and this `await` would itself throw.
-      // Reaching the next line proves no redirect happened.
       const result = await signIn(
         buildFormData({
           email: 'doctor@example.com',
@@ -244,6 +408,40 @@ describe('signIn Server Action (integration)', () => {
       );
 
       expect(result).toEqual({ ok: false, error: 'unknown' });
+    });
+
+    it('returns unknown when Supabase returns success but no user id', async () => {
+      // Edge case: Supabase reports `error: null` but no `user` object. We
+      // cannot determine status without the id, so the action MUST return
+      // `unknown` and NOT redirect.
+      signInWithPasswordMock.mockResolvedValue({ data: { user: null }, error: null });
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      const result = await signIn(
+        buildFormData({ email: 'doctor@example.com', password: 'correct-horse' }),
+      );
+
+      expect(result).toEqual({ ok: false, error: 'unknown' });
+    });
+
+    it('returns unknown and signs the user out when there is no profile row', async () => {
+      const userId = randomUUID();
+      await seedAuthUser(userId, 'orphan@example.com');
+      // NO profile row for this user — simulates a stuck mid-signup or
+      // post-LGPD-deletion state.
+      mockSignInOk(userId);
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      const result = await signIn(
+        buildFormData({ email: 'orphan@example.com', password: 'correct-horse' }),
+      );
+
+      expect(result).toEqual({ ok: false, error: 'unknown' });
+      // Orphan session signed out so the user does not loop on a
+      // dashboard the middleware will reject anyway.
+      expect(signOutMock).toHaveBeenCalledTimes(1);
     });
   });
 });

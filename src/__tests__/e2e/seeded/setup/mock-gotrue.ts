@@ -5,36 +5,45 @@
 // Why this exists: the default e2e suite is Postgres-only (Testcontainers).
 // `getUser()` always makes a network call to `<SUPABASE_URL>/auth/v1/user`
 // to validate the JWT — a simulated cookie alone is not enough. This mock
-// validates the bearer against a fixed token written by `auth.setup.ts` and
-// returns the seeded user when it matches, so the rest of the auth surface
-// (cookie refresh, `signOut`) round-trips without errors.
+// validates the bearer against a registry of known tokens (seeded with the
+// fixed token written by `auth.setup.ts` plus any tokens minted by the
+// signup/signin endpoints below) and returns the seeded user when it matches,
+// so the rest of the auth surface (cookie refresh, `signOut`) round-trips
+// without errors.
 //
-// Surface intentionally minimal:
-//   • `GET    /auth/v1/user`   — bearer match → seeded user JSON; else 401.
-//   • `POST   /auth/v1/logout` — always 204 (signOut should succeed even on
-//     the mock so the UX path is identical to production).
-//   • `GET    /auth/v1/settings` — returns the small JSON the SDK fetches on
-//     init in some configurations; harmless 200 keeps the SDK quiet.
+// Surface the mock provides:
+//   • `GET    /auth/v1/user`                     — bearer match → registered user JSON; else 401.
+//   • `POST   /auth/v1/logout`                   — always 204.
+//   • `GET    /auth/v1/settings`                 — small JSON the SDK fetches on init.
+//   • `POST   /auth/v1/signup`                   — synthesize a user, register a token, return `{ user, session: null }` (email-confirmation flow).
+//   • `POST   /auth/v1/token?grant_type=password`— look up email/password, mint tokens, return a session.
+//   • `DELETE /auth/v1/admin/users/:id`          — compensating delete on signup rollback.
 //
 // Anything else returns 404 so a missing handler is loud, not silent.
 //
-// Public surface (Decision 2 of dev-cycle-followups-001):
-//   `startMockGotrue(options?)` resolves to `{ port, stop, jwt, url }`. The
-//   `jwt` is built once at start time using a default-good payload so the
+// Public surface:
+//   `startMockGotrue(options?)` resolves to `{ port, stop, jwt, url, registry }`.
+//   The `jwt` is built once at start time using a default-good payload so the
 //   80% caller does not also need to import `buildFixedJwt`. Callers that
 //   need to mint additional/custom tokens can still import `buildFixedJwt`.
+//   The `registry` exposes a small set of helpers for seeded e2e specs to
+//   register known users (so the dashboard render path can resolve the
+//   identity behind a programmatically-issued JWT).
+import { randomUUID } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
+
+import postgres from 'postgres';
 
 export type MockGoTrueUser = {
   id: string;
   aud: string;
   role: string;
   email: string;
-  email_confirmed_at: string;
+  email_confirmed_at: string | null;
   phone: string;
-  confirmed_at: string;
-  last_sign_in_at: string;
+  confirmed_at: string | null;
+  last_sign_in_at: string | null;
   app_metadata: Record<string, unknown>;
   user_metadata: Record<string, unknown>;
   identities: unknown[];
@@ -42,63 +51,90 @@ export type MockGoTrueUser = {
   updated_at: string;
 };
 
+// Registry contract exposed to seeded e2e specs. The e2e setup boots the mock
+// once for the whole suite, then specs can register additional users (as part
+// of their `beforeAll`/`beforeEach`) so that programmatically-issued sessions
+// resolve to the right identity at `GET /auth/v1/user`.
+export type MockGoTrueRegistry = {
+  // Register a token → user mapping. Subsequent `GET /auth/v1/user` calls
+  // bearing this token answer with the supplied user payload. Idempotent —
+  // calling with the same token replaces the previous mapping.
+  registerToken(token: string, user: MockGoTrueUser): void;
+  // Remove a token from the registry. Used by `signOut`-style helpers in
+  // tests that want to assert the bearer no longer authenticates.
+  revokeToken(token: string): void;
+  // Register an email/password pair → user mapping for the `password` grant
+  // (signin) path. The signup path also calls this internally so subsequent
+  // signins with the same credentials work.
+  registerCredentials(email: string, password: string, user: MockGoTrueUser): void;
+  // Remove a user entirely (token map + credential map). Used by the
+  // compensating-delete admin endpoint and by tests that want a clean slate.
+  removeUser(userId: string): void;
+};
+
 export type MockGoTrueHandle = {
-  // The port the mock is listening on. Preferred over `url` for callers
-  // that need to compose URLs differently (e.g., env validation expects a
-  // full URL string, but a sibling helper might want the raw port).
   port: number;
-  // Tear down the entire mock and release the listening socket. After this
-  // resolves, the same port is re-bindable.
   stop: () => Promise<void>;
-  // A valid JWT the mock will accept on `/auth/v1/user`. Built once at
-  // start time so consumers do not need to also call `buildFixedJwt`.
   jwt: string;
-  // Convenience: full origin string `http://127.0.0.1:<port>`. Equivalent
-  // to `\`http://127.0.0.1:${handle.port}\`` — kept here so call sites can
-  // pass it straight to `createServerClient` / `NEXT_PUBLIC_SUPABASE_URL`.
   url: string;
+  registry: MockGoTrueRegistry;
 };
 
 export type MockGoTrueOptions = {
-  // The bearer token value that authorises the seeded user. Any other token
-  // (or no token) yields 401, matching the real GoTrue behaviour. If
-  // omitted, a long-lived JWT is minted from the (defaulted) `user` and
-  // exposed on the handle as `jwt`.
   fixedToken?: string;
-  // The user payload returned by `GET /auth/v1/user`. Built from the same
-  // seed row inserted by `globalSetup` so the dashboard greeting matches the
-  // value asserted in `auth.spec.ts`. Defaults to a stable seeded user when
-  // omitted (matching the identity used by `e2e/start-server.ts`).
   user?: MockGoTrueUser;
-  // Port to bind to. We use a fixed port (rather than `0` for ephemeral)
-  // because Next.js inlines `NEXT_PUBLIC_SUPABASE_URL` into the EDGE bundle
-  // at build time — middleware code that calls `supabase.auth.getUser()`
-  // would otherwise hit the build-time placeholder URL, not the dynamic
-  // mock URL. By binding the mock to the same port as the placeholder,
-  // both the (Node) server runtime AND the edge runtime reach the right
-  // server without rebuilding for every run.
-  //
-  // Defaults to `54321` (the same port a local `supabase start` exposes
-  // and the value `src/shared/env/client.ts` validates for in CI builds).
   port?: number;
+  // Connection string for the test Postgres. When provided, the mock
+  // mirrors `signup` and `admin/users DELETE` operations into the test
+  // container's `auth.users` table so the FK from
+  // `psychologist_profiles.user_id` resolves. Production GoTrue and the
+  // real database share a single Postgres, so this mirrors that contract
+  // for the seeded e2e suite. When omitted, the mock skips the DB write
+  // entirely (used by the unit test suite for the mock itself).
+  databaseUrl?: string;
 };
 
-// Defaults wired in when the caller does not supply overrides. Picking a
-// stable UUID (rather than `randomUUID()`) keeps assertions deterministic
-// across runs and lets reused infrastructure skip re-seeding identical rows.
 const DEFAULT_PORT = 54321;
 const DEFAULT_USER_ID = '00000000-0000-4000-8000-000000000001';
 const DEFAULT_EMAIL = 'seed@example.com';
 
+// Internal state buckets. Module-private — only the registry handle exposes
+// safe mutation entry points. The mock server itself reads from these via
+// closure capture.
+type State = {
+  // Token → user. The seed token is registered at boot.
+  tokens: Map<string, MockGoTrueUser>;
+  // Email → { password, user }. Populated by `signup` and `registerCredentials`.
+  credentials: Map<string, { password: string; user: MockGoTrueUser }>;
+  // userId → token (last-issued). Lets `removeUser` flush the corresponding
+  // token entry without scanning the whole token map.
+  userTokens: Map<string, string>;
+  // Optional postgres-js client used to mirror signup/admin-delete into the
+  // test database's `auth.users` stub. `null` when the caller did not pass
+  // `databaseUrl`. Closed at server shutdown.
+  db: postgres.Sql | null;
+};
+
 export async function startMockGotrue(options: MockGoTrueOptions = {}): Promise<MockGoTrueHandle> {
   const port = options.port ?? DEFAULT_PORT;
-  const user = options.user ?? buildDefaultUser();
-  // Mint a long-lived JWT whose payload matches the (defaulted) user. `exp`
-  // is set far in the future so `setSession` does not detour through
-  // `_callRefreshToken`. Reused verbatim if the caller passed `fixedToken`.
-  const jwt = options.fixedToken ?? buildDefaultJwt(user);
+  const seedUser = options.user ?? buildDefaultUser();
+  const seedToken = options.fixedToken ?? buildDefaultJwt(seedUser);
 
-  const server = createServer((req, res) => handleRequest(req, res, { fixedToken: jwt, user }));
+  const state: State = {
+    tokens: new Map<string, MockGoTrueUser>(),
+    credentials: new Map<string, { password: string; user: MockGoTrueUser }>(),
+    userTokens: new Map<string, string>(),
+    db: options.databaseUrl ? postgres(options.databaseUrl, { max: 1, onnotice: () => {} }) : null,
+  };
+  state.tokens.set(seedToken, seedUser);
+  state.userTokens.set(seedUser.id, seedToken);
+
+  const server = createServer((req, res) => {
+    handleRequest(req, res, state).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : 'unknown';
+      respondJson(res, 500, { code: 500, msg: `mock-gotrue: handler threw: ${message}` });
+    });
+  });
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -117,59 +153,322 @@ export async function startMockGotrue(options: MockGoTrueOptions = {}): Promise<
   const { port: boundPort }: AddressInfo = address;
   const url = `http://127.0.0.1:${boundPort}`;
 
+  const registry: MockGoTrueRegistry = {
+    registerToken(token, user) {
+      state.tokens.set(token, user);
+      state.userTokens.set(user.id, token);
+    },
+    revokeToken(token) {
+      const user = state.tokens.get(token);
+      state.tokens.delete(token);
+      if (user) state.userTokens.delete(user.id);
+    },
+    registerCredentials(email, password, user) {
+      state.credentials.set(email.toLowerCase(), { password, user });
+    },
+    removeUser(userId) {
+      const token = state.userTokens.get(userId);
+      if (token) state.tokens.delete(token);
+      state.userTokens.delete(userId);
+      // Walk credentials to remove every email mapped to this user. There
+      // is at most one in practice (signup is one-email-per-user), but the
+      // walk is defensive in case a test registers multiple aliases.
+      for (const [email, entry] of state.credentials) {
+        if (entry.user.id === userId) {
+          state.credentials.delete(email);
+        }
+      }
+    },
+  };
+
   return {
     port: boundPort,
-    stop: () => closeServer(server),
-    jwt,
+    stop: async () => {
+      await closeServer(server);
+      if (state.db) {
+        await state.db.end({ timeout: 5 });
+      }
+    },
+    jwt: seedToken,
     url,
+    registry,
   };
 }
 
-type ResolvedRequestContext = {
-  fixedToken: string;
-  user: MockGoTrueUser;
-};
-
-function handleRequest(
+async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  context: ResolvedRequestContext,
-): void {
+  state: State,
+): Promise<void> {
   const method = req.method ?? 'GET';
   const rawUrl = req.url ?? '/';
-  const path = rawUrl.split('?')[0] ?? '/';
+  const [pathOnly = '/', queryString = ''] = rawUrl.split('?', 2);
+  const path = pathOnly;
+  const query = new URLSearchParams(queryString);
 
-  // GoTrue's `/user` endpoint is what `supabase.auth.getUser(jwt)` calls. The
-  // SDK passes the access token both via the `Authorization: Bearer …`
-  // header and as the JSON body. We only inspect the header — that's what
-  // the real GoTrue gates on, and it keeps the mock body-parser-free.
+  // GET /auth/v1/user — bearer match against the token registry.
   if (method === 'GET' && path === '/auth/v1/user') {
     const header = req.headers.authorization ?? '';
-    const expected = `Bearer ${context.fixedToken}`;
-    if (header === expected) {
-      respondJson(res, 200, context.user);
+    const token = extractBearer(header);
+    if (token && state.tokens.has(token)) {
+      respondJson(res, 200, state.tokens.get(token));
       return;
     }
     respondJson(res, 401, { code: 401, msg: 'invalid token' });
     return;
   }
 
-  // signOut must succeed cleanly. Real GoTrue returns 204 No Content here.
+  // POST /auth/v1/logout — always 204. Real GoTrue is the same.
   if (method === 'POST' && path === '/auth/v1/logout') {
     res.statusCode = 204;
     res.end();
     return;
   }
 
-  // Some SDK init paths fetch settings. Returning a benign 200 avoids
-  // spurious warnings without us having to handcraft a realistic payload —
-  // the auth flows we exercise don't depend on the values.
+  // GET /auth/v1/settings — benign 200.
   if (method === 'GET' && path === '/auth/v1/settings') {
-    respondJson(res, 200, { external: {}, disable_signup: true, mailer_autoconfirm: true });
+    respondJson(res, 200, { external: {}, disable_signup: false, mailer_autoconfirm: false });
+    return;
+  }
+
+  // POST /auth/v1/signup — synthesize a user and register the token. Returns
+  // `{ user, session: null }` to mirror the email-confirmation flow (the
+  // user must click the verification link before they can sign in).
+  //
+  // The `signUpImpl` Server Action only consumes `signUpData.user.id` from
+  // the response; it does not establish a session here.
+  if (method === 'POST' && path === '/auth/v1/signup') {
+    const body = await readJsonBody(req);
+    const email = typeof body?.email === 'string' ? body.email : null;
+    const password = typeof body?.password === 'string' ? body.password : null;
+    if (!email || !password) {
+      respondJson(res, 400, {
+        code: 400,
+        msg: 'mock-gotrue: signup requires email and password',
+      });
+      return;
+    }
+    const lower = email.toLowerCase();
+    if (state.credentials.has(lower)) {
+      // Mirror the real GoTrue's "user already registered" surface so the
+      // signup action's error mapping (`message.includes('already registered')`)
+      // catches the duplicate and surfaces `email_already_registered`.
+      respondJson(res, 422, {
+        code: 422,
+        error_code: 'email_address_already_registered',
+        msg: 'User already registered',
+      });
+      return;
+    }
+    const userId = randomUUID();
+    const user = buildUser({ id: userId, email });
+    state.credentials.set(lower, { password, user });
+    // Don't issue an access token at signup — the email-confirmation flow
+    // requires the user to verify their email before any session exists.
+    // The `auth.users.email_confirmed_at` is null until the callback runs.
+    user.email_confirmed_at = null;
+    user.confirmed_at = null;
+    user.last_sign_in_at = null;
+    // Mirror the user into the test container's `auth.users` stub so the
+    // FK from `psychologist_profiles.user_id` resolves on the post-signup
+    // INSERT issued by the Server Action. Real Supabase runs GoTrue and
+    // the application database in the same Postgres; this mirror keeps
+    // that contract for the seeded e2e suite.
+    if (state.db) {
+      try {
+        await state.db`
+          INSERT INTO auth.users (id, email, raw_app_meta_data)
+          VALUES (${userId}, ${email}, '{}'::jsonb)
+          ON CONFLICT (id) DO NOTHING
+        `;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown';
+        respondJson(res, 500, {
+          code: 500,
+          msg: `mock-gotrue: failed to mirror auth.users insert: ${msg}`,
+        });
+        return;
+      }
+    }
+    respondJson(res, 200, { user, session: null });
+    return;
+  }
+
+  // POST /auth/v1/token?grant_type=password — sign in. Look up email/password
+  // in the credential registry, mint an access + refresh token, register them,
+  // and return a session payload that supabase-js's `_sessionResponse` can
+  // unpack.
+  if (method === 'POST' && path === '/auth/v1/token' && query.get('grant_type') === 'password') {
+    const body = await readJsonBody(req);
+    const email = typeof body?.email === 'string' ? body.email : null;
+    const password = typeof body?.password === 'string' ? body.password : null;
+    if (!email || !password) {
+      respondJson(res, 400, {
+        code: 400,
+        error_code: 'validation_failed',
+        msg: 'mock-gotrue: password grant requires email and password',
+      });
+      return;
+    }
+    const entry = state.credentials.get(email.toLowerCase());
+    if (!entry || entry.password !== password) {
+      respondJson(res, 400, {
+        code: 400,
+        error_code: 'invalid_credentials',
+        msg: 'Invalid login credentials',
+      });
+      return;
+    }
+    // Mark the user as email-confirmed at signin time only if the test
+    // already drove the verification step (the signup endpoint deliberately
+    // sets `email_confirmed_at = null`). Tests that need to bypass
+    // verification register the user via `registerCredentials` with an
+    // already-confirmed user payload.
+    const accessToken = buildDefaultJwt(entry.user);
+    const refreshToken = `mock-refresh-${entry.user.id}`;
+    state.tokens.set(accessToken, entry.user);
+    state.userTokens.set(entry.user.id, accessToken);
+    const nowSec = Math.floor(Date.now() / 1000);
+    respondJson(res, 200, {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: 60 * 60 * 24 * 30,
+      expires_at: nowSec + 60 * 60 * 24 * 30,
+      token_type: 'bearer',
+      user: entry.user,
+    });
+    return;
+  }
+
+  // POST /__test/register-credentials — TEST-ONLY sidecar endpoint. Lets a
+  // Playwright spec (running in a different process from the mock) seed an
+  // email/password/user mapping into the mock's credential registry, so a
+  // subsequent signin call from inside the webServer process can resolve it.
+  //
+  // The endpoint is gated on the request origin: it only responds when the
+  // socket peer is localhost (127.0.0.1 / ::1). The mock binds to 127.0.0.1
+  // anyway, so this is a belt-and-braces guard against accidental exposure
+  // if the bind address ever changes. The endpoint name is namespaced under
+  // `/__test/` to make it obvious in logs that this is not a real GoTrue
+  // route.
+  if (method === 'POST' && path === '/__test/register-credentials') {
+    if (!isLocalhostRequest(req)) {
+      respondJson(res, 403, { code: 403, msg: 'mock-gotrue: __test endpoints are localhost-only' });
+      return;
+    }
+    const body = await readJsonBody(req);
+    const email = typeof body?.email === 'string' ? body.email : null;
+    const password = typeof body?.password === 'string' ? body.password : null;
+    const userId = typeof body?.userId === 'string' ? body.userId : null;
+    const emailConfirmed = body?.emailConfirmed !== false; // default true
+    if (!email || !password || !userId) {
+      respondJson(res, 400, {
+        code: 400,
+        msg: 'mock-gotrue: register-credentials requires email, password, and userId',
+      });
+      return;
+    }
+    const user = buildUser({ id: userId, email, emailConfirmed });
+    state.credentials.set(email.toLowerCase(), { password, user });
+    respondJson(res, 200, { ok: true, userId });
+    return;
+  }
+
+  // POST /__test/remove-user — TEST-ONLY teardown helper. Removes a user
+  // from the mock's registries by user id. Idempotent.
+  if (method === 'POST' && path === '/__test/remove-user') {
+    if (!isLocalhostRequest(req)) {
+      respondJson(res, 403, { code: 403, msg: 'mock-gotrue: __test endpoints are localhost-only' });
+      return;
+    }
+    const body = await readJsonBody(req);
+    const userId = typeof body?.userId === 'string' ? body.userId : null;
+    if (!userId) {
+      respondJson(res, 400, { code: 400, msg: 'mock-gotrue: remove-user requires userId' });
+      return;
+    }
+    const token = state.userTokens.get(userId);
+    if (token) state.tokens.delete(token);
+    state.userTokens.delete(userId);
+    for (const [email, entry] of state.credentials) {
+      if (entry.user.id === userId) state.credentials.delete(email);
+    }
+    respondJson(res, 200, { ok: true });
+    return;
+  }
+
+  // DELETE /auth/v1/admin/users/:id — compensating delete on signup rollback.
+  // The `signUpImpl` action calls this through the admin client when the
+  // post-signup transaction fails (UNIQUE collision on CRP, etc.).
+  if (method === 'DELETE' && path.startsWith('/auth/v1/admin/users/')) {
+    const userId = path.slice('/auth/v1/admin/users/'.length);
+    if (!userId) {
+      respondJson(res, 400, { code: 400, msg: 'mock-gotrue: admin delete requires user id' });
+      return;
+    }
+    // Drain the request body — the SDK sends `{ should_soft_delete }` in the
+    // body and node will keep the connection open until we consume it.
+    await readJsonBody(req);
+    // Real GoTrue returns 200 with an empty body when the user is removed,
+    // and 200 even if the user did not exist (the SDK does not expose that
+    // distinction in any meaningful way). We mirror that.
+    state.tokens.forEach((user, token) => {
+      if (user.id === userId) state.tokens.delete(token);
+    });
+    state.userTokens.delete(userId);
+    for (const [email, entry] of state.credentials) {
+      if (entry.user.id === userId) state.credentials.delete(email);
+    }
+    // Mirror into the test database: real GoTrue's admin delete cascades
+    // through `auth.users`. We do the same so the post-rollback row count
+    // assertions in the duplicate-* specs see the orphan disappear.
+    if (state.db) {
+      try {
+        await state.db`DELETE FROM auth.users WHERE id = ${userId}`;
+      } catch {
+        // Best-effort: a rollback that races with the FK delete is still a
+        // valid mock outcome; the test asserts on row counts, which are
+        // satisfied either way.
+      }
+    }
+    respondJson(res, 200, {});
     return;
   }
 
   respondJson(res, 404, { code: 404, msg: 'mock-gotrue: route not found', method, path });
+}
+
+function extractBearer(header: string): string | null {
+  if (!header.startsWith('Bearer ')) return null;
+  return header.slice('Bearer '.length).trim() || null;
+}
+
+// True when the inbound request originates from the loopback interface. Used
+// to gate the `/__test/...` sidecar endpoints. The mock binds to 127.0.0.1
+// already, so any non-loopback peer would have to come from a misconfigured
+// reverse proxy — refuse them defensively.
+function isLocalhostRequest(req: IncomingMessage): boolean {
+  const remote = req.socket.remoteAddress ?? '';
+  return remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+}
+
+async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(chunk as Buffer);
+  }
+  if (chunks.length === 0) return {};
+  const raw = Buffer.concat(chunks).toString('utf8');
+  if (!raw.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    return {};
+  } catch {
+    return {};
+  }
 }
 
 function respondJson(res: ServerResponse, status: number, body: unknown): void {
@@ -187,6 +486,8 @@ function closeServer(server: Server): Promise<void> {
   });
 }
 
+// Build a default seed user payload. Stable id and timestamp so reused
+// containers / runs keep the same identity.
 function buildDefaultUser(): MockGoTrueUser {
   const nowIso = new Date().toISOString();
   return {
@@ -206,6 +507,38 @@ function buildDefaultUser(): MockGoTrueUser {
   };
 }
 
+// Build a user payload for an arbitrary email/userId. Used by `signup` to
+// synthesize a fresh row in the credentials registry. Email confirmed-at is
+// initialized to "now" but the signup handler clears it to null to mirror
+// the email-confirmation flow.
+export function buildUser({
+  id,
+  email,
+  emailConfirmed,
+}: {
+  id?: string;
+  email: string;
+  emailConfirmed?: boolean;
+}): MockGoTrueUser {
+  const nowIso = new Date().toISOString();
+  const confirmed = emailConfirmed ?? true;
+  return {
+    id: id ?? randomUUID(),
+    aud: 'authenticated',
+    role: 'authenticated',
+    email,
+    email_confirmed_at: confirmed ? nowIso : null,
+    phone: '',
+    confirmed_at: confirmed ? nowIso : null,
+    last_sign_in_at: confirmed ? nowIso : null,
+    app_metadata: { provider: 'email', providers: ['email'] },
+    user_metadata: {},
+    identities: [],
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+}
+
 function buildDefaultJwt(user: MockGoTrueUser): string {
   const nowSec = Math.floor(Date.now() / 1000);
   return buildFixedJwt({
@@ -213,8 +546,6 @@ function buildDefaultJwt(user: MockGoTrueUser): string {
     email: user.email,
     aud: user.aud,
     role: user.role,
-    // 30 days out — long enough to outlast any test run without going
-    // through `_callRefreshToken`, short enough to be obviously bogus.
     exp: nowSec + 60 * 60 * 24 * 30,
     iat: nowSec,
   });

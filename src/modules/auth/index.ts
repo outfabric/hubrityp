@@ -21,10 +21,18 @@
 // into a client-safe RPC stub.
 
 export { loginInputSchema, type LoginInput } from './lib/login-input-schema';
+export { signupInputSchema, type SignupInput } from './lib/signup-input-schema';
 export { mapSupabaseUser, type AppUser } from './lib/map-supabase-user';
 export { safeRedirect } from './lib/safe-redirect';
+export { postLoginRedirect } from './lib/post-login-redirect';
 
 export { LoginForm, type LoginFormProps } from './components/login-form';
+export { SignupForm, type SignupFormProps, type SignUpAction } from './components/signup-form';
 
 export { signInImpl as signIn, type SignInResult } from './server/login';
+export { signUpImpl as signUp, type SignUpResult } from './server/signup';
 export { signOutImpl as signOut } from './server/logout';
+export {
+  resendVerificationEmailImpl as resendVerificationEmail,
+  type ResendVerificationResult,
+} from './server/resend-verification';

@@ -34,3 +34,39 @@ export function createMiddlewareClient(request: NextRequest) {
 
   return { supabase, response };
 }
+
+// Match the Supabase-managed auth cookie names. `@supabase/ssr` writes the
+// session as either:
+//   • `sb-<projectRef>-auth-token` — small payloads (single cookie), OR
+//   • `sb-<projectRef>-auth-token.0`, `…1`, … — chunked payloads (large JWTs).
+// This regex catches both shapes so we delete every part of a chunked
+// session in one pass. A plain `startsWith('sb-')` check would over-match
+// on unrelated Supabase cookies (e.g. realtime), and a plain
+// `endsWith('-auth-token')` would miss the chunk variants.
+const SUPABASE_AUTH_COOKIE = /^sb-.*-auth-token(\.\d+)?$/;
+
+// Find every Supabase auth cookie present on the request. Used by the
+// middleware when a status transition (suspended/cancelled) requires a hard
+// session clear — we cannot call `signOut()` from edge middleware without a
+// network round-trip to GoTrue, so we delete the cookies directly instead.
+export function findSupabaseAuthCookieNames(request: NextRequest): string[] {
+  return request.cookies
+    .getAll()
+    .map((c) => c.name)
+    .filter((name) => SUPABASE_AUTH_COOKIE.test(name));
+}
+
+// Mutate `response` so that every Supabase auth cookie present on the
+// request is sent back as a deletion (`Max-Age=0`). The browser drops the
+// cookie immediately, leaving the next request fully anonymous.
+//
+// Called only on suspended/cancelled transitions — the status itself
+// represents an intent to lock the user out, so a fail-closed posture is
+// correct: even if the status read raced and the row flipped back to
+// `active` between the read and the next request, the user will simply
+// re-authenticate to recover.
+export function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse): void {
+  for (const name of findSupabaseAuthCookieNames(request)) {
+    response.cookies.delete(name);
+  }
+}

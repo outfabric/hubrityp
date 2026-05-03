@@ -1,21 +1,32 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as AccountLifecycleModule from '@/modules/account-lifecycle';
+
 // Root-middleware behaviour is exercised against a mocked
-// `createMiddlewareClient` so each test can stage either an authenticated
-// session (`{ data: { user: <user> } }`) or an anonymous session
-// (`{ data: { user: null } }`) without booting GoTrue. The middleware itself
-// runs unmocked — these tests pin the gating contract from
-// `specs/authentication/spec.md`:
+// `createMiddlewareClient` and a mocked `getAccountStatus` so each test can
+// stage either an authenticated session (`{ data: { user: <user> } }`) or an
+// anonymous session (`{ data: { user: null } }`) without booting GoTrue or
+// hitting the database. The middleware itself runs unmocked — these tests
+// pin the high-level gating contract from `specs/authentication/spec.md`:
 //
 //   • anon  → /dashboard*       → 307 to /login?redirectTo=<encoded>
-//   • auth  → /login            → 307 to /dashboard
+//   • auth (active) → /login    → 307 to /dashboard
 //   • anon  → /api/health, /    → no redirect (cookie-refresh response)
+//
+// The full status × path matrix (5 × 5) lives in
+// `middleware-status.int.test.ts` — this file keeps the original section-3
+// auth-gating coverage as a regression backstop and asserts only the
+// happy-path active behaviour for authenticated cases. New status branches
+// MUST be added to the matrix file, not here, to keep this file's scope
+// focused on the core anonymous-gating + active passthrough contract.
 //
 // We assert the Location header by parsing it back into a `URL`, since
 // `NextResponse.redirect()` may serialize the value as an absolute URL.
 
 const getUserMock = vi.fn();
+const getAccountStatusMock = vi.fn();
+const clearSupabaseAuthCookiesMock = vi.fn();
 
 vi.mock('@/shared/supabase/middleware', async () => {
   const { NextResponse } = await import('next/server');
@@ -31,11 +42,28 @@ vi.mock('@/shared/supabase/middleware', async () => {
         response,
       };
     }),
+    // The middleware imports this helper for the suspended/cancelled and
+    // orphan-session redirects. The active-only happy path in this file
+    // never triggers it, but the import must resolve to *something*.
+    clearSupabaseAuthCookies: clearSupabaseAuthCookiesMock,
+    findSupabaseAuthCookieNames: vi.fn(() => [] as string[]),
+  };
+});
+
+vi.mock('@/modules/account-lifecycle', async () => {
+  const actual = await vi.importActual<typeof AccountLifecycleModule>(
+    '@/modules/account-lifecycle',
+  );
+  return {
+    ...actual,
+    getAccountStatus: getAccountStatusMock,
   };
 });
 
 beforeEach(() => {
   getUserMock.mockReset();
+  getAccountStatusMock.mockReset();
+  clearSupabaseAuthCookiesMock.mockReset();
 });
 
 afterEach(() => {
@@ -51,6 +79,8 @@ function asAuth() {
     data: { user: { id: '00000000-0000-4000-8000-000000000001', email: 'doctor@example.com' } },
     error: null,
   });
+  // Default to `active` for the legacy auth-gating tests below.
+  getAccountStatusMock.mockResolvedValue({ status: 'active', source: 'db', drift: false });
 }
 
 function makeRequest(path: string): NextRequest {
@@ -106,7 +136,7 @@ describe('middleware (integration)', () => {
     });
   });
 
-  describe('authenticated on /login', () => {
+  describe('authenticated active user on /login', () => {
     it('redirects to /dashboard', async () => {
       asAuth();
       const { middleware } = await import('@/middleware');
@@ -142,7 +172,7 @@ describe('middleware (integration)', () => {
       expect(response.status).toBeLessThan(300);
     });
 
-    it('lets authenticated /dashboard through (no redirect — happy path)', async () => {
+    it('lets active /dashboard through (no redirect — happy path)', async () => {
       asAuth();
       const { middleware } = await import('@/middleware');
       const response = await middleware(makeRequest('/dashboard'));

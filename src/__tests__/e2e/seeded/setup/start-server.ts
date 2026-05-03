@@ -64,6 +64,11 @@ async function main(): Promise<void> {
   const mock = await startMockGotrue({
     fixedToken: accessToken,
     port: MOCK_GOTRUE_PORT,
+    // Pass the test container's connection string so the mock can mirror
+    // signup / admin-delete writes into `auth.users`. Real Supabase runs
+    // GoTrue and the application DB in the same Postgres; this preserves
+    // the FK contract for the seeded e2e suite.
+    databaseUrl: connectionString,
     user: {
       id: SEED_USER_ID,
       aud: 'authenticated',

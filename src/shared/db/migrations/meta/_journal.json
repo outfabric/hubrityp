@@ -8,6 +8,20 @@
       "when": 1777742697390,
       "tag": "0000_blue_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777818923557,
+      "tag": "0001_left_phalanx",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777823530603,
+      "tag": "0002_perfect_bullseye",
+      "breakpoints": true
     }
   ]
 }

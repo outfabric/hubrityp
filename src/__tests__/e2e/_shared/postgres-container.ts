@@ -66,6 +66,13 @@ async function bootstrapAuthSchema(connectionString: string): Promise<void> {
         email text
       );
 
+      -- raw_app_meta_data is set by the production Supabase auth schema
+      -- and used by the set_app_metadata SECURITY DEFINER function (see
+      -- src/shared/db/migrations/0001_*.sql). Add it idempotently so the
+      -- bootstrap stays compatible with existing migration order.
+      ALTER TABLE auth.users
+        ADD COLUMN IF NOT EXISTS raw_app_meta_data jsonb DEFAULT '{}'::jsonb;
+
       CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
         LANGUAGE sql STABLE
       AS $func$

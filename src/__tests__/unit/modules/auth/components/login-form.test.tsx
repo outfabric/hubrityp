@@ -129,4 +129,12 @@ describe('LoginForm', () => {
     expect(screen.queryByText('E-mail inválido.')).not.toBeInTheDocument();
     expect(screen.queryByText('A senha deve ter pelo menos 8 caracteres.')).not.toBeInTheDocument();
   });
+
+  it('renders a "Criar conta" link to /signup so anonymous visitors can self-serve to signup', () => {
+    render(<LoginForm />);
+    const link = screen.getByTestId('login-form-signup-link');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveTextContent('Criar conta');
+    expect(link).toHaveAttribute('href', '/signup');
+  });
 });

@@ -1,5 +1,8 @@
 {
   "@health": "Health endpoints",
   "@auth": "Auth flow — default seeded suite, simulated cookie via storageState",
-  "@auth-real": "Auth flow — dedicated real-GoTrue suite via `npm run test:e2e:real` (lives under src/__tests__/e2e/real/)"
+  "@auth-real": "Auth flow — dedicated real-GoTrue suite via `npm run test:e2e:real` (lives under src/__tests__/e2e/real/)",
+  "@signup": "Signup flow — anonymous reach /signup + login→signup link smoke (section 5)",
+  "@verify-email": "Email verification + /auth/callback smoke (section 6 — bloqueante page render + callback failure path)",
+  "@middleware": "Status-aware root middleware routing (section 7 — anonymous gating + status × path matrix end-to-end)"
 }
