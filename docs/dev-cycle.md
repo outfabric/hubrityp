@@ -318,3 +318,36 @@ O orquestrador:
 - CLAUDE.md: seção "Workflow de change (dev-cycle)"
 - OpenSpec: `/opsx:new`, `/opsx:ff`, `/opsx:apply`, `/opsx:verify`, `/opsx:archive`
 - Skills relacionadas: `unit-tests`, `integration-tests`, `e2e-tests`
+
+---
+
+## 14. Gotchas
+
+Armadilhas reais encontradas durante a primeira invocação do `/dev-cycle` (ver `docs/dev-cycle-retrospective-001.md`, seções 3.4–3.6). Todas se manifestam ao mexer em infraestrutura de e2e ou auth. Leia antes de tocar `playwright.config.ts`, `playwright.auth-real.config.ts`, `e2e/start-server.ts` ou qualquer caminho que envolva `supabase.auth.getUser()` no servidor.
+
+### `NEXT_PUBLIC_*` é inlinado no edge runtime em build time
+
+`middleware.ts` roda no edge runtime, e o Next inlina o valor de `NEXT_PUBLIC_SUPABASE_URL` no bundle no momento do `next build`. Não dá para sobrescrever via `webServer.env` em runtime — o middleware sempre vai bater no host/porta que o build viu. Por isso o mock GoTrue do suite e2e default precisa ouvir na **mesma porta hardcoded** que o build conhece (`127.0.0.1:54321`, idem ao `supabase start`). Helper canônico em `lib/test-utils/mock-gotrue.ts` (`startMockGotrue({ port })` aceita override mas defaulta para `54321` justamente por isso). Consequência prática: o suite mock-GoTrue e o suite `@auth-real` não rodam concorrentemente — disputam a mesma porta.
+
+### Playwright sobe `webServer` ANTES de `globalSetup`
+
+Verificável em `node_modules/playwright/lib/runner/tasks.js::createGlobalSetupTasks`. Qualquer coisa que `globalSetup` escreve em `process.env` (URL dinâmica do Testcontainers Postgres, porta efêmera de mock) é invisível ao Next.js spawnado — `webServer.env` é capturado no config-load. Workaround canônico: `e2e/start-server.ts` faz o boot dinâmico (Postgres + mock GoTrue) e só então `exec`a `next start`, garantindo env completo no momento certo. Esse é o pattern reusável para qualquer suite futuro que precise de recursos efêmeros antes do servidor.
+
+### `playwright.auth-real.config.ts` chama `execSync` no top-level
+
+Mesmo problema da seção anterior em outra fantasia. Como `webServer.env` é capturado em config-load e o suite `@auth-real` depende de URLs/keys que só existem depois de `npx supabase start`, `playwright.auth-real.config.ts` faz `execSync('npx supabase status -o json')` sincronamente no top-level — _não_ em `globalSetup`. **Não tente "consertar" movendo para `globalSetup`**: vai parecer mais limpo e quebrar exatamente como descrito acima, porque o Next spawnado não enxerga as vars. Se a infra de auth-real evoluir, o caminho de fix é o mesmo do mock suite (wrapper de boot tipo `start-server.ts`), não `globalSetup`.
+
+### `supabase status -o json` usa `SCREAMING_SNAKE_CASE`
+
+Quirk do CLI: o payload estruturado usa `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` (uppercase + underscore), não camelCase como em outras saídas do `supabase` CLI. Ver o tipo `SupabaseStatus` em `playwright.auth-real.config.ts`:
+
+```ts
+type SupabaseStatus = {
+  API_URL: string;
+  DB_URL: string;
+  ANON_KEY: string;
+  SERVICE_ROLE_KEY: string;
+};
+```
+
+Ao adicionar novo parsing em volta do CLI, dump o JSON uma vez localmente e cheque o shape real antes de assumir camelCase — vai economizar uma rodada de erro de tipo ou, pior, uma falha silenciosa de undefined.
