@@ -88,6 +88,20 @@ CREATE POLICY "user can select own auth log" ON "auth_logs"
   USING (auth.uid() = user_id);
 --> statement-breakpoint
 
+-- Contract: `auth_logs` exposes only SELECT to end-users. Writes are
+-- performed by `src/modules/registration/server/log-auth-event.ts` through
+-- the app-level Drizzle pool, which MUST connect as a role with
+-- `BYPASSRLS` (Supabase's default `postgres` role does). If a future ops
+-- change pins the app pool to a stricter role without `BYPASSRLS`, every
+-- audit INSERT will fail an RLS check — there is intentionally no INSERT
+-- policy for `authenticated`. Documented at the schema level so a reviewer
+-- can audit the contract without leaving the migration file.
+COMMENT ON TABLE "auth_logs" IS
+  'Audit log for authentication events. SELECT is RLS-restricted to row owner; '
+  'INSERT is performed by the app pool (requires BYPASSRLS on the connecting '
+  'role) — see log-auth-event.ts.';
+--> statement-breakpoint
+
 ALTER TABLE "auth_sessions" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 

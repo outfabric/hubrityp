@@ -46,13 +46,20 @@ type AuthUserRow = {
 };
 
 const supabaseAuthSignUpMock = vi.fn();
+const supabaseAuthSignOutMock = vi.fn();
 const supabaseAuthAdminDeleteUserMock = vi.fn();
 const adminCreateClientMock = vi.fn();
 
+// `signOut` is invoked defensively by every failure branch of `signUpImpl`
+// to guard against the Supabase email-obfuscation edge case where a
+// session cookie is attached to the response despite the signup being
+// rejected. The mock returns the typed `{ error: null }` envelope the SDK
+// promises so the wrapper's `try/catch` does not trip.
 vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn().mockResolvedValue({
     auth: {
       signUp: supabaseAuthSignUpMock,
+      signOut: supabaseAuthSignOutMock,
     },
   }),
 }));
@@ -63,8 +70,10 @@ vi.mock('@supabase/supabase-js', () => ({
 
 beforeEach(() => {
   supabaseAuthSignUpMock.mockReset();
+  supabaseAuthSignOutMock.mockReset();
   supabaseAuthAdminDeleteUserMock.mockReset();
   adminCreateClientMock.mockReset();
+  supabaseAuthSignOutMock.mockResolvedValue({ error: null });
 
   // Default admin-client shim: `auth.admin.deleteUser` performs a real
   // DELETE on `auth.users`. The cascade FK on `profiles.user_id` will
@@ -279,6 +288,13 @@ describe('signUpImpl Server Action (integration)', () => {
       const result = await signUpImpl(formData);
 
       expect(result).toEqual({ ok: false, error: 'duplicate_email' });
+
+      // Defensive cleanup: the duplicate-email branch MUST call
+      // `auth.signOut` so a session cookie attached by Supabase under
+      // email-obfuscation cannot leak to a stranger. This is the
+      // load-bearing assertion of the HIGH-2 fix — if a future refactor
+      // drops the `signOut`, this test catches it.
+      expect(supabaseAuthSignOutMock).toHaveBeenCalledTimes(1);
 
       // Audit row records the failure. `userId` is null (no auth.users
       // was created) — the row is still useful for probing detection.

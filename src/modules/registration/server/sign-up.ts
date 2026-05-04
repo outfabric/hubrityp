@@ -108,6 +108,32 @@ function buildAdminClient() {
 }
 
 /**
+ * Best-effort `auth.signOut` used by every failure branch in `signUpImpl`.
+ *
+ * Why a wrapper: Supabase has documented behaviour where, under email
+ * obfuscation or certain edge cases, `auth.signUp` can attach a session
+ * cookie to the response even when the action fails. Every failure return
+ * defensively clears that cookie so a stranger's session can never ride
+ * out a rejected signup. The cost is one round trip on a failure path —
+ * acceptable.
+ *
+ * Errors thrown by `signOut` itself are swallowed: if Supabase is already
+ * unreachable, the user-facing error code we are about to return is
+ * already the right outcome and a secondary throw would mask it.
+ */
+async function safeSignOut(supabase: { auth: { signOut: () => Promise<unknown> } }): Promise<void> {
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    const name = err instanceof Error ? err.name : 'UnknownError';
+    logger.warn(
+      { event: 'signup_signout_failed', errorName: name },
+      'auth.signOut threw during signup failure cleanup',
+    );
+  }
+}
+
+/**
  * `signUpImpl` is the module-side implementation of the `signUp` Server
  * Action. This file MUST NOT carry a top-level `'use server'` directive —
  * that lives on the route shell (`app/(auth)/signup/actions.ts`) which
@@ -173,11 +199,16 @@ export async function signUpImpl(formData: FormData): Promise<SignUpResult> {
   // `logAuthEvent()` (best-effort, never throws) are called outside this
   // block so the redirect marker propagates and so a logging hiccup
   // cannot mask a real signup failure.
+  //
+  // We hold a reference to the SSR Supabase client so the failure branches
+  // below can call `supabase.auth.signOut()` defensively — see the
+  // duplicate-email comment for the obfuscation scenario this guards
+  // against.
+  const supabase = await createServerClient();
   let signUpData: { user: { id: string } | null } | null = null;
   let signUpError: { code?: string; message?: string; name?: string; status?: number } | null =
     null;
   try {
-    const supabase = await createServerClient();
     const result = await supabase.auth.signUp({
       email,
       password,
@@ -201,11 +232,29 @@ export async function signUpImpl(formData: FormData): Promise<SignUpResult> {
   } catch (err) {
     const name = err instanceof Error ? err.name : 'UnknownError';
     logger.warn({ event: 'signup_unknown_error', errorName: name }, 'signup failure');
+    // Defensive: even on a thrown boundary error Supabase may have set
+    // partial cookies before throwing. Clear them so a stranger's session
+    // cannot ride out a failed signup. `signOut` swallows its own errors;
+    // we still wrap defensively because we never want this branch to
+    // bubble a secondary failure into the user-facing flow.
+    await safeSignOut(supabase);
     return { ok: false, error: 'unknown' };
   }
 
   if (signUpError) {
     if (isDuplicateEmailError(signUpError)) {
+      // Defensive: Supabase has a documented "email obfuscation" mode
+      // where, on a re-signup against an *unconfirmed* prior account,
+      // GoTrue returns `200 OK` with a shadow user object AND sets
+      // session cookies on the response — even though `data.user` may be
+      // null and the request was effectively rejected. If obfuscation is
+      // ever enabled (it varies by project config), the user would
+      // receive "email já cadastrado" while quietly carrying a session
+      // cookie for someone else's pending-verification account. Calling
+      // `signOut` here is one round trip on a failure path — cheap
+      // belt-and-suspenders that closes the hole regardless of project
+      // configuration.
+      await safeSignOut(supabase);
       await logAuthEvent({
         userId: null,
         event: 'signup_failure_duplicate_email',
@@ -234,6 +283,12 @@ export async function signUpImpl(formData: FormData): Promise<SignUpResult> {
           );
         }
       }
+      // Same defense as duplicate_email above: if the signup transaction
+      // somehow set a session cookie for the orphan user before being
+      // rolled back, clear it so the rejected attempt cannot leak a
+      // session. The `admin.deleteUser` rollback above only removes the
+      // server-side row — the cookie on the response is independent.
+      await safeSignOut(supabase);
       await logAuthEvent({
         userId: null,
         event: 'signup_failure_duplicate_crp',
@@ -250,6 +305,10 @@ export async function signUpImpl(formData: FormData): Promise<SignUpResult> {
       },
       'supabase.auth.signUp returned an unexpected error',
     );
+    // Same defense as the other failure branches: an unrecognized
+    // Supabase error must never leave a session cookie attached to a
+    // failed signup.
+    await safeSignOut(supabase);
     return { ok: false, error: 'unknown' };
   }
 

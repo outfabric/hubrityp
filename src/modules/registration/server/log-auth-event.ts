@@ -18,6 +18,18 @@ import { logger } from '@/shared/lib/logger';
 // app pool keeps everything in one place without spinning up a separate
 // Supabase admin client per call.
 //
+// CONTRACT — production deployment requirement:
+// This writer ONLY works when the role behind `db` (i.e. `DATABASE_URL`'s
+// connection user) has `BYPASSRLS` privilege. Supabase's default `postgres`
+// role does, but if a future ops change pins the app pool to a stricter
+// role (e.g. `app_writer` with plain INSERT but no `BYPASSRLS`), every
+// signup-failure log INSERT here will fail an RLS-policy check — no
+// `INSERT` policy exists on `auth_logs` for end-users (asymmetric RLS, by
+// design). The migration enforces this contract at deploy time via a
+// `DO $$ ... RAISE EXCEPTION` block: see `0001_account_registration.sql`
+// near the `auth_logs` definition, which fails the migration if the
+// connecting role cannot bypass RLS.
+//
 // Best-effort by design: a logging failure must NEVER bubble up and break a
 // user-facing flow. Errors are swallowed and re-emitted via the structured
 // logger so ops still see them.
