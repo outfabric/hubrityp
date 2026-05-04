@@ -81,11 +81,11 @@
 
 ## 11. Testes unitários
 
-- [ ] 11.1 `src/__tests__/unit/registration/uf-table.test.ts` — 27 UFs, presença, `regionalCodeToUf` íntegro
-- [ ] 11.2 `src/__tests__/unit/registration/password-validators.test.ts` — happy + cada classe (length, uppercase, lowercase, digit, special) isolada e combinada
-- [ ] 11.3 `src/__tests__/unit/registration/crp-validators.test.ts` — formato válido/inválido + coerência com UF (Apêndice A)
-- [ ] 11.4 `src/__tests__/unit/registration/profile-status.test.ts` — todas as transições válidas e inválidas
-- [ ] 11.5 `src/__tests__/unit/registration/signup-input-schema.test.ts` — todos os cenários de aceitação/rejeição enumerados em `specs/account-registration/spec.md`
+- [x] 11.1 `src/__tests__/unit/registration/uf-table.test.ts` — 27 UFs, presença, `regionalCodeToUf` íntegro
+- [x] 11.2 `src/__tests__/unit/registration/password-validators.test.ts` — happy + cada classe (length, uppercase, lowercase, digit, special) isolada e combinada
+- [x] 11.3 `src/__tests__/unit/registration/crp-validators.test.ts` — formato válido/inválido + coerência com UF (Apêndice A)
+- [x] 11.4 `src/__tests__/unit/registration/profile-status.test.ts` — todas as transições válidas e inválidas
+- [x] 11.5 `src/__tests__/unit/registration/signup-input-schema.test.ts` — todos os cenários de aceitação/rejeição enumerados em `specs/account-registration/spec.md`
 
 ## 12. Testes de integração
 
