@@ -50,12 +50,12 @@
 
 ## 6. Module barrel + route shells
 
-- [ ] 6.1 Criar `src/modules/registration/index.ts` exportando `signUp`, `resendVerificationEmail`, `getCurrentProfile`, `signupInputSchema`, `passwordPolicy`, `SignupForm`, `OnboardingPendingCard`, `Profile`, `ProfileStatus` (sem `'use server'`)
-- [ ] 6.2 Criar `src/app/(auth)/signup/page.tsx` (Server Component) que importa e renderiza `<SignupForm/>` de `@/modules/registration`
-- [ ] 6.3 Criar `src/app/(auth)/signup/actions.ts` com `'use server'` re-exportando `signUp` como wrapper de `@/modules/registration`
-- [ ] 6.4 Criar `src/app/(auth)/auth/callback/route.ts` com handler GET que chama `exchangeCodeForSession`, loga `email_verified`, redireciona para `/onboarding/pending`, e renderiza error UI em token inválido/expirado/ausente
-- [ ] 6.5 Criar `src/app/(app)/onboarding/pending/page.tsx` que carrega `getCurrentProfile`, redireciona para `/dashboard` se `active`, e renderiza `<OnboardingPendingCard status={...} email={...}/>`
-- [ ] 6.6 Criar `src/app/(app)/onboarding/pending/actions.ts` com `'use server'` re-exportando `resendVerificationEmail`
+- [x] 6.1 Criar `src/modules/registration/index.ts` exportando `signUp`, `resendVerificationEmail`, `getCurrentProfile`, `signupInputSchema`, `passwordPolicy`, `SignupForm`, `OnboardingPendingCard`, `Profile`, `ProfileStatus` (sem `'use server'`)
+- [x] 6.2 Criar `src/app/(auth)/signup/page.tsx` (Server Component) que importa e renderiza `<SignupForm/>` de `@/modules/registration`
+- [x] 6.3 Criar `src/app/(auth)/signup/actions.ts` com `'use server'` re-exportando `signUp` como wrapper de `@/modules/registration`
+- [x] 6.4 Criar `src/app/(auth)/auth/callback/route.ts` com handler GET que chama `exchangeCodeForSession`, loga `email_verified`, redireciona para `/onboarding/pending`, e renderiza error UI em token inválido/expirado/ausente
+- [x] 6.5 Criar `src/app/(app)/onboarding/pending/page.tsx` que carrega `getCurrentProfile`, redireciona para `/dashboard` se `active`, e renderiza `<OnboardingPendingCard status={...} email={...}/>`
+- [x] 6.6 Criar `src/app/(app)/onboarding/pending/actions.ts` com `'use server'` re-exportando `resendVerificationEmail`
 
 ## 7. Auth module: signIn status-aware
 
