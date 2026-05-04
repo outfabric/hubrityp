@@ -59,9 +59,9 @@
 
 ## 7. Auth module: signIn status-aware
 
-- [ ] 7.1 Atualizar `src/modules/auth/server/login.ts` (`signInImpl`) para, após `signInWithPassword` bem-sucedido, chamar `getCurrentProfile` e ramificar redirect: `active` → `/dashboard` (ou `redirectTo` válido), `pending_*` → `/onboarding/pending`, `suspended|cancelled` → `signOut` + retornar `{ ok: false, error: 'account_unavailable' }`
-- [ ] 7.2 Acrescentar caso `'account_unavailable'` ao tipo `SignInResult` e ao mapeamento de erros do `LoginForm`
-- [ ] 7.3 Atualizar copy do `LoginForm` para renderizar mensagem pt-BR específica para `account_unavailable`
+- [x] 7.1 Atualizar `src/modules/auth/server/login.ts` (`signInImpl`) para, após `signInWithPassword` bem-sucedido, chamar `getCurrentProfile` e ramificar redirect: `active` → `/dashboard` (ou `redirectTo` válido), `pending_*` → `/onboarding/pending`, `suspended|cancelled` → `signOut` + retornar `{ ok: false, error: 'account_unavailable' }`
+- [x] 7.2 Acrescentar caso `'account_unavailable'` ao tipo `SignInResult` e ao mapeamento de erros do `LoginForm`
+- [x] 7.3 Atualizar copy do `LoginForm` para renderizar mensagem pt-BR específica para `account_unavailable`
 
 ## 8. Middleware status-aware
 

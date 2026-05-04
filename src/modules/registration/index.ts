@@ -39,10 +39,7 @@ export {
   OnboardingPendingCard,
   type OnboardingPendingCardProps,
 } from './components/onboarding-pending-card';
-export {
-  AuthCallbackError,
-  type AuthCallbackErrorProps,
-} from './components/auth-callback-error';
+export { AuthCallbackError, type AuthCallbackErrorProps } from './components/auth-callback-error';
 
 // ---- Types -------------------------------------------------------------------
 export type { Profile } from './lib/profile';

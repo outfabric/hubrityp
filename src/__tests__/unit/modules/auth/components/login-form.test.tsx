@@ -66,6 +66,20 @@ describe('LoginForm', () => {
     expect(error).toHaveTextContent('Erro inesperado, tente novamente.');
   });
 
+  it('renders the account_unavailable message when initialState carries that error', () => {
+    // `account_unavailable` is the post-status-aware-signIn variant: auth
+    // succeeded but the profile is suspended or cancelled. The form MUST
+    // surface a generic support-contact message — never leak whether the
+    // account is suspended vs. cancelled, since both states route the user
+    // to the same support flow.
+    render(<LoginForm initialState={{ ok: false, error: 'account_unavailable' }} />);
+    const error = screen.getByTestId('login-form-error');
+    expect(error).toBeInTheDocument();
+    expect(error).toHaveTextContent(
+      'Esta conta não está disponível. Entre em contato com o suporte.',
+    );
+  });
+
   it('does not render an error region when initialState is { ok: true }', () => {
     render(<LoginForm initialState={{ ok: true }} />);
     expect(screen.queryByTestId('login-form-error')).not.toBeInTheDocument();

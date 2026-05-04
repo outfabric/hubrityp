@@ -34,8 +34,19 @@ export type LoginFormProps = {
   initialState?: SignInResult | null;
 };
 
+// pt-BR copy for each `SignInResult` error variant. The keys MUST match the
+// `error` literal union exactly — adding a new variant to `SignInResult`
+// without a key here is a TypeScript error at the lookup site below, which
+// is the intentional safety net.
+//
+// `account_unavailable` is rendered when the user authenticated successfully
+// but their `profiles.status` is `suspended` or `cancelled`. We deliberately
+// avoid leaking which of those two statuses the account is in — both states
+// route to the same support flow, and naming "suspended" vs. "cancelled"
+// invites guesswork by the user instead of triage by support.
 const ERROR_MESSAGES = {
   invalid_credentials: 'E-mail ou senha incorretos.',
+  account_unavailable: 'Esta conta não está disponível. Entre em contato com o suporte.',
   unknown: 'Erro inesperado, tente novamente.',
 } as const;
 
