@@ -65,10 +65,10 @@
 
 ## 8. Middleware status-aware
 
-- [ ] 8.1 Atualizar `src/middleware.ts` para chamar `getCurrentProfile` após `getUser`
-- [ ] 8.2 Implementar a tabela de decisão path × status conforme `specs/authentication/spec.md`, retornando 307 nos redirects e `NextResponse.next()` (com cookie refresh) nos passes
-- [ ] 8.3 Garantir que `/auth/callback` está no matcher e nunca é redirecionado
-- [ ] 8.4 Adicionar telemetria mínima (pino logger) com `path`, `status`, `decision` para debug local
+- [x] 8.1 Atualizar `src/middleware.ts` para chamar `getCurrentProfile` após `getUser`
+- [x] 8.2 Implementar a tabela de decisão path × status conforme `specs/authentication/spec.md`, retornando 307 nos redirects e `NextResponse.next()` (com cookie refresh) nos passes
+- [x] 8.3 Garantir que `/auth/callback` está no matcher e nunca é redirecionado
+- [x] 8.4 Adicionar telemetria mínima (pino logger) com `path`, `status`, `decision` para debug local
 
 ## 9. Dashboard greeting
 

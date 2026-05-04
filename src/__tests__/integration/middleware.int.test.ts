@@ -1,21 +1,40 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Root-middleware behaviour is exercised against a mocked
-// `createMiddlewareClient` so each test can stage either an authenticated
-// session (`{ data: { user: <user> } }`) or an anonymous session
-// (`{ data: { user: null } }`) without booting GoTrue. The middleware itself
-// runs unmocked — these tests pin the gating contract from
-// `specs/authentication/spec.md`:
+// We import `ProfileStatus` from the canonical barrel for ergonomics —
+// it's a pure value enum, doesn't pull Drizzle, and the unit-test stack
+// resolves the alias correctly. The middleware itself imports from
+// `@/modules/registration/edge` (Edge-safe surface) and that's the path
+// `vi.mock` targets below.
+import { ProfileStatus } from '@/modules/registration';
+import type * as RegistrationEdgeModule from '@/modules/registration/edge';
+
+// Root-middleware behaviour is exercised against mocked module boundaries:
+//   • `@/shared/supabase/middleware`  → returns a fake `supabase` shim and a
+//     plain NextResponse, so we don't boot GoTrue.
+//   • `getCurrentProfileEdge` is replaced via a spy so each test can stage
+//     a profile with a specific `status` (or `null` for anonymous).
 //
-//   • anon  → /dashboard*       → 307 to /login?redirectTo=<encoded>
-//   • auth  → /login            → 307 to /dashboard
-//   • anon  → /api/health, /    → no redirect (cookie-refresh response)
+// The middleware itself runs unmocked — these tests pin the gating
+// contract from `specs/authentication/spec.md` (Requirement: Middleware
+// enforces auth gating for `(app)` routes), with a row per status × path
+// combination from the decision table.
 //
 // We assert the Location header by parsing it back into a `URL`, since
 // `NextResponse.redirect()` may serialize the value as an absolute URL.
 
-const getUserMock = vi.fn();
+// `vi.mock` factories are hoisted above top-level imports, but `const`
+// declarations are NOT — so referencing a `vi.fn()` directly from a factory
+// throws a TDZ error if a top-level import triggers eager evaluation of the
+// mocked module (e.g. importing `ProfileStatus` from the registration
+// barrel above forces the registration mock factory to run before the
+// regular `vi.fn()` consts initialize). `vi.hoisted` fixes this by giving
+// us a hoisted block whose return values ARE accessible inside the
+// factories.
+const { getUserMock, getCurrentProfileEdgeMock } = vi.hoisted(() => ({
+  getUserMock: vi.fn(),
+  getCurrentProfileEdgeMock: vi.fn(),
+}));
 
 vi.mock('@/shared/supabase/middleware', async () => {
   const { NextResponse } = await import('next/server');
@@ -34,23 +53,67 @@ vi.mock('@/shared/supabase/middleware', async () => {
   };
 });
 
+// We mock the Edge-only barrel because that's what the middleware imports.
+// `importOriginal` preserves the rest of the surface — `ProfileStatus`
+// (value enum) and `Profile` (type-only) — so test fixtures can keep
+// using the real enum values for status comparisons.
+vi.mock('@/modules/registration/edge', async (importOriginal) => {
+  const actual = await importOriginal<typeof RegistrationEdgeModule>();
+  return {
+    ...actual,
+    getCurrentProfileEdge: getCurrentProfileEdgeMock,
+  };
+});
+
 beforeEach(() => {
   getUserMock.mockReset();
+  getCurrentProfileEdgeMock.mockReset();
 });
 
 afterEach(() => {
   vi.resetModules();
 });
 
+// Test fixtures.
+
 function asAnon() {
   getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'no session' } });
+  getCurrentProfileEdgeMock.mockResolvedValue(null);
 }
 
-function asAuth() {
+// Authenticated session WITH a profile of the given status.
+function asAuthWithStatus(status: ProfileStatus) {
+  const userId = '00000000-0000-4000-8000-000000000001';
+  getUserMock.mockResolvedValue({
+    data: { user: { id: userId, email: 'doctor@example.com' } },
+    error: null,
+  });
+  getCurrentProfileEdgeMock.mockResolvedValue({
+    userId,
+    email: 'doctor@example.com',
+    fullName: 'Dr. Test',
+    crpNumber: '12345',
+    crpUf: 'SP',
+    crpValidatedAt: null,
+    crpValidatedBy: null,
+    emailVerifiedAt: null,
+    status,
+    termsAcceptedAt: new Date(),
+    privacyAcceptedAt: new Date(),
+    sensitiveDataConsentAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
+// Authenticated session but no profile row (race window). Per spec this is
+// treated identically to "no session" in the decision table.
+function asAuthWithoutProfile() {
   getUserMock.mockResolvedValue({
     data: { user: { id: '00000000-0000-4000-8000-000000000001', email: 'doctor@example.com' } },
     error: null,
   });
+  getCurrentProfileEdgeMock.mockResolvedValue(null);
 }
 
 function makeRequest(path: string): NextRequest {
@@ -106,9 +169,18 @@ describe('middleware (integration)', () => {
     });
   });
 
-  describe('authenticated on /login', () => {
-    it('redirects to /dashboard', async () => {
-      asAuth();
+  describe('active user', () => {
+    it('passes through on /dashboard', async () => {
+      asAuthWithStatus(ProfileStatus.Active);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/dashboard'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
+    });
+
+    it('is bounced from /login to /dashboard', async () => {
+      asAuthWithStatus(ProfileStatus.Active);
       const { middleware } = await import('@/middleware');
       const response = await middleware(makeRequest('/login'));
 
@@ -116,6 +188,137 @@ describe('middleware (integration)', () => {
       const url = parseLocation(response);
       expect(url.pathname).toBe('/dashboard');
       expect(url.search).toBe('');
+    });
+
+    it('is bounced from /signup to /dashboard', async () => {
+      asAuthWithStatus(ProfileStatus.Active);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/signup'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/dashboard');
+    });
+
+    it('is bounced from /onboarding/pending to /dashboard', async () => {
+      asAuthWithStatus(ProfileStatus.Active);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/onboarding/pending'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/dashboard');
+    });
+  });
+
+  describe('pending_verification user', () => {
+    it('is bounced from /login to /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingVerification);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/login'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/onboarding/pending');
+    });
+
+    it('is bounced from /signup to /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingVerification);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/signup'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/onboarding/pending');
+    });
+
+    it('passes through on /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingVerification);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/onboarding/pending'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
+    });
+
+    it('is bounced from /dashboard to /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingVerification);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/dashboard'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/onboarding/pending');
+    });
+  });
+
+  describe('pending_crp_validation user', () => {
+    it('is bounced from /dashboard to /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingCrpValidation);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/dashboard'));
+
+      expect(response.status).toBe(307);
+      expect(parseLocation(response).pathname).toBe('/onboarding/pending');
+    });
+
+    it('passes through on /onboarding/pending', async () => {
+      asAuthWithStatus(ProfileStatus.PendingCrpValidation);
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/onboarding/pending'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
+    });
+  });
+
+  describe.each([ProfileStatus.Suspended, ProfileStatus.Cancelled] as const)(
+    '%s user',
+    (status) => {
+      it('is bounced from /dashboard to /login', async () => {
+        asAuthWithStatus(status);
+        const { middleware } = await import('@/middleware');
+        const response = await middleware(makeRequest('/dashboard'));
+
+        expect(response.status).toBe(307);
+        expect(parseLocation(response).pathname).toBe('/login');
+      });
+
+      it('is bounced from /onboarding/pending to /login', async () => {
+        asAuthWithStatus(status);
+        const { middleware } = await import('@/middleware');
+        const response = await middleware(makeRequest('/onboarding/pending'));
+
+        expect(response.status).toBe(307);
+        expect(parseLocation(response).pathname).toBe('/login');
+      });
+
+      it('is bounced from /login to /login (loop is bounded by signIn refusing)', async () => {
+        asAuthWithStatus(status);
+        const { middleware } = await import('@/middleware');
+        const response = await middleware(makeRequest('/login'));
+
+        // The decision table's last column says suspended/cancelled →
+        // /login on auth pages too. The redirect-loop risk is bounded by
+        // `signIn` returning `account_unavailable` and clearing the cookie
+        // on the next attempt — covered by section 7's tests.
+        expect(response.status).toBe(307);
+        expect(parseLocation(response).pathname).toBe('/login');
+      });
+    },
+  );
+
+  describe('/auth/callback always passes through', () => {
+    it.each([
+      { label: 'anonymous', setup: asAnon },
+      {
+        label: 'pending_verification',
+        setup: () => asAuthWithStatus(ProfileStatus.PendingVerification),
+      },
+      { label: 'active', setup: () => asAuthWithStatus(ProfileStatus.Active) },
+      { label: 'suspended', setup: () => asAuthWithStatus(ProfileStatus.Suspended) },
+    ])('passes through for $label session', async ({ setup }) => {
+      setup();
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/auth/callback?code=abc'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
     });
   });
 
@@ -142,17 +345,39 @@ describe('middleware (integration)', () => {
       expect(response.status).toBeLessThan(300);
     });
 
-    it('lets authenticated /dashboard through (no redirect — happy path)', async () => {
-      asAuth();
+    it('lets anonymous /login through (so the form can render)', async () => {
+      asAnon();
       const { middleware } = await import('@/middleware');
-      const response = await middleware(makeRequest('/dashboard'));
+      const response = await middleware(makeRequest('/login'));
 
       expect(response.headers.get('location')).toBeNull();
       expect(response.status).toBeLessThan(300);
     });
 
-    it('lets anonymous /login through (so the form can render)', async () => {
+    it('lets anonymous /signup through (so the form can render)', async () => {
       asAnon();
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/signup'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
+    });
+  });
+
+  describe('authenticated user without profile row (race window)', () => {
+    it('is treated as anonymous for /dashboard', async () => {
+      asAuthWithoutProfile();
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/dashboard'));
+
+      expect(response.status).toBe(307);
+      const url = parseLocation(response);
+      expect(url.pathname).toBe('/login');
+      expect(url.searchParams.get('redirectTo')).toBe('/dashboard');
+    });
+
+    it('lets /login through (since the user has no profile yet)', async () => {
+      asAuthWithoutProfile();
       const { middleware } = await import('@/middleware');
       const response = await middleware(makeRequest('/login'));
 

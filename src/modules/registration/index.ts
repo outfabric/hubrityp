@@ -28,6 +28,13 @@ export {
   type ResendVerificationResult,
 } from './server/resend-verification';
 export { getCurrentProfile } from './server/get-profile';
+// `getCurrentProfileEdge` is intentionally NOT re-exported from this
+// barrel — it lives in `@/modules/registration/edge`. Bundling Drizzle +
+// Server Actions into an Edge worker (which is what the middleware
+// imports) crashes with `Native module not found: node:crypto`, so the
+// Edge-safe surface is published through a dedicated entrypoint. RSCs
+// and Server Actions running on Node continue to use `getCurrentProfile`
+// (Drizzle-backed) from this barrel.
 
 // ---- Pure validators / policies ---------------------------------------------
 export { signupInputSchema, type SignupInput } from './lib/signup-input-schema';
