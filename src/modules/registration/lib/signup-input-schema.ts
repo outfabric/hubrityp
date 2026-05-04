@@ -21,60 +21,80 @@ import { UF_SET, type UfCode } from './uf-table';
  * surface — the spec asserts pt-BR explicitly for the regional-mismatch
  * scenario.
  */
-export const signupInputSchema = z
-  .object({
-    fullName: z
-      .string({ message: 'Informe seu nome completo.' })
-      .trim()
-      .min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' })
-      .max(120, { message: 'O nome deve ter no máximo 120 caracteres.' }),
-    email: z
-      .string({ message: 'Informe seu e-mail.' })
-      .min(1, { message: 'Informe seu e-mail.' })
-      .email({ message: 'E-mail inválido.' }),
-    password: z
-      .string({ message: 'Informe uma senha.' })
-      // The strong-password policy is the single source of truth — we run
-      // it once and rely on its boolean. Per-rule UI feedback consumes the
-      // `missing` array directly via `passwordPolicy(value)` in the form
-      // component.
-      .refine((value) => passwordPolicy(value).ok, {
-        message:
-          'A senha deve ter pelo menos 10 caracteres e conter letra maiúscula, minúscula, número e caractere especial.',
-      }),
-    passwordConfirm: z.string({ message: 'Confirme sua senha.' }),
-    crpNumber: z.string({ message: 'Informe o número do CRP.' }).refine(isValidCrpFormat, {
-      message: 'CRP inválido. Use o formato NN/NNNNNNN (ex.: 06/123456).',
+// Base object used both for the public schema and as a self-referencing
+// helper inside the cross-field refines' `when` clauses (so a refine can
+// re-validate just the fields it actually depends on).
+const baseSignupSchema = z.object({
+  fullName: z
+    .string({ message: 'Informe seu nome completo.' })
+    .trim()
+    .min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' })
+    .max(120, { message: 'O nome deve ter no máximo 120 caracteres.' }),
+  email: z
+    .string({ message: 'Informe seu e-mail.' })
+    .min(1, { message: 'Informe seu e-mail.' })
+    .email({ message: 'E-mail inválido.' }),
+  password: z
+    .string({ message: 'Informe uma senha.' })
+    // The strong-password policy is the single source of truth — we run
+    // it once and rely on its boolean. Per-rule UI feedback consumes the
+    // `missing` array directly via `passwordPolicy(value)` in the form
+    // component.
+    .refine((value) => passwordPolicy(value).ok, {
+      message:
+        'A senha deve ter pelo menos 10 caracteres e conter letra maiúscula, minúscula, número e caractere especial.',
     }),
-    crpUf: z
-      .string({ message: 'Selecione a UF do CRP.' })
-      .refine((value): value is UfCode => UF_SET.has(value as UfCode), {
-        message: 'UF inválida.',
-      }),
-    acceptedTerms: z.literal(true, {
-      message: 'Você precisa aceitar os Termos de Uso para continuar.',
+  passwordConfirm: z.string({ message: 'Confirme sua senha.' }),
+  crpNumber: z.string({ message: 'Informe o número do CRP.' }).refine(isValidCrpFormat, {
+    message: 'CRP inválido. Use o formato NN/NNNNNNN (ex.: 06/123456).',
+  }),
+  crpUf: z
+    .string({ message: 'Selecione a UF do CRP.' })
+    .refine((value): value is UfCode => UF_SET.has(value as UfCode), {
+      message: 'UF inválida.',
     }),
-    acceptedPrivacy: z.literal(true, {
-      message: 'Você precisa aceitar a Política de Privacidade para continuar.',
-    }),
-    acceptedSensitiveData: z.literal(true, {
-      message: 'Você precisa autorizar o tratamento de dados sensíveis para continuar.',
-    }),
-  })
+  acceptedTerms: z.literal(true, {
+    message: 'Você precisa aceitar os Termos de Uso para continuar.',
+  }),
+  acceptedPrivacy: z.literal(true, {
+    message: 'Você precisa aceitar a Política de Privacidade para continuar.',
+  }),
+  acceptedSensitiveData: z.literal(true, {
+    message: 'Você precisa autorizar o tratamento de dados sensíveis para continuar.',
+  }),
+});
+
+export const signupInputSchema = baseSignupSchema
   // Cross-field: password confirmation. Pinned to `passwordConfirm` so the
   // form highlights the right field.
+  //
+  // `when` makes this refine run **even if other unrelated fields failed**.
+  // Without `when`, Zod's chained `.refine` after `.object` is gated on the
+  // whole object parsing successfully — so an empty consent or empty CRP
+  // would suppress the mismatch error entirely. Per Zod docs, we re-parse
+  // just `password`+`passwordConfirm` to decide whether to run.
   .refine((data) => data.password === data.passwordConfirm, {
     message: 'As senhas não coincidem.',
     path: ['passwordConfirm'],
+    when(payload) {
+      return baseSignupSchema
+        .pick({ password: true, passwordConfirm: true })
+        .safeParse(payload.value).success;
+    },
   })
   // Cross-field: CRP regional code must match the selected UF. The error
   // is reported on `crpNumber` (the field whose 2-digit prefix is the
   // distinguishing piece of information) per the spec scenario, but the
   // pt-BR copy explicitly mentions both halves so the user can fix
-  // either.
+  // either. Same `when` treatment so a missing consent doesn't suppress
+  // a CRP/UF mismatch.
   .refine((data) => isCrpRegionalConsistentWithUf(data.crpNumber, data.crpUf), {
     message: 'O número do CRP não corresponde à UF selecionada.',
     path: ['crpNumber'],
+    when(payload) {
+      return baseSignupSchema.pick({ crpNumber: true, crpUf: true }).safeParse(payload.value)
+        .success;
+    },
   });
 
 export type SignupInput = z.infer<typeof signupInputSchema>;

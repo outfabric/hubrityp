@@ -24,12 +24,17 @@ import { createServerClient } from '@/shared/supabase/server';
 // `/onboarding/pending`. On failure we redirect to the error page with a
 // typed `?reason=...` so the UI can render a pt-BR message + resend CTA.
 //
-// Host preservation (HIGH #3 fix): all redirect URLs are built from
-// `request.nextUrl` (the user-facing URL with the original `Host` header)
-// rather than `request.url` — in dev, Next binds to `0.0.0.0`, and using
-// `request.url` would emit redirects to `0.0.0.0:3000` instead of
-// `localhost:3000`, which is a different cookie origin and breaks the
-// session.
+// Host preservation (HIGH #3 fix): all redirect URLs are built from the
+// user-facing `Host` header (and `x-forwarded-proto` when present) rather
+// than from `request.url` or `request.nextUrl`. Both of those reflect the
+// dev server's bound interface — in Next 15+, even `request.nextUrl`
+// resolves the origin from the bound socket (`0.0.0.0:3000`) when the
+// process binds to `0.0.0.0`, breaking same-origin cookies in development
+// and routing to non-public hostnames behind a proxy in production.
+//
+// Reading `Host` directly (with a small allowlist of forwarding headers)
+// ties the redirect to the URL the user actually typed/clicked, which is
+// the only correct origin for cookie-bearing redirects.
 
 const ERROR_PATH = '/auth/callback/error';
 const SUCCESS_PATH = '/onboarding/pending';
@@ -48,14 +53,28 @@ const ALLOWED_OTP_TYPES = new Set<EmailOtpType>([
   'email_change',
 ]);
 
+// Build the canonical origin (`<protocol>://<host>`) the request actually
+// arrived on. Falls back to `localhost:3000` only if the `Host` header is
+// absent (which should be impossible under HTTP/1.1+ but is harmless).
+//
+// We honour `x-forwarded-proto` so that in production (Vercel/edge proxies)
+// the redirect carries `https://`, while in dev — where no proxy sets the
+// header — we infer from `request.url`'s scheme.
+function userFacingOrigin(request: NextRequest): string {
+  const host = request.headers.get('host') ?? 'localhost:3000';
+  const forwardedProto = request.headers.get('x-forwarded-proto');
+  const protocol = forwardedProto ?? (request.url.startsWith('https://') ? 'https' : 'http');
+  return `${protocol}://${host}`;
+}
+
 function redirectToError(request: NextRequest, reason: FailureReason): Response {
-  const url = new URL(ERROR_PATH, request.nextUrl);
+  const url = new URL(ERROR_PATH, userFacingOrigin(request));
   url.searchParams.set('reason', reason);
   return NextResponse.redirect(url, 307);
 }
 
 function redirectToSuccess(request: NextRequest): Response {
-  const url = new URL(SUCCESS_PATH, request.nextUrl);
+  const url = new URL(SUCCESS_PATH, userFacingOrigin(request));
   return NextResponse.redirect(url, 307);
 }
 

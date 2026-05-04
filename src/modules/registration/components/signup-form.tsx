@@ -158,8 +158,12 @@ export function SignupForm({ action }: SignupFormProps) {
   // after the first blur — so the cross-field `password === passwordConfirm`
   // refine does not fire when the user only edits `passwordConfirm` and
   // tabs out (because `password` did not change). The fix: on blur of
-  // `passwordConfirm`, explicitly trigger its validation so the inline
-  // mismatch error appears immediately. Spec scenario 9.
+  // `passwordConfirm`, run `trigger(['password', 'passwordConfirm'])` so
+  // the resolver re-evaluates the WHOLE schema (including the cross-field
+  // refine) and re-assigns the error to its pinned path. Triggering both
+  // names (rather than only `passwordConfirm`) avoids any RHF render-
+  // optimization that would otherwise scope the assignment to a single
+  // field and drop the cross-field error. Spec scenario 9.
   const passwordConfirmRegister = register('passwordConfirm');
 
   // Stable IDs for `htmlFor`/`aria-describedby` association.
@@ -325,6 +329,16 @@ export function SignupForm({ action }: SignupFormProps) {
             void passwordRegister.onChange(event);
             setPasswordValue(event.target.value);
           }}
+          onBlur={(event) => {
+            // Forward to RHF's bookkeeping (touched/dirty), then re-run
+            // validation across both password + passwordConfirm. This way,
+            // if the user fixes a previously-mismatched `password` to
+            // match `passwordConfirm`, the cross-field error clears
+            // immediately instead of lingering until the next change to
+            // `passwordConfirm`.
+            void passwordRegister.onBlur(event);
+            void trigger(['password', 'passwordConfirm']);
+          }}
         />
         <ul
           id={ids.passwordRules}
@@ -370,12 +384,15 @@ export function SignupForm({ action }: SignupFormProps) {
           {...passwordConfirmRegister}
           onBlur={(event) => {
             // Forward to RHF's bookkeeping (touched state, dirty state),
-            // then explicitly trigger validation on `passwordConfirm` so
-            // the cross-field mismatch refine fires even when only this
-            // field changed. Without this, a user who types a mismatched
-            // confirm and tabs out sees no error until submit.
+            // then explicitly trigger validation on BOTH `password` and
+            // `passwordConfirm`. Triggering both names — rather than only
+            // `passwordConfirm` — forces zodResolver to evaluate the full
+            // schema and assign the cross-field refine's error to its
+            // pinned path (`passwordConfirm`). Without the multi-field
+            // trigger, RHF's per-field render optimisation can scope the
+            // assignment in a way that drops the cross-field error.
             void passwordConfirmRegister.onBlur(event);
-            void trigger('passwordConfirm');
+            void trigger(['password', 'passwordConfirm']);
           }}
         />
         {errors.passwordConfirm?.message ? (

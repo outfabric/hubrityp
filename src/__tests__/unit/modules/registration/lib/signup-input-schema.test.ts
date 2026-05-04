@@ -126,6 +126,25 @@ describe('signupInputSchema — password / passwordConfirm', () => {
     const errs = fieldErrorsOf(result);
     expect(errs.passwordConfirm).toContain('As senhas não coincidem.');
   });
+
+  // Regression — QA-2 ALTO #2. The cross-field refine for password === passwordConfirm
+  // must fire even when *other* unrelated fields are invalid (empty consents, missing
+  // CRP, etc.). Zod's chained `.refine` after `.object` is gated on the whole object
+  // parsing successfully — we use the `when` clause to override that and re-parse just
+  // (`password`, `passwordConfirm`).
+  it('reports passwordConfirm mismatch even when other fields are invalid (consents off, CRP empty)', () => {
+    const errs = fieldErrorsOf(
+      signupInputSchema.safeParse({
+        ...VALID_PAYLOAD,
+        passwordConfirm: 'Forte!Senha8',
+        crpNumber: '',
+        acceptedTerms: false,
+        acceptedPrivacy: false,
+        acceptedSensitiveData: false,
+      }),
+    );
+    expect(errs.passwordConfirm).toContain('As senhas não coincidem.');
+  });
 });
 
 describe('signupInputSchema — crpNumber format', () => {
@@ -170,6 +189,24 @@ describe('signupInputSchema — crpNumber/crpUf cross-field consistency', () => 
     // strict enough to confirm the message is the regional-mismatch one.
     const ALL_MESSAGES = [...onCrpNumber, ...onCrpUf].join(' | ');
     expect(ALL_MESSAGES).toMatch(/CRP.*UF|UF.*CRP|não corresponde|incompat/i);
+  });
+
+  // Sibling regression to the passwordConfirm one above: the CRP/UF mismatch
+  // refine also uses `when` to re-run independent of consent/email failures.
+  it('reports CRP/UF mismatch even when consents are off', () => {
+    const errs = fieldErrorsOf(
+      signupInputSchema.safeParse({
+        ...VALID_PAYLOAD,
+        crpNumber: '06/123456',
+        crpUf: 'RJ',
+        acceptedTerms: false,
+        acceptedPrivacy: false,
+        acceptedSensitiveData: false,
+      }),
+    );
+    const onCrpNumber = errs.crpNumber ?? [];
+    const onCrpUf = errs.crpUf ?? [];
+    expect(onCrpNumber.length + onCrpUf.length).toBeGreaterThan(0);
   });
 
   it('accepts a 1:N CRP-20 council pairing for any covered UF', () => {
