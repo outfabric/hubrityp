@@ -34,7 +34,11 @@
   // Playwright MCP do agente qa-tester roda headed com display virtual —
   // screenshots, snapshots e navegação funcionam normalmente.
   "remoteEnv": {
-    "DISPLAY": ":99"
+    "DISPLAY": ":99",
+    // Desabilita MCPs configurados via claude.ai (mcpServers em ~/.claude.json).
+    // No devcontainer esses servidores não são necessários e evitam tentativas
+    // de conexão desnecessárias ao iniciar o Claude Code CLI.
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
   },
 
   // Roda UMA VEZ quando o container é criado pela primeira vez
