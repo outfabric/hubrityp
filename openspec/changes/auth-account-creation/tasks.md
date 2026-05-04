@@ -26,12 +26,12 @@
 
 ## 3. Validators puros (registration/lib)
 
-- [ ] 3.1 Criar `src/modules/registration/lib/uf-table.ts` exportando os 27 UFs e o map `regionalCodeToUf` derivado do Apêndice A do PRD
-- [ ] 3.2 Criar `src/modules/registration/lib/password-validators.ts` com `passwordPolicy(s): { ok; missing }` e o tipo `PasswordRule`
-- [ ] 3.3 Criar `src/modules/registration/lib/crp-validators.ts` com `parseCrpNumber`, `isValidCrpFormat`, `isCrpRegionalConsistentWithUf`
-- [ ] 3.4 Criar `src/modules/registration/lib/profile-status.ts` exportando `ProfileStatus` enum e `canTransition(from, to): boolean`
-- [ ] 3.5 Criar `src/modules/registration/lib/signup-input-schema.ts` com `signupInputSchema` (Zod) integrando `passwordPolicy`, `isValidCrpFormat`, `isCrpRegionalConsistentWithUf`, e o set de UFs
-- [ ] 3.6 Exportar tipos `Profile` e `ProfileStatus` em `src/modules/registration/lib/profile.ts` (shape derivado do schema Drizzle)
+- [x] 3.1 Criar `src/modules/registration/lib/uf-table.ts` exportando os 27 UFs e o map `regionalCodeToUf` derivado do Apêndice A do PRD
+- [x] 3.2 Criar `src/modules/registration/lib/password-validators.ts` com `passwordPolicy(s): { ok; missing }` e o tipo `PasswordRule`
+- [x] 3.3 Criar `src/modules/registration/lib/crp-validators.ts` com `parseCrpNumber`, `isValidCrpFormat`, `isCrpRegionalConsistentWithUf`
+- [x] 3.4 Criar `src/modules/registration/lib/profile-status.ts` exportando `ProfileStatus` enum e `canTransition(from, to): boolean`
+- [x] 3.5 Criar `src/modules/registration/lib/signup-input-schema.ts` com `signupInputSchema` (Zod) integrando `passwordPolicy`, `isValidCrpFormat`, `isCrpRegionalConsistentWithUf`, e o set de UFs
+- [x] 3.6 Exportar tipos `Profile` e `ProfileStatus` em `src/modules/registration/lib/profile.ts` (shape derivado do schema Drizzle)
 
 ## 4. Server-only — registration/server
 
