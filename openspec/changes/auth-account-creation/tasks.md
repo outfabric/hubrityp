@@ -72,7 +72,7 @@
 
 ## 9. Dashboard greeting
 
-- [ ] 9.1 Atualizar `src/app/(app)/dashboard/page.tsx` para carregar `profile = await getCurrentProfile(...)` e exibir `Olá, {profile.fullName}` no `data-testid="dashboard-greeting"` (mantendo o testid existente)
+- [x] 9.1 Atualizar `src/app/(app)/dashboard/page.tsx` para carregar `profile = await getCurrentProfile(...)` e exibir `Olá, {profile.fullName}` no `data-testid="dashboard-greeting"` (mantendo o testid existente)
 
 ## 10. Documentação
 
