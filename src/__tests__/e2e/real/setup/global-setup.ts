@@ -6,7 +6,12 @@ import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
 
 import type { AuthRealCredentials } from './credentials';
-import { CREDENTIALS_FILE_NAME, SEED_EMAIL, SEED_PASSWORD } from './credentials';
+import {
+  CREDENTIALS_FILE_NAME,
+  SEED_EMAIL,
+  SEED_FULL_NAME,
+  SEED_PASSWORD,
+} from './credentials';
 
 // The auth-real suite seeds a single user via the Supabase Admin API and
 // hands the credentials to the test through a JSON fixture file written
@@ -89,7 +94,7 @@ export default async function globalSetup(): Promise<void> {
     password: SEED_PASSWORD,
     email_confirm: true,
     user_metadata: {
-      fullName: 'Seed Real User',
+      fullName: SEED_FULL_NAME,
       crpNumber: '06/000001',
       crpUf: 'SP',
       termsAcceptedAt: nowIso,

@@ -10,6 +10,10 @@ export const SEED_EMAIL = 'auth-real-seed@example.com';
 // password seeded into a local-only Supabase stack via the admin API.
 // Production paths never see it.
 export const SEED_PASSWORD = 'auth-real-password-12345';
+// Mirrors `user_metadata.fullName` written by `global-setup.ts`. The dashboard
+// greeting renders `profile.fullName`, so the spec asserts against this same
+// value — keep them in sync if either changes.
+export const SEED_FULL_NAME = 'Seed Real User';
 
 export const CREDENTIALS_FILE_NAME = 'credentials.json';
 

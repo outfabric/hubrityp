@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
 import type { AuthRealCredentials } from './setup/credentials';
-import { CREDENTIALS_FILE_NAME } from './setup/credentials';
+import { CREDENTIALS_FILE_NAME, SEED_FULL_NAME } from './setup/credentials';
 
 // Full real-auth round trip against the local `supabase start` stack.
 //
@@ -44,13 +44,16 @@ test.describe('@auth-real', () => {
     await page.waitForURL('**/dashboard');
     await expect(page).toHaveURL(/\/dashboard$/);
 
-    // The dashboard greeting echoes the seeded email — this is the strongest
-    // signal that the real session round-trip worked: middleware accepted
-    // the cookie, the page Server Component called `supabase.auth.getUser`,
-    // and the real GoTrue echoed the user back.
+    // The dashboard greeting echoes `profile.fullName` (see
+    // `src/app/(app)/dashboard/page.tsx`), which `global-setup.ts` seeds as
+    // `SEED_FULL_NAME`. Asserting on it is the strongest signal that the real
+    // session round-trip worked: middleware accepted the cookie, the page
+    // Server Component called `supabase.auth.getUser`, the profile row was
+    // materialized by the `handle_new_user` trigger, and `getCurrentProfile`
+    // read it back.
     const greeting = page.getByTestId('dashboard-greeting');
     await expect(greeting).toBeVisible();
-    await expect(greeting).toHaveText(`Olá, ${creds.email}`);
+    await expect(greeting).toHaveText(`Olá, ${SEED_FULL_NAME}`);
 
     // 2. Log out.
     await page.getByTestId('dashboard-logout').click();
