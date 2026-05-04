@@ -35,10 +35,10 @@
 
 ## 4. Server-only — registration/server
 
-- [ ] 4.1 Criar `src/modules/registration/server/get-profile.ts` exportando `getCurrentProfile(supabase)` com 1 SELECT por chamada via Drizzle, retornando `null` quando não há sessão ou linha
-- [ ] 4.2 Criar `src/modules/registration/server/sign-up.ts` exportando `signUpImpl(formData)` que: parseia com `signupInputSchema`, chama `supabase.auth.signUp` com `emailRedirectTo` montado a partir de `headers().get('origin')`, mapeia erros para `invalid_input`/`duplicate_email`/`duplicate_crp`/`unknown`, faz rollback via `supabase.auth.admin.deleteUser` em duplicate CRP, loga em `auth_logs` via service-role client e redireciona para `/onboarding/pending`
-- [ ] 4.3 Criar `src/modules/registration/server/resend-verification.ts` com `resendVerificationEmailImpl()` que valida `profile.status === 'pending_verification'`, chama `supabase.auth.resend({ type: 'signup' })`, mapeia rate-limit para `{ ok: false, error: 'rate_limited' }`
-- [ ] 4.4 Criar helper `src/modules/registration/server/log-auth-event.ts` (não exposto no barrel) que insere em `auth_logs` via service-role client e capta IP/UA do request
+- [x] 4.1 Criar `src/modules/registration/server/get-profile.ts` exportando `getCurrentProfile(supabase)` com 1 SELECT por chamada via Drizzle, retornando `null` quando não há sessão ou linha
+- [x] 4.2 Criar `src/modules/registration/server/sign-up.ts` exportando `signUpImpl(formData)` que: parseia com `signupInputSchema`, chama `supabase.auth.signUp` com `emailRedirectTo` montado a partir de `headers().get('origin')`, mapeia erros para `invalid_input`/`duplicate_email`/`duplicate_crp`/`unknown`, faz rollback via `supabase.auth.admin.deleteUser` em duplicate CRP, loga em `auth_logs` via service-role client e redireciona para `/onboarding/pending`
+- [x] 4.3 Criar `src/modules/registration/server/resend-verification.ts` com `resendVerificationEmailImpl()` que valida `profile.status === 'pending_verification'`, chama `supabase.auth.resend({ type: 'signup' })`, mapeia rate-limit para `{ ok: false, error: 'rate_limited' }`
+- [x] 4.4 Criar helper `src/modules/registration/server/log-auth-event.ts` (não exposto no barrel) que insere em `auth_logs` via service-role client e capta IP/UA do request
 
 ## 5. Components — registration/components
 
