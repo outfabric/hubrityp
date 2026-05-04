@@ -17,7 +17,7 @@ Capability que governa o slash command `/dev-cycle`, o contrato em modo orquestr
 - **Slash command**: `/dev-cycle <change-name>` (kebab-case opcional; sem argumento, infere do contexto ou prompta seleção via `openspec list --json`).
 - **Pré-condições verificadas** pelo orquestrador antes de iniciar: change existe em `openspec/changes/<name>/`, working tree de `main` limpo, `gh auth status` OK, `docker info` OK.
 - **Worktree gerado**: `../hubrityp-<name>/` na branch `feature/<name>`, com `.dev-cycle/` (gitignored) para artefatos de feedback.
-- **Tags em `tasks.md`**: cada linha pode terminar em qualquer subconjunto de `[unit]` `[integration]` `[e2e]` (default `[unit]`). Determinam quais camadas de teste o `fullstack-developer` deve criar/atualizar.
+- **Camadas de teste por task**: as tasks em `tasks.md` são texto livre, sem tags. O `fullstack-developer` decide quais camadas (unit / integration / e2e) cobrem cada task com base no escopo do que está implementando, seguindo a tabela em `docs/dev-cycle.md` §5 (lógica pura → unit; Server Actions / queries Drizzle / RLS → integration; fluxos críticos de UI → e2e). O agent declara as camadas escolhidas no resumo pré-`VERDICT: PASS`.
 - **Contrato de saída do `fullstack-developer`** (em modo orquestrado): última linha parseável `VERDICT: PASS — <descrição>` ou `VERDICT: FAIL — <razão>. Logs: <path>`.
 - **Contrato de saída do `code-reviewer`**: última linha `VERDICT: approve | approve-with-comments | request-changes`.
 - **Contrato de saída do `qa-tester`**: última linha `VERDICT: clean | issues-found`.

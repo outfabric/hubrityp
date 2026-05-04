@@ -32,18 +32,6 @@ Não use Vitest para:
 6. **Falha por motivo claro**: a mensagem do `expect` deve dizer **o que** quebrou, não **onde**.
 7. **Rápido**: testes unitários devem rodar em milissegundos. Suíte unitária inteira < 10s na máquina do dev.
 
-## Quality gates do projeto
-
-Antes de declarar a tarefa concluída:
-
-```bash
-npm run test:unit          # Vitest (suíte unitária centralizada em src/__tests__/unit)
-npm run lint
-npm run typecheck
-```
-
-Se algum script estiver faltando no `package.json`, adicione (não pule). Não use `--no-verify` em commits.
-
 ## Estrutura de arquivos
 
 Testes unitários vivem **centralizados** em `src/__tests__/unit/`, com a árvore espelhando a árvore de `src/`. Sufixo é `.test.ts` para lógica/server e `.test.tsx` para componentes/hooks (jsdom).

@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,8 +16,10 @@ import { CREDENTIALS_FILE_NAME } from './credentials';
 // The next run is also idempotent (`globalSetup` deletes any pre-existing
 // user with the same email), so a stale row would not break a retry.
 //
-// We deliberately do NOT shut down `supabase start` — that's the developer's
-// or CI's responsibility (CI does it via `npx supabase stop` in section 8).
+// Stack lifecycle: if `playwright.real.config.ts` booted Supabase on-demand
+// it sets `AUTH_REAL_STARTED_BY_TEST=1`, and we mirror that with a `stop` here.
+// If the developer started the stack themselves (flag absent), we leave it
+// running so their unrelated dev session is not nuked underneath them.
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = path.resolve(HERE, '.auth', CREDENTIALS_FILE_NAME);
@@ -53,5 +56,13 @@ export default async function globalTeardown(): Promise<void> {
     await rm(FIXTURE_PATH, { force: true });
   } catch {
     // Swallow — the file is gitignored anyway.
+  }
+
+  if (process.env.AUTH_REAL_STARTED_BY_TEST === '1') {
+    try {
+      execSync('npx supabase stop', { stdio: 'inherit' });
+    } catch {
+      // Swallow — see comment at top of file.
+    }
   }
 }

@@ -16,7 +16,7 @@ Closed-loop development workflow that consumes an existing OpenSpec change and o
 - Change exists at `openspec/changes/<name>/` with at least `tasks.md` and `proposal.md`.
 - `git` working tree on `main` is clean (no uncommitted changes that would conflict with worktree creation).
 - `gh` is authenticated (`gh auth status`) — required for PR creation at the end.
-- `docker` is available — required for QA step (the agent will start `docker compose` if needed AND the heuristic doesn't skip QA).
+- `docker` daemon running and Supabase CLI available (`npm run supabase:start` resolves) — required when QA runs. Step 5a brings up Supabase + app if needed; step 5e tears down only what step 5a started, and only when QA passes.
 
 ---
 
@@ -56,33 +56,91 @@ If `.gitignore` in the main repo doesn't already include `.dev-cycle/`, append i
 
 Read `tasks.md` from the worktree. For every task line still marked `- [ ]`, in file order:
 
-#### 3a. Parse test requirements from the task
-
-Convention: a task line may end with bracketed tags `[unit]`, `[integration]`, `[e2e]` (any subset). If no tag is present, default to `[unit]`. Example:
-
-```
-- [ ] Add /api/health route returning 200 with { ok: true } [unit] [integration]
-```
-
-#### 3b. Invoke `fullstack-developer` (Agent tool)
+#### 3a. Invoke `fullstack-developer` (Agent tool)
 
 Build a prompt that contains:
 - **Scope marker**: "You are operating on worktree `<absolute-path>`. All file edits and bash commands must run inside it (`cd <path> && ...`). Do not touch the main repo working tree."
 - **Task**: the full task line text plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by this task.
-- **Test requirements**: the parsed test tags. Spell out what must be created/updated and run:
-  - Always: unit tests for code in this task (Vitest).
-  - If `[integration]`: integration tests (Vitest + Testcontainers).
-  - If `[e2e]`: E2E tests (Playwright). Tag the e2e tests with `@<dominio>` matching the task's domain (e.g., `@patients`, `@billing`).
-- **Quality gate**: after tests pass, run `npm run check` (lint + format + typecheck). All three must pass.
+- **Test layers (agent decides per task scope)**: agent uses the table in `docs/dev-cycle.md` §5 to pick layers (unit / integration / e2e). For each chosen layer, agent applies the **scoped re-validation contract** documented in `.claude/agents/fullstack-developer.md` ("Re-validação escopada — sempre, task e fix"):
+  - `npm run lint` + `npm run typecheck` (full — both modes)
+  - `npm run test:unit` (full — cheap, cross-task safety net)
+  - `npm run test:integration -- --related $TASK_CHANGED_FILES` where `TASK_CHANGED_FILES = git -C <worktree> diff HEAD --name-only` (uncommitted = this task's work; the orchestrator commits between tasks in step 3b, so HEAD reflects end-of-previous-task)
+  - `npm run test:e2e:seeded -- --grep "@<inferred-tag>"` (only if the task is a critical UI flow per the table)
+  - Forced fallback to full suites when changed files include `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`, `src/shared/lib/utils/**`, `src/modules/auth/**`, root configs, or >10 files.
+  - The agent must declare in its `VERDICT: PASS` summary which layers ran, scoped vs. full, and which fallback signals (if any) triggered. This is what the orchestrator and reviewer audit for coverage.
 - **Reporting contract**: end the response with one of:
   - `VERDICT: PASS — implementation complete, tests pass, npm run check green.`
   - `VERDICT: FAIL — <one-line reason>. Logs: <path under .dev-cycle/>.` (Save full logs to `<worktree>/.dev-cycle/task-<n>-fail.log`.)
 - **Iteration cap**: "You may iterate internally up to 3 times to fix failing tests or lint errors. After 3 failed attempts, return FAIL with the root-cause diagnosis."
 
-#### 3c. Process the result
+#### 3b. Process the result
 
-- If `PASS`: edit the task line in `tasks.md` from `- [ ]` to `- [x]`. Move to the next task.
-- If `FAIL`: stop the loop. Print a summary (which task failed, the FAIL reason line, the log path) and wait for the user. Do not attempt the next task until the user resolves it.
+- If `PASS`:
+  1. Edit the task line in `tasks.md` from `- [ ]` to `- [x]`.
+  2. Stage everything in the working tree: `git -C "$WORKTREE" add -A`.
+  3. Commit with a Conventional Commits subject derived from the task title:
+     - Default: `feat: <task title>`
+     - If title contains `fix`/`bug`/`corrige`: `fix: <task title>`
+     - If title is purely about tests: `test: <task title>`
+     - If title is infra/config: `chore: <task title>`
+     - Body: `OpenSpec change: <name>` plus any co-author trailer per repo convention (check `git log` for the existing pattern).
+  4. **Hooks must run** (no `--no-verify`). If pre-commit hooks fail, treat as a fix-iteration trigger: re-invoke the agent with the hook output as synthetic feedback. The agent's internal retry budget covers it (cap 3, same as test/lint failures).
+  5. Move to the next task. Next task's agent invocation will see `git diff HEAD --name-only` reflecting only its own work.
+- If `FAIL`: stop the loop. Print a summary (which task failed, the FAIL reason line, the log path) and wait for the user. Do not attempt the next task. The working tree is left dirty with the agent's partial work; the user can amend, revert, or instruct continuation. **Do not commit on FAIL** — the WIP commit is contingent on PASS so the linear history doesn't include broken intermediate states.
+
+#### 3c. End-of-tasks regression sweep
+
+After every task is `[x]` and committed, run a full-suite regression sweep before invoking the reviewer. This catches cross-task drift that scoped per-task re-validation can miss (task 5 broke an integration test from task 2 whose import graph the scoped run doesn't touch).
+
+**Test execution is delegated to `fullstack-developer` in sweep mode.** The orchestrator does not run `npm run test:*` directly — its job here is to (a) decide whether e2e is needed, (b) compute the log path, (c) invoke the agent, and (d) on failure, write the synthetic feedback file and re-route to fix mode.
+
+```bash
+cd "$WORKTREE"
+
+# Pick the next sweep number (resume-safe).
+SWEEP_N=$(( $(ls .dev-cycle/sweep-*.log 2>/dev/null | wc -l) + 1 ))
+SWEEP_LOG="$(pwd)/.dev-cycle/sweep-${SWEEP_N}.log"
+
+# E2E sweep only if any per-task ran e2e (no UI scope → nothing to regress at e2e level).
+# Detect via the agent's VERDICT summaries persisted under .dev-cycle/.
+if grep -lE "ran e2e|--grep '@" .dev-cycle/task-*.summary 2>/dev/null | grep -q .; then
+  E2E_REQUIRED=true
+else
+  E2E_REQUIRED=false
+fi
+```
+
+Then invoke `fullstack-developer` (Agent tool) in **sweep mode** with:
+
+- **Scope marker**: `worktree_path = <absolute-path>`.
+- **Mode**: `sweep`.
+- **Flags**: `e2e_required = <true|false>`, `sweep_log_path = <absolute path to $SWEEP_LOG>`.
+- **Instruction**: "Run `npm run test:integration` (full). If `e2e_required` is true, also run `npm run test:e2e:seeded` (full). Append all stdout+stderr to `sweep_log_path`. Do NOT modify code, run lint/typecheck/unit, or scope via `--related`/`--grep` — sweep is full-only and read-only."
+- **Reporting contract**:
+  - `VERDICT: PASS — sweep clean (integration: X tests, e2e: Y tests | e2e: skipped)`
+  - `VERDICT: FAIL — <one-line cause>. Logs: <sweep_log_path>`
+
+Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-task invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-task.
+
+**Branch on the agent's verdict:**
+
+- `VERDICT: PASS` → "Regression sweep clean — proceeding to reviewer." Go to step 4.
+- `VERDICT: FAIL` → persist a synthetic feedback file at `<worktree>/.dev-cycle/sweep-fail-<N>.md` containing:
+  ```
+  # Regression sweep failure (iteration N)
+
+  **Forced full re-validation**: this is a cross-task regression caught by the end-of-tasks sweep. At the end of your fix, run `npm run test:integration` full AND (if applicable) `npm run test:e2e:seeded` full — NOT scoped via --related/--grep. The regression by definition isn't covered by your changed-files graph.
+
+  ## Failing tests
+  <parsed list of failing tests from $SWEEP_LOG>
+
+  ## Raw output
+  <tail of $SWEEP_LOG>
+  ```
+
+  Then invoke `fullstack-developer` in **fix mode** with `feedback_file=.dev-cycle/sweep-fail-<N>.md`. Cap 3 iterations (separate budget from steps 4 and 5).
+
+  Each fix iteration: agent does its fix, runs full re-validation per the synthetic feedback's instruction, returns `VERDICT: PASS`. Orchestrator commits the fix as `fix: <short summary of regression>` (Conventional Commits) and re-invokes `fullstack-developer` in **sweep mode** (back to top of 3c). At cap 3, escalate without invoking the reviewer — broken regressions never reach review.
 
 ### 4. End-of-tasks: code-reviewer loop (cap 3)
 
@@ -113,20 +171,17 @@ Initialize `QA_ITER=0`.
 
 Before bringing up the app, evaluate the skip-QA heuristic. The goal is to avoid the cost of `qa-tester` (Playwright browser, ~2–5 min per iteration, cap 3 = up to 15 min) on backend-only changes.
 
-**Skip QA if all three signals pass** (logical AND):
+**Skip QA if both signals pass** (logical AND):
 
 ```bash
-# Signal 1: no [e2e] tags in tasks.md
-SIGNAL_1=$(! grep -qE '\[e2e\]' "$WORKTREE/openspec/changes/<name>/tasks.md" && echo PASS || echo FAIL)
-
-# Signal 2: no UI keywords in #### Scenario: blocks under specs/
+# Signal 1: no UI keywords in #### Scenario: blocks under specs/
 UI_KEYWORDS='visits|renders|clicks|sees|visual|navigates|page|form|button'
-SIGNAL_2=$(! grep -irE -A 6 '^#### Scenario:' "$WORKTREE/openspec/changes/<name>/specs/" 2>/dev/null \
+SIGNAL_1=$(! grep -irE -A 6 '^#### Scenario:' "$WORKTREE/openspec/changes/<name>/specs/" 2>/dev/null \
   | grep -iqE "$UI_KEYWORDS" && echo PASS || echo FAIL)
 
-# Signal 3: diff main...HEAD doesn't touch UI paths
+# Signal 2: diff main...HEAD doesn't touch UI paths
 CHANGED=$(git -C "$WORKTREE" diff main...HEAD --name-only)
-SIGNAL_3=$(! echo "$CHANGED" | grep -qE '^(src/app/\(app\)/|src/app/\(auth\)/|src/modules/[^/]+/components/|src/shared/ui/)' && echo PASS || echo FAIL)
+SIGNAL_2=$(! echo "$CHANGED" | grep -qE '^(src/app/\(app\)/|src/app/\(auth\)/|src/modules/[^/]+/components/|src/shared/ui/)' && echo PASS || echo FAIL)
 ```
 
 Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orchestrator computes there.
@@ -135,8 +190,8 @@ Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orc
 
 | `--force-qa` | Heuristic | Action |
 |---|---|---|
-| true | (any) | Run QA. Print: `QA forced by --force-qa flag (heuristic would have <skipped|run>: signals=<1>/<2>/<3>).` |
-| false | all 3 PASS | Skip QA. Print the skip message below. Jump to step 7. |
+| true | (any) | Run QA. Print: `QA forced by --force-qa flag (heuristic would have <skipped|run>: signals=<1>/<2>).` |
+| false | both PASS | Skip QA. Print the skip message below. Jump to step 7. |
 | false | any FAIL | Run QA. Print: `QA running — signal X failed: <reason>.` |
 
 **Skip message** (printed when QA is skipped):
@@ -145,9 +200,8 @@ Persist `CHANGED` for reuse in step 6 (fix-mode) — it's the same value the orc
 ## QA Skipped — <change>
 
 Heuristic concluded this change does not require browser QA:
-  - Signal 1 (no [e2e] tags in tasks.md):                               PASS
-  - Signal 2 (no UI keywords in spec scenarios):                        PASS
-  - Signal 3 (diff doesn't touch src/app/(app)/, src/app/(auth)/, src/modules/<dom>/components/, src/shared/ui/): PASS
+  - Signal 1 (no UI keywords in spec scenarios):                        PASS
+  - Signal 2 (diff doesn't touch src/app/(app)/, src/app/(auth)/, src/modules/<dom>/components/, src/shared/ui/): PASS
 
 Skipping qa-tester. Proceeding to step 7 (archive) and step 8 (commits + PR).
 To force QA on this change, re-invoke as: /dev-cycle <name> --force-qa
@@ -155,17 +209,69 @@ To force QA on this change, re-invoke as: /dev-cycle <name> --force-qa
 
 If skipping, do not initialize Docker (no `docker compose up`). Proceed directly to step 7.
 
-#### 5a. Bring up the app
+#### 5a. Ensure Supabase + app are up (track ownership)
+
+QA needs a real Supabase stack (Postgres + GoTrue + Kong) and the Next.js app. The orchestrator brings them up if needed and records what it started in `<worktree>/.dev-cycle/infra-owned.json` so step 5e tears down only what it owns. Resumed runs read the existing marker first to preserve ownership across `/dev-cycle <name>` re-invocations.
 
 ```bash
 cd "$WORKTREE"
-if ! curl -sf http://localhost:3000 > /dev/null; then
-  docker compose up -d
-  # Poll for readiness, max 120s
+
+# Read existing marker (resumed run) or default to "I don't own anything yet".
+OWNS_SUPABASE=$(jq -r '.supabase // false' .dev-cycle/infra-owned.json 2>/dev/null || echo false)
+OWNS_APP=$(jq -r '.app // false' .dev-cycle/infra-owned.json 2>/dev/null || echo false)
+
+# 1. Supabase: validate via the same CLI the @auth-real suite uses.
+if ! npx supabase status -o json >/dev/null 2>&1; then
+  if ! npm run supabase:start; then
+    # Surface the CLI's stderr in the escalation, mirroring readSupabaseStatus()
+    # in playwright.real.config.ts. Don't collapse it into "bootstrap failed".
+    exit 1
+  fi
+  OWNS_SUPABASE=true
+
+  # Orchestrator-owned startup → reset DB so QA gets a clean state.
+  # If Supabase was already up (user-owned), DO NOT reset — we'd wipe their data.
+  npm run supabase:reset
 fi
+
+# 2. App
+if ! curl -sf http://localhost:3000 >/dev/null; then
+  if ! docker compose up -d; then
+    exit 1
+  fi
+  OWNS_APP=true
+fi
+
+# Poll readiness up to 120s; escalate on timeout.
+for i in $(seq 1 60); do
+  curl -sf http://localhost:3000 >/dev/null && break
+  sleep 2
+done
+curl -sf http://localhost:3000 >/dev/null || { echo "App not reachable after 120s"; exit 1; }
+
+# 3. Persist marker (overwrites — fresh source of truth for step 5e).
+mkdir -p .dev-cycle
+cat > .dev-cycle/infra-owned.json <<EOF
+{
+  "supabase": $OWNS_SUPABASE,
+  "app": $OWNS_APP,
+  "started_at": "$(date -u -Iseconds)"
+}
+EOF
 ```
 
-If the app is not reachable after 120s, escalate to user with the docker logs.
+**Ownership matrix** (drives step 5e):
+
+| Initial state             | Bootstrap action                     | Marker                          |
+|---------------------------|--------------------------------------|---------------------------------|
+| Both already up           | Reuse; no DB reset                   | `{supabase: false, app: false}` |
+| Supabase up, app down     | Start app                            | `{supabase: false, app: true}`  |
+| Both down                 | Start Supabase, reset DB, start app  | `{supabase: true, app: true}`   |
+| Supabase down, app up     | Start Supabase, reset DB             | `{supabase: true, app: false}`  |
+
+The "I started it → I reset the DB" policy is deliberate: never wipe a Supabase the user is also using; always reset one we just brought up so QA sees a clean fixture.
+
+This diverges from the `@auth-real` suite's "validate-only, fail loud" pattern (`playwright.real.config.ts:readSupabaseStatus`). The divergence is conscious — the suite is a one-shot test runner the user invokes manually; `/dev-cycle` is an end-to-end workflow that owns its scratch space.
 
 #### 5b. Extract scenarios from the change's specs
 
@@ -192,11 +298,44 @@ Increment `QA_ITER` after the agent returns.
 
 #### 5d. Branch on verdict
 
-- `clean` → proceed to step 6.
+- `clean` → proceed to step 5e (teardown), then step 6.
 - `issues-found`:
-  - If `QA_ITER >= 3` → stop and escalate.
-  - **Loop guard**: same as 4b — compare CRÍTICO/ALTO titles between `qa-<QA_ITER>.md` and `qa-<QA_ITER-1>.md`; halt on identical lists.
-  - Otherwise: invoke `fullstack-developer` in **fix mode** (see step 6 prompt), passing the QA report path. Then re-invoke `code-reviewer` (one short pass on the new diff — `review-after-qa-<QA_ITER>.md`); if it stays clean, re-invoke `qa-tester` (back to 5a). If the short review fails, treat it as a normal review-fix loop (subject to its own 3-iter cap, shared budget with step 4).
+  - If `QA_ITER >= 3` → stop and escalate. **Do NOT run step 5e** — leave infra up for inspection (see escalation message below).
+  - **Loop guard**: same as 4b — compare CRÍTICO/ALTO titles between `qa-<QA_ITER>.md` and `qa-<QA_ITER-1>.md`; halt on identical lists. Same teardown rule: leave infra up.
+  - Otherwise: invoke `fullstack-developer` in **fix mode** (see step 6 prompt), passing the QA report path. Then re-invoke `code-reviewer` (one short pass on the new diff — `review-after-qa-<QA_ITER>.md`); if it stays clean, re-invoke `qa-tester` (back to 5c). If the short review fails, treat it as a normal review-fix loop (subject to its own 3-iter cap, shared budget with step 4).
+
+#### 5e. Teardown (orchestrator-owned only, on QA clean)
+
+Runs only when step 5d returned `VERDICT: clean`. Skipped on:
+- `VERDICT: issues-found` with cap hit or non-converging loop (infra left up so the user can inspect).
+- Any earlier escalation in steps 5a–5d.
+- QA skipped at step 5.0 (no marker was written; nothing to tear down).
+
+```bash
+cd "$WORKTREE"
+[ -f .dev-cycle/infra-owned.json ] || exit 0
+
+OWNS_APP=$(jq -r '.app' .dev-cycle/infra-owned.json)
+OWNS_SUPABASE=$(jq -r '.supabase' .dev-cycle/infra-owned.json)
+
+if [ "$OWNS_APP" = "true" ]; then
+  docker compose down
+fi
+if [ "$OWNS_SUPABASE" = "true" ]; then
+  npm run supabase:stop
+fi
+rm -f .dev-cycle/infra-owned.json
+```
+
+**Escalation message when leaving infra up** (printed at the cap-hit / non-converging point in step 5d, *before* exiting):
+
+```
+QA escalated — infra left up for inspection.
+Marker: <worktree>/.dev-cycle/infra-owned.json indicates what /dev-cycle started.
+Manual teardown (only what's orchestrator-owned):
+  jq -r '.supabase' <worktree>/.dev-cycle/infra-owned.json  # true → npm run supabase:stop
+  jq -r '.app' <worktree>/.dev-cycle/infra-owned.json       # true → docker compose down
+```
 
 ### 6. Fix-mode prompt template (used by 4b and 5d)
 
@@ -222,7 +361,7 @@ The orchestrator computes `changed_files` and `affected_e2e_tags` itself before 
 
 ### 7. Archive in-place
 
-Trigger only when reviewer is clean AND (QA is clean OR QA was skipped at step 5.0). The change is archived inside the worktree on `feature/<name>` so the move + sync + docs land in the same PR as the implementation. **No prompts to the user** — this step is fully non-interactive (defaults below); failures hard-stop before any commits/PR are created.
+Trigger only when reviewer is clean AND (QA is clean OR QA was skipped at step 5.0). The change is archived inside the worktree on `feature/<name>` so the move + sync land in the same PR as the implementation. **No prompts to the user** — this step is fully non-interactive (defaults below); failures hard-stop before any commits/PR are created.
 
 This step is the inline equivalent of `/opsx:archive` running with all confirmations auto-accepted as "proceed". The standalone `/opsx:archive` command continues to exist for ad-hoc archives outside `/dev-cycle`.
 
@@ -264,50 +403,21 @@ mv "openspec/changes/<name>" "$DATED"
 
 Hard-stop on collision (same policy as `/opsx:archive`).
 
-#### 7.4 Generate or update `docs/<capability>.md`
-
-For each capability dir under `$DATED/specs/`, generate or update `docs/<cap>.md` (pt-BR prose, code identifiers/paths/commands stay in English). Source material to read:
-
-- `openspec/specs/<cap>/spec.md` (post-sync source of truth; fall back to the archived delta if 7.2 was skipped).
-- The archived `proposal.md`, `design.md` (if present), `tasks.md`.
-- Existing `docs/<cap>.md` if present (preserve manual edits and prior history entries).
-
-Template sections (same as the standalone archive skill):
-
-- **Resumo** — 1–2 sentences on what this capability is and why it exists.
-- **Onde mora o código** — bullet list of main files/folders with relative paths.
-- **Superfície pública** — routes, server actions, exported components/utilities, env vars, contract surface.
-- **Comportamento e invariantes** — edge cases, gotchas, RLS/LGPD/idempotency notes.
-- **Testes** — test files covering the capability with layer (unit/integration/e2e) and relative paths.
-- **Histórico de changes** — bullet list, **newest first**, of the form `- YYYY-MM-DD <change-name> — <one-line summary>` linking to `../openspec/changes/archive/<dated>/`. Prepend the just-archived change; never drop prior entries.
-
-**Update vs. create**: when `docs/<cap>.md` already exists, edit in place — refresh stale sections, prepend the change to the history, preserve manual content (especially custom sections outside the template above).
-
-If write fails for any capability: pause, list the failed capability(ies). **Do not** rollback the `mv` from 7.3 — the change is semantically archived; the doc can be corrected manually before the commit in 8b.
-
-#### 7.5 Pre-commit safety check
-
-Run `git -C "$WORKTREE" status --short` and `git -C "$WORKTREE" diff --stat docs/` to verify the doc edits look reasonable. If any pre-existing `docs/<cap>.md` shows a destructive diff (e.g., manual sections deleted, history truncated), pause and ask the user before proceeding to step 8.
-
 ### 8. Commits and PR
 
 Once archive (step 7) completed without unresolved errors:
 
-#### 8a. Semantic commits per task
+#### 8a. Per-task commits (already done in step 3b)
 
-Strategy:
-1. For each task in the original `tasks.md` order, compute the set of files exclusively touched by that task. Use `git -C <worktree> log --reverse --oneline` if intermediate commits were already made by the dev agent during the per-task loop; otherwise, replay by reading the worktree's reflog.
-2. If per-task isolation is feasible, create one commit per task with subject derived from the task title and Conventional Commits prefix:
-   - Default: `feat: <task title>`
-   - If task title contains `fix`/`bug`/`corrige`: `fix: <task title>`
-   - If task title is purely about tests: `test: <task title>`
-   - If task title is infra/config: `chore: <task title>`
-3. **If per-task isolation is not feasible** (files overlap across tasks), fall back to a single commit: `feat(<change>): <change title from proposal.md>` and announce this fallback in the final summary.
+Per-task Conventional Commits were created incrementally during step 3b — one commit per task in `tasks.md` order, with messages derived from the task title (`feat:`/`fix:`/`test:`/`chore:`) and `OpenSpec change: <name>` in the body. Plus any commits from sweep fixes (step 3c) and review/QA fix iterations (steps 4–5), each made at the time of the fix.
 
-All commits include in the body:
-- Reference to the OpenSpec change (`OpenSpec change: <name>`)
-- Co-author trailer if appropriate (per repo convention; check existing log)
-- No `--no-verify`. If pre-commit hooks fail, treat as a fix-iteration trigger (route back to step 6).
+Verify the linear history before proceeding to 8b:
+
+```bash
+git -C "$WORKTREE" log --oneline main..HEAD
+```
+
+If a task is missing a commit or has a non-CC subject, abort with a diagnostic — this indicates a bug in step 3b or a manual intervention after a step-3b failure that didn't restore the contract. The legacy fallback to a single commit (`feat(<change>): <change title>`) no longer applies; per-task isolation is by construction.
 
 #### 8b. Dedicated archive commit
 
@@ -317,20 +427,17 @@ After 8a, stage and commit everything the archive step (7) produced as a single 
 cd "$WORKTREE"
 git add \
   openspec/changes/archive/$(date +%F)-<name>/ \
-  openspec/specs/ \
-  docs/
-git commit -m "chore(openspec): archive <name> + sync specs + docs
+  openspec/specs/
+git commit -m "chore(openspec): archive <name> + sync specs
 
 OpenSpec change: <name>
 - Archived to openspec/changes/archive/$(date +%F)-<name>/
-- Synced delta specs into openspec/specs/<cap>/spec.md (see .dev-cycle/sync-summary.md)
-- Updated docs/<cap>.md for each touched capability"
+- Synced delta specs into openspec/specs/<cap>/spec.md (see .dev-cycle/sync-summary.md)"
 ```
 
 Notes:
 - The `mv` from step 7.3 shows up as a rename in `git status`; `git add openspec/changes/archive/<dated>/` stages the rename plus any modifications.
 - `git add openspec/specs/` picks up sync edits from step 7.2.
-- `git add docs/` picks up doc edits from step 7.4.
 - If `git status` shows untracked files outside these paths, **do not** stage them blindly — pause and ask the user.
 - If pre-commit hooks fail, treat as a fix-iteration trigger (route back to step 6, scoped re-validation).
 
@@ -356,7 +463,6 @@ gh pr create \
 
 ## Archive
 - Specs synced: <list of openspec/specs/<cap>/spec.md touched, or "none — docs-only change">
-- Docs updated: <list of docs/<cap>.md created or updated>
 
 ## Evidence
 - Code review: .dev-cycle/review-N.md (final iteration)
@@ -376,12 +482,12 @@ EOF
 Tasks: M/M complete
 Worktree: ../hubrityp-<name>/ (branch: feature/<name>)
 Review iterations: X/3
-QA: <Y/3 | skipped (backend-only heuristic) | skipped (--force-qa override)>
+QA: <Y/3 | skipped (backend-only heuristic)>
+Infra: <torn down (orchestrator-owned: supabase=<bool>, app=<bool>) | reused user-owned, no teardown | left up — QA escalated, manual teardown noted above>
 Archive: openspec/changes/archive/YYYY-MM-DD-<name>/
   - Specs synced: <list or "none">
-  - Docs updated: <list or "none">
 Commits created: <count> per-task + 1 archive commit (<strategy: per-task | single>)
-Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md}
+Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md, infra-owned.json (if QA escalated)}
 PR: <url>
 ```
 

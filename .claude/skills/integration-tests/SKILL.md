@@ -35,19 +35,6 @@ Não use este nível para:
 
 **Regra prática:** Testcontainers para a suíte de integração (CI e dev). `supabase start` permanece como ambiente de desenvolvimento (UI Studio, Auth, Storage, Realtime). Os dois coexistem.
 
-## Quality gates
-
-Antes de declarar a tarefa concluída:
-
-```bash
-docker info >/dev/null      # Docker precisa estar rodando
-npm run test:integration    # Vitest com config de integração (ver assets/)
-npm run lint
-npm run typecheck
-```
-
-Se Docker não estiver disponível no ambiente, **declare explicitamente** — não pule silenciosamente.
-
 ## Estrutura recomendada
 
 Todos os testes vivem **centralizados** sob `src/__tests__/`. Integração usa o sufixo `.int.test.ts` para o filtro do Vitest pegar só essa camada.

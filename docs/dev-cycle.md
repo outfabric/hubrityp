@@ -42,8 +42,7 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
                                                               │
                                                               ▼
                                                        archive in-place
-                                                       (sync specs + mv +
-                                                        docs/<cap>.md)
+                                                       (sync specs + mv)
                                                               │
                                                               ▼
                                                        commits semânticos
@@ -53,8 +52,8 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
 
 > **Notas**:
 >
-> - `qa-tester` é skipado automaticamente quando uma heurística de 3 sinais conclui que a change é backend-only (sem tags `[e2e]`, sem keywords UI em scenarios, sem paths em `src/app/(app)/`, `src/app/(auth)/` ou `src/modules/<dominio>/components/`). Veja seção 7.bis. Force com `/dev-cycle <name> --force-qa`.
-> - O **archive** é feito dentro do worktree, na branch `feature/<name>`, antes do push — então o PR já vem com a change movida para `openspec/changes/archive/`, specs sincronizados e `docs/<cap>.md` atualizados. `/opsx:archive` ainda existe para uso ad-hoc fora do `/dev-cycle`.
+> - `qa-tester` é skipado automaticamente quando uma heurística de 2 sinais conclui que a change é backend-only (sem keywords UI em scenarios e sem paths tocados em `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dominio>/components/` ou `src/shared/ui/`). Veja seção 7.bis. Force com `/dev-cycle <name> --force-qa`.
+> - O **archive** é feito dentro do worktree, na branch `feature/<name>`, antes do push — então o PR já vem com a change movida para `openspec/changes/archive/` e specs sincronizados. `/opsx:archive` ainda existe para uso ad-hoc fora do `/dev-cycle`.
 
 ---
 
@@ -98,25 +97,29 @@ Comportamento:
 
 ## 5. Anatomia de uma task
 
-Em `openspec/changes/<name>/tasks.md`, cada task é uma linha checkbox. Você pode anotar quais camadas de teste a task exige usando tags entre colchetes no fim da linha:
+Em `openspec/changes/<name>/tasks.md`, cada task é uma linha checkbox com texto livre descrevendo o que deve ser feito:
 
 ```
-- [ ] Add /api/health route returning 200 with { ok: true } [unit] [integration]
-- [ ] Add patient list page with skeleton loading [unit] [e2e]
-- [ ] Migrate patient table to add 'archived' column [integration]
+- [ ] Add /api/health route returning 200 with { ok: true }
+- [ ] Add patient list page with skeleton loading
+- [ ] Migrate patient table to add 'archived' column
 - [ ] Refactor billing helper for clarity
 ```
 
-Convenção:
+**Camadas de teste**: não anotamos tags na task. O `fullstack-developer` decide quais camadas (unit / integration / e2e) cobrem a task analisando o que está sendo implementado:
 
-| Tag             | Significa                                                                                                        |
-| --------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `[unit]`        | Cria/atualiza testes Vitest unitários para essa task.                                                            |
-| `[integration]` | Cria/atualiza testes Vitest + Testcontainers contra Postgres real.                                               |
-| `[e2e]`         | Cria/atualiza testes Playwright cobrindo o fluxo. Devem receber tag `@<dominio>` (ex.: `@patients`, `@billing`). |
-| _(sem tag)_     | Default `[unit]`.                                                                                                |
+| Natureza da task                                                                                                                                               | Camadas esperadas                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Lógica pura, validators Zod, helpers, hooks isolados                                                                                                           | unit                                                                                                                 |
+| Server Action, Route Handler, query Drizzle, política RLS, função Inngest, integração externa, schema/migration                                                | unit (quando há lógica isolada testável) + integration (sempre, contra Postgres real via Testcontainers)             |
+| Fluxo crítico de UI (auth, criação/edição de paciente, agendamento, lembrete WhatsApp, geração de receita, cobrança/PIX, sessão de telepsicologia, prontuário) | unit + integration + e2e (Playwright; tag `@<dominio>` no teste, p.ex. `@patients`, `@billing`)                      |
+| Refactor mecânico ou doc-only                                                                                                                                  | re-rodar suítes existentes que cobrem o caminho tocado; criar testes novos só se a refactor expõe lógica não-coberta |
 
-O `fullstack-developer` recebe essas tags e sabe quais skills (`unit-tests`, `integration-tests`, `e2e-tests`) consultar e quais comandos rodar.
+O agent consulta as skills `unit-tests`, `integration-tests` e `e2e-tests` para os padrões concretos (setup, mocks, factories, helpers de auth) de cada camada.
+
+**Escopo dentro da camada**: a tabela escolhe **quais camadas** rodam; dentro de cada camada o agent aplica o **mesmo padrão escopado do modo fix** (ver §7) — `lint`+`typecheck`+`unit` full, `integration` via `--related`, `e2e` via `--grep "@<tag>"`. Isso evita rodar suítes inteiras a cada task numa change com muitas tasks. Forced-fallback (schema/types/env/auth/configs/>10 arquivos) reverte para suíte full daquela camada quando o sinal dispara.
+
+**WIP commits per-task**: depois de cada task PASSar, o orquestrador commita o working tree com Conventional Commits derivado do título da task (`feat:` default, `fix:`/`test:`/`chore:` por convenção). Razão: (a) o agent calcula `git diff HEAD --name-only` para escopar `--related` apenas aos arquivos da task atual; (b) o step 7 (Commits semânticos + PR) já encontra a história linear pronta, sem precisar reconstruir per-task isolation post-hoc.
 
 ---
 
@@ -147,16 +150,25 @@ mkdir -p ../hubrityp-<name>/.dev-cycle
 
 Para cada task `- [ ]`, em ordem do arquivo:
 
-1. **Parse das tags de teste** (`[unit]`/`[integration]`/`[e2e]`; default `[unit]`).
-2. **Invoca `fullstack-developer`** via Agent tool com:
+1. **Invoca `fullstack-developer`** via Agent tool com:
    - `worktree_path` (absoluto)
    - texto literal da task + trechos relevantes de proposal/specs/design
-   - lista de camadas de teste
-   - instrução de rodar `npm run check` no fim
+   - instrução: o agent escolhe camadas pela tabela da §5 e aplica a **re-validação escopada (§7)** dentro de cada camada — `lint`+`typecheck`+`unit` full, `integration --related $(git diff HEAD --name-only)`, `e2e --grep "@<tag>"` (só se UI crítico)
    - cap interno de 3 tentativas de fix
-   - contrato de saída: `VERDICT: PASS — ...` ou `VERDICT: FAIL — ...`
-3. **PASS** → marca a task `- [x]` em `tasks.md` e avança.
-4. **FAIL** → pausa, mostra logs em `.dev-cycle/task-<n>-fail.log`, espera o usuário.
+   - contrato de saída: `VERDICT: PASS — ...` ou `VERDICT: FAIL — ...` (incluindo no resumo: camadas rodadas, escopado vs. full, fallbacks acionados)
+2. **PASS** → marca a task `- [x]` em `tasks.md`, **commita o working tree** com Conventional Commits (`feat:`/`fix:`/`test:`/`chore:` derivado do título da task) + body `OpenSpec change: <name>`. Hooks rodam normalmente; falha de hook vira fix-iteration. A próxima task vai ver `git diff HEAD --name-only` refletindo só o trabalho dela.
+3. **FAIL** → pausa, mostra logs em `.dev-cycle/task-<n>-fail.log`, espera o usuário. **Não commita** — o working tree fica sujo com o trabalho parcial; o usuário decide amend, revert ou continuar.
+
+#### Step 3.bis — Regression sweep antes do reviewer
+
+Quando todas as tasks estão `[x]` e commitadas, roda **sweep full** das camadas que foram escopadas per-task: `npm run test:integration` (full) e `npm run test:e2e:seeded` (full, só se algum task rodou e2e). Lint/typecheck/unit já rodaram full em todo per-task — sweep aqui é redundante para essas camadas.
+
+A execução dos testes é **delegada ao `fullstack-developer` em modo sweep** — o orquestrador não roda `npm run test:*` direto. O orquestrador só (a) decide se e2e precisa rodar (heurística por grep nos `task-<n>.summary`), (b) calcula o caminho do `sweep-<N>.log`, (c) invoca o agent com `mode=sweep` + `e2e_required` + `sweep_log_path`, e (d) em failure, escreve o synthetic feedback e re-roteia para fix mode. Em modo sweep o agent é read-only: roda só os comandos pedidos, append no log, e devolve veredicto — não tenta corrigir nem altera código.
+
+- **Verde** (`VERDICT: PASS` do agent) → step 4 (reviewer).
+- **Vermelho** (`VERDICT: FAIL` do agent) → orquestrador persiste falhas em `.dev-cycle/sweep-fail-<N>.md` como synthetic feedback (com instrução explícita "rode integration full + e2e full no fim do fix, não escopado") e invoca `fullstack-developer` em modo fix. Cap 3 (budget separado dos steps 4 e 5). A cada fix: agent aplica fix + re-validação full + commit (`fix: <regressão>`); orquestrador re-invoca o agent em sweep mode. Cap atingido → escala sem invocar reviewer.
+
+Custo amortizado da sweep: ~2–3min uma vez por change. Substitui o gasto de ~2min × N tasks que o full-per-task antigo tinha. O overhead extra da delegação ao agent (vs. orquestrador rodar npm direto) é ~5–10s — preço para manter o orquestrador 100% livre de execução de testes/lint/typecheck.
 
 ### Step 4 — Loop dev ↔ code-reviewer (cap 3)
 
@@ -180,25 +192,46 @@ Antes de qualquer custo (Docker, browser), o orquestrador avalia a heurística d
 - Se os 3 sinais resultam em PASS → skipa `qa-tester`, anuncia o motivo, e pula direto para o step 6 (Archive in-place). O Docker NÃO é inicializado.
 - Caso contrário → roda QA normalmente.
 
-#### Step 5.1 — Loop QA (quando 5.0 não skipa)
+#### Step 5.1 — Bring-up de Supabase + app (com ownership)
 
-1. Garante app no ar:
-   ```bash
-   curl -sf http://localhost:3000 || docker compose up -d
-   ```
-   Aguarda até 120s. Se não subir, escala.
-2. **Extrai cenários** dos arquivos em `specs/` — todos os blocos `#### Scenario:`. Numera. Fallback: critérios de aceite do `proposal.md`. Sem nenhum dos dois → aborta.
-3. Invoca `qa-tester` com URL base + lista numerada de cenários. Persiste em `.dev-cycle/qa-<N>.md`.
-4. Lê linha `VERDICT:`:
-   - `clean` → step 6.
+QA precisa de Supabase real (Postgres + GoTrue + Kong) e do Next.js. O orquestrador sobe o que faltar e registra em `<worktree>/.dev-cycle/infra-owned.json` o que ele iniciou — esse marker dirige o teardown do step 5.2.
+
+Ordem de operações:
+
+1. **Supabase**: `npx supabase status -o json` valida (mesma CLI usada pela suíte `@auth-real`). Se não responder, roda `npm run supabase:start`, marca `supabase: true`, e dispara `npm run supabase:reset` para garantir estado de DB limpo. Se já estava up (user-owned), reusa sem tocar no DB.
+2. **App**: `curl -sf http://localhost:3000`. Se cair, roda `docker compose up -d` e marca `app: true`. Polling de 120s para readiness; timeout escala.
+3. **Marker**: `<worktree>/.dev-cycle/infra-owned.json` com `{ supabase, app, started_at }` é sobrescrito (fonte de verdade para o teardown).
+
+A política "subi → reseto o DB" é deliberada: nunca wipear um Supabase que o usuário também usa; sempre resetar um que o orquestrador acabou de subir, para QA partir de um fixture limpo. Isso diverge conscientemente do padrão `@auth-real` ("validate-only, fail loud") porque o `/dev-cycle` é uma orquestração end-to-end que possui seu próprio scratch space, não um test runner one-shot.
+
+#### Step 5.1.1 — Loop QA (quando 5.0 não skipa)
+
+1. **Extrai cenários** dos arquivos em `specs/` — todos os blocos `#### Scenario:`. Numera. Fallback: critérios de aceite do `proposal.md`. Sem nenhum dos dois → aborta.
+2. Invoca `qa-tester` com URL base + lista numerada de cenários. Persiste em `.dev-cycle/qa-<N>.md`.
+3. Lê linha `VERDICT:`:
+   - `clean` → step 5.2 (teardown), depois step 6.
    - `issues-found`:
-     - Se `QA_ITER >= 3` → escala.
-     - Loop guard idêntico ao do reviewer (se CRÍTICO/ALTO repetem entre iterações, escala).
+     - Se `QA_ITER >= 3` → escala. **Não roda teardown** — infra fica de pé pra inspeção.
+     - Loop guard idêntico ao do reviewer (se CRÍTICO/ALTO repetem entre iterações, escala — também sem teardown).
      - Senão: invoca `fullstack-developer` em modo fix. Reinvoca `code-reviewer` (review curto sobre o novo diff). Se review limpo → reinvoca `qa-tester`.
+
+#### Step 5.2 — Teardown (orchestrator-owned, só em QA clean)
+
+Roda apenas quando `VERDICT: clean`. Em `issues-found` com cap atingido ou loop não-convergente, infra fica de pé com mensagem acionável.
+
+Lê `infra-owned.json` e derruba só o que tem flag `true`:
+
+```bash
+[ "$(jq -r '.app' .dev-cycle/infra-owned.json)" = "true" ] && docker compose down
+[ "$(jq -r '.supabase' .dev-cycle/infra-owned.json)" = "true" ] && npm run supabase:stop
+rm -f .dev-cycle/infra-owned.json
+```
+
+Se a invocação inicial reusou Supabase + app que o usuário já tinha de pé, ambas as flags são `false` e o teardown é no-op — coerente com "não derrubo o que não subi".
 
 ### Step 6 — Archive in-place
 
-Roda quando reviewer está limpo E (QA está limpo OU QA foi skipado no 5.0). Acontece **dentro do worktree, na branch `feature/<name>`**, antes do push — assim o PR já vem com a change movida, specs sincronizados e `docs/<cap>.md` atualizados.
+Roda quando reviewer está limpo E (QA está limpo OU QA foi skipado no 5.0). Acontece **dentro do worktree, na branch `feature/<name>`**, antes do push — assim o PR já vem com a change movida e specs sincronizados.
 
 **Princípio**: equivale a `/opsx:archive` rodando com todas as confirmações auto-aceitas como "proceed". Totalmente não-interativo; falhas hard-stopam antes de qualquer commit/PR.
 
@@ -233,17 +266,6 @@ mv "openspec/changes/<name>" "$DATED"
 
 Hard-stop em colisão (mesma política do `/opsx:archive`).
 
-#### 6.4 — Generate / update `docs/<cap>.md`
-
-Para cada capability em `$DATED/specs/`, gera ou atualiza `docs/<cap>.md` (pt-BR; identifiers/paths/comandos em inglês). Template fixo: Resumo, Onde mora o código, Superfície pública, Comportamento e invariantes, Testes, Histórico de changes (newest first, com link para `../openspec/changes/archive/<dated>/`).
-
-- Se `docs/<cap>.md` já existe: edit in-place — refrescar seções obsoletas, prepend a nova entrada no histórico, **preservar edições manuais** (especialmente seções fora do template).
-- Se write falha para alguma capability: pausa, lista as falhas. **Não rollback** do `mv` — a change está semanticamente arquivada; o doc pode ser corrigido manualmente antes do commit em 7.b.
-
-#### 6.5 — Pre-commit safety check
-
-`git status --short` + `git diff --stat docs/`. Se algum `docs/<cap>.md` mostra diff destrutivo (seções manuais deletadas, histórico truncado), pausa antes de seguir para o step 7.
-
 #### Política de falhas (resumo)
 
 | Sub-passo      | Falha → ação                                                          |
@@ -251,61 +273,67 @@ Para cada capability em `$DATED/specs/`, gera ou atualiza `docs/<cap>.md` (pt-BR
 | 6.1 (validate) | Hard error — sinal de bug                                             |
 | 6.2 (sync)     | Pausa, mostra `sync-summary.md`, pede decisão. Não defaulta para skip |
 | 6.3 (mv)       | Hard error com mensagem                                               |
-| 6.4 (docs gen) | Pausa, lista capability falhada. **Não** rollback do `mv`             |
-| 6.5 (safety)   | Pausa para revisão manual                                             |
 
 Princípio: antes do `mv` (6.3), qualquer falha é recuperável e sem efeito colateral; depois do `mv`, abortar é pausar e pedir intervenção, não desfazer.
 
 ### Step 7 — Commits semânticos + PR
 
-1. **Commits per-task** (default): para cada task em `tasks.md`, identifica os arquivos exclusivamente tocados por aquela task e cria um commit com Conventional Commits:
-   - `feat: <task title>` (default)
-   - `fix: <task title>` se a task contém `fix`/`bug`/`corrige`
-   - `test: <task title>` se for puramente sobre testes
-   - `chore: <task title>` para infra/config
-2. **Fallback**: se isolar arquivos por task for inviável (overlap), cria um commit único `feat(<change>): <change title>` e anuncia o fallback.
-3. **Commit dedicado de archive** (sempre, depois dos per-task):
+1. **Commits per-task** já foram criados incrementalmente no step 3 (após cada PASS, um commit por task em ordem de `tasks.md`, com Conventional Commits derivado do título — `feat:`/`fix:`/`test:`/`chore:`). Mais commits eventuais de fixes da regression sweep (step 3.bis) e dos loops reviewer/QA (steps 4–5). O step 7 só verifica a história linear:
    ```bash
-   git add openspec/changes/archive/$(date +%F)-<name>/ openspec/specs/ docs/
-   git commit -m "chore(openspec): archive <name> + sync specs + docs"
+   git -C "$WORKTREE" log --oneline main..HEAD
+   ```
+   Falha (commit faltando ou subject não-CC) → aborta com diagnóstico — sinal de bug no step 3 ou intervenção manual quebrando o contrato. O fallback "commit único" das versões antigas não existe mais — per-task isolation é por construção.
+2. **Commit dedicado de archive** (sempre, depois dos per-task):
+   ```bash
+   git add openspec/changes/archive/$(date +%F)-<name>/ openspec/specs/
+   git commit -m "chore(openspec): archive <name> + sync specs"
    ```
    Justificativa do commit isolado: auditável no PR (reviewer vê 1 commit infra separado dos commits de feature), bisectável (sync mau-feito é localizável), rebatível (retry/fix do archive não toca os commits de feature).
-4. **Push + PR**:
+3. **Push + PR**:
    ```bash
    git push -u origin feature/<name>
    gh pr create --base main --title "<change title>" --body "..."
    ```
-   O body inclui referência à change OpenSpec (com path do archive datado), seções "Archive" (specs synced + docs touched) e "Evidence" (reports de review/QA — ou "QA skipped" quando aplicável), e checklist de tasks.
+   O body inclui referência à change OpenSpec (com path do archive datado), seção "Archive" (specs synced) e "Evidence" (reports de review/QA — ou "QA skipped" quando aplicável), e checklist de tasks.
 
 ---
 
-## 7. Estratégia de re-validação após fixes (anti-regressão)
+## 7. Estratégia de re-validação escopada (task + fix)
 
-Cada fix pós-feedback (do `code-reviewer` ou do `qa-tester`) modifica código que **já passou** pelos gates per-task. Sem re-validação, regressões cruzadas passam: um fix de schema pode quebrar testes de uma task anterior; um fix de QA em um componente pode quebrar e2e de outro fluxo. Re-rodar a suíte inteira a cada fix é caro (e2e custa minutos) e desencoraja iterações; portanto, a estratégia é **escopada por arquivos afetados**, com fallback para suíte completa quando o escopo não puder ser determinado com confiança.
+A mesma sequência roda em **dois contextos**:
+
+- **Task mode** (step 3, per task): agent calcula `CHANGED_FILES = git diff HEAD --name-only` localmente — uncommitted = só o trabalho desta task, porque o orquestrador commita entre tasks.
+- **Fix mode** (steps 3.bis, 4, 5, pós-feedback): orquestrador injeta `changed_files` (`git diff <fix-base>...HEAD --name-only`) e `affected_e2e_tags` no prompt.
+
+Sem essa escopagem, full-per-task numa change com 10 tasks gastaria ~50min só de teste antes do reviewer. Com escopagem, ~10–20min, com regression sweep cobrindo o cross-task drift.
 
 ### As 4 camadas (ordem fixa, falha-rápido)
 
-| #   | Camada                  | Comando                                                | Por quê                                                                                                                             |
-| --- | ----------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Falha aqui = parar antes de tocar testes.                                                           |
-| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar.                              |
-| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                    |
-| 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>` mantidas em `src/__tests__/e2e/seeded/tags.json` (ou inferidas da estrutura de `src/app/`). |
+| #   | Camada                  | Comando                                                | Por quê                                                                                                                                   |
+| --- | ----------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Lint ~10s, typecheck whole-program (não vale escopar).                                                    |
+| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar — vale como safety net per-task.    |
+| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                          |
+| 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>`. Em task mode, agent infere a tag pelo path tocado (`src/app/(app)/<dominio>/**` → `@<dominio>`). |
 
-`$CHANGED_FILES` = `git -C <worktree> diff <fix-base>...HEAD --name-only`, calculado pelo orquestrador e passado ao agent.
+E2E é **opcional em task mode** (só roda quando a tabela da §5 indica fluxo crítico de UI). Em fix mode, sempre roda — fallback para full se `affected_e2e_tags` veio vazio.
 
 ### Sinais que forçam fallback para suítes completas
 
-Qualquer um basta para acionar `npm run test:integration` full + `npm run test:e2e:seeded` full:
+Qualquer um basta (mesma lista nos dois modos):
 
 - Mudou `src/shared/db/schema/**`, `src/shared/lib/types/**`, ou `src/shared/env/**` (schema/tipos globais).
 - Mudou `src/shared/lib/utils/**` ou `src/modules/auth/**` (utilitários compartilhados / módulo de auth).
 - Mudou `next.config.ts`, `tailwind.config.*`, ou `drizzle.config.*` (config).
-- Mais de 10 arquivos modificados no fix (proxy de "mudança ampla").
+- Mais de 10 arquivos modificados (proxy de "mudança ampla").
 
 O agent deve nomear explicitamente o sinal acionado no resumo pré-`VERDICT`.
 
-### Custo esperado por iteração de fix (estimado)
+### Cross-task drift e a regression sweep
+
+Escopar per-task tem um custo: regressão da task 5 que quebra um teste integration da task 2 sem que `--related` da task 5 inclua aquele teste. **Step 3.bis** fecha esse buraco rodando `test:integration` full (e `test:e2e:seeded` full, condicional) entre o fim do step 3 e o início do step 4. Custo ~2–3min uma vez. Falha → fix mode com synthetic feedback que força full re-validação.
+
+### Custo esperado por iteração (estimado)
 
 | Camada           | Escopado  | Full       |
 | ---------------- | --------- | ---------- |
@@ -315,38 +343,41 @@ O agent deve nomear explicitamente o sinal acionado no resumo pré-`VERDICT`.
 | E2E              | ~1min     | ~10min     |
 | **Total**        | **~2min** | **~13min** |
 
-Com cap de 3 iters por loop e dois loops (reviewer + QA), pior caso ≈ 12min de re-validação por change — aceitável.
+Com escopagem em task mode + sweep no fim:
+
+- Change de 10 tasks (3 UI crítico): 7×~70s + 3×~3min + sweep ~3min ≈ **~21min** de re-validação total (vs. ~55min do full-per-task antigo).
 
 ### Onde a estratégia vive
 
-- O orquestrador **não** roda testes diretamente; instrui o `fullstack-developer` no prompt de fix.
-- O orquestrador **calcula** `changed_files` e `affected_e2e_tags` antes de invocar o agent.
-- O `fullstack-developer` executa a sequência e devolve `VERDICT: PASS` apenas se toda a re-validação ficar verde.
+- **Per-task** (step 3): o agent executa a sequência. Orquestrador não roda testes — só commita entre tasks.
+- **Sweep** (step 3.bis): o orquestrador invoca o agent em **modo sweep** com `e2e_required` e `sweep_log_path` — agent roda `test:integration` (e `test:e2e:seeded` quando aplicável) full e devolve `VERDICT: PASS|FAIL`. A heurística de "precisa e2e?" continua no orquestrador, mas execução é sempre via agent. Se a sweep falhar, o agent é re-invocado em modo fix com synthetic feedback.
+- **Fix pós-feedback** (steps 3.bis, 4, 5): orquestrador calcula `changed_files`/`affected_e2e_tags` e injeta no prompt; agent executa a sequência e devolve `VERDICT: PASS` apenas com re-validação verde.
+
+**Princípio invariante**: em todos os modos, **só o agent roda `npm run test:*`, `npm run lint` e `npm run typecheck`**. O orquestrador só faz infra (docker/supabase), git, openspec status e gh — nunca dispara testes nem checagens de código direto.
 
 ---
 
 ## 7.bis Skip-QA — heurística
 
-O `qa-tester` usa Playwright em browser real (~2–5min/iteração, cap 3 = até 15min). Para changes backend-only o custo não se justifica. O step 5.0 do pipeline avalia 3 sinais; se todos derem PASS, `qa-tester` é skipado (e o Docker não é nem inicializado).
+O `qa-tester` usa Playwright em browser real (~2–5min/iteração, cap 3 = até 15min). Para changes backend-only o custo não se justifica. O step 5.0 do pipeline avalia 2 sinais; se ambos derem PASS, `qa-tester` é skipado — e o bring-up de Supabase + app (step 5.1) não acontece, então não há nem Docker nem `supabase:start` nem teardown a fazer.
 
-### Os 3 sinais (logical AND)
+### Os 2 sinais (logical AND)
 
 | #   | Sinal                                                                                                              | Comando                                                                                                                                  |
 | --- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Nenhuma tag `[e2e]` em `tasks.md`                                                                                  | `! grep -qE '\[e2e\]' openspec/changes/<name>/tasks.md`                                                                                  |
-| 2   | Nenhuma keyword UI em blocos `#### Scenario:` dos `specs/`                                                         | `! grep -irE -A 6 '^#### Scenario:' specs/ \| grep -iqE 'visits\|renders\|clicks\|sees\|visual\|navigates\|page\|form\|button'`          |
-| 3   | Diff `main...HEAD` não toca `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/` | `! git diff main...HEAD --name-only \| grep -qE '^(src/app/\(app\)/\|src/app/\(auth\)/\|src/modules/[^/]+/components/\|src/shared/ui/)'` |
+| 1   | Nenhuma keyword UI em blocos `#### Scenario:` dos `specs/`                                                         | `! grep -irE -A 6 '^#### Scenario:' specs/ \| grep -iqE 'visits\|renders\|clicks\|sees\|visual\|navigates\|page\|form\|button'`          |
+| 2   | Diff `main...HEAD` não toca `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/` | `! git diff main...HEAD --name-only \| grep -qE '^(src/app/\(app\)/\|src/app/\(auth\)/\|src/modules/[^/]+/components/\|src/shared/ui/)'` |
 
-A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-positivo (existem changes UI sem `[e2e]` e com scenarios escritos em linguagem neutra). O sinal 3 (paths tocados) é o catch-all que pega esses casos.
+A combinação **AND** é deliberada: o sinal 1 sozinho pode dar falso-positivo (scenarios escritos em linguagem neutra que ainda assim implicam UI). O sinal 2 (paths tocados no diff) é o catch-all que pega esses casos — qualquer arquivo de UI no diff força QA a rodar mesmo que os scenarios sejam ambíguos.
 
 ### Exemplos com changes arquivadas reais
 
-| Change                     | S1  | S2  | S3  | Decisão                                                           |
-| -------------------------- | --- | --- | --- | ----------------------------------------------------------------- |
-| `bootstrap-foundation`     | ✓   | ✓   | ✓   | **Skip** (infra/tooling, sem UI)                                  |
-| `bootstrap-data-and-tests` | ✓   | ✓   | ✓   | **Skip** (db/lib/test stack)                                      |
-| `smoke-health-feature`     | ✓   | ✗   | ✗   | **Roda** (toca `src/app/(auth)/login`, `src/app/(app)/dashboard`) |
-| `dev-cycle-followups-001`  | ✓   | ✓   | ✓\* | **Skip** (refactor de orquestrador, sem UI)                       |
+| Change                     | S1  | S2  | Decisão                                                           |
+| -------------------------- | --- | --- | ----------------------------------------------------------------- |
+| `bootstrap-foundation`     | ✓   | ✓   | **Skip** (infra/tooling, sem UI)                                  |
+| `bootstrap-data-and-tests` | ✓   | ✓   | **Skip** (db/lib/test stack)                                      |
+| `smoke-health-feature`     | ✗   | ✗   | **Roda** (toca `src/app/(auth)/login`, `src/app/(app)/dashboard`) |
+| `dev-cycle-followups-001`  | ✓   | ✓\* | **Skip** (refactor de orquestrador, sem UI)                       |
 
 \*Quando a heurística retorna PASS para uma change que mexe em UI por engano, use `--force-qa`.
 
@@ -356,8 +387,8 @@ A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-posi
 
 ### Mensagens
 
-- **Skip**: lista os 3 sinais com PASS e instrui o usuário a re-invocar com `--force-qa` se discordar.
-- **Run após heurística falhar**: nomeia qual sinal disparou (ex.: "Signal 3 failed: diff touches `src/shared/ui/button.tsx`").
+- **Skip**: lista os 2 sinais com PASS e instrui o usuário a re-invocar com `--force-qa` se discordar.
+- **Run após heurística falhar**: nomeia qual sinal disparou (ex.: "Signal 2 failed: diff touches `src/shared/ui/button.tsx`").
 - **Run forçado**: "QA forced by --force-qa flag (heuristic would have skipped/run)".
 
 ---
@@ -367,6 +398,7 @@ A combinação **AND** é deliberada: sinais 1 e 2 sozinhos podem dar falso-posi
 | Loop                                                       | Cap      | Ação ao bater                                                                                      |
 | ---------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
 | Tentativas internas do dev por task (testes/lint falhando) | 3        | Pausa, mostra logs (`.dev-cycle/task-<n>-fail.log`), espera usuário.                               |
+| Regression sweep ↔ dev (step 3.bis)                        | 3        | Pausa, mostra `sweep-fail-<N>.md` e `.dev-cycle/sweep-<N>.log`. Não invoca reviewer.               |
 | Ciclo dev ↔ code-reviewer pós-tasks                        | 3        | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`.                                    |
 | Ciclo dev ↔ qa-tester                                      | 3        | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`.                                        |
 | Mesmo finding repete 2× consecutivas (review ou QA)        | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
@@ -382,20 +414,22 @@ Quando um cap é atingido, o orquestrador imprime:
 
 ## 9. Onde os artefatos vivem
 
-| Artefato                 | Caminho                                                  |
-| ------------------------ | -------------------------------------------------------- |
-| Worktree da change       | `../hubrityp-<name>/` (sibling do repo)                  |
-| Branch da change         | `feature/<name>` (criada do `origin/main`)               |
-| Relatórios de review     | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ...  |
-| Relatórios de QA         | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...          |
-| Sumário do sync de specs | `<worktree>/.dev-cycle/sync-summary.md`                  |
-| Logs de falhas de task   | `<worktree>/.dev-cycle/task-<n>-fail.log`                |
-| Pasta `.dev-cycle/`      | gitignored (via `.gitignore` na raiz do repo)            |
-| Change arquivada         | `openspec/changes/archive/YYYY-MM-DD-<name>/`            |
-| Specs principais sincr.  | `openspec/specs/<cap>/spec.md` (editado no step 6.2)     |
-| Docs técnicas            | `docs/<cap>.md` (gerado/atualizado no step 6.4)          |
-| Commits                  | per-task + 1 commit `chore(openspec): archive ...`       |
-| PR                       | aberto via `gh pr create` contra `main` (já com archive) |
+| Artefato                          | Caminho                                                                                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Worktree da change                | `../hubrityp-<name>/` (sibling do repo)                                                                                                          |
+| Branch da change                  | `feature/<name>` (criada do `origin/main`)                                                                                                       |
+| Relatórios de review              | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ...                                                                                          |
+| Relatórios de QA                  | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...                                                                                                  |
+| Sumário do sync de specs          | `<worktree>/.dev-cycle/sync-summary.md`                                                                                                          |
+| Logs de falhas de task            | `<worktree>/.dev-cycle/task-<n>-fail.log`                                                                                                        |
+| Sumário de cobertura per-task     | `<worktree>/.dev-cycle/task-<n>.summary` (camadas que rodaram, escopado vs. full — usado pelo step 3.bis pra decidir se sweep precisa rodar e2e) |
+| Logs/feedback da regression sweep | `<worktree>/.dev-cycle/sweep-<N>.log`, `sweep-fail-<N>.md` (synthetic feedback quando sweep vermelha)                                            |
+| Marker de ownership de infra      | `<worktree>/.dev-cycle/infra-owned.json` (existe entre 5.1 e 5.2; persiste se QA escala)                                                         |
+| Pasta `.dev-cycle/`               | gitignored (via `.gitignore` na raiz do repo)                                                                                                    |
+| Change arquivada                  | `openspec/changes/archive/YYYY-MM-DD-<name>/`                                                                                                    |
+| Specs principais sincr.           | `openspec/specs/<cap>/spec.md` (editado no step 6.2)                                                                                             |
+| Commits                           | per-task + 1 commit `chore(openspec): archive ...`                                                                                               |
+| PR                                | aberto via `gh pr create` contra `main` (já com archive)                                                                                         |
 
 Após o merge, limpe o worktree:
 
@@ -419,20 +453,23 @@ O orquestrador:
 - Detecta o worktree existente e reusa.
 - Pula tasks já marcadas `[x]` em `tasks.md`.
 - Conta os arquivos `review-N.md` e `qa-N.md` existentes em `.dev-cycle/` para inicializar `REVIEW_ITER` e `QA_ITER` corretamente (não reinicia o cap a cada retomada).
+- Lê `infra-owned.json` (se existir) ao entrar no step 5.1 para preservar ownership entre invocações — uma run anterior interrompida que subiu Supabase continua sendo "dona" disso na re-invocação. Se você manualmente derrubou Supabase entre as duas runs, o marker fica stale e o orquestrador re-detecta + sobe + remarca.
 
 ---
 
 ## 11. Troubleshooting
 
-| Sintoma                                                              | Causa provável                                                                                                  | Resolução                                                                                                                                                                |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| "docker compose up failed" no step QA                                | Docker daemon não está de pé                                                                                    | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop.                                                                                                           |
-| "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                                       | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
-| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                                              | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
-| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `src/__tests__/e2e/seeded/tags.json` nem segue a convenção `src/app/(app)/<dominio>/**` | O agent faz fallback para suíte e2e completa. Considere atualizar `src/__tests__/e2e/seeded/tags.json`.                                                                  |
-| Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                                              | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
-| Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                                       | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
-| `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                                          | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |
+| Sintoma                                                              | Causa provável                                                                                                       | Resolução                                                                                                                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "docker compose up failed" no step 5.1                               | Docker daemon não está de pé                                                                                         | `sudo systemctl start docker` (Linux) ou abrir Docker Desktop.                                                                                                           |
+| `npm run supabase:start` falha no step 5.1                           | Porta 54321 ocupada (suíte `@auth-real` rodando? mock GoTrue da seeded suite?), Docker indisponível, ou crash da CLI | Mensagem de stderr da CLI é surfaceada. Resolver o conflito de porta (`lsof -i:54321`) ou subir o Docker primeiro; re-invocar `/dev-cycle <name>`.                       |
+| Infra ficou de pé após QA escalar                                    | Comportamento esperado — step 5.2 não roda em `issues-found`                                                         | Cheque `<worktree>/.dev-cycle/infra-owned.json` para saber o que é seu (true) e derrube manualmente: `npm run supabase:stop` e/ou `docker compose down`.                 |
+| "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                                            | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
+| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                                                   | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
+| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `src/__tests__/e2e/seeded/tags.json` nem segue a convenção `src/app/(app)/<dominio>/**`      | O agent faz fallback para suíte e2e completa. Considere atualizar `src/__tests__/e2e/seeded/tags.json`.                                                                  |
+| Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                                                   | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
+| Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                                            | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
+| `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                                               | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |
 
 ---
 
@@ -440,7 +477,8 @@ O orquestrador:
 
 - **Schema OpenSpec**: apenas `spec-driven`.
 - **Sem paralelismo**: tasks são sequenciais por design (ordem importa em OpenSpec). Se você quer paralelismo, divida em changes independentes.
-- **Local-first**: precisa de Docker + `gh` + Playwright local. Não roda em CI.
+- **Local-first**: precisa de Docker + Supabase CLI + `gh` + Playwright local. Não roda em CI.
+- **Ports compartilhadas com a suíte `@auth-real`**: o step 5.1 sobe Supabase na porta hardcoded `54321` (ver gotcha em §14). Não é possível rodar `/dev-cycle` e `npm run test:e2e:real` concorrentemente — são mutuamente exclusivos.
 - **Custo de QA**: cada iteração do `qa-tester` consome tempo de browser real (~2–5min). Caps de 3 são intencionais; se você precisa de mais, é sinal de problema estrutural. A heurística do step 5.0 (seção 7.bis) skipa QA em changes backend-only para evitar esse custo quando seguro; use `--force-qa` se quiser desligar a heurística.
 - **Commits per-task** dependem de isolar arquivos por task com confiança. Se as tasks compartilham muitos arquivos, o orquestrador cai para um commit único e anuncia.
 
