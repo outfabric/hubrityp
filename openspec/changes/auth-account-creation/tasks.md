@@ -76,8 +76,8 @@
 
 ## 10. Documentação
 
-- [ ] 10.1 Adicionar seção "Wave-4 IDs (auth-account-creation)" em `docs/design-system/testid.md` com todos os novos `data-testid` (signup-form-*, onboarding-pending-*, auth-callback-*) e os arquivos onde vivem
-- [ ] 10.2 Atualizar `CLAUDE.md` (seção "Estrutura de pastas") se a árvore de `src/modules/registration/` ou `src/shared/db/schema/auth/` exigir nota explícita
+- [x] 10.1 Adicionar seção "Wave-4 IDs (auth-account-creation)" em `docs/design-system/testid.md` com todos os novos `data-testid` (signup-form-*, onboarding-pending-*, auth-callback-*) e os arquivos onde vivem
+- [x] 10.2 Atualizar `CLAUDE.md` (seção "Estrutura de pastas") se a árvore de `src/modules/registration/` ou `src/shared/db/schema/auth/` exigir nota explícita
 
 ## 11. Testes unitários
 
