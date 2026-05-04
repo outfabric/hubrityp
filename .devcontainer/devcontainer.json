@@ -46,13 +46,15 @@
   "remoteUser": "node",
 
   // Portas do inner Docker (DinD) encaminhadas para o host via VS Code.
-  "forwardPorts": [3000, 54321, 54322, 54323, 54324],
+  "forwardPorts": [3000, 54321, 54322, 54323, 54324, 54327, 8083],
   "portsAttributes": {
     "3000": { "label": "Next.js dev" },
     "54321": { "label": "Supabase API / Kong" },
     "54322": { "label": "Supabase DB" },
     "54323": { "label": "Supabase Studio" },
-    "54324": { "label": "Supabase Inbucket" }
+    "54324": { "label": "Supabase Inbucket" },
+    "54327": { "label": "Supabase Analytics (Logflare)" },
+    "8083": { "label": "Supabase Edge Runtime inspector" }
   },
 
   "customizations": {
