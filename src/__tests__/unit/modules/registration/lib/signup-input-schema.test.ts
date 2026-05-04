@@ -185,14 +185,13 @@ describe('signupInputSchema — crpNumber/crpUf cross-field consistency', () => 
 });
 
 describe('signupInputSchema — consents', () => {
-  it.each([
-    ['acceptedTerms'],
-    ['acceptedPrivacy'],
-    ['acceptedSensitiveData'],
-  ] as const)('rejects when %s is false', (field) => {
-    const errs = fieldErrorsOf(signupInputSchema.safeParse({ ...VALID_PAYLOAD, [field]: false }));
-    expect(errs[field]?.length ?? 0).toBeGreaterThan(0);
-  });
+  it.each([['acceptedTerms'], ['acceptedPrivacy'], ['acceptedSensitiveData']] as const)(
+    'rejects when %s is false',
+    (field) => {
+      const errs = fieldErrorsOf(signupInputSchema.safeParse({ ...VALID_PAYLOAD, [field]: false }));
+      expect(errs[field]?.length ?? 0).toBeGreaterThan(0);
+    },
+  );
 
   it('rejects when all three consents are false, with errors on each', () => {
     const errs = fieldErrorsOf(

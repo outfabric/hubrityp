@@ -76,10 +76,9 @@ describe('canTransition — disallowed paths', () => {
   it('treats cancelled as terminal — no edge leaves cancelled', () => {
     for (const to of ALL_STATUSES) {
       if (to === ProfileStatus.Cancelled) continue;
-      expect(
-        canTransition(ProfileStatus.Cancelled, to),
-        `cancelled → ${to} must be rejected`,
-      ).toBe(false);
+      expect(canTransition(ProfileStatus.Cancelled, to), `cancelled → ${to} must be rejected`).toBe(
+        false,
+      );
     }
   });
 

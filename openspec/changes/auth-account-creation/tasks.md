@@ -89,15 +89,15 @@
 
 ## 12. Testes de integração
 
-- [ ] 12.1 Helper `src/__tests__/integration/registration/helpers/markCrpValidated.ts` que UPDATE `profiles.status = 'active'` via Drizzle (uso só em testes)
-- [ ] 12.2 Factory `src/__tests__/integration/registration/factories/signup-input.ts` para gerar payloads válidos/variantes
-- [ ] 12.3 `src/__tests__/integration/registration/sign-up.int.test.ts` — happy path cria `auth.users` + `profiles` + log; duplicate email; duplicate CRP rolla back o auth.user; trigger metadata-faltando aborta a transação
-- [ ] 12.4 `src/__tests__/integration/registration/email-verified-trigger.int.test.ts` — UPDATE `auth.users.email_confirmed_at` transita status; idempotente para `active`
-- [ ] 12.5 `src/__tests__/integration/registration/rls-profiles.int.test.ts` — userA não SELECT/UPDATE profile do userB; INSERT direto bloqueado para usuário; service role bypass
-- [ ] 12.6 `src/__tests__/integration/registration/rls-auth-logs.int.test.ts` — userA só lê próprios logs; INSERT direto bloqueado
-- [ ] 12.7 `src/__tests__/integration/registration/get-current-profile.int.test.ts` — retorna typed profile, `null` sem sessão, `null` com profile inexistente, garante 1 SELECT (assert via `pg_stat_statements` ou contagem de queries via mock)
-- [ ] 12.8 `src/__tests__/integration/registration/middleware-status-gating.int.test.ts` — combinatória path × status conforme tabela de decisão (no mínimo: anonymous→`/dashboard`→307 login, pending→`/dashboard`→307 onboarding, active→`/login`→307 dashboard, suspended→qualquer path→307 login, callback sempre passa)
-- [ ] 12.9 `src/__tests__/integration/registration/sign-in-status-aware.int.test.ts` — login com pending leva a `/onboarding/pending`; com suspended retorna `account_unavailable` e clear cookies
+- [x] 12.1 Helper `src/__tests__/integration/registration/helpers/markCrpValidated.ts` que UPDATE `profiles.status = 'active'` via Drizzle (uso só em testes)
+- [x] 12.2 Factory `src/__tests__/integration/registration/factories/signup-input.ts` para gerar payloads válidos/variantes
+- [x] 12.3 `src/__tests__/integration/registration/sign-up.int.test.ts` — happy path cria `auth.users` + `profiles` + log; duplicate email; duplicate CRP rolla back o auth.user; trigger metadata-faltando aborta a transação
+- [x] 12.4 `src/__tests__/integration/registration/email-verified-trigger.int.test.ts` — UPDATE `auth.users.email_confirmed_at` transita status; idempotente para `active`
+- [x] 12.5 `src/__tests__/integration/registration/rls-profiles.int.test.ts` — userA não SELECT/UPDATE profile do userB; INSERT direto bloqueado para usuário; service role bypass
+- [x] 12.6 `src/__tests__/integration/registration/rls-auth-logs.int.test.ts` — userA só lê próprios logs; INSERT direto bloqueado
+- [x] 12.7 `src/__tests__/integration/registration/get-current-profile.int.test.ts` — retorna typed profile, `null` sem sessão, `null` com profile inexistente, garante 1 SELECT (assert via `pg_stat_statements` ou contagem de queries via mock)
+- [x] 12.8 `src/__tests__/integration/registration/middleware-status-gating.int.test.ts` — combinatória path × status conforme tabela de decisão (no mínimo: anonymous→`/dashboard`→307 login, pending→`/dashboard`→307 onboarding, active→`/login`→307 dashboard, suspended→qualquer path→307 login, callback sempre passa)
+- [x] 12.9 `src/__tests__/integration/registration/sign-in-status-aware.int.test.ts` — login com pending leva a `/onboarding/pending`; com suspended retorna `account_unavailable` e clear cookies
 
 ## 13. Testes E2E seeded
 

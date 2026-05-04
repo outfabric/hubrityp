@@ -130,9 +130,10 @@ describe('isCrpRegionalConsistentWithUf', () => {
 
   it('handles the 1:N CRP-20 council (covers AM, RR, AC, RO)', () => {
     for (const uf of ['AM', 'RR', 'AC', 'RO']) {
-      expect(isCrpRegionalConsistentWithUf('20/123456', uf), `20 → ${uf} should be consistent`).toBe(
-        true,
-      );
+      expect(
+        isCrpRegionalConsistentWithUf('20/123456', uf),
+        `20 → ${uf} should be consistent`,
+      ).toBe(true);
     }
   });
 

@@ -26,7 +26,34 @@ describe('passwordPolicy — happy paths', () => {
   });
 
   it('accepts a variety of allowed special characters', () => {
-    const specials = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}', '|', ';', ':', ',', '.', '<', '>', '?'];
+    const specials = [
+      '!',
+      '@',
+      '#',
+      '$',
+      '%',
+      '^',
+      '&',
+      '*',
+      '(',
+      ')',
+      '_',
+      '+',
+      '-',
+      '=',
+      '[',
+      ']',
+      '{',
+      '}',
+      '|',
+      ';',
+      ':',
+      ',',
+      '.',
+      '<',
+      '>',
+      '?',
+    ];
     for (const ch of specials) {
       const password = `Aa1aaaaaa${ch}`; // 10 chars: 1U, 7L, 1D, 1S
       const result = passwordPolicy(password);
@@ -116,12 +143,7 @@ describe('passwordPolicy — boundary values', () => {
     // 10 spaces: length OK, but uppercase/lowercase/digit/special all fail.
     const result = passwordPolicy('          ');
     expect(result.ok).toBe(false);
-    expect(result.missing).toEqual<PasswordRule[]>([
-      'uppercase',
-      'lowercase',
-      'digit',
-      'special',
-    ]);
+    expect(result.missing).toEqual<PasswordRule[]>(['uppercase', 'lowercase', 'digit', 'special']);
   });
 
   it('PASSWORD_MIN_LENGTH constant equals 10', () => {
