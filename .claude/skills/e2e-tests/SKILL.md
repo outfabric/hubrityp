@@ -66,21 +66,6 @@ npm run test:e2e:real      # exige `npx supabase start` rodando; valida o caminh
 
 **Default desta skill:** suíte seeded (Testcontainers Postgres + mock GoTrue + cookie via `@supabase/ssr`). A suíte real fica reservada para uma única spec de smoke por release.
 
-## Quality gates
-
-Antes de declarar a tarefa concluída:
-
-```bash
-docker info >/dev/null                          # Docker rodando
-npx playwright install --with-deps chromium    # primeira vez no ambiente
-npm run test:e2e:seeded                         # suíte default
-# E quando alterar fluxo de auth real:
-# npx supabase start && npm run test:e2e:real && npx supabase stop
-npm run lint && npm run typecheck
-```
-
-Se Docker ou os browsers não estiverem disponíveis, **declare explicitamente** — não pule silenciosamente.
-
 ## Estrutura de arquivos
 
 ```

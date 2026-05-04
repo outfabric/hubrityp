@@ -45,7 +45,11 @@ type SupabaseStatus = {
   SERVICE_ROLE_KEY: string;
 };
 
-function readSupabaseStatus(): SupabaseStatus {
+type StatusResult =
+  | { ok: true; status: SupabaseStatus }
+  | { ok: false; stderr: string; message: string };
+
+function tryReadSupabaseStatus(): StatusResult {
   // The Supabase CLI prints diagnostic warnings ("Stopped services: ...") on
   // stderr and the structured payload on stdout. We capture stdout only.
   let raw: string;
@@ -56,16 +60,11 @@ function readSupabaseStatus(): SupabaseStatus {
     });
   } catch (err) {
     // `execSync` attaches the child process's stderr (Buffer) on the thrown
-    // error. Surface it explicitly — without this, `(err as Error).message`
-    // collapses to "Command failed: ..." and the actual diagnostic from the
-    // Supabase CLI is silently dropped, defeating debuggability.
+    // error. Surface it so callers can decide whether to retry (e.g. by
+    // booting the stack on-demand) or fail with a useful diagnostic.
     const stderr = (err as { stderr?: Buffer | string }).stderr;
     const stderrText = stderr ? String(stderr).trim() : '';
-    throw new Error(
-      'Supabase stack is not running. Run `npx supabase start` before `npm run test:e2e:real`.\n' +
-        (stderrText ? `Underlying stderr:\n${stderrText}\n` : '') +
-        `(Original error: ${(err as Error).message})`,
-    );
+    return { ok: false, stderr: stderrText, message: (err as Error).message };
   }
 
   let parsed: Record<string, unknown>;
@@ -99,11 +98,57 @@ function readSupabaseStatus(): SupabaseStatus {
   }
 
   return {
-    API_URL: apiUrl,
-    DB_URL: dbUrl,
-    ANON_KEY: anonKey,
-    SERVICE_ROLE_KEY: serviceRoleKey,
+    ok: true,
+    status: {
+      API_URL: apiUrl,
+      DB_URL: dbUrl,
+      ANON_KEY: anonKey,
+      SERVICE_ROLE_KEY: serviceRoleKey,
+    },
   };
+}
+
+function bootSupabase(): void {
+  // First boot pulls Docker images and can take 60–90s; warm boots are
+  // ~10–20s. We inherit stdio so the developer can see CLI progress instead
+  // of staring at a silent terminal — a long unexplained pause here was a
+  // common source of "is it stuck?" confusion before this hook existed.
+  console.log('[auth-real] Supabase stack not running — booting via `npx supabase start`...');
+  execSync('npx supabase start', { stdio: 'inherit' });
+}
+
+function readSupabaseStatus(): SupabaseStatus {
+  const first = tryReadSupabaseStatus();
+  if (first.ok) {
+    return first.status;
+  }
+
+  // The CLI failed. Boot the stack on-demand and retry once. We mark the
+  // boot with `AUTH_REAL_STARTED_BY_TEST=1` so `globalTeardown` knows it is
+  // safe to shut the stack back down — without the flag, we would tear down
+  // a stack the developer started manually for unrelated dev work.
+  try {
+    bootSupabase();
+  } catch (err) {
+    const stderr = (err as { stderr?: Buffer | string }).stderr;
+    const stderrText = stderr ? String(stderr).trim() : '';
+    throw new Error(
+      '`npx supabase start` failed. Is Docker running?\n' +
+        (stderrText ? `Underlying stderr:\n${stderrText}\n` : '') +
+        `(Original error: ${(err as Error).message})`,
+    );
+  }
+  process.env.AUTH_REAL_STARTED_BY_TEST = '1';
+
+  const second = tryReadSupabaseStatus();
+  if (second.ok) {
+    return second.status;
+  }
+  throw new Error(
+    'Supabase status still unavailable after `npx supabase start` succeeded.\n' +
+      (second.stderr ? `Underlying stderr:\n${second.stderr}\n` : '') +
+      `(Original error: ${second.message})`,
+  );
 }
 
 const status = readSupabaseStatus();

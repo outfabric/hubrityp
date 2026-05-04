@@ -82,41 +82,13 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-6. **Generate or update technical docs (`docs/<capability>.md`)**
-
-   For each capability touched by this change, generate or update a project docs file under `docs/`. Goal: enrich the working context for future developers and AI agents who need to make changes to that capability without re-reading every spec, archived change, and commit.
-
-   **Identify affected capabilities**: list directories under `openspec/changes/archive/YYYY-MM-DD-<name>/specs/`. If none exist (e.g., docs-only change), skip this step entirely and note it in the final summary.
-
-   **For each capability `<cap>`**:
-
-   a. Read source material:
-      - `openspec/specs/<cap>/spec.md` (post-sync source of truth; fall back to the archived delta if sync was skipped).
-      - The archived `proposal.md`, `design.md` (if present), `tasks.md`.
-      - Existing `docs/<cap>.md` if present (preserve manual edits and prior history entries).
-      - Implementation files referenced in `design.md` / `tasks.md`. Inspect more code only if those artifacts don't already cover what you need — do not re-derive what the spec already states.
-
-   b. Write or update `docs/<cap>.md` (in pt-BR, matching the existing docs style; code identifiers, file paths, and shell commands stay in English):
-
-      - **Resumo** — 1–2 sentences on what this capability is and why it exists.
-      - **Onde mora o código** — bullet list of the main files/folders implementing it, with relative paths (e.g., `src/app/api/health/route.ts`, `src/modules/health/lib/db-probe.ts`).
-      - **Superfície pública** — routes, server actions, exported components/utilities, env vars consumed/exposed, and any contract surface (response shapes, event names) downstream consumers depend on.
-      - **Comportamento e invariantes** — edge cases, gotchas, and assumptions worth knowing before changing this code (e.g., "endpoint must remain unauthenticated", "transcrição nunca pode sair do Brasil", RLS policies, idempotency keys).
-      - **Testes** — test files covering the capability and the layer of each (unit/integration/e2e), with relative paths.
-      - **Histórico de changes** — bullet list of archived OpenSpec changes that touched this capability, **newest first**, in the form `- YYYY-MM-DD <change-name> — <one-line summary>` linking to `../openspec/changes/archive/<dated>/`. Append the just-archived change to the top; never drop prior entries.
-
-   Keep the doc concise — it's a hand-off, not a re-statement of the spec. The spec at `openspec/specs/<cap>/spec.md` remains the formal source of truth; `docs/<cap>.md` is the human-readable map that points to code, contracts, and history.
-
-   **Update vs. create**: when `docs/<cap>.md` already exists, edit in place — refresh sections that are now stale, append the change to the history, and preserve any manual content the user may have added (especially custom sections outside the template above).
-
-7. **Display summary**
+6. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
    - Archive location
    - Whether specs were synced (if applicable)
-   - Docs touched: list of `docs/<cap>.md` files created or updated (or "no delta specs — docs step skipped")
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
