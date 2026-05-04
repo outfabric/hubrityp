@@ -164,6 +164,16 @@ jobs:
       - name: Start Supabase
         run: supabase start
 
+      # `supabase start` only seeds the GoTrue/Storage schemas — project tables
+      # (e.g. `public.profiles`) live in Drizzle migrations under
+      # `src/shared/db/migrations/`, so we must apply them explicitly before
+      # the Playwright suite runs. Without this step `globalSetup` fails with
+      # `relation "public.profiles" does not exist`.
+      - name: Apply Drizzle migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: npm run db:migrate
+
       - name: Run @auth-real Playwright suite
         run: npm run test:e2e:real
 
