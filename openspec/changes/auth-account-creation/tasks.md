@@ -112,4 +112,4 @@
 
 ## 14. Validação final
 
-- [ ] 14.5 `openspec validate auth-account-creation` retorna OK
+- [x] 14.5 `openspec validate auth-account-creation` retorna OK
