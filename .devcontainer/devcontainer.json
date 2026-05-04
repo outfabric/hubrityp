@@ -1,0 +1,74 @@
+{
+  "name": "HubrityP",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+
+  "features": {
+    // Docker-in-Docker: daemon Docker isolado dentro do container.
+    // Supabase CLI usa este daemon → tudo para quando o devcontainer fecha.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "dockerDashComposeVersion": "v2",
+      "installDockerBuildx": true
+    }
+  },
+
+  // Monta o DIRETÓRIO PAI do repo em /workspaces.
+  // Isso garante que git worktrees sibling (../hubrityp-<change>) criados
+  // pelo /dev-cycle sejam persistidos no host em vez do filesystem efêmero
+  // do container. Sem isso, um restart apaga os worktrees ativos.
+  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/hubrityp",
+
+  "mounts": [
+    // ~/.claude/ → credentials, settings globais, plugins, memória
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
+    // ~/.claude.json → MCPs da web app do Claude (context7, etc.)
+    "source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind,consistency=cached",
+    // ~/.config/gh/ → auth do GitHub CLI (necessário para gh pr create no step 8c do dev-cycle)
+    "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind,readonly,consistency=cached",
+    // Volume nomeado para o daemon DinD: persiste imagens Docker entre restarts.
+    // Sem isso, npm run supabase:start re-puxa ~1.5 GB de imagens a cada restart.
+    "type=volume,source=devcontainer-docker-data,target=/var/lib/docker"
+  ],
+
+  // DISPLAY virtual (Xvfb iniciado no post-start.sh).
+  // Playwright MCP do agente qa-tester roda headed com display virtual —
+  // screenshots, snapshots e navegação funcionam normalmente.
+  "remoteEnv": {
+    "DISPLAY": ":99"
+  },
+
+  // Roda UMA VEZ quando o container é criado pela primeira vez
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Roda EM CADA INÍCIO do container (incluindo restarts)
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+
+  "remoteUser": "node",
+
+  // Portas do inner Docker (DinD) encaminhadas para o host via VS Code.
+  "forwardPorts": [3000, 54321, 54322, 54323, 54324, 54327, 8083],
+  "portsAttributes": {
+    "3000": { "label": "Next.js dev" },
+    "54321": { "label": "Supabase API / Kong" },
+    "54322": { "label": "Supabase DB" },
+    "54323": { "label": "Supabase Studio" },
+    "54324": { "label": "Supabase Inbucket" },
+    "54327": { "label": "Supabase Analytics (Logflare)" },
+    "8083": { "label": "Supabase Edge Runtime inspector" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  }
+}
