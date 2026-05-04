@@ -12,17 +12,17 @@
 
 ## 2. Database schema, migration, RLS e triggers
 
-- [ ] 2.1 Criar pasta `src/shared/db/schema/auth/` com `tables.ts`, `policies.ts`
-- [ ] 2.2 Definir em `tables.ts` os Drizzle schemas `profiles`, `authLogs`, `authSessions` com todas as colunas, constraints e indexes especificados em `specs/data-layer/spec.md`
-- [ ] 2.3 Adicionar exports de `profiles`, `authLogs`, `authSessions` em `src/shared/db/schema/index.ts`
-- [ ] 2.4 Em `policies.ts`, declarar SQL puro de `ENABLE ROW LEVEL SECURITY` e as policies (`profiles_select_own`, `profiles_update_own`, `auth_logs_select_own`, `auth_sessions_select_own`)
-- [ ] 2.5 Escrever SQL da função `public.handle_new_user()` SECURITY DEFINER que lê `raw_user_meta_data`, faz INSERT em `profiles` com `status='pending_verification'`, `email = NEW.email`, e levanta exception em metadata faltando
-- [ ] 2.6 Escrever SQL do trigger `AFTER INSERT ON auth.users FOR EACH ROW EXECUTE handle_new_user()`
-- [ ] 2.7 Escrever SQL da função `public.handle_email_confirmed()` que detecta transição `email_confirmed_at NULL → NOT NULL` e atualiza `profiles.status = 'pending_crp_validation'` + `profiles.emailVerifiedAt = NEW.email_confirmed_at`, idempotente
-- [ ] 2.8 Escrever SQL do trigger `AFTER UPDATE OF email_confirmed_at ON auth.users FOR EACH ROW EXECUTE handle_email_confirmed()`
-- [ ] 2.9 Rodar `npm run db:generate` e mesclar manualmente o SQL de RLS + triggers no arquivo gerado `src/shared/db/migrations/0001_account_registration.sql`
-- [ ] 2.10 Aplicar localmente via `supabase db reset` + `npm run db:migrate` para validar a migration ponta-a-ponta
-- [ ] 2.11 Atualizar `src/shared/db/migrations/README.md` com a entrada da nova migration
+- [x] 2.1 Criar pasta `src/shared/db/schema/auth/` com `tables.ts`, `policies.ts`
+- [x] 2.2 Definir em `tables.ts` os Drizzle schemas `profiles`, `authLogs`, `authSessions` com todas as colunas, constraints e indexes especificados em `specs/data-layer/spec.md`
+- [x] 2.3 Adicionar exports de `profiles`, `authLogs`, `authSessions` em `src/shared/db/schema/index.ts`
+- [x] 2.4 Em `policies.ts`, declarar SQL puro de `ENABLE ROW LEVEL SECURITY` e as policies (`profiles_select_own`, `profiles_update_own`, `auth_logs_select_own`, `auth_sessions_select_own`)
+- [x] 2.5 Escrever SQL da função `public.handle_new_user()` SECURITY DEFINER que lê `raw_user_meta_data`, faz INSERT em `profiles` com `status='pending_verification'`, `email = NEW.email`, e levanta exception em metadata faltando
+- [x] 2.6 Escrever SQL do trigger `AFTER INSERT ON auth.users FOR EACH ROW EXECUTE handle_new_user()`
+- [x] 2.7 Escrever SQL da função `public.handle_email_confirmed()` que detecta transição `email_confirmed_at NULL → NOT NULL` e atualiza `profiles.status = 'pending_crp_validation'` + `profiles.emailVerifiedAt = NEW.email_confirmed_at`, idempotente
+- [x] 2.8 Escrever SQL do trigger `AFTER UPDATE OF email_confirmed_at ON auth.users FOR EACH ROW EXECUTE handle_email_confirmed()`
+- [x] 2.9 Rodar `npm run db:generate` e mesclar manualmente o SQL de RLS + triggers no arquivo gerado `src/shared/db/migrations/0001_account_registration.sql`
+- [x] 2.10 Aplicar localmente via `supabase db reset` + `npm run db:migrate` para validar a migration ponta-a-ponta
+- [x] 2.11 Atualizar `src/shared/db/migrations/README.md` com a entrada da nova migration
 
 ## 3. Validators puros (registration/lib)
 
