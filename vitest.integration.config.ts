@@ -20,6 +20,7 @@ export default defineConfig({
       '.temp',
     ],
     globalSetup: ['./src/__tests__/integration/setup/global-setup.ts'],
+    setupFiles: ['./src/__tests__/integration/setup/setup-each.ts'],
     // Boot of Testcontainers Postgres + migrations can take ~30s on the cold
     // path; keep this generous so the suite never flakes on first run.
     testTimeout: 30_000,

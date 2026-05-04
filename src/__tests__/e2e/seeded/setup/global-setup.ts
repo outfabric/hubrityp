@@ -31,16 +31,48 @@ export default async function globalSetup() {
     // schema already exists. We seed the deterministic UUID + email the
     // mock GoTrue echoes back from `GET /auth/v1/user`. `ON CONFLICT`
     // keeps the seed idempotent across reused containers.
+    //
+    // `raw_user_meta_data` carries the fields the `handle_new_user()`
+    // SECURITY DEFINER trigger requires to materialize the corresponding
+    // `profiles` row (introduced by the auth-account-creation change).
+    // Without these fields the AFTER INSERT trigger raises an exception
+    // and the auth.users INSERT rolls back. We pass the JSON as a string
+    // and cast on the SQL side because postgres.js binds objects via
+    // `sql.json(...)` only inside the tagged template's specific helper
+    // overloads, which is more brittle here than a literal cast.
+    const nowIso = new Date().toISOString();
+    const metadata = JSON.stringify({
+      fullName: 'Seed User',
+      crpNumber: '00000-S',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
     await sql`
-      INSERT INTO auth.users (id, instance_id, aud, role, email)
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
       VALUES (
         ${seed.userId},
         '00000000-0000-0000-0000-000000000000',
         'authenticated',
         'authenticated',
-        ${seed.email}
+        ${seed.email},
+        ${metadata}::jsonb
       )
       ON CONFLICT (id) DO NOTHING;
+    `;
+
+    // Force the seeded user's profile to `active` so the e2e suite can
+    // exercise the dashboard surface end-to-end (the trigger initialises
+    // `status = 'pending_verification'`, which middleware would redirect
+    // to `/onboarding/pending` instead). The UPDATE is idempotent and
+    // safe to run on already-active rows.
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now())
+      WHERE user_id = ${seed.userId};
     `;
 
     await db

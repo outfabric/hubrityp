@@ -78,6 +78,67 @@ Notes:
 - `dashboard-logout` is intentionally on the layout, not the page. Every authenticated page
   inherits it (see `docs/design-system/route-layout.md`).
 
+## Wave-4 IDs (auth-account-creation)
+
+These are the test IDs introduced by the `auth-account-creation` change, which adds the
+account creation flow (`/signup`), the verification holding page (`/onboarding/pending`), and
+the OAuth/email verification callback error page (`/auth/callback`). Each one is placed by
+hand in the source files cited and is exercised by at least one unit, integration, or e2e
+test under `src/__tests__/`.
+
+### Signup form
+
+Surface: `/signup` (rendered by `src/app/(auth)/signup/page.tsx`, component lives in the
+`registration` module).
+
+| `data-testid`                   | Surface                                           | Element                                                                                                                                                                                                                      |
+| ------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signup-form-name`              | `modules/registration/components/signup-form.tsx` | Nome completo `<input>`.                                                                                                                                                                                                     |
+| `signup-form-email`             | `modules/registration/components/signup-form.tsx` | E-mail `<input type="email">`.                                                                                                                                                                                               |
+| `signup-form-password`          | `modules/registration/components/signup-form.tsx` | Senha `<input type="password">` (com indicador de força associado).                                                                                                                                                          |
+| `signup-form-password-confirm`  | `modules/registration/components/signup-form.tsx` | Confirmação de senha `<input type="password">`.                                                                                                                                                                              |
+| `signup-form-crp-number`        | `modules/registration/components/signup-form.tsx` | Número do CRP `<input>` (apenas dígitos).                                                                                                                                                                                    |
+| `signup-form-crp-uf`            | `modules/registration/components/signup-form.tsx` | UF do CRP `<select>` (lista das 27 unidades federativas).                                                                                                                                                                    |
+| `signup-form-terms`             | `modules/registration/components/signup-form.tsx` | Checkbox de aceite dos Termos de Uso.                                                                                                                                                                                        |
+| `signup-form-privacy`           | `modules/registration/components/signup-form.tsx` | Checkbox de aceite da Política de Privacidade.                                                                                                                                                                               |
+| `signup-form-sensitive-data`    | `modules/registration/components/signup-form.tsx` | Checkbox de consentimento explícito para tratamento de dados sensíveis (LGPD art. 11).                                                                                                                                       |
+| `signup-form-submit`            | `modules/registration/components/signup-form.tsx` | Submit `<Button>` ("Criar conta" / "Criando…" enquanto pendente).                                                                                                                                                            |
+| `signup-form-error`             | `modules/registration/components/signup-form.tsx` | Inline error region (`role="alert"`) para erros globais do formulário.                                                                                                                                                       |
+| `signup-form-error-<fieldName>` | `modules/registration/components/signup-form.tsx` | Inline error region por campo. `<fieldName>` corresponde à chave do schema Zod (camelCase): `fullName`, `email`, `password`, `passwordConfirm`, `crpNumber`, `crpUf`, `acceptTerms`, `acceptPrivacy`, `acceptSensitiveData`. |
+
+### Onboarding pending (verification holding page)
+
+Surface: `/onboarding/pending` (rendered by `src/app/(app)/onboarding/pending/page.tsx`).
+
+| `data-testid`                       | Surface                                                          | Element                                                                                                                 |
+| ----------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `onboarding-pending-status`         | `modules/registration/components/onboarding-pending-card.tsx`    | `<Card>` raiz que exibe o estado pendente (`pending_verification` ou `pending_crp_validation`).                         |
+| `onboarding-pending-resend-email`   | `modules/registration/components/resend-verification-button.tsx` | Botão "Reenviar email de verificação" (default `testId` do `<ResendVerificationButton>`).                               |
+| `onboarding-pending-resend-success` | `modules/registration/components/resend-verification-button.tsx` | Inline success region renderizada após reenvio bem-sucedido (default `successTestId`).                                  |
+| `onboarding-pending-resend-error`   | `modules/registration/components/resend-verification-button.tsx` | Inline error region renderizada após erro tipado (`rate_limited`, `invalid_status`, `unknown`) — default `errorTestId`. |
+
+### Auth callback error
+
+Surface: `/auth/callback` (rendered by `src/app/(auth)/auth/callback/page.tsx`).
+
+| `data-testid`          | Surface                                                          | Element                                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `auth-callback-error`  | `modules/registration/components/auth-callback-error.tsx`        | `<Card>` raiz exibida quando o link de verificação está expirado/inválido.                                                  |
+| `auth-callback-resend` | `modules/registration/components/resend-verification-button.tsx` | Botão de reenvio na surface `/auth/callback` (passado via `testId="auth-callback-resend"` ao `<ResendVerificationButton>`). |
+
+Notes:
+
+- The `signup-form-error-<fieldName>` row is a **template**, not a single ID. Each individual
+  per-field error region is rendered conditionally — tests that assert absence should use
+  `expect(page.getByTestId('signup-form-error-email')).toHaveCount(0)` rather than waiting.
+- `<ResendVerificationButton>` is a single component reused across two surfaces. The
+  `onboarding-pending-*` IDs are the **defaults**; the `/auth/callback` page overrides them
+  via the `testId`/`successTestId`/`errorTestId` props to keep IDs scoped to their surface
+  (`auth-callback-resend`, `auth-callback-resend-success`, `auth-callback-resend-error`).
+- `onboarding-pending-status` is reused across both pending statuses (the same `<Card>` root
+  renders different copy). Tests differentiate by asserting the visible heading, not by a
+  separate ID.
+
 ## Adding new IDs
 
 A pull request introducing one or more new `data-testid` values must update this document in

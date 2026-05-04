@@ -38,7 +38,9 @@ export async function bootPostgres(): Promise<BootedPostgres> {
 // rely on:
 //   - `authenticated` and `anon` roles (named in the policy `TO ...` clause)
 //   - `auth.uid()` function returning the JWT subject claim
-//   - `auth.users` table referenced by `owner_id` columns
+//   - `auth.users` table referenced by `owner_id` columns, including the
+//     `email_confirmed_at` and `raw_user_meta_data` columns the
+//     `auth-account-creation` triggers read/observe
 async function bootstrapAuthSchema(connectionString: string): Promise<void> {
   const sql = postgres(connectionString, { max: 1, onnotice: () => {} });
   try {
@@ -65,6 +67,12 @@ async function bootstrapAuthSchema(connectionString: string): Promise<void> {
         role text,
         email text
       );
+
+      -- Reused-container friendly: extend the table when older runs created
+      -- it without these columns. Mirrors the production Supabase schema
+      -- surface that the auth triggers depend on.
+      ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS email_confirmed_at timestamptz;
+      ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS raw_user_meta_data jsonb DEFAULT '{}'::jsonb;
 
       CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
         LANGUAGE sql STABLE

@@ -52,6 +52,29 @@ USING/WITH CHECK clauses with the ancestor-ownership join, but every
 owner-scoped policy keeps this base shape so a reviewer can verify
 correctness in seconds.
 
+## Migrations index
+
+| File                            | Domain   | Notes                                                                                                                                                                                                                                                                                                            |
+| ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0000_blue_mother_askani.sql`   | `health` | Canonical owner-scoped RLS template (`health_pings`).                                                                                                                                                                                                                                                            |
+| `0001_account_registration.sql` | `auth`   | `profiles`, `auth_logs`, `auth_sessions`. Cross-schema FKs to `auth.users` (manual), `profiles.status` CHECK constraint, asymmetric RLS (no end-user INSERT/DELETE on `profiles`; SELECT-only on logs/sessions), and the `handle_new_user` / `handle_email_confirmed` SECURITY DEFINER triggers on `auth.users`. |
+| `0002_add_last_resend_at.sql`   | `auth`   | Adds nullable `profiles.last_resend_at` so `resendVerificationEmail` can enforce a per-user 60s server-side throttle (refresh-bypass fix). No new RLS — existing `profiles` SELECT/UPDATE policies cover the column.                                                                                             |
+
+## Auth-domain RLS deviation from the canonical template
+
+`profiles`, `auth_logs`, and `auth_sessions` intentionally diverge from the
+owner-scoped template above:
+
+- `profiles` exposes only SELECT and UPDATE to end-users. INSERT is reserved
+  for the SECURITY DEFINER trigger `public.handle_new_user()` (no INSERT
+  policy exists for `authenticated`); DELETE is service-role only.
+- `auth_logs` and `auth_sessions` expose only SELECT to end-users. The
+  service role is the sole writer.
+
+The asymmetry is preserved by the policies declared in
+`src/shared/db/schema/auth/policies.ts` and is enforced at runtime by the
+RLS scenarios in the auth integration tests (delivered in section 12).
+
 ## Rollback
 
 There is no automatic rollback. To revert a migration locally, drop the

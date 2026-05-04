@@ -146,6 +146,10 @@ vite.config.ts.timestamp-*
 # Lives inside each per-change worktree at <worktree>/.dev-cycle/
 .dev-cycle/
 
+# Supabase Studio scratch snippets — created when running queries in Studio.
+# Owned by the Studio container, so cannot be deleted from host without sudo.
+supabase/snippets/
+
 # Playwright artifacts
 src/__tests__/e2e/seeded/setup/.auth/
 src/__tests__/e2e/real/setup/.auth/

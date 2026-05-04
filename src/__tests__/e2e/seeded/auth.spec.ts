@@ -39,12 +39,14 @@ test.describe('@auth simulated suite', () => {
       const response = await page.goto('/dashboard');
 
       expect(response?.status()).toBe(200);
-      // The dashboard server component reads the user from
-      // `supabase.auth.getUser()`, which the mock GoTrue answers with the
-      // seeded `seed@example.com` identity.
+      // The dashboard server component now resolves the session through
+      // `getCurrentProfile(...)` and greets the user by `profile.fullName`
+      // (not `auth.users.email`). The seeded user metadata in
+      // `setup/global-setup.ts` writes `fullName: 'Seed User'`, so the
+      // visible greeting must echo that exact value.
       const greeting = page.getByTestId('dashboard-greeting');
       await expect(greeting).toBeVisible();
-      await expect(greeting).toHaveText('Olá, seed@example.com');
+      await expect(greeting).toHaveText('Olá, Seed User');
     });
 
     test('clicking logout clears the session and redirects to /login', async ({ page }) => {

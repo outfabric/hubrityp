@@ -169,7 +169,76 @@ function handleRequest(
     return;
   }
 
+  // PostgREST shim for `/rest/v1/profiles`. The Edge-runtime middleware
+  // calls `supabase.from('profiles').select(...).eq('user_id', X)
+  // .maybeSingle()` to resolve the active profile (Node-only Drizzle
+  // can't run on Edge). We answer with a static `active` profile for the
+  // seeded user so the dashboard surface stays reachable. Any other
+  // `user_id` filter returns an empty array (treated as `null` by
+  // `.maybeSingle()`), which middleware maps to "no profile" and
+  // redirects to /login.
+  //
+  // We don't try to fully emulate PostgREST's filter grammar — the
+  // middleware only ever issues an `eq.<uuid>` filter on `user_id`, so
+  // the regex below is sufficient. Add more filters here if a future
+  // call site needs them.
+  if (method === 'GET' && path === '/rest/v1/profiles') {
+    const queryString = rawUrl.includes('?') ? (rawUrl.split('?')[1] ?? '') : '';
+    const params = new URLSearchParams(queryString);
+    const userIdFilter = params.get('user_id') ?? '';
+    const match = /^eq\.(.+)$/.exec(userIdFilter);
+    const requestedUserId = match?.[1];
+
+    // `.maybeSingle()` sends `Accept: application/vnd.pgrst.object+json`,
+    // so PostgREST replies with a single JSON object on match (200) or
+    // an empty `{}` payload at 406 on no-match. We replicate both
+    // behaviours so supabase-js parses the response identically to a
+    // real Postgres+PostgREST stack.
+    const acceptsObject = (req.headers.accept ?? '').includes('application/vnd.pgrst.object+json');
+    if (requestedUserId === context.user.id) {
+      const row = buildSeededProfileRow(context.user);
+      respondJson(res, 200, acceptsObject ? row : [row]);
+      return;
+    }
+    if (acceptsObject) {
+      respondJson(res, 406, {
+        code: 'PGRST116',
+        details: 'Results contain 0 rows',
+        message: 'JSON object requested, multiple (or no) rows returned',
+      });
+      return;
+    }
+    respondJson(res, 200, []);
+    return;
+  }
+
   respondJson(res, 404, { code: 404, msg: 'mock-gotrue: route not found', method, path });
+}
+
+// Static profile row for the seeded user. Returned by the PostgREST shim
+// above so the Edge-runtime middleware can resolve the seeded user as
+// `active` without standing up Postgres-as-PostgREST in the e2e stack.
+// Field names mirror the snake-cased columns the middleware reads via
+// `.from('profiles').select(...)`.
+function buildSeededProfileRow(user: MockGoTrueUser): Record<string, unknown> {
+  const now = new Date().toISOString();
+  return {
+    user_id: user.id,
+    email: user.email,
+    full_name: 'Seed User',
+    crp_number: '00000-S',
+    crp_uf: 'SP',
+    crp_validated_at: now,
+    crp_validated_by: null,
+    email_verified_at: now,
+    status: 'active',
+    terms_accepted_at: now,
+    privacy_accepted_at: now,
+    sensitive_data_consent_at: now,
+    last_resend_at: null,
+    created_at: now,
+    updated_at: now,
+  };
 }
 
 function respondJson(res: ServerResponse, status: number, body: unknown): void {

@@ -10,14 +10,23 @@ SaaS web para psicólogos autônomos brasileiros (consultório, online ou híbri
 src/
   app/                                     # Next.js App Router (rotas, layouts, route handlers)
     (auth)/login/                          # rotas públicas — shells finos que delegam para módulos
+    (auth)/signup/                         # shell de /signup (delegado ao módulo registration)
+    (auth)/auth/callback/                  # shell do callback OAuth/verificação de email
     (app)/dashboard/                       # shell autenticado da app
+    (app)/onboarding/pending/              # shell pós-signup (pending_verification / pending_crp_validation)
     api/                                   # Route Handlers (ex.: /api/health, /api/me)
-  middleware.ts                            # edge middleware (gating de auth)
+  middleware.ts                            # edge middleware (gating de auth + status do profile)
   modules/<dominio>/                       # código por domínio, uma pasta por capability
     auth/
       components/                          # componentes (client/server) do módulo
       server/                              # implementação das Server Actions (sem `'use server'`)
       lib/                                 # validators, mappers, branded types
+      index.ts                             # API PÚBLICA do módulo
+    registration/                          # cadastro de psicólogo + verificação + status do profile
+      components/                          # signup-form, onboarding-pending-card, auth-callback-error, resend-verification-button
+      server/                              # sign-up, resend-verification, get-profile (e variante edge)
+      lib/                                 # signup-input-schema (Zod), crp/password validators, profile-status, uf-table
+      edge.ts                              # API PÚBLICA edge-safe (consumida pelo middleware)
       index.ts                             # API PÚBLICA do módulo
     health/
   shared/                                  # concerns cross-módulo (não depende de modules/)
@@ -26,6 +35,7 @@ src/
     env/                                   # env validado por Zod (server + client splits)
     supabase/                              # clientes Supabase (browser, server, middleware)
     db/                                    # Drizzle: client.ts + schema/ + migrations/
+      schema/auth/                         # tabelas auth.profiles + RLS policies (espelha schema `auth` do Supabase)
   __tests__/                               # TODOS os testes vivem aqui (centralizados)
     unit/                                  # Vitest unit (espelha a árvore de src/)
     integration/                           # Vitest + Testcontainers (*.int.test.ts)

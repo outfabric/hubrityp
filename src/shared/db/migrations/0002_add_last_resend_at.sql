@@ -1,0 +1,14 @@
+-- Adds `profiles.last_resend_at` so `resendVerificationEmail` can enforce
+-- a server-side throttle (1 resend per 60s per user). The previous code
+-- relied on Supabase's per-project rate limit, which does not fire on
+-- local dev and is not granular enough in prod (per-IP, not per-user).
+--
+-- Nullable on purpose: until the user clicks "Reenviar e-mail", the column
+-- stays NULL — and the Server Action treats NULL as "no recent resend".
+--
+-- RLS impact: no new policies needed. The existing `profiles` SELECT/UPDATE
+-- policies (USING/WITH CHECK auth.uid() = user_id) cover the new column
+-- automatically — the user reads their own throttle state via SELECT, the
+-- action writes it via the app-level Drizzle pool (BYPASSRLS) so there is
+-- no per-user UPDATE policy required for the throttle write itself.
+ALTER TABLE "profiles" ADD COLUMN "last_resend_at" timestamp with time zone;
