@@ -20,7 +20,7 @@ claude plugins install typescript-lsp@claude-plugins-official
 echo "==> Instalando openspec CLI..."
 # @fission-ai/openspec é usado pelo /dev-cycle (openspec status, openspec list).
 # Instalado globalmente no host via nvm — precisa ser reinstalado no container.
-npm install -g @fission-ai/openspec
+npm install -g @fission-ai/openspec@latest
 
 echo "==> Instalando dependências do projeto..."
 npm install --no-audit --no-fund
