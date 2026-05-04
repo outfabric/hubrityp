@@ -9,6 +9,14 @@ sudo apt-get install -y --no-install-recommends xvfb
 echo "==> Instalando Claude Code CLI..."
 npm install -g @anthropic-ai/claude-code@latest
 
+echo "==> Registrando plugins do Claude Code para o container..."
+# installed_plugins.json (montado do host) tem installPath e projectPath com
+# caminhos absolutos do host (/home/antonio/...). No container o home é
+# /home/node/ e o projeto está em /workspaces/hubrityp, então o Claude Code
+# não encontra o plugin. Este comando adiciona um novo entry com os caminhos
+# corretos do container — os dois entries coexistem sem conflito.
+claude plugins install typescript-lsp@claude-plugins-official
+
 echo "==> Instalando openspec CLI..."
 # @fission-ai/openspec é usado pelo /dev-cycle (openspec status, openspec list).
 # Instalado globalmente no host via nvm — precisa ser reinstalado no container.
