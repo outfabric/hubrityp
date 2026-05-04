@@ -1,14 +1,14 @@
 ## 1. Design system foundation
 
-- [ ] 1.1 Adicionar todos os tokens de cor, tipografia, espaçamento, radius, shadow, durações e easing definidos em `docs/design-system/rules.md` como CSS custom properties em `src/app/globals.css`, escopados em `:root` e `[data-theme='dark']`
-- [ ] 1.2 Adicionar bloco `@media (prefers-reduced-motion: reduce)` em `src/app/globals.css` que zera animation/transition durations
-- [ ] 1.3 Reescrever `tailwind.config.ts` para mapear `theme.extend.colors` (background, surface.*, border.*, text.*, brand.50..900, success/warning/danger/info.{50,500,700}), `borderRadius`, `boxShadow`, `transitionDuration`, `fontFamily` para `var(--token)` conforme design system
-- [ ] 1.4 Configurar `darkMode: ['class', "[data-theme='dark']"]` no `tailwind.config.ts`
-- [ ] 1.5 Carregar Inter via `next/font/google` em `src/app/layout.tsx`, expor como `--font-sans`, aplicar no `<body>` via classe Tailwind
-- [ ] 1.6 Verificar via `next build` que não há requisição a `fonts.googleapis.com` (rede inspecionada via Playwright na e2e seeded)
-- [ ] 1.7 Instalar/verificar shadcn primitives: `button`, `input`, `label`, `form`, `checkbox`, `select`, `card`, `alert` em `src/shared/ui/` via `npx shadcn add` (consultar Context7 para a versão atual de cada componente)
-- [ ] 1.8 Auditar cada primitive em `src/shared/ui/` para remover qualquer cor hardcoded, substituindo por classes Tailwind backed nos tokens
-- [ ] 1.9 Confirmar que `Button` e `Input` mantêm a mesma assinatura de props pós-mudança para não quebrar `app/(auth)/login/login-form.tsx`
+- [x] 1.1 Adicionar todos os tokens de cor, tipografia, espaçamento, radius, shadow, durações e easing definidos em `docs/design-system/rules.md` como CSS custom properties em `src/app/globals.css`, escopados em `:root` e `[data-theme='dark']`
+- [x] 1.2 Adicionar bloco `@media (prefers-reduced-motion: reduce)` em `src/app/globals.css` que zera animation/transition durations
+- [x] 1.3 Reescrever `tailwind.config.ts` para mapear `theme.extend.colors` (background, surface.*, border.*, text.*, brand.50..900, success/warning/danger/info.{50,500,700}), `borderRadius`, `boxShadow`, `transitionDuration`, `fontFamily` para `var(--token)` conforme design system
+- [x] 1.4 Configurar `darkMode: ['class', "[data-theme='dark']"]` no `tailwind.config.ts`
+- [x] 1.5 Carregar Inter via `next/font/google` em `src/app/layout.tsx`, expor como `--font-sans`, aplicar no `<body>` via classe Tailwind
+- [x] 1.6 Verificar via `next build` que não há requisição a `fonts.googleapis.com` (rede inspecionada via Playwright na e2e seeded)
+- [x] 1.7 Instalar/verificar shadcn primitives: `button`, `input`, `label`, `form`, `checkbox`, `select`, `card`, `alert` em `src/shared/ui/` via `npx shadcn add` (consultar Context7 para a versão atual de cada componente)
+- [x] 1.8 Auditar cada primitive em `src/shared/ui/` para remover qualquer cor hardcoded, substituindo por classes Tailwind backed nos tokens
+- [x] 1.9 Confirmar que `Button` e `Input` mantêm a mesma assinatura de props pós-mudança para não quebrar `app/(auth)/login/login-form.tsx`
 
 ## 2. Database schema, migration, RLS e triggers
 

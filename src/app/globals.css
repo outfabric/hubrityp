@@ -1,87 +1,310 @@
 @import 'tailwindcss';
 
 /*
- * Tailwind v4 theme bridge for the shadcn token system.
+ * Sálvia design system tokens
+ * --------------------------------------------------------------------------
+ * Source of truth for every color, typography, spacing, radius, shadow,
+ * duration, and easing token. Mirrors `docs/design-system/rules.md` 1:1.
  *
- * Tailwind v4 generates utilities (`bg-primary`, `text-primary-foreground`,
- * `border-input`, etc.) ONLY from `--color-*` declarations inside a `@theme`
- * block. The legacy `tailwind.config.ts` `theme.extend.colors` map that
- * shadcn's CLI scaffolded is silently ignored by v4, which is why every
- * `bg-primary` / `border-input` / `bg-card` class previously produced no rule
- * and the login UI rendered as unstyled HTML.
+ * Naming convention — two-tier:
  *
- * `@theme inline` keeps the HSL channel layer (`--background`, `--primary`,
- * etc.) declared in the `:root` / `.dark` blocks below as the single source
- * of dark-mode-aware truth, while exposing each shadcn token as a Tailwind
- * v4 color so utilities resolve correctly. Do NOT inline raw HSL values
- * here — that would break the `.dark` override.
+ * - Runtime tokens (`--ds-*`): live values that flip with dark mode. They
+ *   are declared on `:root` (light theme) and overridden under
+ *   `[data-theme='dark']`. Setting/removing the `data-theme` attribute on
+ *   `<html>` flips the entire UI without any class-list churn (no FOUC,
+ *   no React re-render) — this is the substrate for an eventual user toggle.
+ *
+ * - Theme tokens (`--color-*`, `--radius-*`, `--shadow-*`, ... inside
+ *   `@theme inline`): names Tailwind v4 uses to generate utilities. Each
+ *   maps to its corresponding runtime `--ds-*` variable via `var()`. We use
+ *   `@theme inline` so Tailwind inlines the `var(--ds-...)` expression
+ *   directly into the utility CSS — preserving the dark override path.
+ *
+ * Backward-compatible aliases (`--color-card`, `--color-foreground`,
+ * `--color-destructive`, etc.) keep the legacy shadcn class set
+ * (`bg-card`, `text-destructive`) resolving to Sálvia tokens during the
+ * transition period; the canonical names below should be preferred in
+ * new code.
  */
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --radius: var(--radius);
+:root {
+  /* Backgrounds */
+  --ds-background: #fafaf9;
+  --ds-surface: #ffffff;
+  --ds-surface-muted: #f5f5f4;
+  --ds-surface-sunken: #f0efec;
+
+  /* Borders */
+  --ds-border: #e7e5e4;
+  --ds-border-strong: #d6d3d1;
+  --ds-border-subtle: #efedeb;
+
+  /* Text */
+  --ds-text-primary: #1c1917;
+  --ds-text-secondary: #57534e;
+  --ds-text-tertiary: #78716c;
+  --ds-text-disabled: #a8a29e;
+  --ds-text-inverse: #fafaf9;
+
+  /* Brand — verde-sálvia */
+  --ds-brand-50: #f2f5f1;
+  --ds-brand-100: #e1e8de;
+  --ds-brand-200: #c2d1bc;
+  --ds-brand-300: #a0b89a;
+  --ds-brand-400: #7e9e78;
+  --ds-brand-500: #6b8a66;
+  --ds-brand-600: #587355;
+  --ds-brand-700: #475d45;
+  --ds-brand-800: #364937;
+  --ds-brand-900: #2a382b;
+
+  /* Semânticas */
+  --ds-success-50: #f0f7f1;
+  --ds-success-500: #5c8c61;
+  --ds-success-700: #3f6644;
+  --ds-warning-50: #fbf6ec;
+  --ds-warning-500: #c28a3d;
+  --ds-warning-700: #8c6128;
+  --ds-danger-50: #fbf1ef;
+  --ds-danger-500: #b0594b;
+  --ds-danger-700: #813f33;
+  --ds-info-50: #eff3f6;
+  --ds-info-500: #5b7a93;
+  --ds-info-700: #3f5870;
+
+  /* Tipografia */
+  --ds-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ds-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Espaçamento — base 4px */
+  --ds-space-1: 0.25rem;
+  --ds-space-2: 0.5rem;
+  --ds-space-3: 0.75rem;
+  --ds-space-4: 1rem;
+  --ds-space-5: 1.25rem;
+  --ds-space-6: 1.5rem;
+  --ds-space-8: 2rem;
+  --ds-space-10: 2.5rem;
+  --ds-space-12: 3rem;
+  --ds-space-16: 4rem;
+  --ds-space-20: 5rem;
+  --ds-space-24: 6rem;
+
+  /* Radius */
+  --ds-radius-sm: 0.25rem;
+  --ds-radius-md: 0.5rem;
+  --ds-radius-lg: 0.625rem;
+  --ds-radius-xl: 0.75rem;
+  --ds-radius-2xl: 1rem;
+  --ds-radius-full: 9999px;
+
+  /* Shadows — sutis, neutras, nunca coloridas */
+  --ds-shadow-xs: 0 1px 2px 0 rgb(28 25 23 / 0.04);
+  --ds-shadow-sm: 0 1px 3px 0 rgb(28 25 23 / 0.06), 0 1px 2px 0 rgb(28 25 23 / 0.04);
+  --ds-shadow-md: 0 4px 8px -2px rgb(28 25 23 / 0.08), 0 2px 4px -2px rgb(28 25 23 / 0.04);
+  --ds-shadow-lg: 0 12px 24px -4px rgb(28 25 23 / 0.1), 0 4px 8px -2px rgb(28 25 23 / 0.05);
+  --ds-shadow-focus: 0 0 0 3px rgb(107 138 102 / 0.2);
+
+  /* Animação */
+  --ds-duration-fast: 150ms;
+  --ds-duration-base: 200ms;
+  --ds-duration-slow: 300ms;
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+[data-theme='dark'] {
+  /* Backgrounds */
+  --ds-background: #1c1917;
+  --ds-surface: #292524;
+  --ds-surface-muted: #1f1d1b;
+  --ds-surface-sunken: #14110f;
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+  /* Borders */
+  --ds-border: #3a3633;
+  --ds-border-strong: #4d4845;
+  --ds-border-subtle: #2d2a28;
+
+  /* Text */
+  --ds-text-primary: #fafaf9;
+  --ds-text-secondary: #d6d3d1;
+  --ds-text-tertiary: #a8a29e;
+  --ds-text-disabled: #6b6663;
+  --ds-text-inverse: #1c1917;
+
+  /* Brand */
+  --ds-brand-50: #2a382b;
+  --ds-brand-100: #364937;
+  --ds-brand-500: #8aab85;
+  --ds-brand-600: #9dbe98;
+  --ds-brand-700: #b0d1ab;
+
+  /* Semânticas */
+  --ds-success-50: #1f2d22;
+  --ds-success-500: #7da682;
+  --ds-warning-50: #2a2418;
+  --ds-warning-500: #d9a55a;
+  --ds-danger-50: #2a1814;
+  --ds-danger-500: #c97565;
+  --ds-info-50: #1a2330;
+  --ds-info-500: #7b97ae;
+
+  /*
+   * Shadows are slightly stronger in dark mode to retain the same perceived
+   * elevation against the darker surface. Same neutral hue family as light.
+   */
+  --ds-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --ds-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --ds-shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --ds-shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.6), 0 4px 8px -2px rgb(0 0 0 / 0.45);
+  --ds-shadow-focus: 0 0 0 3px rgb(138 171 133 / 0.35);
+}
+
+/*
+ * Reduced-motion baseline. WCAG 2.1 §2.3.3 (Animation from Interactions):
+ * users who set the OS-level "reduce motion" preference must not be subjected
+ * to non-essential motion. Collapsing every animation/transition duration to
+ * effectively zero (0.01ms) keeps state changes functional but instant. The
+ * `!important` is intentional — third-party stylesheets occasionally set
+ * `transition: ... !important;` which would otherwise win the cascade.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Tailwind v4 theme bridge.
+ *
+ * `@theme inline` declares the names Tailwind uses to generate utilities and
+ * inlines the right-hand value directly into the generated CSS. Every entry
+ * resolves to its corresponding `--ds-*` runtime variable, which preserves
+ * the dark-mode override path: a class like `bg-background` compiles to
+ * `background-color: var(--ds-background)`, which itself flips when
+ * `[data-theme='dark']` toggles.
+ *
+ * Without `inline`, Tailwind would output the literal value at build time
+ * and dark mode would be impossible to express through utilities.
+ */
+@theme inline {
+  /* Colors — canonical Sálvia tokens */
+  --color-background: var(--ds-background);
+  --color-surface: var(--ds-surface);
+  --color-surface-muted: var(--ds-surface-muted);
+  --color-surface-sunken: var(--ds-surface-sunken);
+
+  --color-border: var(--ds-border);
+  --color-border-strong: var(--ds-border-strong);
+  --color-border-subtle: var(--ds-border-subtle);
+
+  --color-text-primary: var(--ds-text-primary);
+  --color-text-secondary: var(--ds-text-secondary);
+  --color-text-tertiary: var(--ds-text-tertiary);
+  --color-text-disabled: var(--ds-text-disabled);
+  --color-text-inverse: var(--ds-text-inverse);
+
+  --color-brand-50: var(--ds-brand-50);
+  --color-brand-100: var(--ds-brand-100);
+  --color-brand-200: var(--ds-brand-200);
+  --color-brand-300: var(--ds-brand-300);
+  --color-brand-400: var(--ds-brand-400);
+  --color-brand-500: var(--ds-brand-500);
+  --color-brand-600: var(--ds-brand-600);
+  --color-brand-700: var(--ds-brand-700);
+  --color-brand-800: var(--ds-brand-800);
+  --color-brand-900: var(--ds-brand-900);
+
+  --color-success-50: var(--ds-success-50);
+  --color-success-500: var(--ds-success-500);
+  --color-success-700: var(--ds-success-700);
+  --color-warning-50: var(--ds-warning-50);
+  --color-warning-500: var(--ds-warning-500);
+  --color-warning-700: var(--ds-warning-700);
+  --color-danger-50: var(--ds-danger-50);
+  --color-danger-500: var(--ds-danger-500);
+  --color-danger-700: var(--ds-danger-700);
+  --color-info-50: var(--ds-info-50);
+  --color-info-500: var(--ds-info-500);
+  --color-info-700: var(--ds-info-700);
+
+  /*
+   * Backward-compatible shadcn aliases. Keep `bg-card`, `text-foreground`,
+   * `border-input`, `text-destructive`, `bg-primary` etc. resolving to
+   * Sálvia tokens until we sweep the call sites in later sections. New
+   * code MUST use the canonical names above.
+   */
+  --color-foreground: var(--ds-text-primary);
+  --color-card: var(--ds-surface);
+  --color-card-foreground: var(--ds-text-primary);
+  --color-popover: var(--ds-surface);
+  --color-popover-foreground: var(--ds-text-primary);
+  --color-primary: var(--ds-brand-500);
+  --color-primary-foreground: var(--ds-text-inverse);
+  --color-secondary: var(--ds-surface-muted);
+  --color-secondary-foreground: var(--ds-text-primary);
+  --color-muted: var(--ds-surface-muted);
+  --color-muted-foreground: var(--ds-text-secondary);
+  --color-accent: var(--ds-surface-muted);
+  --color-accent-foreground: var(--ds-text-primary);
+  --color-destructive: var(--ds-danger-500);
+  --color-destructive-foreground: var(--ds-text-inverse);
+  --color-input: var(--ds-border);
+  --color-ring: var(--ds-brand-500);
+
+  /* Typography */
+  --font-sans: var(--ds-font-sans);
+  --font-mono: var(--ds-font-mono);
+
+  /* Radius */
+  --radius-sm: var(--ds-radius-sm);
+  --radius-md: var(--ds-radius-md);
+  --radius-lg: var(--ds-radius-lg);
+  --radius-xl: var(--ds-radius-xl);
+  --radius-2xl: var(--ds-radius-2xl);
+  --radius-full: var(--ds-radius-full);
+
+  /* Shadows */
+  --shadow-xs: var(--ds-shadow-xs);
+  --shadow-sm: var(--ds-shadow-sm);
+  --shadow-md: var(--ds-shadow-md);
+  --shadow-lg: var(--ds-shadow-lg);
+  --shadow-focus: var(--ds-shadow-focus);
+
+  /* Durations — Tailwind exposes these as `duration-fast`, etc. */
+  --duration-fast: var(--ds-duration-fast);
+  --duration-base: var(--ds-duration-base);
+  --duration-slow: var(--ds-duration-slow);
+
+  /* Easing — Tailwind exposes `ease-out` */
+  --ease-out: var(--ds-ease-out);
+}
+
+/*
+ * Dark variant wiring for Tailwind v4.
+ *
+ * Tailwind v4 deprecated the JS `darkMode` option for non-class strategies.
+ * The `@custom-variant dark` directive defines what `dark:` matches against
+ * — here, any element under (or matching) `[data-theme='dark']`. This keeps
+ * the `tailwind.config.ts` `darkMode: ['class', "[data-theme='dark']"]`
+ * (kept for spec compliance and tooling) functionally aligned with the
+ * Tailwind v4 runtime.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Global focus ring. Every interactive element that receives `:focus-visible`
+ * shows the brand-tinted ring defined by `--ds-shadow-focus`. The selector
+ * list intentionally leaves room for components to opt into their own focus
+ * treatment (e.g., a button that sets `focus-visible:ring-...`) — the cascade
+ * lets the more specific rule win.
+ */
+@layer base {
+  :where(button, [role='button'], a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: var(--ds-shadow-focus);
   }
 }
