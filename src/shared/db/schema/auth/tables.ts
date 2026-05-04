@@ -59,6 +59,14 @@ export const profiles = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
+    // Server-side throttle for `resendVerificationEmail`. Stamped to `now()`
+    // every time we successfully ask GoTrue to resend the signup email; the
+    // Server Action refuses (with `rate_limited`) any call that arrives
+    // within 60s of the previous one. Nullable because the column is
+    // empty until the user actually requests a resend. The client-side
+    // 60s cooldown remains for UX, but cannot be bypassed by a refresh
+    // because the gate now lives in the database.
+    lastResendAt: timestamp('last_resend_at', { withTimezone: true }),
   },
   (table) => [
     // CRP is unique per UF (a psychologist registered in SP and another in

@@ -43,6 +43,7 @@ type FakeSupabaseClient = {
       data: { user: { id: string; email: string } | null };
       error: { message: string } | null;
     }>;
+    signOut: () => Promise<{ error: null }>;
   };
   from: (tableName: string) => FakeQueryBuilder;
 };
@@ -94,6 +95,7 @@ function buildQueryBuilder(): FakeQueryBuilder {
           terms_accepted_at: row.termsAcceptedAt,
           privacy_accepted_at: row.privacyAcceptedAt,
           sensitive_data_consent_at: row.sensitiveDataConsentAt,
+          last_resend_at: row.lastResendAt,
           created_at: row.createdAt,
           updated_at: row.updatedAt,
         },
@@ -120,6 +122,13 @@ vi.mock('@/shared/supabase/middleware', () => {
               error: user ? null : { message: 'no session' },
             };
           },
+          // The CRÍTICO fix: middleware calls signOut for suspended/cancelled
+          // sessions to break the redirect loop. The real GoTrue rotates the
+          // session cookie via the @supabase/ssr cookie adapter; this stub
+          // is a no-op (the explicit cookie clear in the middleware itself
+          // covers the request-mirror side of the contract).
+          // eslint-disable-next-line @typescript-eslint/require-await -- mirrors GoTrue's async surface
+          signOut: async () => ({ error: null }),
         },
         from: (tableName: string) => {
           if (tableName !== 'profiles') {
@@ -292,7 +301,7 @@ describe('middleware status gating (real DB)', () => {
       expect(parseLocation(response).pathname).toBe('/login');
     });
 
-    it('redirects /login → /login (loop bounded by signIn refusing on next attempt)', async () => {
+    it('passes /login through (no self-redirect loop) — session is cleared so next request is anonymous', async () => {
       const seeded = await seedProfile();
       await setStatus(seeded.userId, 'suspended');
       sessionRef.current = seeded;
@@ -300,8 +309,24 @@ describe('middleware status gating (real DB)', () => {
       const { middleware } = await import('@/middleware');
       const response = await middleware(makeRequest('/login'));
 
-      expect(response.status).toBe(307);
-      expect(parseLocation(response).pathname).toBe('/login');
+      // The CRÍTICO fix: instead of redirecting /login → /login (loop), the
+      // middleware now lets /login render and clears the session cookie.
+      // The next request from this browser will be anonymous and stay on
+      // /login per the "no session" column of the decision table.
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
+    });
+
+    it('passes /signup through with the session cleared', async () => {
+      const seeded = await seedProfile();
+      await setStatus(seeded.userId, 'suspended');
+      sessionRef.current = seeded;
+
+      const { middleware } = await import('@/middleware');
+      const response = await middleware(makeRequest('/signup'));
+
+      expect(response.headers.get('location')).toBeNull();
+      expect(response.status).toBeLessThan(300);
     });
   });
 

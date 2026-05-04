@@ -36,6 +36,12 @@ const { getUserMock, getCurrentProfileEdgeMock } = vi.hoisted(() => ({
   getCurrentProfileEdgeMock: vi.fn(),
 }));
 
+// `signOutMock` is a no-op spy — the suspended/cancelled fix asks the
+// middleware to call `supabase.auth.signOut()` before redirecting/passing.
+// The test asserts presence-of-call and that any `sb-*` cookie that was on
+// the incoming request is explicitly deleted on the outgoing response.
+const signOutMock = vi.hoisted(() => vi.fn().mockResolvedValue({ error: null }));
+
 vi.mock('@/shared/supabase/middleware', async () => {
   const { NextResponse } = await import('next/server');
   return {
@@ -45,6 +51,7 @@ vi.mock('@/shared/supabase/middleware', async () => {
         supabase: {
           auth: {
             getUser: getUserMock,
+            signOut: signOutMock,
           },
         },
         response,
@@ -68,6 +75,8 @@ vi.mock('@/modules/registration/edge', async (importOriginal) => {
 beforeEach(() => {
   getUserMock.mockReset();
   getCurrentProfileEdgeMock.mockReset();
+  signOutMock.mockReset();
+  signOutMock.mockResolvedValue({ error: null });
 });
 
 afterEach(() => {
@@ -101,6 +110,7 @@ function asAuthWithStatus(status: ProfileStatus) {
     termsAcceptedAt: new Date(),
     privacyAcceptedAt: new Date(),
     sensitiveDataConsentAt: new Date(),
+    lastResendAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -116,8 +126,12 @@ function asAuthWithoutProfile() {
   getCurrentProfileEdgeMock.mockResolvedValue(null);
 }
 
-function makeRequest(path: string): NextRequest {
-  return new NextRequest(`http://localhost${path}`);
+function makeRequest(path: string, opts: { withSupabaseCookie?: boolean } = {}): NextRequest {
+  const request = new NextRequest(`http://localhost${path}`);
+  if (opts.withSupabaseCookie) {
+    request.cookies.set('sb-localhost-auth-token', 'fake-token');
+  }
+  return request;
 }
 
 function parseLocation(response: Response): URL {
@@ -270,35 +284,61 @@ describe('middleware (integration)', () => {
   describe.each([ProfileStatus.Suspended, ProfileStatus.Cancelled] as const)(
     '%s user',
     (status) => {
-      it('is bounced from /dashboard to /login', async () => {
+      it('is bounced from /dashboard to /login with the session cleared', async () => {
         asAuthWithStatus(status);
         const { middleware } = await import('@/middleware');
-        const response = await middleware(makeRequest('/dashboard'));
+        const response = await middleware(makeRequest('/dashboard', { withSupabaseCookie: true }));
 
         expect(response.status).toBe(307);
         expect(parseLocation(response).pathname).toBe('/login');
+        // The fix for the redirect-loop CRÍTICO: middleware MUST sign out
+        // the suspended session and emit cookie deletions on the redirect.
+        expect(signOutMock).toHaveBeenCalledTimes(1);
+        const tokenCookie = response.cookies.get('sb-localhost-auth-token');
+        // `cookies.delete` produces a cookie entry with empty value and
+        // `Max-Age=0` (or expires-in-the-past) — assert the expiration
+        // signal rather than the absence (Next stores deletes as entries).
+        expect(tokenCookie?.value ?? '').toBe('');
       });
 
-      it('is bounced from /onboarding/pending to /login', async () => {
+      it('is bounced from /onboarding/pending to /login with the session cleared', async () => {
         asAuthWithStatus(status);
         const { middleware } = await import('@/middleware');
-        const response = await middleware(makeRequest('/onboarding/pending'));
+        const response = await middleware(
+          makeRequest('/onboarding/pending', { withSupabaseCookie: true }),
+        );
 
         expect(response.status).toBe(307);
         expect(parseLocation(response).pathname).toBe('/login');
+        expect(signOutMock).toHaveBeenCalledTimes(1);
       });
 
-      it('is bounced from /login to /login (loop is bounded by signIn refusing)', async () => {
+      it('lets /login through (no redirect loop) and clears the session cookie', async () => {
         asAuthWithStatus(status);
         const { middleware } = await import('@/middleware');
-        const response = await middleware(makeRequest('/login'));
+        const response = await middleware(makeRequest('/login', { withSupabaseCookie: true }));
 
-        // The decision table's last column says suspended/cancelled →
-        // /login on auth pages too. The redirect-loop risk is bounded by
-        // `signIn` returning `account_unavailable` and clearing the cookie
-        // on the next attempt — covered by section 7's tests.
-        expect(response.status).toBe(307);
-        expect(parseLocation(response).pathname).toBe('/login');
+        // Pre-fix behaviour was a redirect to /login (self-loop). The CRÍTICO
+        // fix: when status=suspended/cancelled and the path is the auth
+        // surface itself, middleware passes through (so the form renders)
+        // and clears the auth cookies. The next request is anonymous, so
+        // `decide` falls back to the "no session" column and stays on
+        // /login.
+        expect(response.headers.get('location')).toBeNull();
+        expect(response.status).toBeLessThan(300);
+        expect(signOutMock).toHaveBeenCalledTimes(1);
+        const tokenCookie = response.cookies.get('sb-localhost-auth-token');
+        expect(tokenCookie?.value ?? '').toBe('');
+      });
+
+      it('lets /signup through and clears the session cookie', async () => {
+        asAuthWithStatus(status);
+        const { middleware } = await import('@/middleware');
+        const response = await middleware(makeRequest('/signup', { withSupabaseCookie: true }));
+
+        expect(response.headers.get('location')).toBeNull();
+        expect(response.status).toBeLessThan(300);
+        expect(signOutMock).toHaveBeenCalledTimes(1);
       });
     },
   );

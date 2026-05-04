@@ -60,6 +60,7 @@ export async function getCurrentProfileEdge(supabase: SupabaseClient): Promise<P
         'terms_accepted_at',
         'privacy_accepted_at',
         'sensitive_data_consent_at',
+        'last_resend_at',
         'created_at',
         'updated_at',
       ].join(','),
@@ -97,6 +98,7 @@ export async function getCurrentProfileEdge(supabase: SupabaseClient): Promise<P
     termsAcceptedAt: parseTimestamp(row.terms_accepted_at) as Date,
     privacyAcceptedAt: parseTimestamp(row.privacy_accepted_at) as Date,
     sensitiveDataConsentAt: parseTimestamp(row.sensitive_data_consent_at) as Date,
+    lastResendAt: parseTimestamp(row.last_resend_at),
     createdAt: parseTimestamp(row.created_at) as Date,
     updatedAt: parseTimestamp(row.updated_at) as Date,
   };

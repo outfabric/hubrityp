@@ -15,6 +15,13 @@
       "when": 1777891250708,
       "tag": "0001_account_registration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777912166630,
+      "tag": "0002_add_last_resend_at",
+      "breakpoints": true
     }
   ]
 }

@@ -112,6 +112,7 @@ export function SignupForm({ action }: SignupFormProps) {
     handleSubmit,
     setError,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm<SignupFormValues, unknown, SignupInput>({
     resolver: zodResolver(signupInputSchema),
@@ -152,6 +153,14 @@ export function SignupForm({ action }: SignupFormProps) {
   // `setValue`. The hidden `<input>` ensures a `name=crpUf` field is
   // present in the submitted FormData, which the Server Action reads.
   const crpUfRegister = register('crpUf');
+
+  // RHF's `mode: 'onTouched'` validates a field when its OWN value changes
+  // after the first blur — so the cross-field `password === passwordConfirm`
+  // refine does not fire when the user only edits `passwordConfirm` and
+  // tabs out (because `password` did not change). The fix: on blur of
+  // `passwordConfirm`, explicitly trigger its validation so the inline
+  // mismatch error appears immediately. Spec scenario 9.
+  const passwordConfirmRegister = register('passwordConfirm');
 
   // Stable IDs for `htmlFor`/`aria-describedby` association.
   const ids = {
@@ -358,7 +367,16 @@ export function SignupForm({ action }: SignupFormProps) {
           aria-invalid={errors.passwordConfirm ? true : undefined}
           aria-describedby={errors.passwordConfirm ? errorIds.passwordConfirm : undefined}
           data-testid="signup-form-password-confirm"
-          {...register('passwordConfirm')}
+          {...passwordConfirmRegister}
+          onBlur={(event) => {
+            // Forward to RHF's bookkeeping (touched state, dirty state),
+            // then explicitly trigger validation on `passwordConfirm` so
+            // the cross-field mismatch refine fires even when only this
+            // field changed. Without this, a user who types a mismatched
+            // confirm and tabs out sees no error until submit.
+            void passwordConfirmRegister.onBlur(event);
+            void trigger('passwordConfirm');
+          }}
         />
         {errors.passwordConfirm?.message ? (
           <p

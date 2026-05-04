@@ -58,6 +58,7 @@ correctness in seconds.
 | ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `0000_blue_mother_askani.sql`   | `health` | Canonical owner-scoped RLS template (`health_pings`).                                                                                                                                                                                                                                                            |
 | `0001_account_registration.sql` | `auth`   | `profiles`, `auth_logs`, `auth_sessions`. Cross-schema FKs to `auth.users` (manual), `profiles.status` CHECK constraint, asymmetric RLS (no end-user INSERT/DELETE on `profiles`; SELECT-only on logs/sessions), and the `handle_new_user` / `handle_email_confirmed` SECURITY DEFINER triggers on `auth.users`. |
+| `0002_add_last_resend_at.sql`   | `auth`   | Adds nullable `profiles.last_resend_at` so `resendVerificationEmail` can enforce a per-user 60s server-side throttle (refresh-bypass fix). No new RLS — existing `profiles` SELECT/UPDATE policies cover the column.                                                                                             |
 
 ## Auth-domain RLS deviation from the canonical template
 

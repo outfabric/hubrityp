@@ -235,6 +235,7 @@ function buildSeededProfileRow(user: MockGoTrueUser): Record<string, unknown> {
     terms_accepted_at: now,
     privacy_accepted_at: now,
     sensitive_data_consent_at: now,
+    last_resend_at: null,
     created_at: now,
     updated_at: now,
   };
