@@ -7,6 +7,11 @@ set -euo pipefail
 # Se já estiver rodando, não faz nada.
 if ! pgrep -x Xvfb > /dev/null; then
   echo "==> Iniciando Xvfb em :99..."
+  # /tmp/.X11-unix deve existir com sticky bit antes do Xvfb iniciar.
+  # O Xvfb roda como 'node' (não root) e não consegue criar o diretório —
+  # sem ele o socket não é criado e DISPLAY=:99 fica inacessível ao Playwright.
+  sudo mkdir -p /tmp/.X11-unix
+  sudo chmod 1777 /tmp/.X11-unix
   Xvfb :99 -screen 0 1280x900x24 -ac +extension GLX +render -noreset &
   disown
   sleep 1
