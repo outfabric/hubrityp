@@ -42,11 +42,11 @@
 
 ## 5. Components — registration/components
 
-- [ ] 5.1 Criar `src/modules/registration/components/signup-form.tsx` (`'use client'`) com react-hook-form + zodResolver(`signupInputSchema`), feedback inline em blur (não onChange) por campo, lista de critérios de senha em tempo real
-- [ ] 5.2 Aplicar `data-testid` em todos os campos, checkboxes, submit e região de erro conforme `specs/account-registration/spec.md`
-- [ ] 5.3 Criar `src/modules/registration/components/onboarding-pending-card.tsx` (Server Component que renderiza variações condicionais por `status` e embute o botão de resend como Client Component leaf)
-- [ ] 5.4 Criar `src/modules/registration/components/resend-verification-button.tsx` (`'use client'`) com cooldown visual de 60s pós-click bem-sucedido (`disabled` + texto "Reenviar (NNs)")
-- [ ] 5.5 Criar `src/modules/registration/components/auth-callback-error.tsx` para a tela de erro do callback com botão de resend
+- [x] 5.1 Criar `src/modules/registration/components/signup-form.tsx` (`'use client'`) com react-hook-form + zodResolver(`signupInputSchema`), feedback inline em blur (não onChange) por campo, lista de critérios de senha em tempo real
+- [x] 5.2 Aplicar `data-testid` em todos os campos, checkboxes, submit e região de erro conforme `specs/account-registration/spec.md`
+- [x] 5.3 Criar `src/modules/registration/components/onboarding-pending-card.tsx` (Server Component que renderiza variações condicionais por `status` e embute o botão de resend como Client Component leaf)
+- [x] 5.4 Criar `src/modules/registration/components/resend-verification-button.tsx` (`'use client'`) com cooldown visual de 60s pós-click bem-sucedido (`disabled` + texto "Reenviar (NNs)")
+- [x] 5.5 Criar `src/modules/registration/components/auth-callback-error.tsx` para a tela de erro do callback com botão de resend
 
 ## 6. Module barrel + route shells
 
