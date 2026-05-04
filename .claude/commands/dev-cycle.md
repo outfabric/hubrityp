@@ -1,6 +1,6 @@
 ---
 name: "Dev Cycle"
-description: "Closed-loop dev workflow for an OpenSpec change: per-task dev→tests→lint, end-of-change reviewer→QA→commits→PR."
+description: "Closed-loop dev workflow for an OpenSpec change: per-section dev→tests→lint, end-of-change reviewer→QA→commits→PR."
 category: Workflow
 tags: [workflow, openspec, agents, hubrityp]
 ---
@@ -30,7 +30,7 @@ openspec status --change "<name>" --json
 
 - Parse `schemaName`. If ≠ `spec-driven`, abort with: "Only the spec-driven schema is supported by /dev-cycle today."
 - Parse the artifact list. Read into context: `proposal.md`, `tasks.md`, `design.md` (if present), and every file under `openspec/changes/<name>/specs/`.
-- Announce: "Using change: <name> (schema: spec-driven). Tasks: M total, K already complete."
+- Announce: "Using change: <name> (schema: spec-driven). Sections: S total, P already complete (M/M subtasks done)."
 
 ### 2. Setup the worktree (sibling)
 
@@ -52,45 +52,74 @@ mkdir -p "$WORKTREE/.dev-cycle"
 
 If `.gitignore` in the main repo doesn't already include `.dev-cycle/`, append it (one-time setup) so feedback artifacts never get staged.
 
-### 3. Per-task loop (sequential)
+### 3. Per-section loop (sequential)
 
-Read `tasks.md` from the worktree. For every task line still marked `- [ ]`, in file order:
+Parse `tasks.md` from the worktree into **sections**. A section is a `## N. <title>` heading plus every line until the next `## ` heading or end of file. Subtasks are `- [ ] N.M ...` lines under the heading. The natural unit of work for the agent is **one section** — typically a coherent group of 3–11 subtasks.
 
-#### 3a. Invoke `fullstack-developer` (Agent tool)
+For every section that contains at least one `- [ ]` subtask, in file order:
 
-Build a prompt that contains:
+#### 3a. Pre-section sanity + agent invocation
+
+**Pre-section sanity check** (assert before invoking the agent):
+
+```bash
+# Working tree must be clean — section-level commits land at end of each section.
+git -C "$WORKTREE" diff --quiet HEAD || { echo "Working tree dirty at start of section <N> — abort"; exit 1; }
+```
+
+If a section is in **mixed state** (some `- [x]` AND some `- [ ]` subtasks), hard-stop with:
+```
+Section <N> is in mixed state (some [x], some [ ]). This can only happen via manual edit of tasks.md
+between runs. Section atomicity requires either a full rerun (revert all [x] in this section to [ ])
+or a clean state. Refusing to guess intent.
+```
+
+Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt containing:
+
 - **Scope marker**: "You are operating on worktree `<absolute-path>`. All file edits and bash commands must run inside it (`cd <path> && ...`). Do not touch the main repo working tree."
-- **Task**: the full task line text plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by this task.
-- **Test layers (agent decides per task scope)**: agent uses the table in `docs/dev-cycle.md` §5 to pick layers (unit / integration / e2e). For each chosen layer, agent applies the **scoped re-validation contract** documented in `.claude/agents/fullstack-developer.md` ("Re-validação escopada — sempre, task e fix"):
+- **`section`** field: the literal section text from `tasks.md` — header `## N. <title>` plus every subtask line (`- [ ] N.M ...`) and any prose paragraphs between them. Plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by the section's subtasks.
+- **Section-as-unit instruction**: "Implement every subtask in this section as a single unit of work. Do not pause between subtasks. Run scoped re-validation ONCE at the end of the section, not after each subtask. The orchestrator will atomically flip every `- [ ]` in this section to `- [x]` only on `VERDICT: PASS` — partial completion produces nothing."
+- **Test layers (agent picks superset for the section)**: agent uses the table in `docs/dev-cycle.md` §5 to pick layers (unit / integration / e2e). A section's subtasks typically span multiple natures — agent selects the **superset** of layers needed across all subtasks. For each chosen layer, agent applies the **scoped re-validation contract** documented in `.claude/agents/fullstack-developer.md` ("Re-validação escopada — sempre, section e fix"):
   - `npm run lint` + `npm run typecheck` (full — both modes)
-  - `npm run test:unit` (full — cheap, cross-task safety net)
-  - `npm run test:integration -- --related $TASK_CHANGED_FILES` where `TASK_CHANGED_FILES = git -C <worktree> diff HEAD --name-only` (uncommitted = this task's work; the orchestrator commits between tasks in step 3b, so HEAD reflects end-of-previous-task)
-  - `npm run test:e2e:seeded -- --grep "@<inferred-tag>"` (only if the task is a critical UI flow per the table)
-  - Forced fallback to full suites when changed files include `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`, `src/shared/lib/utils/**`, `src/modules/auth/**`, root configs, or >10 files.
-  - The agent must declare in its `VERDICT: PASS` summary which layers ran, scoped vs. full, and which fallback signals (if any) triggered. This is what the orchestrator and reviewer audit for coverage.
+  - `npm run test:unit` (full — cheap, cross-section safety net)
+  - `npm run test:integration -- --related $SECTION_CHANGED_FILES` where `SECTION_CHANGED_FILES = git -C <worktree> diff HEAD --name-only` (uncommitted = this section's work; the orchestrator commits between sections in step 3b, so HEAD reflects end-of-previous-section)
+  - `npm run test:e2e:seeded -- --grep "@<inferred-tags>"` (only if any subtask in the section touches a critical UI flow per the table; the agent may need to grep multiple `@<dom>` tags into the `--grep` regex)
+  - Forced fallback to full suites when changed files include `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`, `src/shared/lib/utils/**`, `src/modules/auth/**`, root configs, or >10 files. **A section's diff is naturally larger than a single subtask's, so the >10-files signal fires more often by design — that is the correct, non-degenerate behavior.**
+  - The agent must declare in its `VERDICT: PASS` summary which layers ran, scoped vs. full, and which fallback signals (if any) triggered.
 - **Reporting contract**: end the response with one of:
   - `VERDICT: PASS — implementation complete, tests pass, npm run check green.`
-  - `VERDICT: FAIL — <one-line reason>. Logs: <path under .dev-cycle/>.` (Save full logs to `<worktree>/.dev-cycle/task-<n>-fail.log`.)
+  - `VERDICT: FAIL — <one-line reason, including which subtask broke if applicable>. Logs: <path under .dev-cycle/>.` (Save full logs to `<worktree>/.dev-cycle/section-<N>-fail.log`.)
 - **Iteration cap**: "You may iterate internally up to 3 times to fix failing tests or lint errors. After 3 failed attempts, return FAIL with the root-cause diagnosis."
 
 #### 3b. Process the result
 
 - If `PASS`:
-  1. Edit the task line in `tasks.md` from `- [ ]` to `- [x]`.
+  1. **Atomically flip all `- [ ] N.M` lines in section N to `- [x] N.M`** in `tasks.md`. Use `Edit` per line (each subtask line is unique because of the `N.M` prefix + free text). Do not use sed/awk on the whole file. If any individual line edit fails (line text changed unexpectedly between read and edit), abort with a diagnostic — never half-flip a section.
   2. Stage everything in the working tree: `git -C "$WORKTREE" add -A`.
-  3. Commit with a Conventional Commits subject derived from the task title:
-     - Default: `feat: <task title>`
-     - If title contains `fix`/`bug`/`corrige`: `fix: <task title>`
-     - If title is purely about tests: `test: <task title>`
-     - If title is infra/config: `chore: <task title>`
-     - Body: `OpenSpec change: <name>` plus any co-author trailer per repo convention (check `git log` for the existing pattern).
+  3. Commit with a Conventional Commits subject derived from the **section title** (not subtask titles). Lowercase the title for the subject; preserve original casing in the body bullets. Type heuristic:
+     - Default: `feat: <section title lowercased>`
+     - Title contains `test`/`testes`: `test: <section title>`
+     - Title contains `doc`/`documenta`: `docs: <section title>`
+     - Title contains `fix`/`bug`/`corrige`: `fix: <section title>`
+     - Title contains `validação final` / `ci` / `tooling` / `setup`: `chore: <section title>`
+     - Body shape:
+       ```
+       OpenSpec change: <name>
+
+       Subtasks completed:
+       - N.1 <subtask text>
+       - N.2 <subtask text>
+       ...
+
+       Co-Authored-By: <follow repo convention from `git log`>
+       ```
   4. **Hooks must run** (no `--no-verify`). If pre-commit hooks fail, treat as a fix-iteration trigger: re-invoke the agent with the hook output as synthetic feedback. The agent's internal retry budget covers it (cap 3, same as test/lint failures).
-  5. Move to the next task. Next task's agent invocation will see `git diff HEAD --name-only` reflecting only its own work.
-- If `FAIL`: stop the loop. Print a summary (which task failed, the FAIL reason line, the log path) and wait for the user. Do not attempt the next task. The working tree is left dirty with the agent's partial work; the user can amend, revert, or instruct continuation. **Do not commit on FAIL** — the WIP commit is contingent on PASS so the linear history doesn't include broken intermediate states.
+  5. Move to the next section. Next section's agent invocation will see `git diff HEAD --name-only` reflecting only its own work.
+- If `FAIL`: stop the loop. Print a summary (which section + which subtask broke, the FAIL reason line, the log path) and wait for the user. Do not attempt the next section. The working tree is left dirty with the agent's partial work; the user can amend, revert, or instruct continuation. **Do not commit on FAIL** and **do not flip any subtask to `[x]`** — atomicity is per-section: a section is either fully done + committed or fully pending.
 
-#### 3c. End-of-tasks regression sweep
+#### 3c. End-of-sections regression sweep
 
-After every task is `[x]` and committed, run a full-suite regression sweep before invoking the reviewer. This catches cross-task drift that scoped per-task re-validation can miss (task 5 broke an integration test from task 2 whose import graph the scoped run doesn't touch).
+After every section is fully complete (all subtasks `[x]`) and committed, run a full-suite regression sweep before invoking the reviewer. This catches cross-section drift that scoped per-section re-validation can miss (section 5 broke an integration test from section 2 whose import graph the scoped run doesn't touch).
 
 **Test execution is delegated to `fullstack-developer` in sweep mode.** The orchestrator does not run `npm run test:*` directly — its job here is to (a) decide whether e2e is needed, (b) compute the log path, (c) invoke the agent, and (d) on failure, write the synthetic feedback file and re-route to fix mode.
 
@@ -101,9 +130,9 @@ cd "$WORKTREE"
 SWEEP_N=$(( $(ls .dev-cycle/sweep-*.log 2>/dev/null | wc -l) + 1 ))
 SWEEP_LOG="$(pwd)/.dev-cycle/sweep-${SWEEP_N}.log"
 
-# E2E sweep only if any per-task ran e2e (no UI scope → nothing to regress at e2e level).
+# E2E sweep only if any per-section ran e2e (no UI scope → nothing to regress at e2e level).
 # Detect via the agent's VERDICT summaries persisted under .dev-cycle/.
-if grep -lE "ran e2e|--grep '@" .dev-cycle/task-*.summary 2>/dev/null | grep -q .; then
+if grep -lE "ran e2e|--grep '@" .dev-cycle/section-*.summary 2>/dev/null | grep -q .; then
   E2E_REQUIRED=true
 else
   E2E_REQUIRED=false
@@ -120,7 +149,7 @@ Then invoke `fullstack-developer` (Agent tool) in **sweep mode** with:
   - `VERDICT: PASS — sweep clean (integration: X tests, e2e: Y tests | e2e: skipped)`
   - `VERDICT: FAIL — <one-line cause>. Logs: <sweep_log_path>`
 
-Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-task invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-task.
+Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-section invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-section.
 
 **Branch on the agent's verdict:**
 
@@ -129,7 +158,7 @@ Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-ta
   ```
   # Regression sweep failure (iteration N)
 
-  **Forced full re-validation**: this is a cross-task regression caught by the end-of-tasks sweep. At the end of your fix, run `npm run test:integration` full AND (if applicable) `npm run test:e2e:seeded` full — NOT scoped via --related/--grep. The regression by definition isn't covered by your changed-files graph.
+  **Forced full re-validation**: this is a cross-section regression caught by the end-of-sections sweep. At the end of your fix, run `npm run test:integration` full AND (if applicable) `npm run test:e2e:seeded` full — NOT scoped via --related/--grep. The regression by definition isn't covered by your changed-files graph.
 
   ## Failing tests
   <parsed list of failing tests from $SWEEP_LOG>
@@ -142,7 +171,7 @@ Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-ta
 
   Each fix iteration: agent does its fix, runs full re-validation per the synthetic feedback's instruction, returns `VERDICT: PASS`. Orchestrator commits the fix as `fix: <short summary of regression>` (Conventional Commits) and re-invokes `fullstack-developer` in **sweep mode** (back to top of 3c). At cap 3, escalate without invoking the reviewer — broken regressions never reach review.
 
-### 4. End-of-tasks: code-reviewer loop (cap 3)
+### 4. End-of-sections: code-reviewer loop (cap 3)
 
 Trigger only when every task in `tasks.md` is `[x]`. Initialize `REVIEW_ITER=0`.
 
@@ -407,9 +436,9 @@ Hard-stop on collision (same policy as `/opsx:archive`).
 
 Once archive (step 7) completed without unresolved errors:
 
-#### 8a. Per-task commits (already done in step 3b)
+#### 8a. Per-section commits (already done in step 3b)
 
-Per-task Conventional Commits were created incrementally during step 3b — one commit per task in `tasks.md` order, with messages derived from the task title (`feat:`/`fix:`/`test:`/`chore:`) and `OpenSpec change: <name>` in the body. Plus any commits from sweep fixes (step 3c) and review/QA fix iterations (steps 4–5), each made at the time of the fix.
+Per-section Conventional Commits were created incrementally during step 3b — one commit per section in `tasks.md` order, with subjects derived from the section title (`feat:`/`fix:`/`test:`/`docs:`/`chore:`) and a body listing the subtasks completed plus `OpenSpec change: <name>`. Plus any commits from sweep fixes (step 3c) and review/QA fix iterations (steps 4–5), each made at the time of the fix.
 
 Verify the linear history before proceeding to 8b:
 
@@ -417,7 +446,7 @@ Verify the linear history before proceeding to 8b:
 git -C "$WORKTREE" log --oneline main..HEAD
 ```
 
-If a task is missing a commit or has a non-CC subject, abort with a diagnostic — this indicates a bug in step 3b or a manual intervention after a step-3b failure that didn't restore the contract. The legacy fallback to a single commit (`feat(<change>): <change title>`) no longer applies; per-task isolation is by construction.
+If a section is missing a commit or has a non-CC subject, abort with a diagnostic — this indicates a bug in step 3b or a manual intervention after a step-3b failure that didn't restore the contract. Per-section isolation is by construction; do not fall back to a single combined commit.
 
 #### 8b. Dedicated archive commit
 
@@ -479,14 +508,14 @@ EOF
 ```
 ## Dev Cycle Complete — <change>
 
-Tasks: M/M complete
+Sections: S/S complete (M/M subtasks)
 Worktree: ../hubrityp-<name>/ (branch: feature/<name>)
 Review iterations: X/3
 QA: <Y/3 | skipped (backend-only heuristic)>
 Infra: <torn down (orchestrator-owned: supabase=<bool>, app=<bool>) | reused user-owned, no teardown | left up — QA escalated, manual teardown noted above>
 Archive: openspec/changes/archive/YYYY-MM-DD-<name>/
   - Specs synced: <list or "none">
-Commits created: <count> per-task + 1 archive commit (<strategy: per-task | single>)
+Commits created: <count> per-section + 1 archive commit
 Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md, infra-owned.json (if QA escalated)}
 PR: <url>
 ```
@@ -497,8 +526,8 @@ PR: <url>
 
 | Loop | Cap | On cap-hit |
 |---|---|---|
-| Dev internal retries per task | 3 | Pause, show logs, wait for user |
-| dev ↔ code-reviewer (post-tasks) | 3 | Pause, list persistent BLOCKER/HIGH |
+| Dev internal retries per section | 3 | Pause, show logs, wait for user |
+| dev ↔ code-reviewer (post-sections) | 3 | Pause, list persistent BLOCKER/HIGH |
 | dev ↔ qa-tester | 3 | Pause, list persistent CRÍTICO/ALTO |
 | Same finding repeats 2× consecutively | immediate | Pause (non-converging signal) |
 
@@ -508,7 +537,7 @@ PR: <url>
 
 `/dev-cycle <name>` is interruptible and idempotent:
 - Detects an existing worktree and reuses it.
-- Skips tasks already marked `[x]`.
+- Skips sections fully complete (every subtask `[x]`); refuses to resume a section in mixed `[x]`/`[ ]` state.
 - Preserves prior `.dev-cycle/*.md` reports and counts them when applying the iteration cap (does not start `REVIEW_ITER` from 0 if `.dev-cycle/review-*.md` already exists; pick up where it stopped).
 
 ---

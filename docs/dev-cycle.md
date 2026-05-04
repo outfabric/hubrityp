@@ -29,10 +29,10 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
        ▼                           ▼                            ▼
 ┌────────────────┐         ┌────────────────┐         ┌────────────────┐
 │ fullstack-     │  loop   │ code-reviewer  │  loop   │ qa-tester      │
-│ developer      │◀──fix───│  (1× pós-tasks)│◀──fix───│ (1× pós-review)│
+│ developer      │◀──fix───│ (1× pós-seções)│◀──fix───│ (1× pós-review)│
 └────────────────┘         └────────────────┘         └─── skip if ────┘
         │                          │                  backend-only
-        │ per task                 │ feedback estruturado     │
+        │ per section              │ feedback estruturado     │
         ▼                          │ (BLOCKER/HIGH)           │ feedback estruturado
    impl → unit → integration       │                          │ (CRÍTICO/ALTO)
    → e2e → lint+typecheck          ▼                          ▼
@@ -46,7 +46,7 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
                                                               │
                                                               ▼
                                                        commits semânticos
-                                                       (per-task + 1 archive)
+                                                       (per-section + 1 archive)
                                                        + push + gh pr create
 ```
 
@@ -95,20 +95,30 @@ Comportamento:
 
 ---
 
-## 5. Anatomia de uma task
+## 5. Anatomia de uma seção
 
-Em `openspec/changes/<name>/tasks.md`, cada task é uma linha checkbox com texto livre descrevendo o que deve ser feito:
+Em `openspec/changes/<name>/tasks.md`, o OpenSpec organiza o trabalho em **seções numeradas** (`## N. Título`), cada uma agrupando 3–11 subtasks coerentes (`- [ ] N.M ...`):
 
 ```
-- [ ] Add /api/health route returning 200 with { ok: true }
-- [ ] Add patient list page with skeleton loading
-- [ ] Migrate patient table to add 'archived' column
-- [ ] Refactor billing helper for clarity
+## 1. Design system foundation
+
+- [ ] 1.1 Adicionar tokens de cor, tipografia, espaçamento ... em `src/app/globals.css`
+- [ ] 1.2 Adicionar bloco `@media (prefers-reduced-motion)` ...
+- [ ] 1.3 Reescrever `tailwind.config.ts` para mapear `theme.extend.colors` ...
+
+## 2. Database schema, migration, RLS e triggers
+
+- [ ] 2.1 Criar pasta `src/shared/db/schema/auth/` com `tables.ts`, `policies.ts`
+- [ ] 2.2 Definir Drizzle schemas `profiles`, `authLogs`, `authSessions` ...
+- [ ] 2.3 Adicionar exports em `src/shared/db/schema/index.ts`
+...
 ```
 
-**Camadas de teste**: não anotamos tags na task. O `fullstack-developer` decide quais camadas (unit / integration / e2e) cobrem a task analisando o que está sendo implementado:
+O `/dev-cycle` itera **por seção**, não por subtask — uma invocação do `fullstack-developer` cobre todas as subtasks da seção como uma unidade de trabalho. Razão: o overhead por invocação (system prompt do agent ~18KB + CLAUDE.md + contexto da change) é pago uma vez por invocação; agrupar em seções reduz invocações de O(N subtasks) para O(N seções) — em changes médias de ~14 seções/~90 subtasks, ~6× menos invocações.
 
-| Natureza da task                                                                                                                                               | Camadas esperadas                                                                                                    |
+**Camadas de teste**: não anotamos tags nas subtasks. O `fullstack-developer` decide quais camadas (unit / integration / e2e) cobrem o **conjunto da seção** analisando o que está sendo implementado. Tipicamente uma seção mistura naturezas (ex.: "Database schema, migration, RLS e triggers" = unit + integration; "Components" = unit + integration + e2e) — o agent seleciona o **superset** das camadas necessárias.
+
+| Natureza das subtasks da seção                                                                                                                                 | Camadas esperadas                                                                                                    |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Lógica pura, validators Zod, helpers, hooks isolados                                                                                                           | unit                                                                                                                 |
 | Server Action, Route Handler, query Drizzle, política RLS, função Inngest, integração externa, schema/migration                                                | unit (quando há lógica isolada testável) + integration (sempre, contra Postgres real via Testcontainers)             |
@@ -117,9 +127,9 @@ Em `openspec/changes/<name>/tasks.md`, cada task é uma linha checkbox com texto
 
 O agent consulta as skills `unit-tests`, `integration-tests` e `e2e-tests` para os padrões concretos (setup, mocks, factories, helpers de auth) de cada camada.
 
-**Escopo dentro da camada**: a tabela escolhe **quais camadas** rodam; dentro de cada camada o agent aplica o **mesmo padrão escopado do modo fix** (ver §7) — `lint`+`typecheck`+`unit` full, `integration` via `--related`, `e2e` via `--grep "@<tag>"`. Isso evita rodar suítes inteiras a cada task numa change com muitas tasks. Forced-fallback (schema/types/env/auth/configs/>10 arquivos) reverte para suíte full daquela camada quando o sinal dispara.
+**Escopo dentro da camada**: a tabela escolhe **quais camadas** rodam; dentro de cada camada o agent aplica o **mesmo padrão escopado do modo fix** (ver §7) — `lint`+`typecheck`+`unit` full, `integration` via `--related`, `e2e` via `--grep "@<tags>"` (combinando múltiplos domínios quando a seção tocar mais de um). A re-validação roda **uma vez no fim da seção**, não após cada subtask. Forced-fallback (schema/types/env/auth/configs/>10 arquivos) reverte para suíte full quando o sinal dispara — diff de seção é maior que diff de subtask, então o sinal de >10 arquivos dispara mais frequentemente, comportamento correto.
 
-**WIP commits per-task**: depois de cada task PASSar, o orquestrador commita o working tree com Conventional Commits derivado do título da task (`feat:` default, `fix:`/`test:`/`chore:` por convenção). Razão: (a) o agent calcula `git diff HEAD --name-only` para escopar `--related` apenas aos arquivos da task atual; (b) o step 7 (Commits semânticos + PR) já encontra a história linear pronta, sem precisar reconstruir per-task isolation post-hoc.
+**WIP commits per-section**: depois de cada seção PASSar, o orquestrador (a) flipa **atomicamente** todas as `- [ ] N.M` da seção para `- [x] N.M` em `tasks.md`, e (b) commita o working tree com Conventional Commits derivado do **título da seção** (`feat:` default, `test:`/`docs:`/`fix:`/`chore:` por keywords no título), com body listando as subtasks completadas. Razão: (a) o agent calcula `git diff HEAD --name-only` para escopar `--related` apenas aos arquivos da seção atual; (b) o step 7 (Commits semânticos + PR) já encontra a história linear pronta. **Atomicidade per-section é por construção**: em FAIL no meio da seção, nenhuma subtask vira `[x]` e nenhum commit é criado — a seção é tudo ou nada.
 
 ---
 
@@ -133,7 +143,7 @@ openspec status --change "<name>" --json
 
 - Confirma schema = `spec-driven`.
 - Lê `proposal.md`, `tasks.md`, `design.md`, e tudo em `specs/`.
-- Anuncia: "Using change: <name> (schema: spec-driven). Tasks: M total, K already complete."
+- Anuncia: "Using change: <name> (schema: spec-driven). Sections: S total, P already complete (M/M subtasks done)."
 
 ### Step 2 — Setup do worktree
 
@@ -146,33 +156,35 @@ mkdir -p ../hubrityp-<name>/.dev-cycle
 - Reusa worktree existente se já houver um para essa change (idempotência).
 - Adiciona `.dev-cycle/` ao `.gitignore` se ausente.
 
-### Step 3 — Loop por task (sequencial)
+### Step 3 — Loop por seção (sequencial)
 
-Para cada task `- [ ]`, em ordem do arquivo:
+Parseia `tasks.md` em seções (`## N. <título>` + linhas `- [ ] N.M ...` até a próxima `## ` ou EOF). Para cada seção que tenha pelo menos uma subtask `- [ ]`, em ordem do arquivo:
 
-1. **Invoca `fullstack-developer`** via Agent tool com:
+1. **Sanity check**: working tree limpo (`git diff --quiet HEAD`). Mixed state na seção (algumas `[x]`, algumas `[ ]`) é hard-stop — só pode acontecer via edição manual entre runs e não temos como inferir a intenção. Mensagem instrui o user a reverter `[x]` da seção para `[ ]` ou commitar o trabalho parcial.
+2. **Invoca `fullstack-developer`** em modo `section` via Agent tool com:
    - `worktree_path` (absoluto)
-   - texto literal da task + trechos relevantes de proposal/specs/design
-   - instrução: o agent escolhe camadas pela tabela da §5 e aplica a **re-validação escopada (§7)** dentro de cada camada — `lint`+`typecheck`+`unit` full, `integration --related $(git diff HEAD --name-only)`, `e2e --grep "@<tag>"` (só se UI crítico)
+   - `section`: texto literal da seção (header + todas as subtasks + qualquer prosa) + trechos relevantes de proposal/specs/design referenciados pelas subtasks
+   - instrução explícita "implemente todas as subtasks como uma unidade; não pause entre subtasks; rode re-validação UMA vez no fim"
+   - o agent escolhe o **superset** das camadas pela tabela da §5 e aplica a **re-validação escopada (§7)** dentro de cada camada — `lint`+`typecheck`+`unit` full, `integration --related $(git diff HEAD --name-only)`, `e2e --grep "@<tags>"` (só se alguma subtask tocar UI crítico, podendo combinar múltiplas tags)
    - cap interno de 3 tentativas de fix
-   - contrato de saída: `VERDICT: PASS — ...` ou `VERDICT: FAIL — ...` (incluindo no resumo: camadas rodadas, escopado vs. full, fallbacks acionados)
-2. **PASS** → marca a task `- [x]` em `tasks.md`, **commita o working tree** com Conventional Commits (`feat:`/`fix:`/`test:`/`chore:` derivado do título da task) + body `OpenSpec change: <name>`. Hooks rodam normalmente; falha de hook vira fix-iteration. A próxima task vai ver `git diff HEAD --name-only` refletindo só o trabalho dela.
-3. **FAIL** → pausa, mostra logs em `.dev-cycle/task-<n>-fail.log`, espera o usuário. **Não commita** — o working tree fica sujo com o trabalho parcial; o usuário decide amend, revert ou continuar.
+   - contrato de saída: `VERDICT: PASS — ...` ou `VERDICT: FAIL — ...` (em FAIL, indica qual subtask específica quebrou)
+3. **PASS** → flipa **atomicamente** todas as `- [ ] N.M` da seção para `- [x] N.M` em `tasks.md` (via `Edit` por linha — cada linha é única pelo prefixo `N.M`); **commita o working tree** com Conventional Commits derivado do **título da seção** (`feat:` default, `test:`/`docs:`/`fix:`/`chore:` por keywords) + body listando as subtasks completadas + `OpenSpec change: <name>`. Hooks rodam normalmente; falha de hook vira fix-iteration. A próxima seção vai ver `git diff HEAD --name-only` refletindo só o trabalho dela.
+4. **FAIL** → pausa, mostra logs em `.dev-cycle/section-<N>-fail.log`, espera o usuário. **Não commita** e **não marca nenhuma subtask `[x]`** — atomicidade per-section: a seção é tudo ou nada. Working tree fica sujo com trabalho parcial; o usuário decide amend, revert ou continuar.
 
 #### Step 3.bis — Regression sweep antes do reviewer
 
-Quando todas as tasks estão `[x]` e commitadas, roda **sweep full** das camadas que foram escopadas per-task: `npm run test:integration` (full) e `npm run test:e2e:seeded` (full, só se algum task rodou e2e). Lint/typecheck/unit já rodaram full em todo per-task — sweep aqui é redundante para essas camadas.
+Quando todas as seções estão completas (todas as subtasks `[x]`) e cada seção commitada, roda **sweep full** das camadas que foram escopadas per-section: `npm run test:integration` (full) e `npm run test:e2e:seeded` (full, só se alguma seção rodou e2e). Lint/typecheck/unit já rodaram full em toda invocação per-section — sweep aqui é redundante para essas camadas.
 
-A execução dos testes é **delegada ao `fullstack-developer` em modo sweep** — o orquestrador não roda `npm run test:*` direto. O orquestrador só (a) decide se e2e precisa rodar (heurística por grep nos `task-<n>.summary`), (b) calcula o caminho do `sweep-<N>.log`, (c) invoca o agent com `mode=sweep` + `e2e_required` + `sweep_log_path`, e (d) em failure, escreve o synthetic feedback e re-roteia para fix mode. Em modo sweep o agent é read-only: roda só os comandos pedidos, append no log, e devolve veredicto — não tenta corrigir nem altera código.
+A execução dos testes é **delegada ao `fullstack-developer` em modo sweep** — o orquestrador não roda `npm run test:*` direto. O orquestrador só (a) decide se e2e precisa rodar (heurística por grep nos `section-<N>.summary`), (b) calcula o caminho do `sweep-<N>.log`, (c) invoca o agent com `mode=sweep` + `e2e_required` + `sweep_log_path`, e (d) em failure, escreve o synthetic feedback e re-roteia para fix mode. Em modo sweep o agent é read-only: roda só os comandos pedidos, append no log, e devolve veredicto — não tenta corrigir nem altera código.
 
 - **Verde** (`VERDICT: PASS` do agent) → step 4 (reviewer).
 - **Vermelho** (`VERDICT: FAIL` do agent) → orquestrador persiste falhas em `.dev-cycle/sweep-fail-<N>.md` como synthetic feedback (com instrução explícita "rode integration full + e2e full no fim do fix, não escopado") e invoca `fullstack-developer` em modo fix. Cap 3 (budget separado dos steps 4 e 5). A cada fix: agent aplica fix + re-validação full + commit (`fix: <regressão>`); orquestrador re-invoca o agent em sweep mode. Cap atingido → escala sem invocar reviewer.
 
-Custo amortizado da sweep: ~2–3min uma vez por change. Substitui o gasto de ~2min × N tasks que o full-per-task antigo tinha. O overhead extra da delegação ao agent (vs. orquestrador rodar npm direto) é ~5–10s — preço para manter o orquestrador 100% livre de execução de testes/lint/typecheck.
+Custo amortizado da sweep: ~2–3min uma vez por change. O ganho do section-loop não é tempo de teste — é **redução de invocações do agent**: cada invocação paga overhead de boot (system prompt + CLAUDE.md + contexto), e cortar de ~90 para ~14 invocações em uma change típica economiza centenas de milhares de tokens.
 
 ### Step 4 — Loop dev ↔ code-reviewer (cap 3)
 
-Quando todas as tasks estão `[x]`:
+Quando todas as seções estão completas (todas as subtasks `[x]`):
 
 1. Invoca `code-reviewer` com worktree path + base = `main`. Persiste em `.dev-cycle/review-<N>.md`.
 2. Lê linha `VERDICT:`:
@@ -278,12 +290,12 @@ Princípio: antes do `mv` (6.3), qualquer falha é recuperável e sem efeito col
 
 ### Step 7 — Commits semânticos + PR
 
-1. **Commits per-task** já foram criados incrementalmente no step 3 (após cada PASS, um commit por task em ordem de `tasks.md`, com Conventional Commits derivado do título — `feat:`/`fix:`/`test:`/`chore:`). Mais commits eventuais de fixes da regression sweep (step 3.bis) e dos loops reviewer/QA (steps 4–5). O step 7 só verifica a história linear:
+1. **Commits per-section** já foram criados incrementalmente no step 3 (após cada PASS, um commit por seção em ordem de `tasks.md`, com Conventional Commits derivado do título da seção — `feat:`/`fix:`/`test:`/`docs:`/`chore:` — e body listando as subtasks completadas). Mais commits eventuais de fixes da regression sweep (step 3.bis) e dos loops reviewer/QA (steps 4–5). O step 7 só verifica a história linear:
    ```bash
    git -C "$WORKTREE" log --oneline main..HEAD
    ```
-   Falha (commit faltando ou subject não-CC) → aborta com diagnóstico — sinal de bug no step 3 ou intervenção manual quebrando o contrato. O fallback "commit único" das versões antigas não existe mais — per-task isolation é por construção.
-2. **Commit dedicado de archive** (sempre, depois dos per-task):
+   Falha (commit faltando ou subject não-CC) → aborta com diagnóstico — sinal de bug no step 3 ou intervenção manual quebrando o contrato. O fallback "commit único" das versões antigas não existe mais — per-section isolation é por construção.
+2. **Commit dedicado de archive** (sempre, depois dos per-section):
    ```bash
    git add openspec/changes/archive/$(date +%F)-<name>/ openspec/specs/
    git commit -m "chore(openspec): archive <name> + sync specs"
@@ -298,25 +310,25 @@ Princípio: antes do `mv` (6.3), qualquer falha é recuperável e sem efeito col
 
 ---
 
-## 7. Estratégia de re-validação escopada (task + fix)
+## 7. Estratégia de re-validação escopada (section + fix)
 
 A mesma sequência roda em **dois contextos**:
 
-- **Task mode** (step 3, per task): agent calcula `CHANGED_FILES = git diff HEAD --name-only` localmente — uncommitted = só o trabalho desta task, porque o orquestrador commita entre tasks.
+- **Section mode** (step 3, per seção): agent calcula `CHANGED_FILES = git diff HEAD --name-only` localmente — uncommitted = só o trabalho desta seção, porque o orquestrador commita entre seções.
 - **Fix mode** (steps 3.bis, 4, 5, pós-feedback): orquestrador injeta `changed_files` (`git diff <fix-base>...HEAD --name-only`) e `affected_e2e_tags` no prompt.
 
-Sem essa escopagem, full-per-task numa change com 10 tasks gastaria ~50min só de teste antes do reviewer. Com escopagem, ~10–20min, com regression sweep cobrindo o cross-task drift.
+Sem essa escopagem, suíte full-por-seção numa change com 14 seções gastaria minutos de teste extra a cada invocação antes do reviewer. Com escopagem, integration roda em ~20s e e2e em ~1min na maioria das seções, com regression sweep no fim cobrindo o cross-section drift.
 
 ### As 4 camadas (ordem fixa, falha-rápido)
 
-| #   | Camada                  | Comando                                                | Por quê                                                                                                                                   |
-| --- | ----------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Lint ~10s, typecheck whole-program (não vale escopar).                                                    |
-| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar — vale como safety net per-task.    |
-| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                          |
-| 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>`. Em task mode, agent infere a tag pelo path tocado (`src/app/(app)/<dominio>/**` → `@<dominio>`). |
+| #   | Camada                  | Comando                                                | Por quê                                                                                                                                                                                                   |
+| --- | ----------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Lint + typecheck (full) | `npm run lint && npm run typecheck`                    | Cheap, mandatório no CLAUDE.md. Lint ~10s, typecheck whole-program (não vale escopar).                                                                                                                    |
+| 2   | Unit (full)             | `npm run test:unit`                                    | Suíte unitária inteira é barata (<30s típico) e cobre regressões cruzadas sem custo. Não vale escopar — vale como safety net per-section.                                                                 |
+| 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                                                                                          |
+| 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>`. Em section mode, agent infere as tags pelos paths tocados (`src/app/(app)/<dominio>/**` → `@<dominio>`), combinando múltiplas quando a seção atravessa domínios. |
 
-E2E é **opcional em task mode** (só roda quando a tabela da §5 indica fluxo crítico de UI). Em fix mode, sempre roda — fallback para full se `affected_e2e_tags` veio vazio.
+E2E é **opcional em section mode** (só roda quando alguma subtask da seção toca fluxo crítico de UI per tabela da §5). Em fix mode, sempre roda — fallback para full se `affected_e2e_tags` veio vazio.
 
 ### Sinais que forçam fallback para suítes completas
 
@@ -329,9 +341,9 @@ Qualquer um basta (mesma lista nos dois modos):
 
 O agent deve nomear explicitamente o sinal acionado no resumo pré-`VERDICT`.
 
-### Cross-task drift e a regression sweep
+### Cross-section drift e a regression sweep
 
-Escopar per-task tem um custo: regressão da task 5 que quebra um teste integration da task 2 sem que `--related` da task 5 inclua aquele teste. **Step 3.bis** fecha esse buraco rodando `test:integration` full (e `test:e2e:seeded` full, condicional) entre o fim do step 3 e o início do step 4. Custo ~2–3min uma vez. Falha → fix mode com synthetic feedback que força full re-validação.
+Escopar per-section tem um custo: regressão da seção 5 que quebra um teste integration da seção 2 sem que `--related` da seção 5 inclua aquele teste. **Step 3.bis** fecha esse buraco rodando `test:integration` full (e `test:e2e:seeded` full, condicional) entre o fim do step 3 e o início do step 4. Custo ~2–3min uma vez. Falha → fix mode com synthetic feedback que força full re-validação.
 
 ### Custo esperado por iteração (estimado)
 
@@ -343,13 +355,14 @@ Escopar per-task tem um custo: regressão da task 5 que quebra um teste integrat
 | E2E              | ~1min     | ~10min     |
 | **Total**        | **~2min** | **~13min** |
 
-Com escopagem em task mode + sweep no fim:
+Com escopagem em section mode + sweep no fim:
 
-- Change de 10 tasks (3 UI crítico): 7×~70s + 3×~3min + sweep ~3min ≈ **~21min** de re-validação total (vs. ~55min do full-per-task antigo).
+- Change de 14 seções (1 UI crítico, 13 backend): 13×~2min + 1×~3min + sweep ~3min ≈ **~32min** de re-validação. Diff por seção é maior, então o fallback de >10 arquivos dispara mais — esperado.
+- Ganho real **não é tempo de teste** mas **tokens economizados em invocações do agent**: ~6× menos invocações (~14 vs. ~90) × overhead de boot por invocação (~18KB system prompt + CLAUDE.md + contexto da change) ≈ centenas de milhares de tokens em changes médias.
 
 ### Onde a estratégia vive
 
-- **Per-task** (step 3): o agent executa a sequência. Orquestrador não roda testes — só commita entre tasks.
+- **Per-section** (step 3): o agent executa a sequência uma vez no fim da seção. Orquestrador não roda testes — só flipa os checkboxes da seção e commita entre seções.
 - **Sweep** (step 3.bis): o orquestrador invoca o agent em **modo sweep** com `e2e_required` e `sweep_log_path` — agent roda `test:integration` (e `test:e2e:seeded` quando aplicável) full e devolve `VERDICT: PASS|FAIL`. A heurística de "precisa e2e?" continua no orquestrador, mas execução é sempre via agent. Se a sweep falhar, o agent é re-invocado em modo fix com synthetic feedback.
 - **Fix pós-feedback** (steps 3.bis, 4, 5): orquestrador calcula `changed_files`/`affected_e2e_tags` e injeta no prompt; agent executa a sequência e devolve `VERDICT: PASS` apenas com re-validação verde.
 
@@ -395,13 +408,13 @@ A combinação **AND** é deliberada: o sinal 1 sozinho pode dar falso-positivo 
 
 ## 8. Loop prevention
 
-| Loop                                                       | Cap      | Ação ao bater                                                                                      |
-| ---------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
-| Tentativas internas do dev por task (testes/lint falhando) | 3        | Pausa, mostra logs (`.dev-cycle/task-<n>-fail.log`), espera usuário.                               |
-| Regression sweep ↔ dev (step 3.bis)                        | 3        | Pausa, mostra `sweep-fail-<N>.md` e `.dev-cycle/sweep-<N>.log`. Não invoca reviewer.               |
-| Ciclo dev ↔ code-reviewer pós-tasks                        | 3        | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`.                                    |
-| Ciclo dev ↔ qa-tester                                      | 3        | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`.                                        |
-| Mesmo finding repete 2× consecutivas (review ou QA)        | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
+| Loop                                                        | Cap      | Ação ao bater                                                                                      |
+| ----------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| Tentativas internas do dev por seção (testes/lint falhando) | 3        | Pausa, mostra logs (`.dev-cycle/section-<N>-fail.log`), espera usuário.                            |
+| Regression sweep ↔ dev (step 3.bis)                         | 3        | Pausa, mostra `sweep-fail-<N>.md` e `.dev-cycle/sweep-<N>.log`. Não invoca reviewer.               |
+| Ciclo dev ↔ code-reviewer pós-seções                        | 3        | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`.                                    |
+| Ciclo dev ↔ qa-tester                                       | 3        | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`.                                        |
+| Mesmo finding repete 2× consecutivas (review ou QA)         | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
 
 Quando um cap é atingido, o orquestrador imprime:
 
@@ -414,22 +427,22 @@ Quando um cap é atingido, o orquestrador imprime:
 
 ## 9. Onde os artefatos vivem
 
-| Artefato                          | Caminho                                                                                                                                          |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Worktree da change                | `../hubrityp-<name>/` (sibling do repo)                                                                                                          |
-| Branch da change                  | `feature/<name>` (criada do `origin/main`)                                                                                                       |
-| Relatórios de review              | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ...                                                                                          |
-| Relatórios de QA                  | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...                                                                                                  |
-| Sumário do sync de specs          | `<worktree>/.dev-cycle/sync-summary.md`                                                                                                          |
-| Logs de falhas de task            | `<worktree>/.dev-cycle/task-<n>-fail.log`                                                                                                        |
-| Sumário de cobertura per-task     | `<worktree>/.dev-cycle/task-<n>.summary` (camadas que rodaram, escopado vs. full — usado pelo step 3.bis pra decidir se sweep precisa rodar e2e) |
-| Logs/feedback da regression sweep | `<worktree>/.dev-cycle/sweep-<N>.log`, `sweep-fail-<N>.md` (synthetic feedback quando sweep vermelha)                                            |
-| Marker de ownership de infra      | `<worktree>/.dev-cycle/infra-owned.json` (existe entre 5.1 e 5.2; persiste se QA escala)                                                         |
-| Pasta `.dev-cycle/`               | gitignored (via `.gitignore` na raiz do repo)                                                                                                    |
-| Change arquivada                  | `openspec/changes/archive/YYYY-MM-DD-<name>/`                                                                                                    |
-| Specs principais sincr.           | `openspec/specs/<cap>/spec.md` (editado no step 6.2)                                                                                             |
-| Commits                           | per-task + 1 commit `chore(openspec): archive ...`                                                                                               |
-| PR                                | aberto via `gh pr create` contra `main` (já com archive)                                                                                         |
+| Artefato                          | Caminho                                                                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worktree da change                | `../hubrityp-<name>/` (sibling do repo)                                                                                                             |
+| Branch da change                  | `feature/<name>` (criada do `origin/main`)                                                                                                          |
+| Relatórios de review              | `<worktree>/.dev-cycle/review-1.md`, `review-2.md`, ...                                                                                             |
+| Relatórios de QA                  | `<worktree>/.dev-cycle/qa-1.md`, `qa-2.md`, ...                                                                                                     |
+| Sumário do sync de specs          | `<worktree>/.dev-cycle/sync-summary.md`                                                                                                             |
+| Logs de falhas de seção           | `<worktree>/.dev-cycle/section-<N>-fail.log`                                                                                                        |
+| Sumário de cobertura per-section  | `<worktree>/.dev-cycle/section-<N>.summary` (camadas que rodaram, escopado vs. full — usado pelo step 3.bis pra decidir se sweep precisa rodar e2e) |
+| Logs/feedback da regression sweep | `<worktree>/.dev-cycle/sweep-<N>.log`, `sweep-fail-<N>.md` (synthetic feedback quando sweep vermelha)                                               |
+| Marker de ownership de infra      | `<worktree>/.dev-cycle/infra-owned.json` (existe entre 5.1 e 5.2; persiste se QA escala)                                                            |
+| Pasta `.dev-cycle/`               | gitignored (via `.gitignore` na raiz do repo)                                                                                                       |
+| Change arquivada                  | `openspec/changes/archive/YYYY-MM-DD-<name>/`                                                                                                       |
+| Specs principais sincr.           | `openspec/specs/<cap>/spec.md` (editado no step 6.2)                                                                                                |
+| Commits                           | per-section + 1 commit `chore(openspec): archive ...`                                                                                               |
+| PR                                | aberto via `gh pr create` contra `main` (já com archive)                                                                                            |
 
 Após o merge, limpe o worktree:
 
@@ -451,7 +464,7 @@ git branch -d feature/<name>
 O orquestrador:
 
 - Detecta o worktree existente e reusa.
-- Pula tasks já marcadas `[x]` em `tasks.md`.
+- Pula seções totalmente completas (todas as subtasks `[x]`) em `tasks.md`. Mixed state numa seção (algumas `[x]`, algumas `[ ]`) é hard-stop — só acontece via edição manual entre runs e o orquestrador não tenta inferir intenção.
 - Conta os arquivos `review-N.md` e `qa-N.md` existentes em `.dev-cycle/` para inicializar `REVIEW_ITER` e `QA_ITER` corretamente (não reinicia o cap a cada retomada).
 - Lê `infra-owned.json` (se existir) ao entrar no step 5.1 para preservar ownership entre invocações — uma run anterior interrompida que subiu Supabase continua sendo "dona" disso na re-invocação. Se você manualmente derrubou Supabase entre as duas runs, o marker fica stale e o orquestrador re-detecta + sobe + remarca.
 
@@ -476,11 +489,11 @@ O orquestrador:
 ## 12. Limitações conhecidas
 
 - **Schema OpenSpec**: apenas `spec-driven`.
-- **Sem paralelismo**: tasks são sequenciais por design (ordem importa em OpenSpec). Se você quer paralelismo, divida em changes independentes.
+- **Sem paralelismo**: seções são sequenciais por design (ordem importa em OpenSpec). Se você quer paralelismo, divida em changes independentes.
 - **Local-first**: precisa de Docker + Supabase CLI + `gh` + Playwright local. Não roda em CI.
 - **Ports compartilhadas com a suíte `@auth-real`**: o step 5.1 sobe Supabase na porta hardcoded `54321` (ver gotcha em §14). Não é possível rodar `/dev-cycle` e `npm run test:e2e:real` concorrentemente — são mutuamente exclusivos.
 - **Custo de QA**: cada iteração do `qa-tester` consome tempo de browser real (~2–5min). Caps de 3 são intencionais; se você precisa de mais, é sinal de problema estrutural. A heurística do step 5.0 (seção 7.bis) skipa QA em changes backend-only para evitar esse custo quando seguro; use `--force-qa` se quiser desligar a heurística.
-- **Commits per-task** dependem de isolar arquivos por task com confiança. Se as tasks compartilham muitos arquivos, o orquestrador cai para um commit único e anuncia.
+- **Atomicidade per-section** significa blast radius maior em falha: se uma seção tem 11 subtasks e a 9ª quebra, o trabalho das 8 anteriores fica uncommitted no working tree (não perdido — o user pode amend ou resetar).
 
 ---
 

@@ -146,50 +146,50 @@ Sempre prefira documentação verificada e atual a suposições.
 
 Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta no seu prompt um conjunto fixo de campos. Reconheça-os e respeite o contrato.
 
-**Modos de invocação**: o orquestrador te invoca em **um de três modos** — `task`, `fix`, ou `sweep`. O modo é determinado pelos campos presentes no prompt: `task` → modo task; `feedback_file` → modo fix; `mode: sweep` + `e2e_required` + `sweep_log_path` → modo sweep.
+**Modos de invocação**: o orquestrador te invoca em **um de três modos** — `section`, `fix`, ou `sweep`. O modo é determinado pelos campos presentes no prompt: `section` → modo section; `feedback_file` → modo fix; `mode: sweep` + `e2e_required` + `sweep_log_path` → modo sweep.
 
 **Campos que você pode receber:**
 
 - `worktree_path` (sempre) — caminho absoluto do git worktree dedicado a esta change. **Toda** edição de arquivo e **todo** comando bash deve operar dentro dele. Em bash, prefixe com `cd <worktree_path> && ...` (ou `git -C <worktree_path> ...`). Nunca toque na working tree principal do repo.
-- `task` (modo task) — o texto literal da task. Você decide quais camadas de teste cobrem essa task usando a tabela da seção 5 de `docs/dev-cycle.md` (lógica pura → unit; Server Action/RLS/migration → unit + integration; fluxo crítico de UI → unit + integration + e2e). Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em task mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta task; o orquestrador commita um WIP entre tasks, então `HEAD` reflete o fim da task anterior).
-- `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-task pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
-- `changed_files` (modo fix) — lista de paths já calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`); use exatamente esta lista no `--related` do Vitest. (Em task mode, você calcula localmente — ver acima.)
-- `affected_e2e_tags` (modo fix) — lista de tags `@<dominio>` para passar a `--grep` do Playwright. Se a lista estiver vazia, faça fallback para suíte E2E completa. (Em task mode, infira a tag a partir do path tocado: `src/app/(app)/<dominio>/**` → `@<dominio>`. Se a task não toca UI crítico, **pule e2e** — a tabela da seção 5 governa.)
+- `section` (modo section) — texto literal de uma seção do `tasks.md` (`## N. Título` + todas as linhas `- [ ] N.M ...` daquela seção, mais qualquer prosa entre elas). **Implemente TODAS as subtasks da seção como uma unidade de trabalho** — não pause entre subtasks, não rode re-validação após cada subtask. Você decide quais camadas de teste cobrem o **conjunto** da seção usando a tabela da §5 de `docs/dev-cycle.md` (lógica pura → unit; Server Action/RLS/migration → unit + integration; fluxo crítico de UI → unit + integration + e2e). Tipicamente uma seção mistura naturezas — selecione o **superset** das camadas necessárias. Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em section mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta seção; o orquestrador commita um WIP entre seções, então `HEAD` reflete o fim da seção anterior).
+- `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
+- `changed_files` (modo fix) — lista de paths já calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`); use exatamente esta lista no `--related` do Vitest. (Em section mode, você calcula localmente — ver acima.)
+- `affected_e2e_tags` (modo fix) — lista de tags `@<dominio>` para passar a `--grep` do Playwright. Se a lista estiver vazia, faça fallback para suíte E2E completa. (Em section mode, infira a tag a partir dos paths tocados: `src/app/(app)/<dominio>/**` → `@<dominio>`. Se nenhuma subtask da seção toca UI crítico, **pule e2e** — a tabela da §5 governa.)
 - `mode: sweep` (modo sweep) — marca a invocação como regression sweep do step 3.bis. Em modo sweep você é **read-only**: só roda os comandos pedidos e devolve veredicto, sem modificar código.
 - `e2e_required` (modo sweep) — boolean. Se `true`, rode `npm run test:e2e:seeded` full além do integration. Se `false`, só integration.
 - `sweep_log_path` (modo sweep) — caminho absoluto onde você deve appendar stdout+stderr de **ambas** as suítes (use `>> "$sweep_log_path" 2>&1`).
 
 > [!IMPORTANT]
-> **Não toque em `tasks.md`:** Você NÃO deve modificar nenhum arquivo que case com `openspec/changes/*/tasks.md`. Marcar tasks `[x]` é responsabilidade exclusiva do orquestrador `/dev-cycle`. Esta regra vale mesmo se a task atual parecer concluída — devolva apenas o `VERDICT: PASS` e deixe o orquestrador atualizar o checkbox.
+> **Não toque em `tasks.md`:** Você NÃO deve modificar nenhum arquivo que case com `openspec/changes/*/tasks.md`. Marcar checkboxes `[x]` é responsabilidade exclusiva do orquestrador `/dev-cycle`. Esta regra vale mesmo após implementar todas as subtasks de uma seção — devolva apenas o `VERDICT: PASS` e deixe o orquestrador flipar todos os checkboxes daquela seção atomicamente.
 
 **Contrato de saída (obrigatório, parseável):**
 
 Termine sua resposta com **exatamente uma** das linhas (a forma exata depende do modo — ver seções específicas):
 
-- Modos task / fix:
+- Modos section / fix:
   - `VERDICT: PASS — <resumo de uma linha do que foi feito>`
   - `VERDICT: FAIL — <causa raiz em uma linha>. Logs: <path absoluto sob .dev-cycle/>`
 - Modo sweep (ver seção dedicada abaixo):
   - `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests | e2e: skipped)`
   - `VERDICT: FAIL — <causa de uma linha>. Logs: <sweep_log_path>`
 
-Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (suítes executadas, escopo escopado vs. full, contagem de testes). Em modos task e fix, declare qual sinal de fallback (se algum) forçou suíte completa.
+Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (suítes executadas, escopo escopado vs. full, contagem de testes). Em modos section e fix, declare qual sinal de fallback (se algum) forçou suíte completa. **Em FAIL no modo section, indique qual subtask específica quebrou** (ex.: "completou 1.1-1.4, falhou em 1.5: <causa>") para facilitar debugging.
 
 **Cap interno**: você pode iterar até 3 vezes para corrigir falhas (de teste, lint, typecheck). No 4º atento, devolva `VERDICT: FAIL` com diagnóstico de causa raiz — não fique tentando indefinidamente.
 
-### Re-validação escopada (sempre — task e fix)
+### Re-validação escopada (sempre — section e fix)
 
 **Antes** de devolver `VERDICT: PASS`, execute esta sequência em ambos os modos. Ordem fixa, falha-rápido (pare na primeira falha não-recuperável):
 
 1. **Full**: `npm run lint && npm run typecheck`. Lint é barato (~10s); typecheck é whole-program e não vale escopar. Falhou aqui? Corrija e tente de novo (cap 3) antes do passo 2.
-2. **Full**: `npm run test:unit`. A suíte unit inteira é barata (<30s típico) e captura regressões cruzadas sem custo de escopar — vale rodar full mesmo em task mode pra ter um safety net por task.
+2. **Full**: `npm run test:unit`. A suíte unit inteira é barata (<30s típico) e captura regressões cruzadas sem custo de escopar — vale rodar full mesmo em section mode pra ter um safety net por seção.
 3. **Escopado**: `npm run test:integration -- --related $CHANGED_FILES`. `$CHANGED_FILES` vem de:
-   - **Modo task**: `git -C <worktree_path> diff HEAD --name-only` (calculado por você).
+   - **Modo section**: `git -C <worktree_path> diff HEAD --name-only` (calculado por você).
    - **Modo fix**: lista injetada pelo orquestrador.
 
    Se Vitest não conseguir resolver o grafo (imports dinâmicos) ou retornar zero testes onde algo claramente deveria rodar, faça fallback para `npm run test:integration` full e anuncie.
 4. **Escopado**: `npm run test:e2e -- --grep "<affected_e2e_tags>"`.
-   - **Modo task**: a tabela da seção 5 do `docs/dev-cycle.md` decide se a task precisa de e2e. Se sim, infira a tag pelo path tocado (`src/app/(app)/<dominio>/**` → `@<dominio>`) ou pelo escopo da task. Se não, **pule esta camada**.
+   - **Modo section**: a tabela da §5 do `docs/dev-cycle.md` decide se a seção precisa de e2e. Se alguma subtask toca UI crítico, sim — infira a(s) tag(s) pelos paths tocados (`src/app/(app)/<dominio>/**` → `@<dominio>`). Se nenhuma subtask toca UI crítico, **pule esta camada**.
    - **Modo fix**: use `affected_e2e_tags` injetado pelo orquestrador. Se vazio/ambíguo, fallback para `npm run test:e2e` full.
 
 **Sinais que forçam fallback para suítes completas** (qualquer um basta, mesma lista nos dois modos):
@@ -201,9 +201,9 @@ Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (
 
 Se um fallback for acionado, nomeie o sinal explicitamente no resumo pré-VERDICT (ex.: "Fallback para integration full acionado: alteração em `src/shared/db/schema/auth.ts`").
 
-### Modo sweep (regressão pós-tasks, step 3.bis)
+### Modo sweep (regressão pós-seções, step 3.bis)
 
-No step 3.bis do `/dev-cycle`, depois de todas as tasks estarem `[x]` e commitadas, o orquestrador te invoca em **modo sweep** para rodar uma re-validação full das camadas que foram escopadas per-task. **Você não modifica código nesse modo** — só roda testes e devolve veredicto. Princípio: o orquestrador nunca dispara `npm run test:*` direto; toda execução de testes passa por você.
+No step 3.bis do `/dev-cycle`, depois de todas as seções estarem completas (todas as subtasks `[x]`) e commitadas, o orquestrador te invoca em **modo sweep** para rodar uma re-validação full das camadas que foram escopadas per-section. **Você não modifica código nesse modo** — só roda testes e devolve veredicto. Princípio: o orquestrador nunca dispara `npm run test:*` direto; toda execução de testes passa por você.
 
 **Comandos a executar** (na ordem, do worktree):
 
@@ -216,9 +216,9 @@ No step 3.bis do `/dev-cycle`, depois de todas as tasks estarem `[x]` e commitad
    cd "$worktree_path" && npm run test:e2e:seeded >> "$sweep_log_path" 2>&1
    ```
 
-Se `e2e_required` for `false`, **não** rode e2e — significa que nenhuma task tocou UI crítica e não há nada para regress nessa camada.
+Se `e2e_required` for `false`, **não** rode e2e — significa que nenhuma seção tocou UI crítica e não há nada para regress nessa camada.
 
-**Não rode** lint, typecheck, ou unit. Eles já rodaram full em todo per-task (passos 1 e 2 da seção "Re-validação escopada"), então re-rodar aqui é redundante. Sweep é exclusivamente para integration e e2e, que eram escopados per-task.
+**Não rode** lint, typecheck, ou unit. Eles já rodaram full em toda invocação per-section (passos 1 e 2 da seção "Re-validação escopada"), então re-rodar aqui é redundante. Sweep é exclusivamente para integration e e2e, que eram escopados per-section.
 
 **Não tente corrigir falhas em modo sweep.** Se a integration ou e2e falhar, devolva `VERDICT: FAIL` imediatamente — o orquestrador vai escrever o synthetic feedback em `sweep-fail-<N>.md` e te re-invocar em **modo fix** com o caminho desse arquivo. Em modo fix, aí sim você corrige e roda re-validação full conforme a instrução do próprio synthetic feedback.
 
