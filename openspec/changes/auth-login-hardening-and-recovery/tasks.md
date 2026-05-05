@@ -42,12 +42,12 @@
 
 ## 5. Lockout state machine
 
-- [ ] 5.1 Criar `src/modules/auth/server/lockout.ts` (não exposto no barrel) com função `applyFailedLoginAttempt(supabase, userId): Promise<{ failedLoginCount, lockoutUntil, requiresPasswordReset, lockoutJustStarted }>` executando o UPDATE atômico documentado em `design.md` D2 e retornando o estado pós-update
-- [ ] 5.2 Em `src/modules/auth/server/lockout.ts`, expor `resetLoginCounters(supabase, userId)` que zera `failed_login_count`, `consecutive_lockouts`, `lockout_until` (chamado em login bem-sucedido)
-- [ ] 5.3 Em `src/modules/auth/server/lockout.ts`, expor `isCurrentlyLockedOut(profile): { lockedOut: boolean; until?: Date }` (helper puro)
-- [ ] 5.4 Teste de integração `src/__tests__/integration/auth-hardening/lockout-atomic.int.test.ts` — 10 attempts paralelos contra mesmo user; assert `failed_login_count = 5` exatamente, lockout disparado uma única vez, log `lockout_started` único
-- [ ] 5.5 Teste de integração `src/__tests__/integration/auth-hardening/lockout-window.int.test.ts` — falha 4x, espera 16 min (mock NOW), falha 1x → não bloqueia (counter resetou); falha 5x dentro de 15 min → bloqueia
-- [ ] 5.6 Teste de integração `src/__tests__/integration/auth-hardening/lockout-consecutive.int.test.ts` — 3 lockouts consecutivos setam `requires_password_reset=true`; reset do lockout via reset de senha zera tudo
+- [x] 5.1 Criar `src/modules/auth/server/lockout.ts` (não exposto no barrel) com função `applyFailedLoginAttempt(supabase, userId): Promise<{ failedLoginCount, lockoutUntil, requiresPasswordReset, lockoutJustStarted }>` executando o UPDATE atômico documentado em `design.md` D2 e retornando o estado pós-update
+- [x] 5.2 Em `src/modules/auth/server/lockout.ts`, expor `resetLoginCounters(supabase, userId)` que zera `failed_login_count`, `consecutive_lockouts`, `lockout_until` (chamado em login bem-sucedido)
+- [x] 5.3 Em `src/modules/auth/server/lockout.ts`, expor `isCurrentlyLockedOut(profile): { lockedOut: boolean; until?: Date }` (helper puro)
+- [x] 5.4 Teste de integração `src/__tests__/integration/auth-hardening/lockout-atomic.int.test.ts` — 10 attempts paralelos contra mesmo user; assert `failed_login_count = 5` exatamente, lockout disparado uma única vez, log `lockout_started` único
+- [x] 5.5 Teste de integração `src/__tests__/integration/auth-hardening/lockout-window.int.test.ts` — falha 4x, espera 16 min (mock NOW), falha 1x → não bloqueia (counter resetou); falha 5x dentro de 15 min → bloqueia
+- [x] 5.6 Teste de integração `src/__tests__/integration/auth-hardening/lockout-consecutive.int.test.ts` — 3 lockouts consecutivos setam `requires_password_reset=true`; reset do lockout via reset de senha zera tudo
 
 ## 6. Auth module — signIn e signOut
 
