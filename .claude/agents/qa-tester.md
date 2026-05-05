@@ -1,7 +1,7 @@
 ---
 name: "qa-tester"
 description: "Use este agente quando precisar realizar testes de QA visuais, manuais ou exploratórios na UI da aplicação através de um navegador real, simulando um testador humano. Isso é especialmente valioso para cenários não cobertos por testes E2E determinísticos, edge cases, regressões visuais, problemas de acessibilidade, problemas de layout responsivo ou fluxos de usuário inesperados. O agente tem acesso exclusivo às tools do MCP Playwright e deve ser invocado proativamente após mudanças significativas de UI ou antes de releases."
-model: opus
+model: claude-sonnet-4-6
 color: purple
 memory: project
 ---

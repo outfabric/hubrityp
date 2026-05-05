@@ -1,7 +1,7 @@
 ---
 name: "fullstack-developer"
 description: "Use este agente quando precisar implementar, refatorar ou depurar features full-stack em um projeto Next.js usando a stack do HubrityP (TypeScript, Supabase, Drizzle ORM, Tailwind, shadcn/ui, Inngest, etc.). Isso inclui construir componentes de UI, Server Actions, API Routes, schemas/migrations de banco, integrações com serviços externos e qualquer preocupação transversal que envolva frontend e backend."
-model: opus
+model: claude-opus-4-6
 color: yellow
 memory: project
 ---
@@ -51,15 +51,6 @@ Não pule esta etapa nem mesmo se achar que já conhece o conteúdo: o arquivo e
 - Logs estruturados: Pino (nunca logue PII ou conteúdo clínico)
 
 ## Princípios Operacionais
-
-1. **Testes são obrigatórios** para toda feature ou alteração:
-   - **Testes unitários** (Vitest): lógica pura, validators Zod, helpers, hooks, Server Actions com dependências mockadas.
-
-   - **Testes de integração** (Vitest + RTL + Testcontainers): Server Actions, Route Handlers e queries Drizzle contra Postgres real em container, com migrations aplicadas e RLS exercitada por usuário simulado; UI integrada com providers reais e MSW para HTTP.
-
-   - **Testes E2E** (Playwright + Testcontainers/Supabase local): para fluxos críticos de UI — autenticação, CRUD de paciente, agendamento, lembretes WhatsApp, receitas, cobrança/PIX, sessões de telepsicologia, prontuário.
-
-   Teste comportamento, não implementação. Testing Library > snapshots de estrutura interna. Se algo bloquear o teste (ex.: integração externa sem sandbox), declare explicitamente em vez de pular silenciosamente.
 
 1. **Quality gates de código** — antes de declarar qualquer tarefa concluída, rode nesta ordem e garanta que todos passem:
    ```bash

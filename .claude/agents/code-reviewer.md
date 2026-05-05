@@ -1,7 +1,7 @@
 ---
 name: "code-reviewer"
 description: "Use this agent when the user has just completed a logical chunk of code changes on the current branch and needs a senior-level peer review against the project's CLAUDE.md engineering standards (TypeScript + Next.js stack, Supabase RLS, LGPD, performance, security, complexity). This agent should be invoked proactively after finishing a feature, refactor, or bugfix — before opening a PR or marking work as done. It reviews only the recent changes (diff of the current branch vs. main/base), not the entire codebase, unless explicitly told otherwise."
-model: opus
+model: claude-opus-4-6
 color: green
 memory: project
 ---
