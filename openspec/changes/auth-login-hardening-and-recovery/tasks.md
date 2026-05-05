@@ -1,17 +1,17 @@
 ## 1. Database schema, RLS e função SQL
 
-- [ ] 1.1 Adicionar em `src/shared/db/schema/auth/tables.ts` as colunas novas em `profiles`: `failed_login_count`, `last_failed_login_at`, `lockout_until`, `consecutive_lockouts`, `requires_password_reset`
-- [ ] 1.2 Definir em `src/shared/db/schema/auth/tables.ts` a tabela `oauthIdentities` com PK uuid, FK `user_id`, `provider`, `provider_user_id`, `is_primary`, `linked_at`, `UNIQUE(provider, provider_user_id)`, index em `user_id`
-- [ ] 1.3 Adicionar export de `oauthIdentities` em `src/shared/db/schema/index.ts`
-- [ ] 1.4 Atualizar `src/shared/db/schema/auth/policies.ts` com `ENABLE ROW LEVEL SECURITY` em `oauth_identities` + policy `oauth_identities_select_own`
-- [ ] 1.5 Reescrever a função SQL `public.handle_new_user()` para branch por `NEW.raw_app_meta_data ->> 'provider'`: email/NULL → INSERT como antes; outros provedores → `RETURN NEW` sem inserir
-- [ ] 1.6 Escrever função SQL `public.purge_old_auth_logs()` SECURITY DEFINER que deleta `auth_logs` com `created_at < NOW() - INTERVAL '6 months'` e retorna count
-- [ ] 1.7 Rodar `npm run db:generate` e mesclar manualmente no arquivo `src/shared/db/migrations/0002_login_hardening.sql`: ALTERs de `profiles`, índice parcial `profiles_lockout_until_idx WHERE lockout_until IS NOT NULL`, CREATE TABLE `oauth_identities`, RLS, redefinição de `handle_new_user()` (REPLACE), CREATE FUNCTION `purge_old_auth_logs()`
-- [ ] 1.8 Aplicar `supabase db reset` + `npm run db:migrate` para validar a migration ponta-a-ponta
-- [ ] 1.9 Atualizar `src/shared/db/migrations/README.md` com a entrada da migration 0002 e o bloco de comentário documentando o set canônico de `auth_logs.event` (incluindo eventos novos: `login_*`, `lockout_*`, `password_reset_*`, `oauth_signup`, `social_linked`, `logout`)
-- [ ] 1.10 Teste de integração `src/__tests__/integration/oauth/handle-new-user-trigger.int.test.ts` — INSERT em `auth.users` com `provider='google'` não cria profile; com `provider='email'` cria como antes; provider NULL trata como email
-- [ ] 1.11 Teste de integração `src/__tests__/integration/data-layer/purge-old-auth-logs.int.test.ts` — com 10 logs >6 meses + 5 recentes, função retorna 10 e mantém só os recentes; tabela vazia retorna 0; usuário comum não pode chamar
-- [ ] 1.12 Teste de integração `src/__tests__/integration/oauth/rls-oauth-identities.int.test.ts` — userA não vê identities do userB; INSERT direto bloqueado para usuário; service role bypass
+- [x] 1.1 Adicionar em `src/shared/db/schema/auth/tables.ts` as colunas novas em `profiles`: `failed_login_count`, `last_failed_login_at`, `lockout_until`, `consecutive_lockouts`, `requires_password_reset`
+- [x] 1.2 Definir em `src/shared/db/schema/auth/tables.ts` a tabela `oauthIdentities` com PK uuid, FK `user_id`, `provider`, `provider_user_id`, `is_primary`, `linked_at`, `UNIQUE(provider, provider_user_id)`, index em `user_id`
+- [x] 1.3 Adicionar export de `oauthIdentities` em `src/shared/db/schema/index.ts`
+- [x] 1.4 Atualizar `src/shared/db/schema/auth/policies.ts` com `ENABLE ROW LEVEL SECURITY` em `oauth_identities` + policy `oauth_identities_select_own`
+- [x] 1.5 Reescrever a função SQL `public.handle_new_user()` para branch por `NEW.raw_app_meta_data ->> 'provider'`: email/NULL → INSERT como antes; outros provedores → `RETURN NEW` sem inserir
+- [x] 1.6 Escrever função SQL `public.purge_old_auth_logs()` SECURITY DEFINER que deleta `auth_logs` com `created_at < NOW() - INTERVAL '6 months'` e retorna count
+- [x] 1.7 Rodar `npm run db:generate` e mesclar manualmente no arquivo `src/shared/db/migrations/0002_login_hardening.sql`: ALTERs de `profiles`, índice parcial `profiles_lockout_until_idx WHERE lockout_until IS NOT NULL`, CREATE TABLE `oauth_identities`, RLS, redefinição de `handle_new_user()` (REPLACE), CREATE FUNCTION `purge_old_auth_logs()`
+- [x] 1.8 Aplicar `supabase db reset` + `npm run db:migrate` para validar a migration ponta-a-ponta
+- [x] 1.9 Atualizar `src/shared/db/migrations/README.md` com a entrada da migration 0002 e o bloco de comentário documentando o set canônico de `auth_logs.event` (incluindo eventos novos: `login_*`, `lockout_*`, `password_reset_*`, `oauth_signup`, `social_linked`, `logout`)
+- [x] 1.10 Teste de integração `src/__tests__/integration/oauth/handle-new-user-trigger.int.test.ts` — INSERT em `auth.users` com `provider='google'` não cria profile; com `provider='email'` cria como antes; provider NULL trata como email
+- [x] 1.11 Teste de integração `src/__tests__/integration/data-layer/purge-old-auth-logs.int.test.ts` — com 10 logs >6 meses + 5 recentes, função retorna 10 e mantém só os recentes; tabela vazia retorna 0; usuário comum não pode chamar
+- [x] 1.12 Teste de integração `src/__tests__/integration/oauth/rls-oauth-identities.int.test.ts` — userA não vê identities do userB; INSERT direto bloqueado para usuário; service role bypass
 
 ## 2. Validators puros
 

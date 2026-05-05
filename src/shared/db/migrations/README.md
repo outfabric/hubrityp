@@ -54,11 +54,37 @@ correctness in seconds.
 
 ## Migrations index
 
-| File                            | Domain   | Notes                                                                                                                                                                                                                                                                                                            |
-| ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0000_blue_mother_askani.sql`   | `health` | Canonical owner-scoped RLS template (`health_pings`).                                                                                                                                                                                                                                                            |
-| `0001_account_registration.sql` | `auth`   | `profiles`, `auth_logs`, `auth_sessions`. Cross-schema FKs to `auth.users` (manual), `profiles.status` CHECK constraint, asymmetric RLS (no end-user INSERT/DELETE on `profiles`; SELECT-only on logs/sessions), and the `handle_new_user` / `handle_email_confirmed` SECURITY DEFINER triggers on `auth.users`. |
-| `0002_add_last_resend_at.sql`   | `auth`   | Adds nullable `profiles.last_resend_at` so `resendVerificationEmail` can enforce a per-user 60s server-side throttle (refresh-bypass fix). No new RLS — existing `profiles` SELECT/UPDATE policies cover the column.                                                                                             |
+| File                            | Domain   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0000_blue_mother_askani.sql`   | `health` | Canonical owner-scoped RLS template (`health_pings`).                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `0001_account_registration.sql` | `auth`   | `profiles`, `auth_logs`, `auth_sessions`. Cross-schema FKs to `auth.users` (manual), `profiles.status` CHECK constraint, asymmetric RLS (no end-user INSERT/DELETE on `profiles`; SELECT-only on logs/sessions), and the `handle_new_user` / `handle_email_confirmed` SECURITY DEFINER triggers on `auth.users`.                                                                                                                                                                                  |
+| `0002_add_last_resend_at.sql`   | `auth`   | Adds nullable `profiles.last_resend_at` so `resendVerificationEmail` can enforce a per-user 60s server-side throttle (refresh-bypass fix). No new RLS — existing `profiles` SELECT/UPDATE policies cover the column.                                                                                                                                                                                                                                                                              |
+| `0003_login_hardening.sql`      | `auth`   | Login hardening: adds lockout columns to `profiles` (`failed_login_count`, `last_failed_login_at`, `lockout_until`, `consecutive_lockouts`, `requires_password_reset`) with partial index on `lockout_until`; creates `oauth_identities` table (SELECT-own RLS only, writes service-role); rewrites `handle_new_user()` to branch by provider (email/NULL inserts profile, OAuth providers skip); adds `purge_old_auth_logs()` SECURITY DEFINER retention function (not executable by end-users). |
+
+## Canonical `auth_logs.event` values
+
+The `event` column on `auth_logs` is free-text but applications MUST use the
+values below so dashboards, retention queries, and audit reports stay coherent:
+
+| Event                               | Description                                         |
+| ----------------------------------- | --------------------------------------------------- |
+| `signup_success`                    | Email signup completed (profile created by trigger) |
+| `signup_failure_duplicate_email`    | Signup rejected — email already in use              |
+| `signup_failure_duplicate_crp`      | Signup rejected — CRP already registered            |
+| `login_success`                     | Successful password login                           |
+| `login_failure_invalid_credentials` | Password mismatch                                   |
+| `login_failure_unverified`          | Email not yet verified                              |
+| `login_failure_locked`              | Account locked (lockout_until in the future)        |
+| `lockout_triggered`                 | Account locked after N consecutive failures         |
+| `lockout_released`                  | Lockout expired or manually cleared                 |
+| `password_reset_requested`          | User requested a password reset email               |
+| `password_reset_completed`          | Password successfully changed via reset flow        |
+| `password_reset_forced`             | Admin or system forced a password reset flag        |
+| `oauth_signup`                      | OAuth-based signup (no profile created by trigger)  |
+| `social_linked`                     | OAuth identity linked to existing account           |
+| `logout`                            | User-initiated sign-out                             |
+
+New events added by future changes MUST be appended to this table.
 
 ## Auth-domain RLS deviation from the canonical template
 

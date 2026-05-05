@@ -42,3 +42,14 @@ export const authSessionsPolicies = [
      FOR SELECT TO authenticated
      USING (auth.uid() = user_id);`,
 ] as const;
+
+// `oauth_identities` exposes only SELECT to end-users, scoped to their own
+// rows. INSERT/UPDATE/DELETE have no user-facing policy — writes are
+// exclusively performed by the service role (e.g., the OAuth linking Server
+// Action).
+export const oauthIdentitiesPolicies = [
+  `ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "oauth_identities_select_own" ON oauth_identities
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+] as const;
