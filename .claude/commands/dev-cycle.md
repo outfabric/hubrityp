@@ -263,7 +263,24 @@ if ! npx supabase status -o json >/dev/null 2>&1; then
   npm run supabase:reset
 fi
 
-# 2. App
+# 2. Inject Supabase keys into .env.local so the Next.js container picks them up.
+# docker-compose.yml only injects DATABASE_URL and NEXT_PUBLIC_SUPABASE_URL via
+# hardcoded service hostnames; ANON_KEY and SERVICE_ROLE_KEY must come from the
+# running CLI. We write them unconditionally (idempotent) — the values are stable
+# for the lifetime of the local stack.
+SUPABASE_STATUS_JSON=$(npx supabase status -o json)
+ANON_KEY=$(echo "$SUPABASE_STATUS_JSON" | jq -r '.ANON_KEY')
+SERVICE_ROLE_KEY=$(echo "$SUPABASE_STATUS_JSON" | jq -r '.SERVICE_ROLE_KEY')
+if [ -z "$ANON_KEY" ] || [ "$ANON_KEY" = "null" ]; then
+  echo "Could not read ANON_KEY from supabase status — aborting"; exit 1
+fi
+# Remove stale entries if present, then append current values.
+grep -v 'NEXT_PUBLIC_SUPABASE_ANON_KEY\|SUPABASE_SERVICE_ROLE_KEY' .env.local > .env.local.tmp 2>/dev/null || true
+mv .env.local.tmp .env.local 2>/dev/null || true
+printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
+  "$ANON_KEY" "$SERVICE_ROLE_KEY" >> .env.local
+
+# 3. App
 if ! curl -sf http://localhost:3000 >/dev/null; then
   if ! docker compose up -d; then
     exit 1
@@ -278,7 +295,7 @@ for i in $(seq 1 60); do
 done
 curl -sf http://localhost:3000 >/dev/null || { echo "App not reachable after 120s"; exit 1; }
 
-# 3. Persist marker (overwrites — fresh source of truth for step 5e).
+# 4. Persist marker (overwrites — fresh source of truth for step 5e).
 mkdir -p .dev-cycle
 cat > .dev-cycle/infra-owned.json <<EOF
 {

@@ -1,7 +1,7 @@
 ---
 name: "fullstack-developer"
 description: "Use este agente quando precisar implementar, refatorar ou depurar features full-stack em um projeto Next.js usando a stack do HubrityP (TypeScript, Supabase, Drizzle ORM, Tailwind, shadcn/ui, Inngest, etc.). Isso inclui construir componentes de UI, Server Actions, API Routes, schemas/migrations de banco, integrações com serviços externos e qualquer preocupação transversal que envolva frontend e backend."
-model: opus
+model: claude-opus-4-6
 color: yellow
 memory: project
 ---
