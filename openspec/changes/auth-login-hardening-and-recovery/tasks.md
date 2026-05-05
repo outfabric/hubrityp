@@ -9,6 +9,9 @@
 - [ ] 1.7 Rodar `npm run db:generate` e mesclar manualmente no arquivo `src/shared/db/migrations/0002_login_hardening.sql`: ALTERs de `profiles`, índice parcial `profiles_lockout_until_idx WHERE lockout_until IS NOT NULL`, CREATE TABLE `oauth_identities`, RLS, redefinição de `handle_new_user()` (REPLACE), CREATE FUNCTION `purge_old_auth_logs()`
 - [ ] 1.8 Aplicar `supabase db reset` + `npm run db:migrate` para validar a migration ponta-a-ponta
 - [ ] 1.9 Atualizar `src/shared/db/migrations/README.md` com a entrada da migration 0002 e o bloco de comentário documentando o set canônico de `auth_logs.event` (incluindo eventos novos: `login_*`, `lockout_*`, `password_reset_*`, `oauth_signup`, `social_linked`, `logout`)
+- [ ] 1.10 Teste de integração `src/__tests__/integration/oauth/handle-new-user-trigger.int.test.ts` — INSERT em `auth.users` com `provider='google'` não cria profile; com `provider='email'` cria como antes; provider NULL trata como email
+- [ ] 1.11 Teste de integração `src/__tests__/integration/data-layer/purge-old-auth-logs.int.test.ts` — com 10 logs >6 meses + 5 recentes, função retorna 10 e mantém só os recentes; tabela vazia retorna 0; usuário comum não pode chamar
+- [ ] 1.12 Teste de integração `src/__tests__/integration/oauth/rls-oauth-identities.int.test.ts` — userA não vê identities do userB; INSERT direto bloqueado para usuário; service role bypass
 
 ## 2. Validators puros
 
@@ -18,11 +21,17 @@
 - [ ] 2.4 Criar `src/modules/oauth/lib/link-account-input-schema.ts` com `{ password: z.string().min(1), pendingUserId: z.string().uuid() }`
 - [ ] 2.5 Criar `src/modules/oauth/lib/oauth-providers.ts` exportando o set válido (`['google'] as const`) e tipos
 - [ ] 2.6 Atualizar `src/modules/auth/lib/login-input-schema.ts` para incluir `keepLoggedIn: z.boolean().default(false)` e tipos derivados
+- [ ] 2.7 Teste unitário `src/__tests__/unit/password-recovery/forgot-password-input-schema.test.ts` — happy + email malformado
+- [ ] 2.8 Teste unitário `src/__tests__/unit/password-recovery/reset-password-input-schema.test.ts` — happy + cada classe de erro de senha + mismatch
+- [ ] 2.9 Teste unitário `src/__tests__/unit/oauth/complete-profile-input-schema.test.ts` — reuso dos validadores de CRP/UF/aceites
+- [ ] 2.10 Teste unitário `src/__tests__/unit/oauth/link-account-input-schema.test.ts` — uuid válido + senha presente
+- [ ] 2.11 Teste unitário `src/__tests__/unit/auth/login-input-schema.test.ts` — atualizar para incluir `keepLoggedIn` default e rejeição de não-boolean
 
 ## 3. Cookie sidecar e wrapper de Supabase
 
 - [ ] 3.1 Estender `src/shared/supabase/server.ts` (`createServerClient`) para ler o cookie `hp_keep_logged_in` no request e aplicar `Max-Age = 86400` ou omitir nos cookies Supabase ao escrevê-los
 - [ ] 3.2 Adicionar helper `src/shared/lib/cookies/keep-logged-in.ts` com `setKeepLoggedInCookie(response, value: boolean)` e `clearKeepLoggedInCookie(response)`
+- [ ] 3.3 Teste de integração `src/__tests__/integration/auth-hardening/keep-logged-in-cookie.int.test.ts` — `keepLoggedIn=true` produz Max-Age=86400 nos cookies; false produz session cookies; logout limpa
 
 ## 4. Resend helper
 
@@ -36,6 +45,9 @@
 - [ ] 5.1 Criar `src/modules/auth/server/lockout.ts` (não exposto no barrel) com função `applyFailedLoginAttempt(supabase, userId): Promise<{ failedLoginCount, lockoutUntil, requiresPasswordReset, lockoutJustStarted }>` executando o UPDATE atômico documentado em `design.md` D2 e retornando o estado pós-update
 - [ ] 5.2 Em `src/modules/auth/server/lockout.ts`, expor `resetLoginCounters(supabase, userId)` que zera `failed_login_count`, `consecutive_lockouts`, `lockout_until` (chamado em login bem-sucedido)
 - [ ] 5.3 Em `src/modules/auth/server/lockout.ts`, expor `isCurrentlyLockedOut(profile): { lockedOut: boolean; until?: Date }` (helper puro)
+- [ ] 5.4 Teste de integração `src/__tests__/integration/auth-hardening/lockout-atomic.int.test.ts` — 10 attempts paralelos contra mesmo user; assert `failed_login_count = 5` exatamente, lockout disparado uma única vez, log `lockout_started` único
+- [ ] 5.5 Teste de integração `src/__tests__/integration/auth-hardening/lockout-window.int.test.ts` — falha 4x, espera 16 min (mock NOW), falha 1x → não bloqueia (counter resetou); falha 5x dentro de 15 min → bloqueia
+- [ ] 5.6 Teste de integração `src/__tests__/integration/auth-hardening/lockout-consecutive.int.test.ts` — 3 lockouts consecutivos setam `requires_password_reset=true`; reset do lockout via reset de senha zera tudo
 
 ## 6. Auth module — signIn e signOut
 
@@ -43,6 +55,14 @@
 - [ ] 6.2 Em `signInImpl`, ao detectar `lockoutJustStarted`, disparar `sendAccountLockedEmail` best-effort (failure não derruba ação)
 - [ ] 6.3 Atualizar `src/modules/auth/lib/sign-in-result.ts` (criar se não existir) para o tipo de erro estendido: `'invalid_credentials' | 'locked_out' | 'requires_password_reset' | 'account_unavailable' | 'unknown'`, com `lockoutUntil?: string` em `locked_out`
 - [ ] 6.4 Reescrever `src/modules/auth/server/logout.ts` (`signOutImpl`) para chamar `supabase.auth.signOut({ scope: 'global' })`, UPDATE em `auth_sessions.revokedAt`, `clearKeepLoggedInCookie`, log `logout`, redirect `/login` (sem propagar exception se Supabase falhar — best-effort)
+- [ ] 6.5 Teste unitário `src/__tests__/unit/auth/sign-in-result.test.ts` — todos os 5 tipos de erro renderizam copy correta no helper de mapeamento
+- [ ] 6.6 Teste de integração `src/__tests__/integration/auth-hardening/anti-enumeration.int.test.ts` — 100 attempts mistos (50 emails reais, 50 inexistentes); assert `median(real) - median(fake) < 50ms`
+- [ ] 6.7 Teste de integração `src/__tests__/integration/auth-hardening/sign-in-status-aware.int.test.ts` — atualizar para cobrir `locked_out`, `requires_password_reset`, `account_unavailable`
+- [ ] 6.8 Teste de integração `src/__tests__/integration/auth-hardening/sign-out-global.int.test.ts` — após `signOut`, `auth_sessions.revokedAt` populated; segundo request com refresh token antigo é rejeitado por Supabase
+- [ ] 6.9 Teste de integração `src/__tests__/integration/data-layer/auth-logs-events-canonical.int.test.ts` — sentinel test que grep no source por strings passadas a `logAuthEvent` e valida set canônico
+- [ ] 6.10 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/lockout.spec.ts` — 5 logins falhos seguidos disparam lockout UI + e-mail no inbucket; 6º attempt mostra `locked_out`
+- [ ] 6.11 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/keep-logged-in.spec.ts` — checkbox marcado mantém sessão após reabrir browser context (Playwright storageState); não marcado, sessão é descartada
+- [ ] 6.12 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/logout-global.spec.ts` — duas pages com mesma sessão; logout em A faz B receber 307 para login no próximo request
 
 ## 7. Password-recovery module
 
@@ -51,6 +71,10 @@
 - [ ] 7.3 Criar `src/modules/password-recovery/components/forgot-password-form.tsx` (`'use client'`) com react-hook-form + Zod, `data-testid` correspondentes
 - [ ] 7.4 Criar `src/modules/password-recovery/components/reset-password-form.tsx` (`'use client'`) com lista de critérios em tempo real (reusa `passwordPolicy`), `data-testid`s
 - [ ] 7.5 Criar `src/modules/password-recovery/index.ts` exportando: `requestPasswordReset`, `resetPassword`, `ForgotPasswordForm`, `ResetPasswordForm`, schemas
+- [ ] 7.6 Teste de integração `src/__tests__/integration/password-recovery/request-password-reset.int.test.ts` — happy path chama Supabase resetPasswordForEmail; email inexistente noop com mesma resposta
+- [ ] 7.7 Teste de integração `src/__tests__/integration/password-recovery/reset-password.int.test.ts` — atualiza senha; revoga todas sessões; reseta lockout state; sendPasswordChangedEmail invocado (mock); banner redirect; senha fraca rejeitada
+- [ ] 7.8 Teste E2E `src/__tests__/e2e/seeded/password-recovery/forgot-and-reset.spec.ts` — fluxo completo: forgot → email no inbucket → click link → reset com senha forte → banner em /login → login com nova senha funciona
+- [ ] 7.9 Teste E2E `src/__tests__/e2e/seeded/password-recovery/anti-enumeration.spec.ts` — UI mostra mesma copy para email existente e inexistente
 
 ## 8. OAuth module
 
@@ -61,6 +85,12 @@
 - [ ] 8.5 Criar `src/modules/oauth/components/complete-profile-form.tsx` (`'use client'`) com email read-only e fullName pré-preenchido a partir de `user.user_metadata.full_name`
 - [ ] 8.6 Criar `src/modules/oauth/components/link-account-form.tsx` (`'use client'`) com campo senha + submit, copy genérica em erro
 - [ ] 8.7 Criar `src/modules/oauth/index.ts` exportando: `completeOAuthProfile`, `linkOAuthIdentity`, `resolveOAuthCallback`, `GoogleButton`, `CompleteProfileForm`, `LinkAccountForm`, schemas
+- [ ] 8.8 Teste de integração `src/__tests__/integration/oauth/complete-oauth-profile.int.test.ts` — happy path (cria profile + identity, status `pending_crp_validation`); duplicate CRP retorna typed error
+- [ ] 8.9 Teste de integração `src/__tests__/integration/oauth/link-oauth-identity.int.test.ts` — senha correta linka (deleta pendingUser, insere oauth_identity, redirect); senha incorreta retorna `invalid_credentials` e incrementa counter no user tradicional
+- [ ] 8.10 **[e2e helper]** `src/__tests__/e2e/seeded/_shared/google-oauth-stub.ts` que via `page.route()` intercepta `accounts.google.com` e callback do Supabase, retornando code controlado e identity sintética
+- [ ] 8.11 Teste E2E `src/__tests__/e2e/seeded/oauth/google-first-time.spec.ts` — stub retorna identity nova; UI redireciona para `/onboarding/complete-profile`; submit cria profile e identity; redirect `/onboarding/pending`
+- [ ] 8.12 Teste E2E `src/__tests__/e2e/seeded/oauth/google-link-account.spec.ts` — pré-seed conta tradicional; stub retorna mesmo email; UI redireciona para `/auth/link-account`; senha correta linka; redirect `/login?banner=account_linked`
+- [ ] 8.13 Teste E2E `src/__tests__/e2e/seeded/oauth/google-returning-active.spec.ts` — pré-seed user active com identity Google; stub retorna mesma identity; redirect direto `/dashboard`
 
 ## 9. LoginForm atualizado
 
@@ -80,12 +110,14 @@
 - [ ] 10.7 Criar `src/app/(app)/onboarding/complete-profile/actions.ts` com `'use server'` re-exportando `completeOAuthProfile`
 - [ ] 10.8 Criar `src/app/(auth)/auth/link-account/page.tsx` que lê `pendingUserId` da query, valida que existe e renderiza `<LinkAccountForm/>`
 - [ ] 10.9 Criar `src/app/(auth)/auth/link-account/actions.ts` com `'use server'` re-exportando `linkOAuthIdentity`
+- [ ] 10.10 Atualizar `playwright.seeded.config.ts` se necessário para incluir os novos subdirs
 
 ## 11. Middleware atualizado
 
 - [ ] 11.1 Atualizar `src/middleware.ts` para implementar a tabela de decisão completa: novos cases `requires_password_reset = true` (→ `/forgot-password`) e "session sem profile e provider != email" (→ `/onboarding/complete-profile`)
 - [ ] 11.2 Garantir que `/forgot-password`, `/reset-password`, `/auth/link-account` estão no matcher
 - [ ] 11.3 Helper `src/middleware.ts` (ou em `src/modules/auth/server/`) `hasOAuthIdentity(authUser): boolean` para distinguir "sem profile + OAuth" de "sem profile + race window de email signup"
+- [ ] 11.4 Teste de integração `src/__tests__/integration/middleware/middleware-status-gating-v2.int.test.ts` — atualizar combinatória para incluir `requires_password_reset = true` e "OAuth sem profile"
 
 ## 12. Configuração Supabase OAuth + env
 
@@ -99,47 +131,6 @@
 - [ ] 13.1 Adicionar seção "Wave-5 IDs (auth-login-hardening-and-recovery)" em `docs/design-system/testid.md` com todos os novos testids: `login-form-keep-logged-in`, `login-form-google-button`, `forgot-password-form-*`, `reset-password-form-*`, `complete-profile-form-*`, `link-account-form-*`, `auth-callback-error`/`auth-callback-resend` (se introduzido novo)
 - [ ] 13.2 Criar `docs/runbooks/oauth-smoke.md` com checklist manual para validar Google OAuth real (smoke pré-release; não automatizado)
 
-## 14. Testes unitários
+## 14. Validação final
 
-- [ ] 14.1 `src/__tests__/unit/password-recovery/forgot-password-input-schema.test.ts` — happy + email malformado
-- [ ] 14.2 `src/__tests__/unit/password-recovery/reset-password-input-schema.test.ts` — happy + cada classe de erro de senha + mismatch
-- [ ] 14.3 `src/__tests__/unit/oauth/complete-profile-input-schema.test.ts` — reuso dos validadores de CRP/UF/aceites
-- [ ] 14.4 `src/__tests__/unit/oauth/link-account-input-schema.test.ts` — uuid válido + senha presente
-- [ ] 14.5 `src/__tests__/unit/auth/sign-in-result.test.ts` — todos os 5 tipos de erro renderizam copy correta no helper de mapeamento
-- [ ] 14.6 `src/__tests__/unit/auth/login-input-schema.test.ts` — atualizar para incluir `keepLoggedIn` default e rejeição de não-boolean
-
-## 15. Testes de integração
-
-- [ ] 15.1 `src/__tests__/integration/auth-hardening/lockout-atomic.int.test.ts` — 10 attempts paralelos contra mesmo user; assert `failed_login_count = 5` exatamente, lockout disparado uma única vez, log `lockout_started` único
-- [ ] 15.2 `src/__tests__/integration/auth-hardening/lockout-window.int.test.ts` — falha 4x, espera 16 min (mock NOW), falha 1x → não bloqueia (counter resetou); falha 5x dentro de 15 min → bloqueia
-- [ ] 15.3 `src/__tests__/integration/auth-hardening/lockout-consecutive.int.test.ts` — 3 lockouts consecutivos setam `requires_password_reset=true`; reset do lockout via reset de senha zera tudo
-- [ ] 15.4 `src/__tests__/integration/auth-hardening/anti-enumeration.int.test.ts` — 100 attempts mistos (50 emails reais, 50 inexistentes); assert `median(real) - median(fake) < 50ms`
-- [ ] 15.5 `src/__tests__/integration/auth-hardening/sign-in-status-aware.int.test.ts` — atualizar para cobrir `locked_out`, `requires_password_reset`, `account_unavailable`
-- [ ] 15.6 `src/__tests__/integration/auth-hardening/sign-out-global.int.test.ts` — após `signOut`, `auth_sessions.revokedAt` populated; segundo request com refresh token antigo é rejeitado por Supabase
-- [ ] 15.7 `src/__tests__/integration/password-recovery/request-password-reset.int.test.ts` — happy path chama Supabase resetPasswordForEmail; email inexistente noop com mesma resposta
-- [ ] 15.8 `src/__tests__/integration/password-recovery/reset-password.int.test.ts` — atualiza senha; revoga todas sessões; reseta lockout state; sendPasswordChangedEmail invocado (mock); banner redirect; senha fraca rejeitada
-- [ ] 15.9 `src/__tests__/integration/oauth/handle-new-user-trigger.int.test.ts` — INSERT em `auth.users` com `provider='google'` não cria profile; com `provider='email'` cria como antes; provider NULL trata como email
-- [ ] 15.10 `src/__tests__/integration/oauth/complete-oauth-profile.int.test.ts` — happy path (cria profile + identity, status `pending_crp_validation`); duplicate CRP retorna typed error
-- [ ] 15.11 `src/__tests__/integration/oauth/link-oauth-identity.int.test.ts` — senha correta linka (deleta pendingUser, insere oauth_identity, redirect); senha incorreta retorna `invalid_credentials` e incrementa counter no user tradicional
-- [ ] 15.12 `src/__tests__/integration/oauth/rls-oauth-identities.int.test.ts` — userA não vê identities do userB; INSERT direto bloqueado para usuário; service role bypass
-- [ ] 15.13 `src/__tests__/integration/auth-hardening/keep-logged-in-cookie.int.test.ts` — `keepLoggedIn=true` produz Max-Age=86400 nos cookies; false produz session cookies; logout limpa
-- [ ] 15.14 `src/__tests__/integration/data-layer/purge-old-auth-logs.int.test.ts` — com 10 logs >6 meses + 5 recentes, função retorna 10 e mantém só os recentes; tabela vazia retorna 0; usuário comum não pode chamar
-- [ ] 15.15 `src/__tests__/integration/middleware/middleware-status-gating-v2.int.test.ts` — atualizar combinatória para incluir `requires_password_reset = true` e "OAuth sem profile"
-- [ ] 15.16 `src/__tests__/integration/data-layer/auth-logs-events-canonical.int.test.ts` — sentinel test que grep no source por strings passadas a `logAuthEvent` e valida set canônico
-
-## 16. Testes E2E seeded
-
-- [ ] 16.1 Helper `src/__tests__/e2e/seeded/_shared/google-oauth-stub.ts` que via `page.route()` intercepta `accounts.google.com` e callback do Supabase, retornando code controlado e identity sintética
-- [ ] 16.2 `src/__tests__/e2e/seeded/auth-hardening/lockout.spec.ts` — 5 logins falhos seguidos disparam lockout UI + e-mail no inbucket; 6º attempt mostra `locked_out`
-- [ ] 16.3 `src/__tests__/e2e/seeded/auth-hardening/keep-logged-in.spec.ts` — checkbox marcado mantém sessão após reabrir browser context (Playwright storageState); não marcado, sessão é descartada
-- [ ] 16.4 `src/__tests__/e2e/seeded/auth-hardening/logout-global.spec.ts` — duas pages com mesma sessão; logout em A faz B receber 307 para login no próximo request
-- [ ] 16.5 `src/__tests__/e2e/seeded/password-recovery/forgot-and-reset.spec.ts` — fluxo completo: forgot → email no inbucket → click link → reset com senha forte → banner em /login → login com nova senha funciona
-- [ ] 16.6 `src/__tests__/e2e/seeded/password-recovery/anti-enumeration.spec.ts` — UI mostra mesma copy para email existente e inexistente
-- [ ] 16.7 `src/__tests__/e2e/seeded/oauth/google-first-time.spec.ts` — stub retorna identity nova; UI redireciona para `/onboarding/complete-profile`; submit cria profile e identity; redirect `/onboarding/pending`
-- [ ] 16.8 `src/__tests__/e2e/seeded/oauth/google-link-account.spec.ts` — pré-seed conta tradicional; stub retorna mesmo email; UI redireciona para `/auth/link-account`; senha correta linka; redirect `/login?banner=account_linked`
-- [ ] 16.9 `src/__tests__/e2e/seeded/oauth/google-returning-active.spec.ts` — pré-seed user active com identity Google; stub retorna mesma identity; redirect direto `/dashboard`
-- [ ] 16.10 Atualizar `playwright.seeded.config.ts` se necessário para incluir os novos subdirs
-
-## 17. Validação final
-
-- [ ] 17.5 `openspec validate auth-login-hardening-and-recovery --strict` retorna OK
+- [ ] 14.1 `openspec validate auth-login-hardening-and-recovery --strict` retorna OK
