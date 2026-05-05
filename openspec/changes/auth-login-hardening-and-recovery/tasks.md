@@ -51,18 +51,18 @@
 
 ## 6. Auth module — signIn e signOut
 
-- [ ] 6.1 Reescrever `src/modules/auth/server/login.ts` (`signInImpl`) para: parsear `loginInputSchema` com `keepLoggedIn`; lookup profile pelo email; se `lockout_until > NOW()` → retornar `locked_out`; se `requires_password_reset` → retornar `requires_password_reset` (após sign-in succeed e signOut); chamar `signInWithPassword`; em sucesso, executar status-aware redirect existente + `setKeepLoggedInCookie` + `resetLoginCounters` + log `login_success`; em falha, `applyFailedLoginAttempt` (se profile existe) + dummy bcrypt-compare (se não existe) + log `login_failure` + retornar `invalid_credentials` ou `locked_out` se a UPDATE atômica acabou de bloquear
-- [ ] 6.2 Em `signInImpl`, ao detectar `lockoutJustStarted`, disparar `sendAccountLockedEmail` best-effort (failure não derruba ação)
-- [ ] 6.3 Atualizar `src/modules/auth/lib/sign-in-result.ts` (criar se não existir) para o tipo de erro estendido: `'invalid_credentials' | 'locked_out' | 'requires_password_reset' | 'account_unavailable' | 'unknown'`, com `lockoutUntil?: string` em `locked_out`
-- [ ] 6.4 Reescrever `src/modules/auth/server/logout.ts` (`signOutImpl`) para chamar `supabase.auth.signOut({ scope: 'global' })`, UPDATE em `auth_sessions.revokedAt`, `clearKeepLoggedInCookie`, log `logout`, redirect `/login` (sem propagar exception se Supabase falhar — best-effort)
-- [ ] 6.5 Teste unitário `src/__tests__/unit/auth/sign-in-result.test.ts` — todos os 5 tipos de erro renderizam copy correta no helper de mapeamento
-- [ ] 6.6 Teste de integração `src/__tests__/integration/auth-hardening/anti-enumeration.int.test.ts` — 100 attempts mistos (50 emails reais, 50 inexistentes); assert `median(real) - median(fake) < 50ms`
-- [ ] 6.7 Teste de integração `src/__tests__/integration/auth-hardening/sign-in-status-aware.int.test.ts` — atualizar para cobrir `locked_out`, `requires_password_reset`, `account_unavailable`
-- [ ] 6.8 Teste de integração `src/__tests__/integration/auth-hardening/sign-out-global.int.test.ts` — após `signOut`, `auth_sessions.revokedAt` populated; segundo request com refresh token antigo é rejeitado por Supabase
-- [ ] 6.9 Teste de integração `src/__tests__/integration/data-layer/auth-logs-events-canonical.int.test.ts` — sentinel test que grep no source por strings passadas a `logAuthEvent` e valida set canônico
-- [ ] 6.10 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/lockout.spec.ts` — 5 logins falhos seguidos disparam lockout UI + e-mail no inbucket; 6º attempt mostra `locked_out`
-- [ ] 6.11 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/keep-logged-in.spec.ts` — checkbox marcado mantém sessão após reabrir browser context (Playwright storageState); não marcado, sessão é descartada
-- [ ] 6.12 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/logout-global.spec.ts` — duas pages com mesma sessão; logout em A faz B receber 307 para login no próximo request
+- [x] 6.1 Reescrever `src/modules/auth/server/login.ts` (`signInImpl`) para: parsear `loginInputSchema` com `keepLoggedIn`; lookup profile pelo email; se `lockout_until > NOW()` → retornar `locked_out`; se `requires_password_reset` → retornar `requires_password_reset` (após sign-in succeed e signOut); chamar `signInWithPassword`; em sucesso, executar status-aware redirect existente + `setKeepLoggedInCookie` + `resetLoginCounters` + log `login_success`; em falha, `applyFailedLoginAttempt` (se profile existe) + dummy bcrypt-compare (se não existe) + log `login_failure` + retornar `invalid_credentials` ou `locked_out` se a UPDATE atômica acabou de bloquear
+- [x] 6.2 Em `signInImpl`, ao detectar `lockoutJustStarted`, disparar `sendAccountLockedEmail` best-effort (failure não derruba ação)
+- [x] 6.3 Atualizar `src/modules/auth/lib/sign-in-result.ts` (criar se não existir) para o tipo de erro estendido: `'invalid_credentials' | 'locked_out' | 'requires_password_reset' | 'account_unavailable' | 'unknown'`, com `lockoutUntil?: string` em `locked_out`
+- [x] 6.4 Reescrever `src/modules/auth/server/logout.ts` (`signOutImpl`) para chamar `supabase.auth.signOut({ scope: 'global' })`, UPDATE em `auth_sessions.revokedAt`, `clearKeepLoggedInCookie`, log `logout`, redirect `/login` (sem propagar exception se Supabase falhar — best-effort)
+- [x] 6.5 Teste unitário `src/__tests__/unit/auth/sign-in-result.test.ts` — todos os 5 tipos de erro renderizam copy correta no helper de mapeamento
+- [x] 6.6 Teste de integração `src/__tests__/integration/auth-hardening/anti-enumeration.int.test.ts` — 100 attempts mistos (50 emails reais, 50 inexistentes); assert `median(real) - median(fake) < 50ms`
+- [x] 6.7 Teste de integração `src/__tests__/integration/auth-hardening/sign-in-status-aware.int.test.ts` — atualizar para cobrir `locked_out`, `requires_password_reset`, `account_unavailable`
+- [x] 6.8 Teste de integração `src/__tests__/integration/auth-hardening/sign-out-global.int.test.ts` — após `signOut`, `auth_sessions.revokedAt` populated; segundo request com refresh token antigo é rejeitado por Supabase
+- [x] 6.9 Teste de integração `src/__tests__/integration/data-layer/auth-logs-events-canonical.int.test.ts` — sentinel test que grep no source por strings passadas a `logAuthEvent` e valida set canônico
+- [x] 6.10 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/lockout.spec.ts` — 5 logins falhos seguidos disparam lockout UI + e-mail no inbucket; 6º attempt mostra `locked_out`
+- [x] 6.11 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/keep-logged-in.spec.ts` — checkbox marcado mantém sessão após reabrir browser context (Playwright storageState); não marcado, sessão é descartada
+- [x] 6.12 Teste E2E `src/__tests__/e2e/seeded/auth-hardening/logout-global.spec.ts` — duas pages com mesma sessão; logout em A faz B receber 307 para login no próximo request
 
 ## 7. Password-recovery module
 

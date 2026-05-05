@@ -48,6 +48,19 @@ vi.mock('@/shared/supabase/server', () => ({
   }),
 }));
 
+// Mock cookies for setKeepLoggedInCookie / clearKeepLoggedInCookie
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+  }),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+// Mock sendAccountLockedEmail — best-effort, not tested here
+vi.mock('@/shared/lib/mail/send-account-locked', () => ({
+  sendAccountLockedEmail: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
 beforeEach(() => {
   signInWithPasswordMock.mockReset();
   signOutMock.mockReset();

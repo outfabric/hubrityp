@@ -42,6 +42,42 @@ vi.mock('@/modules/registration', async (importOriginal) => {
   };
 });
 
+// Mock dependencies introduced by the login hardening rewrite. These are
+// needed because `signInImpl` now imports `db` for profile lookup, cookies
+// for keepLoggedIn, logAuthEvent for audit logging, and sendAccountLockedEmail.
+vi.mock('@/shared/db/client', () => ({
+  db: {
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    }),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+    }),
+    execute: vi.fn().mockResolvedValue([]),
+  },
+}));
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+  }),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+vi.mock('@/modules/registration/server/log-auth-event', () => ({
+  logAuthEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/shared/lib/mail/send-account-locked', () => ({
+  sendAccountLockedEmail: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
 beforeEach(() => {
   signInWithPasswordMock.mockReset();
   signOutMock.mockReset();

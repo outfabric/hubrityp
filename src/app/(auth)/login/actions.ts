@@ -12,7 +12,7 @@
 
 import { signIn as signInImpl } from '@/modules/auth';
 
-export type { SignInResult } from '@/modules/auth';
+export type { SignInResult, SignInError } from '@/modules/auth';
 
 export async function signIn(formData: FormData) {
   return signInImpl(formData);

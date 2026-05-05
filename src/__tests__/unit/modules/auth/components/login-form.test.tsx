@@ -63,7 +63,7 @@ describe('LoginForm', () => {
     render(<LoginForm initialState={{ ok: false, error: 'unknown' }} />);
     const error = screen.getByTestId('login-form-error');
     expect(error).toBeInTheDocument();
-    expect(error).toHaveTextContent('Erro inesperado, tente novamente.');
+    expect(error).toHaveTextContent('Algo deu errado. Tente novamente.');
   });
 
   it('renders the account_unavailable message when initialState carries that error', () => {

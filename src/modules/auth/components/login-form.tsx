@@ -13,8 +13,10 @@ import { useForm } from 'react-hook-form';
 // drag the `import 'server-only'` chain (logger, supabase server client) into
 // the browser bundle and the RSC boundary checker would (correctly) refuse
 // the build. The route shell stays the single client-facing action surface.
-import { signIn, type SignInResult } from '@/app/(auth)/login/actions';
+import { signIn } from '@/app/(auth)/login/actions';
 import { loginInputSchema, type LoginFormInput } from '@/modules/auth/lib/login-input-schema';
+import type { SignInResult } from '@/modules/auth/lib/sign-in-result';
+import { SIGN_IN_ERROR_MESSAGES } from '@/modules/auth/lib/sign-in-result';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -34,21 +36,10 @@ export type LoginFormProps = {
   initialState?: SignInResult | null;
 };
 
-// pt-BR copy for each `SignInResult` error variant. The keys MUST match the
-// `error` literal union exactly — adding a new variant to `SignInResult`
-// without a key here is a TypeScript error at the lookup site below, which
-// is the intentional safety net.
-//
-// `account_unavailable` is rendered when the user authenticated successfully
-// but their `profiles.status` is `suspended` or `cancelled`. We deliberately
-// avoid leaking which of those two statuses the account is in — both states
-// route to the same support flow, and naming "suspended" vs. "cancelled"
-// invites guesswork by the user instead of triage by support.
-const ERROR_MESSAGES = {
-  invalid_credentials: 'E-mail ou senha incorretos.',
-  account_unavailable: 'Esta conta não está disponível. Entre em contato com o suporte.',
-  unknown: 'Erro inesperado, tente novamente.',
-} as const;
+// pt-BR copy sourced from the canonical `SIGN_IN_ERROR_MESSAGES` map in
+// `sign-in-result.ts`. This is the single source of truth for error copy;
+// the keys match `SignInError` exactly so a new variant forces a compile
+// error if the map is not updated.
 
 export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(signInAction, initialState);
@@ -73,7 +64,8 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
   // for the previous attempt; it just yields visual priority to whatever
   // the user is currently typing.
   const hasFieldError = Boolean(emailFieldError ?? passwordFieldError);
-  const errorMessage = state && !state.ok && !hasFieldError ? ERROR_MESSAGES[state.error] : null;
+  const errorMessage =
+    state && !state.ok && !hasFieldError ? SIGN_IN_ERROR_MESSAGES[state.error] : null;
 
   return (
     <form action={formAction} className="space-y-4" noValidate>

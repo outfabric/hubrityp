@@ -81,6 +81,10 @@ export type MockGoTrueOptions = {
   // Defaults to `54321` (the same port a local `supabase start` exposes
   // and the value `src/shared/env/client.ts` validates for in CI builds).
   port?: number;
+  // Fixed password for the seeded user. When set, `POST /auth/v1/token`
+  // validates the password against this value. When omitted, any password
+  // is accepted for the seeded user's email (backward-compatible).
+  fixedPassword?: string;
 };
 
 // Defaults wired in when the caller does not supply overrides. Picking a
@@ -98,7 +102,18 @@ export async function startMockGotrue(options: MockGoTrueOptions = {}): Promise<
   // `_callRefreshToken`. Reused verbatim if the caller passed `fixedToken`.
   const jwt = options.fixedToken ?? buildDefaultJwt(user);
 
-  const server = createServer((req, res) => handleRequest(req, res, { fixedToken: jwt, user }));
+  const server = createServer((req, res) => {
+    handleRequest(req, res, {
+      fixedToken: jwt,
+      user,
+      fixedPassword: options.fixedPassword,
+    }).catch(() => {
+      if (!res.headersSent) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: 'internal mock error' }));
+      }
+    });
+  });
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -128,13 +143,14 @@ export async function startMockGotrue(options: MockGoTrueOptions = {}): Promise<
 type ResolvedRequestContext = {
   fixedToken: string;
   user: MockGoTrueUser;
+  fixedPassword?: string;
 };
 
-function handleRequest(
+async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
   context: ResolvedRequestContext,
-): void {
+): Promise<void> {
   const method = req.method ?? 'GET';
   const rawUrl = req.url ?? '/';
   const path = rawUrl.split('?')[0] ?? '/';
@@ -212,6 +228,49 @@ function handleRequest(
     return;
   }
 
+  // `POST /auth/v1/token?grant_type=password` is the endpoint
+  // `signInWithPassword` calls. The mock accepts the seeded user's email
+  // and returns a valid session; any other email gets a 400 Bad Request
+  // matching real GoTrue's invalid-credentials response.
+  if (method === 'POST' && path === '/auth/v1/token') {
+    const body = await readBody(req);
+    let parsed: { email?: string; password?: string } = {};
+    try {
+      parsed = JSON.parse(body) as { email?: string; password?: string };
+    } catch {
+      respondJson(res, 400, { error: 'invalid_grant', error_description: 'Invalid request body' });
+      return;
+    }
+
+    // If a fixedPassword is set, validate both email and password.
+    // If no fixedPassword, accept any password for the seeded user email
+    // (backward-compatible with the existing E2E suite).
+    const passwordOk = context.fixedPassword ? parsed.password === context.fixedPassword : true;
+
+    if (parsed.email === context.user.email && passwordOk) {
+      const nowIso = new Date().toISOString();
+      const nowSec = Math.floor(Date.now() / 1000);
+      respondJson(res, 200, {
+        access_token: context.fixedToken,
+        token_type: 'bearer',
+        expires_in: 60 * 60 * 24 * 30,
+        expires_at: nowSec + 60 * 60 * 24 * 30,
+        refresh_token: 'mock-refresh-token',
+        user: {
+          ...context.user,
+          last_sign_in_at: nowIso,
+        },
+      });
+      return;
+    }
+
+    respondJson(res, 400, {
+      error: 'invalid_grant',
+      error_description: 'Invalid login credentials',
+    });
+    return;
+  }
+
   respondJson(res, 404, { code: 404, msg: 'mock-gotrue: route not found', method, path });
 }
 
@@ -239,6 +298,15 @@ function buildSeededProfileRow(user: MockGoTrueUser): Record<string, unknown> {
     created_at: now,
     updated_at: now,
   };
+}
+
+function readBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
 }
 
 function respondJson(res: ServerResponse, status: number, body: unknown): void {

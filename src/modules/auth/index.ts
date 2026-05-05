@@ -26,5 +26,12 @@ export { safeRedirect } from './lib/safe-redirect';
 
 export { LoginForm, type LoginFormProps } from './components/login-form';
 
-export { signInImpl as signIn, type SignInResult } from './server/login';
+export {
+  type SignInError,
+  type SignInResult,
+  SIGN_IN_ERROR_MESSAGES,
+  getSignInErrorMessage,
+} from './lib/sign-in-result';
+
+export { signInImpl as signIn } from './server/login';
 export { signOutImpl as signOut } from './server/logout';
