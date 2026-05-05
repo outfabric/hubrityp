@@ -35,10 +35,10 @@
 
 ## 4. Resend helper
 
-- [ ] 4.1 Criar `src/shared/lib/mail/resend.ts` com função `sendEmailViaResend({ to, from, subject, html, text })` usando `fetch` para `https://api.resend.com/emails`, headers de auth via `process.env.RESEND_API_KEY`
-- [ ] 4.2 Criar `src/shared/lib/mail/send-password-changed.ts` que renderiza template pt-BR ("Sua senha foi alterada") e chama `sendEmailViaResend`; em dev sem `RESEND_API_KEY`, loga warning via pino e retorna `{ ok: true, skipped: true }`
-- [ ] 4.3 Criar `src/shared/lib/mail/send-account-locked.ts` (mesmo padrão) com template "Sua conta foi temporariamente bloqueada"
-- [ ] 4.4 Adicionar `RESEND_API_KEY` ao schema `src/shared/env/schemas.ts` como string opcional, documentar em `.env.local.example`
+- [x] 4.1 Criar `src/shared/lib/mail/resend.ts` com função `sendEmailViaResend({ to, from, subject, html, text })` usando `fetch` para `https://api.resend.com/emails`, headers de auth via `process.env.RESEND_API_KEY`
+- [x] 4.2 Criar `src/shared/lib/mail/send-password-changed.ts` que renderiza template pt-BR ("Sua senha foi alterada") e chama `sendEmailViaResend`; em dev sem `RESEND_API_KEY`, loga warning via pino e retorna `{ ok: true, skipped: true }`
+- [x] 4.3 Criar `src/shared/lib/mail/send-account-locked.ts` (mesmo padrão) com template "Sua conta foi temporariamente bloqueada"
+- [x] 4.4 Adicionar `RESEND_API_KEY` ao schema `src/shared/env/schemas.ts` como string opcional, documentar em `.env.local.example`
 
 ## 5. Lockout state machine
 
