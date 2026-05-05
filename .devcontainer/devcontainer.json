@@ -8,7 +8,10 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "dockerDashComposeVersion": "v2",
       "installDockerBuildx": true
-    }
+    },
+    // GitHub CLI: necessário para gh pr create no step 8c do dev-cycle.
+    // Auth vem do bind-mount de ~/.config/gh.
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
   // Monta o DIRETÓRIO PAI do repo em /workspaces.
