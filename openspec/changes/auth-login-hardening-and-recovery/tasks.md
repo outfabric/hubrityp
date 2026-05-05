@@ -15,17 +15,17 @@
 
 ## 2. Validators puros
 
-- [ ] 2.1 Criar `src/modules/password-recovery/lib/forgot-password-input-schema.ts` com Zod schema `{ email: emailRfc }`
-- [ ] 2.2 Criar `src/modules/password-recovery/lib/reset-password-input-schema.ts` reusando `passwordPolicy` do `@/modules/registration` + confirmação igual
-- [ ] 2.3 Criar `src/modules/oauth/lib/complete-profile-input-schema.ts` reusando validadores de CRP/UF/aceites/nome do `@/modules/registration` (sem email/senha — sessão já existe)
-- [ ] 2.4 Criar `src/modules/oauth/lib/link-account-input-schema.ts` com `{ password: z.string().min(1), pendingUserId: z.string().uuid() }`
-- [ ] 2.5 Criar `src/modules/oauth/lib/oauth-providers.ts` exportando o set válido (`['google'] as const`) e tipos
-- [ ] 2.6 Atualizar `src/modules/auth/lib/login-input-schema.ts` para incluir `keepLoggedIn: z.boolean().default(false)` e tipos derivados
-- [ ] 2.7 Teste unitário `src/__tests__/unit/password-recovery/forgot-password-input-schema.test.ts` — happy + email malformado
-- [ ] 2.8 Teste unitário `src/__tests__/unit/password-recovery/reset-password-input-schema.test.ts` — happy + cada classe de erro de senha + mismatch
-- [ ] 2.9 Teste unitário `src/__tests__/unit/oauth/complete-profile-input-schema.test.ts` — reuso dos validadores de CRP/UF/aceites
-- [ ] 2.10 Teste unitário `src/__tests__/unit/oauth/link-account-input-schema.test.ts` — uuid válido + senha presente
-- [ ] 2.11 Teste unitário `src/__tests__/unit/auth/login-input-schema.test.ts` — atualizar para incluir `keepLoggedIn` default e rejeição de não-boolean
+- [x] 2.1 Criar `src/modules/password-recovery/lib/forgot-password-input-schema.ts` com Zod schema `{ email: emailRfc }`
+- [x] 2.2 Criar `src/modules/password-recovery/lib/reset-password-input-schema.ts` reusando `passwordPolicy` do `@/modules/registration` + confirmação igual
+- [x] 2.3 Criar `src/modules/oauth/lib/complete-profile-input-schema.ts` reusando validadores de CRP/UF/aceites/nome do `@/modules/registration` (sem email/senha — sessão já existe)
+- [x] 2.4 Criar `src/modules/oauth/lib/link-account-input-schema.ts` com `{ password: z.string().min(1), pendingUserId: z.string().uuid() }`
+- [x] 2.5 Criar `src/modules/oauth/lib/oauth-providers.ts` exportando o set válido (`['google'] as const`) e tipos
+- [x] 2.6 Atualizar `src/modules/auth/lib/login-input-schema.ts` para incluir `keepLoggedIn: z.boolean().default(false)` e tipos derivados
+- [x] 2.7 Teste unitário `src/__tests__/unit/password-recovery/forgot-password-input-schema.test.ts` — happy + email malformado
+- [x] 2.8 Teste unitário `src/__tests__/unit/password-recovery/reset-password-input-schema.test.ts` — happy + cada classe de erro de senha + mismatch
+- [x] 2.9 Teste unitário `src/__tests__/unit/oauth/complete-profile-input-schema.test.ts` — reuso dos validadores de CRP/UF/aceites
+- [x] 2.10 Teste unitário `src/__tests__/unit/oauth/link-account-input-schema.test.ts` — uuid válido + senha presente
+- [x] 2.11 Teste unitário `src/__tests__/unit/auth/login-input-schema.test.ts` — atualizar para incluir `keepLoggedIn` default e rejeição de não-boolean
 
 ## 3. Cookie sidecar e wrapper de Supabase
 

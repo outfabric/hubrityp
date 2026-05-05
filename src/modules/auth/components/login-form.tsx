@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 // the browser bundle and the RSC boundary checker would (correctly) refuse
 // the build. The route shell stays the single client-facing action surface.
 import { signIn, type SignInResult } from '@/app/(auth)/login/actions';
-import { loginInputSchema, type LoginInput } from '@/modules/auth/lib/login-input-schema';
+import { loginInputSchema, type LoginFormInput } from '@/modules/auth/lib/login-input-schema';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -56,10 +56,10 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
   const {
     register,
     formState: { errors },
-  } = useForm<LoginInput>({
+  } = useForm<LoginFormInput>({
     resolver: zodResolver(loginInputSchema),
     mode: 'onBlur',
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', keepLoggedIn: false },
   });
 
   const emailFieldError = errors.email?.message;

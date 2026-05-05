@@ -20,7 +20,7 @@
 // from the route shell (`@/app/(auth)/login/actions`) which Next.js compiles
 // into a client-safe RPC stub.
 
-export { loginInputSchema, type LoginInput } from './lib/login-input-schema';
+export { loginInputSchema, type LoginInput, type LoginFormInput } from './lib/login-input-schema';
 export { mapSupabaseUser, type AppUser } from './lib/map-supabase-user';
 export { safeRedirect } from './lib/safe-redirect';
 

@@ -35,6 +35,7 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
   const parsed = loginInputSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
+    keepLoggedIn: formData.get('keepLoggedIn') === 'true',
   });
 
   if (!parsed.success) {
@@ -61,7 +62,8 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
   let supabaseError: { name?: string; message?: string } | null = null;
   let redirectTarget: string | null = null;
   try {
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { email, password } = parsed.data;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     supabaseError = error;
 
     if (!supabaseError) {

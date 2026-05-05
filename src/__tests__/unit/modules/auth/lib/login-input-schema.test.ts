@@ -99,4 +99,67 @@ describe('loginInputSchema', () => {
     const fieldErrors = result.error.flatten().fieldErrors;
     expect(fieldErrors.email).toContain('Informe seu e-mail.');
   });
+
+  describe('keepLoggedIn field', () => {
+    it('defaults keepLoggedIn to false when not provided', () => {
+      const result = loginInputSchema.safeParse({
+        email: 'a@b.co',
+        password: '12345678',
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.keepLoggedIn).toBe(false);
+    });
+
+    it('accepts keepLoggedIn: true', () => {
+      const result = loginInputSchema.safeParse({
+        email: 'a@b.co',
+        password: '12345678',
+        keepLoggedIn: true,
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.keepLoggedIn).toBe(true);
+    });
+
+    it('accepts keepLoggedIn: false explicitly', () => {
+      const result = loginInputSchema.safeParse({
+        email: 'a@b.co',
+        password: '12345678',
+        keepLoggedIn: false,
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.keepLoggedIn).toBe(false);
+    });
+
+    it('rejects a non-boolean keepLoggedIn value (string)', () => {
+      const result = loginInputSchema.safeParse({
+        email: 'a@b.co',
+        password: '12345678',
+        keepLoggedIn: 'true',
+      });
+
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      const fieldErrors = result.error.flatten().fieldErrors;
+      expect(fieldErrors.keepLoggedIn?.length ?? 0).toBeGreaterThan(0);
+    });
+
+    it('rejects a non-boolean keepLoggedIn value (number)', () => {
+      const result = loginInputSchema.safeParse({
+        email: 'a@b.co',
+        password: '12345678',
+        keepLoggedIn: 1,
+      });
+
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      const fieldErrors = result.error.flatten().fieldErrors;
+      expect(fieldErrors.keepLoggedIn?.length ?? 0).toBeGreaterThan(0);
+    });
+  });
 });
