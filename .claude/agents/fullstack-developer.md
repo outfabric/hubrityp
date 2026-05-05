@@ -153,7 +153,7 @@ Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta 
 - `worktree_path` (sempre) — caminho absoluto do git worktree dedicado a esta change. **Toda** edição de arquivo e **todo** comando bash deve operar dentro dele. Em bash, prefixe com `cd <worktree_path> && ...` (ou `git -C <worktree_path> ...`). Nunca toque na working tree principal do repo.
 - `section` (modo section) — texto literal de uma seção do `tasks.md` (`## N. Título` + todas as linhas `- [ ] N.M ...` daquela seção, mais qualquer prosa entre elas). **Implemente TODAS as subtasks da seção como uma unidade de trabalho** — não pause entre subtasks, não rode re-validação após cada subtask. Você decide quais camadas de teste cobrem o **conjunto** da seção usando a tabela da §5 de `docs/dev-cycle.md` (lógica pura → unit; Server Action/RLS/migration → unit + integration; fluxo crítico de UI → unit + integration + e2e). Tipicamente uma seção mistura naturezas — selecione o **superset** das camadas necessárias. Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em section mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta seção; o orquestrador commita um WIP entre seções, então `HEAD` reflete o fim da seção anterior).
 - `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
-- `changed_files` (modo fix) — lista de paths já calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`); use exatamente esta lista no `--related` do Vitest. (Em section mode, você calcula localmente — ver acima.)
+- `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`); use para os **fallback signal checks** (contagem de arquivos, padrões de path). Para o comando de integration test, use `--changed <fix-base>` — não `--related` (que é subcomando, não flag do `vitest run`). (Em section mode, você não recebe este campo — use `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
 - `affected_e2e_tags` (modo fix) — lista de tags `@<dominio>` para passar a `--grep` do Playwright. Se a lista estiver vazia, faça fallback para suíte E2E completa. (Em section mode, infira a tag a partir dos paths tocados: `src/app/(app)/<dominio>/**` → `@<dominio>`. Se nenhuma subtask da seção toca UI crítico, **pule e2e** — a tabela da §5 governa.)
 - `mode: sweep` (modo sweep) — marca a invocação como regression sweep do step 3.bis. Em modo sweep você é **read-only**: só roda os comandos pedidos e devolve veredicto, sem modificar código.
 - `e2e_required` (modo sweep) — boolean. Se `true`, rode `npm run test:e2e:seeded` full além do integration. Se `false`, só integration.
@@ -183,14 +183,14 @@ Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (
 
 1. **Full**: `npm run lint && npm run typecheck`. Lint é barato (~10s); typecheck é whole-program e não vale escopar. Falhou aqui? Corrija e tente de novo (cap 3) antes do passo 2.
 2. **Full**: `npm run test:unit`. A suíte unit inteira é barata (<30s típico) e captura regressões cruzadas sem custo de escopar — vale rodar full mesmo em section mode pra ter um safety net por seção.
-3. **Escopado**: `npm run test:integration -- --related $CHANGED_FILES`. `$CHANGED_FILES` vem de:
-   - **Modo section**: `git -C <worktree_path> diff HEAD --name-only` (calculado por você).
-   - **Modo fix**: lista injetada pelo orquestrador.
+3. **Escopado** (`--changed` é flag válida do `vitest run`; `related` é subcomando separado e não funciona via `npm run test:integration --`):
+   - **Modo section**: `npm run test:integration -- --changed` (sem valor = uncommitted changes; o worktree contém só o trabalho desta seção).
+   - **Modo fix**: `npm run test:integration -- --changed <fix-base>` onde `<fix-base>` é o SHA injetado pelo orquestrador no step 6.1.
 
-   Se Vitest não conseguir resolver o grafo (imports dinâmicos) ou retornar zero testes onde algo claramente deveria rodar, faça fallback para `npm run test:integration` full e anuncie.
-4. **Escopado**: `npm run test:e2e -- --grep "<affected_e2e_tags>"`.
+   Se `--changed` resolver zero arquivos de teste onde algo claramente deveria rodar, faça fallback para `npm run test:integration` full e anuncie.
+4. **Escopado**: `npm run test:e2e:seeded -- --grep "<affected_e2e_tags>"`.
    - **Modo section**: a tabela da §5 do `docs/dev-cycle.md` decide se a seção precisa de e2e. Se alguma subtask toca UI crítico, sim — infira a(s) tag(s) pelos paths tocados (`src/app/(app)/<dominio>/**` → `@<dominio>`). Se nenhuma subtask toca UI crítico, **pule esta camada**.
-   - **Modo fix**: use `affected_e2e_tags` injetado pelo orquestrador. Se vazio/ambíguo, fallback para `npm run test:e2e` full.
+   - **Modo fix**: use `affected_e2e_tags` injetado pelo orquestrador. Se vazio/ambíguo, fallback para `npm run test:e2e:seeded` full.
 
 **Sinais que forçam fallback para suítes completas** (qualquer um basta, mesma lista nos dois modos):
 

@@ -82,7 +82,7 @@ Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt
 - **Test layers (agent picks superset for the section)**: agent uses the table in `docs/dev-cycle.md` §5 to pick layers (unit / integration / e2e). A section's subtasks typically span multiple natures — agent selects the **superset** of layers needed across all subtasks. For each chosen layer, agent applies the **scoped re-validation contract** documented in `.claude/agents/fullstack-developer.md` ("Re-validação escopada — sempre, section e fix"):
   - `npm run lint` + `npm run typecheck` (full — both modes)
   - `npm run test:unit` (full — cheap, cross-section safety net)
-  - `npm run test:integration -- --related $SECTION_CHANGED_FILES` where `SECTION_CHANGED_FILES = git -C <worktree> diff HEAD --name-only` (uncommitted = this section's work; the orchestrator commits between sections in step 3b, so HEAD reflects end-of-previous-section)
+  - `npm run test:integration -- --changed` (`--changed` is a valid `vitest run` flag that detects uncommitted changes via git automatically; no file collection needed — the working tree holds only this section's work because step 3a asserts a clean state before each section)
   - `npm run test:e2e:seeded -- --grep "@<inferred-tags>"` (only if any subtask in the section touches a critical UI flow per the table; the agent may need to grep multiple `@<dom>` tags into the `--grep` regex)
   - Forced fallback to full suites when changed files include `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`, `src/shared/lib/utils/**`, `src/modules/auth/**`, root configs, or >10 files. **A section's diff is naturally larger than a single subtask's, so the >10-files signal fires more often by design — that is the correct, non-degenerate behavior.**
   - The agent must declare in its `VERDICT: PASS` summary which layers ran, scoped vs. full, and which fallback signals (if any) triggered.
@@ -377,7 +377,7 @@ When invoking `fullstack-developer` to address feedback:
   1. Compute `CHANGED=$(git -C <worktree> diff <fix-base>...HEAD --name-only)` where `<fix-base>` = the SHA at the start of this fix iteration.
   2. Run `npm run lint` and `npm run typecheck` (full). If either fails → fix and retry (internal cap 3).
   3. Run `npm run test:unit` (full suite). If fails → fix and retry.
-  4. Run `npm run test:integration -- --related $CHANGED`. If `--related` produces no test files OR Vitest cannot resolve, fall back to full integration. If fails → fix and retry.
+  4. Run `npm run test:integration -- --changed <fix-base>` (covers all changes since the fix iteration started, committed or uncommitted). If `--changed` resolves to zero test files, fall back to full integration. If fails → fix and retry.
   5. Run `npm run test:e2e:seeded -- --grep "@<flow-tags>"` where `<flow-tags>` is the orchestrator-supplied list. If empty/ambiguous, fall back to full E2E.
   6. **Forced fallback to full suites** when any of these signals applies (announce which signal triggered it):
      - Changed any file under `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`
