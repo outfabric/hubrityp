@@ -121,7 +121,7 @@ docker compose down      # derrubar
 2. **Testes de integração** — Server Actions, API Routes, queries Supabase (contra Supabase local via Docker).
 3. **Testes E2E** — para fluxos críticos de UI (Playwright). Fluxos críticos incluem: cadastro/login, criação de paciente, geração de receita, prontuário etc.
 
-Os testes devem cobrir comportamento, não implementação.
+Os testes devem cobrir comportamento, não implementação. Se algo bloquear o teste (ex.: integração externa sem sandbox), declare explicitamente em vez de pular silenciosamente.
 
 ## Padrões obrigatórios
 
