@@ -29,9 +29,9 @@
 
 ## 3. Cookie sidecar e wrapper de Supabase
 
-- [ ] 3.1 Estender `src/shared/supabase/server.ts` (`createServerClient`) para ler o cookie `hp_keep_logged_in` no request e aplicar `Max-Age = 86400` ou omitir nos cookies Supabase ao escrevê-los
-- [ ] 3.2 Adicionar helper `src/shared/lib/cookies/keep-logged-in.ts` com `setKeepLoggedInCookie(response, value: boolean)` e `clearKeepLoggedInCookie(response)`
-- [ ] 3.3 Teste de integração `src/__tests__/integration/auth-hardening/keep-logged-in-cookie.int.test.ts` — `keepLoggedIn=true` produz Max-Age=86400 nos cookies; false produz session cookies; logout limpa
+- [x] 3.1 Estender `src/shared/supabase/server.ts` (`createServerClient`) para ler o cookie `hp_keep_logged_in` no request e aplicar `Max-Age = 86400` ou omitir nos cookies Supabase ao escrevê-los
+- [x] 3.2 Adicionar helper `src/shared/lib/cookies/keep-logged-in.ts` com `setKeepLoggedInCookie(response, value: boolean)` e `clearKeepLoggedInCookie(response)`
+- [x] 3.3 Teste de integração `src/__tests__/integration/auth-hardening/keep-logged-in-cookie.int.test.ts` — `keepLoggedIn=true` produz Max-Age=86400 nos cookies; false produz session cookies; logout limpa
 
 ## 4. Resend helper
 
