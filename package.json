@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "if [ \"$VERCEL_ENV\" = 'production' ]; then npm run db:migrate; fi",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",

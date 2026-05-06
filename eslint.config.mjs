@@ -95,13 +95,15 @@ const config = [
       '@typescript-eslint/no-unsafe-member-access': 'off',
     },
   },
-  // `src/shared/env/` is the validation boundary itself; CLI files run outside
-  // the Next.js bundle and therefore cannot import `server-only` to reach
-  // `serverEnv`. Both are allowed to read `process.env` directly.
+  // `src/shared/env/` is the validation boundary itself; CLI files and
+  // `next.config.ts` run outside the Next.js bundle and therefore cannot
+  // import `server-only` to reach `serverEnv`. All are allowed to read
+  // `process.env` directly.
   {
     files: [
       'src/shared/env/index.ts',
       'src/shared/env/client.ts',
+      'next.config.ts',
       'drizzle.config.ts',
       'scripts/db-migrate.ts',
       'vitest.setup.ts',
