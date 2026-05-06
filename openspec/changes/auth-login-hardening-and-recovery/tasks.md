@@ -128,8 +128,8 @@
 
 ## 13. Documentação
 
-- [ ] 13.1 Adicionar seção "Wave-5 IDs (auth-login-hardening-and-recovery)" em `docs/design-system/testid.md` com todos os novos testids: `login-form-keep-logged-in`, `login-form-google-button`, `forgot-password-form-*`, `reset-password-form-*`, `complete-profile-form-*`, `link-account-form-*`, `auth-callback-error`/`auth-callback-resend` (se introduzido novo)
-- [ ] 13.2 Criar `docs/runbooks/oauth-smoke.md` com checklist manual para validar Google OAuth real (smoke pré-release; não automatizado)
+- [x] 13.1 Adicionar seção "Wave-5 IDs (auth-login-hardening-and-recovery)" em `docs/design-system/testid.md` com todos os novos testids: `login-form-keep-logged-in`, `login-form-google-button`, `forgot-password-form-*`, `reset-password-form-*`, `complete-profile-form-*`, `link-account-form-*`, `auth-callback-error`/`auth-callback-resend` (se introduzido novo)
+- [x] 13.2 Criar `docs/runbooks/oauth-smoke.md` com checklist manual para validar Google OAuth real (smoke pré-release; não automatizado)
 
 ## 14. Validação final
 
