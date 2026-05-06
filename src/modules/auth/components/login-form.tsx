@@ -17,7 +17,13 @@ import { useForm } from 'react-hook-form';
 import { signIn } from '@/app/(auth)/login/actions';
 import { loginInputSchema, type LoginFormInput } from '@/modules/auth/lib/login-input-schema';
 import type { SignInResult } from '@/modules/auth/lib/sign-in-result';
-import { GoogleButton } from '@/modules/oauth';
+// Import `GoogleButton` directly from its component file rather than from the
+// `@/modules/oauth` barrel. The barrel co-exports Server Action implementations
+// that import `'server-only'` / `next/headers`; pulling the barrel into this
+// `'use client'` file would drag those server-only modules into the browser
+// bundle and break the build.  This follows the same discipline documented in
+// `@/modules/auth/index.ts` for `signIn`.
+import { GoogleButton } from '@/modules/oauth/components/google-button';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Input } from '@/shared/ui/input';
