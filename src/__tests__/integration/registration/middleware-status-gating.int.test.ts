@@ -79,7 +79,7 @@ function buildQueryBuilder(): FakeQueryBuilder {
       );
       const row = rows[0];
       if (!row) return { data: null, error: null };
-      // Remap camelCase → snake_case to match what real PostgREST
+      // Remap camelCase -> snake_case to match what real PostgREST
       // returns. The Edge adapter renames back to camelCase.
       return {
         data: {
@@ -96,6 +96,11 @@ function buildQueryBuilder(): FakeQueryBuilder {
           privacy_accepted_at: row.privacyAcceptedAt,
           sensitive_data_consent_at: row.sensitiveDataConsentAt,
           last_resend_at: row.lastResendAt,
+          failed_login_count: row.failedLoginCount,
+          last_failed_login_at: row.lastFailedLoginAt,
+          lockout_until: row.lockoutUntil,
+          consecutive_lockouts: row.consecutiveLockouts,
+          requires_password_reset: row.requiresPasswordReset,
           created_at: row.createdAt,
           updated_at: row.updatedAt,
         },
@@ -118,7 +123,15 @@ vi.mock('@/shared/supabase/middleware', () => {
           getUser: async () => {
             const user = sessionRef.current;
             return {
-              data: { user: user ? { id: user.userId, email: user.email } : null },
+              data: {
+                user: user
+                  ? {
+                      id: user.userId,
+                      email: user.email,
+                      app_metadata: { provider: 'email', providers: ['email'] },
+                    }
+                  : null,
+              },
               error: user ? null : { message: 'no session' },
             };
           },

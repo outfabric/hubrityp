@@ -31,6 +31,7 @@ import { writeSeedState } from './seed-state';
 // Testcontainers (`.withReuse()`) skip re-inserting the row across runs.
 const SEED_USER_ID = '00000000-0000-4000-8000-000000000001';
 const SEED_EMAIL = 'seed@example.com';
+const SEED_PASSWORD = 'Correct-Horse-Battery!';
 
 // Mock GoTrue must bind to a STABLE port. Next.js inlines `NEXT_PUBLIC_*`
 // into the edge bundle at build time, so the middleware (edge runtime) is
@@ -63,6 +64,7 @@ async function main(): Promise<void> {
   const nowIso = new Date().toISOString();
   const mock = await startMockGotrue({
     fixedToken: accessToken,
+    fixedPassword: SEED_PASSWORD,
     port: MOCK_GOTRUE_PORT,
     user: {
       id: SEED_USER_ID,

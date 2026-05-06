@@ -1,5 +1,5 @@
 {
   "@health": "Health endpoints",
-  "@auth": "Auth flow — default seeded suite, simulated cookie via storageState",
+  "@auth": "Auth flow — default seeded suite, simulated cookie via storageState + auth hardening (lockout, keep-logged-in, global logout) + password recovery",
   "@auth-real": "Auth flow — dedicated real-GoTrue suite via `npm run test:e2e:real` (lives under src/__tests__/e2e/real/)"
 }

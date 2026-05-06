@@ -71,7 +71,12 @@ export default async function globalSetup() {
       UPDATE public.profiles
       SET status = 'active',
           email_verified_at = COALESCE(email_verified_at, now()),
-          crp_validated_at = COALESCE(crp_validated_at, now())
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          failed_login_count = 0,
+          last_failed_login_at = NULL,
+          lockout_until = NULL,
+          consecutive_lockouts = 0,
+          requires_password_reset = false
       WHERE user_id = ${seed.userId};
     `;
 

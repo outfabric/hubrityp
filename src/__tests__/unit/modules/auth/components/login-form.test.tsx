@@ -1,5 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+// Radix UI Checkbox uses ResizeObserver internally (via `@radix-ui/react-use-size`).
+// jsdom does not provide ResizeObserver, so we stub it globally before tests run.
+beforeAll(() => {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
 
 // We mock `@/app/(auth)/login/actions` so importing `LoginForm` (which
 // imports `signIn` from the route shell) does not pull in the server-only
@@ -17,6 +27,32 @@ import { describe, expect, it, vi } from 'vitest';
 // state-conditional rendering — the action is never actually called.
 vi.mock('@/app/(auth)/login/actions', () => ({
   signIn: vi.fn().mockResolvedValue({ ok: true }),
+}));
+
+// Mock `@/modules/oauth` — GoogleButton imports `@/shared/supabase/client`
+// which instantiates a browser Supabase client. Under jsdom this would
+// require a full Supabase setup. A lightweight stub is sufficient since
+// these tests assert login-form behavior, not OAuth flows.
+vi.mock('@/modules/oauth', () => ({
+  GoogleButton: () => <button data-testid="login-form-google-button">Entrar com Google</button>,
+}));
+
+// Mock `next/link` — in jsdom there is no Next.js router context, so
+// the real Link component may fail. We render a plain `<a>` tag instead.
+vi.mock('next/link', () => ({
+  default: ({
+    href,
+    children,
+    ...rest
+  }: {
+    href: string;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 import { LoginForm } from '@/modules/auth/components/login-form';
@@ -63,7 +99,7 @@ describe('LoginForm', () => {
     render(<LoginForm initialState={{ ok: false, error: 'unknown' }} />);
     const error = screen.getByTestId('login-form-error');
     expect(error).toBeInTheDocument();
-    expect(error).toHaveTextContent('Erro inesperado, tente novamente.');
+    expect(error).toHaveTextContent('Algo deu errado. Tente novamente.');
   });
 
   it('renders the account_unavailable message when initialState carries that error', () => {
@@ -142,5 +178,106 @@ describe('LoginForm', () => {
     expect(screen.getByTestId('login-form-error')).toBeInTheDocument();
     expect(screen.queryByText('E-mail inválido.')).not.toBeInTheDocument();
     expect(screen.queryByText('A senha deve ter pelo menos 8 caracteres.')).not.toBeInTheDocument();
+  });
+
+  // ---- 9.1: Checkbox "Manter conectado" ----
+
+  it('renders the keep-logged-in checkbox with the expected testid', () => {
+    render(<LoginForm />);
+    const checkbox = screen.getByTestId('login-form-keep-logged-in');
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toHaveAttribute('role', 'checkbox');
+  });
+
+  it('renders the keep-logged-in checkbox unchecked by default', () => {
+    render(<LoginForm />);
+    const checkbox = screen.getByTestId('login-form-keep-logged-in');
+    expect(checkbox).toHaveAttribute('data-state', 'unchecked');
+  });
+
+  it('submits keepLoggedIn=false via a hidden input by default', () => {
+    const { container } = render(<LoginForm />);
+    const hidden = container.querySelector('input[type="hidden"][name="keepLoggedIn"]');
+    expect(hidden).toBeInTheDocument();
+    expect(hidden).toHaveAttribute('value', 'false');
+  });
+
+  it('toggles the keep-logged-in checkbox and updates hidden input on click', async () => {
+    const { container } = render(<LoginForm />);
+    const checkbox = screen.getByTestId('login-form-keep-logged-in');
+    fireEvent.click(checkbox);
+
+    await waitFor(() => {
+      expect(checkbox).toHaveAttribute('data-state', 'checked');
+    });
+
+    const hidden = container.querySelector('input[type="hidden"][name="keepLoggedIn"]');
+    expect(hidden).toHaveAttribute('value', 'true');
+  });
+
+  // ---- 9.2: GoogleButton ----
+
+  it('renders the GoogleButton below the submit button', () => {
+    render(<LoginForm />);
+    const googleBtn = screen.getByTestId('login-form-google-button');
+    expect(googleBtn).toBeInTheDocument();
+  });
+
+  // ---- 9.3: Error copies with links ----
+
+  it('renders locked_out error with remaining time and link to /forgot-password', () => {
+    // Lockout expires 10 minutes from now
+    const lockoutUntil = new Date(Date.now() + 10 * 60_000).toISOString();
+    render(<LoginForm initialState={{ ok: false, error: 'locked_out', lockoutUntil }} />);
+
+    const error = screen.getByTestId('login-form-error');
+    expect(error).toBeInTheDocument();
+    expect(error).toHaveTextContent(/Conta temporariamente bloqueada/);
+    expect(error).toHaveTextContent(/10 min/);
+
+    const link = error.querySelector('a');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/forgot-password');
+    expect(link).toHaveTextContent('redefina sua senha');
+  });
+
+  it('renders locked_out error with fallback text when lockoutUntil is missing', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'locked_out' }} />);
+
+    const error = screen.getByTestId('login-form-error');
+    expect(error).toHaveTextContent(/alguns instantes/);
+    expect(error).toHaveTextContent(/redefina sua senha/);
+  });
+
+  it('renders requires_password_reset error with link prefilled with email', async () => {
+    render(<LoginForm initialState={{ ok: false, error: 'requires_password_reset' }} />);
+
+    // Type an email first so the link uses it
+    const emailInput = screen.getByTestId('login-form-email');
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+
+    await waitFor(() => {
+      const error = screen.getByTestId('login-form-error');
+      const link = error.querySelector('a');
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute(
+        'href',
+        `/forgot-password?email=${encodeURIComponent('test@example.com')}`,
+      );
+      expect(link).toHaveTextContent('redefina sua senha');
+    });
+  });
+
+  it('renders requires_password_reset error with link even when email is empty', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'requires_password_reset' }} />);
+
+    const error = screen.getByTestId('login-form-error');
+    expect(error).toHaveTextContent(/Por segurança/);
+    expect(error).toHaveTextContent(/redefina sua senha/);
+
+    const link = error.querySelector('a');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/forgot-password?email=');
+    expect(link).toHaveTextContent('redefina sua senha');
   });
 });

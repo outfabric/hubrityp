@@ -20,11 +20,18 @@
 // from the route shell (`@/app/(auth)/login/actions`) which Next.js compiles
 // into a client-safe RPC stub.
 
-export { loginInputSchema, type LoginInput } from './lib/login-input-schema';
+export { loginInputSchema, type LoginInput, type LoginFormInput } from './lib/login-input-schema';
 export { mapSupabaseUser, type AppUser } from './lib/map-supabase-user';
 export { safeRedirect } from './lib/safe-redirect';
 
 export { LoginForm, type LoginFormProps } from './components/login-form';
 
-export { signInImpl as signIn, type SignInResult } from './server/login';
+export {
+  type SignInError,
+  type SignInResult,
+  SIGN_IN_ERROR_MESSAGES,
+  getSignInErrorMessage,
+} from './lib/sign-in-result';
+
+export { signInImpl as signIn } from './server/login';
 export { signOutImpl as signOut } from './server/logout';

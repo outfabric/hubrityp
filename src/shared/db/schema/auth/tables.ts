@@ -1,8 +1,10 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   char,
   index,
   inet,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -67,6 +69,17 @@ export const profiles = pgTable(
     // 60s cooldown remains for UX, but cannot be bypassed by a refresh
     // because the gate now lives in the database.
     lastResendAt: timestamp('last_resend_at', { withTimezone: true }),
+    // --- Login hardening columns (section 1, change auth-login-hardening) ---
+    // Tracks consecutive failed login attempts. Reset to 0 on successful login.
+    failedLoginCount: integer('failed_login_count').notNull().default(0),
+    // Timestamp of the most recent failed login attempt. Nullable until first failure.
+    lastFailedLoginAt: timestamp('last_failed_login_at', { withTimezone: true }),
+    // When set and in the future, the account is temporarily locked out.
+    lockoutUntil: timestamp('lockout_until', { withTimezone: true }),
+    // How many times the account has been locked out in succession (escalates duration).
+    consecutiveLockouts: integer('consecutive_lockouts').notNull().default(0),
+    // When true, the user must reset their password before regaining access.
+    requiresPasswordReset: boolean('requires_password_reset').notNull().default(false),
   },
   (table) => [
     // CRP is unique per UF (a psychologist registered in SP and another in
@@ -136,3 +149,32 @@ export const authSessions = pgTable(
 
 export type AuthSession = typeof authSessions.$inferSelect;
 export type NewAuthSession = typeof authSessions.$inferInsert;
+
+// `oauth_identities` stores linked OAuth provider accounts for each user.
+// The table is write-protected at the RLS layer — only the service role can
+// INSERT/UPDATE/DELETE. End-users can SELECT their own rows only.
+export const oauthIdentities = pgTable(
+  'oauth_identities',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // FK to `auth.users`. The cross-schema reference is emitted manually in
+    // the migration (same pattern as `profiles.user_id`).
+    userId: uuid('user_id').notNull(),
+    provider: text('provider').notNull(),
+    providerUserId: text('provider_user_id').notNull(),
+    isPrimary: boolean('is_primary').notNull().default(false),
+    linkedAt: timestamp('linked_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    unique('oauth_identities_provider_provider_user_id_unique').on(
+      table.provider,
+      table.providerUserId,
+    ),
+    index('oauth_identities_user_id_idx').on(table.userId),
+  ],
+);
+
+export type OauthIdentity = typeof oauthIdentities.$inferSelect;
+export type NewOauthIdentity = typeof oauthIdentities.$inferInsert;

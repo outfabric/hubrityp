@@ -1,78 +1,135 @@
+import { eq } from 'drizzle-orm';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { loginInputSchema } from '@/modules/auth/lib/login-input-schema';
 import { safeRedirect } from '@/modules/auth/lib/safe-redirect';
+import type { SignInResult } from '@/modules/auth/lib/sign-in-result';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
+import { logAuthEvent } from '@/modules/registration/server/log-auth-event';
+import { db } from '@/shared/db/client';
+import { profiles } from '@/shared/db/schema/auth/tables';
+import { setKeepLoggedInCookie } from '@/shared/lib/cookies/keep-logged-in';
 import { logger } from '@/shared/lib/logger';
+import { sendAccountLockedEmail } from '@/shared/lib/mail/send-account-locked';
 import { createServerClient } from '@/shared/supabase/server';
 
-// Discriminated union returned to the page. Errors are typed string literals,
-// never `Error` instances, so the result stays serializable across the
-// Server Action boundary and consumers can narrow exhaustively.
-//
-// `account_unavailable` is surfaced when authentication succeeds but the
-// user's `profiles.status` is `suspended` or `cancelled` — the action signs
-// the user back out and returns this error so the form can render a
-// support-contact message instead of redirecting into the app shell.
-//
-// Additional variants (e.g. `rate_limited`) MUST be added here before the
-// action starts returning them, so the consumer's exhaustive switch keeps
-// compiling.
-export type SignInResult =
-  | { ok: true }
-  | { ok: false; error: 'invalid_credentials' | 'account_unavailable' | 'unknown' };
+import { applyFailedLoginAttempt, isCurrentlyLockedOut, resetLoginCounters } from './lockout';
+
+export type { SignInResult } from '@/modules/auth/lib/sign-in-result';
 
 const DEFAULT_TARGET = '/dashboard';
 const PENDING_TARGET = '/onboarding/pending';
+
+/**
+ * Anti-enumeration delay: add random 50–150ms delay to match the timing
+ * of a real bcrypt compare, preventing attackers from distinguishing
+ * existing vs non-existing emails by response time.
+ */
+async function dummyDelay(): Promise<void> {
+  const { randomInt } = await import('node:crypto');
+  await new Promise<void>((r) => setTimeout(r, 50 + randomInt(100)));
+}
 
 // `signInImpl` is the module-side implementation of the `signIn` Server
 // Action. This file MUST NOT carry a top-level `'use server'` directive —
 // that lives on the route shell (`app/(auth)/login/actions.ts`) which wraps
 // this function. Marking the module as `'use server'` would force every
 // export to be RPC-able and would couple the module's lifecycle to the
-// Server Action runtime, defeating the shell↔module split.
+// Server Action runtime, defeating the shell-module split.
 export async function signInImpl(formData: FormData): Promise<SignInResult> {
   const parsed = loginInputSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
+    keepLoggedIn: formData.get('keepLoggedIn') === 'true',
   });
 
   if (!parsed.success) {
     // Identical error to invalid credentials so a probing attacker cannot
-    // distinguish "valid email but wrong password" from "malformed email" by
-    // reading the response body. The Zod schema already runs on the client,
-    // so legitimate users have seen inline errors before reaching the server.
+    // distinguish "valid email but wrong password" from "malformed email".
+    // The Zod schema already runs on the client, so legitimate users have
+    // seen inline errors before reaching the server. Do NOT touch lockout
+    // counters or Supabase.
     return { ok: false, error: 'invalid_credentials' };
+  }
+
+  const { email, password, keepLoggedIn } = parsed.data;
+
+  // ---- Pre-check: lookup profile by email for lockout state ----
+  // We need the profile BEFORE calling Supabase to check lockout state.
+  // If the profile does not exist, we still proceed to the dummy delay
+  // path later (anti-enumeration).
+  let existingProfile: {
+    userId: string;
+    lockoutUntil: Date | null;
+    requiresPasswordReset: boolean;
+  } | null = null;
+
+  try {
+    const rows = await db
+      .select({
+        userId: profiles.userId,
+        lockoutUntil: profiles.lockoutUntil,
+        requiresPasswordReset: profiles.requiresPasswordReset,
+      })
+      .from(profiles)
+      .where(eq(profiles.email, email))
+      .limit(1);
+    existingProfile = rows[0] ?? null;
+  } catch {
+    // DB lookup failure — fall through to Supabase attempt. If both
+    // fail, the unknown error path covers it.
+  }
+
+  // ---- Lockout pre-check ----
+  if (existingProfile) {
+    const lockout = isCurrentlyLockedOut(existingProfile);
+    if (lockout.lockedOut) {
+      void logAuthEvent({
+        userId: existingProfile.userId,
+        event: 'login_failure',
+        metadata: { reason: 'locked_out' },
+      });
+      return {
+        ok: false,
+        error: 'locked_out',
+        lockoutUntil: lockout.until?.toISOString(),
+      };
+    }
   }
 
   const supabase = await createServerClient();
 
-  // Status-aware sign-in:
-  //   1. `signInWithPassword` writes the session cookies (single network call).
-  //   2. `getCurrentProfile` loads the typed `profiles` row via the same
-  //      cookie context (PK lookup, no extra round trip beyond the user fetch).
-  //   3. Branch on `profile.status` to decide redirect target / signOut /
-  //      typed error result.
-  //
   // ONLY the Supabase-touching calls live inside the try block. `redirect()`
   // below throws a `NEXT_REDIRECT` marker that MUST propagate to Next.js;
-  // catching it here would silently break navigation. We therefore compute
-  // the redirect TARGET inside the try block and call `redirect()` outside.
+  // catching it here would silently break navigation.
   let supabaseError: { name?: string; message?: string } | null = null;
   let redirectTarget: string | null = null;
+
   try {
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     supabaseError = error;
 
     if (!supabaseError) {
+      // ---- requires_password_reset check ----
+      // After successful auth, if the profile requires a password reset,
+      // sign the user back out and return the error.
+      if (existingProfile?.requiresPasswordReset) {
+        await supabase.auth.signOut();
+        void logAuthEvent({
+          userId: existingProfile.userId,
+          event: 'login_failure',
+          metadata: { reason: 'requires_password_reset' },
+        });
+        return { ok: false, error: 'requires_password_reset' };
+      }
+
       const profile = await getCurrentProfile(supabase);
 
       // Defensive: the SECURITY DEFINER trigger on `auth.users` guarantees a
       // `profiles` row by the time `signInWithPassword` returns success, so
       // `null` here implies either a race with the trigger commit or a
-      // session that no longer maps to a user row. In either case the safe
-      // path is to clear the session and surface `unknown` — letting the
-      // user retry rather than land on a half-bound shell.
+      // session that no longer maps to a user row.
       if (!profile) {
         await supabase.auth.signOut();
         logger.warn(
@@ -84,13 +141,20 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
 
       switch (profile.status) {
         case ProfileStatus.Active: {
-          // Contract: `redirectTo` is forwarded by `app/(auth)/login/page.tsx`
-          // → `LoginForm` → `<input type="hidden" name="redirectTo">` → this
-          // FormData. We deliberately read from FormData (NOT from
-          // headers/query) so the value is bound to the submitted form, not
-          // to the request context. Any custom login form that replaces
-          // `LoginForm` MUST forward the same hidden input, or post-auth
-          // redirects silently fall back to `DEFAULT_TARGET`.
+          // Set keepLoggedIn cookie
+          const cookieStore = await cookies();
+          setKeepLoggedInCookie(cookieStore, keepLoggedIn);
+
+          // Reset lockout counters on successful login
+          await resetLoginCounters(db, profile.userId);
+
+          // Log successful login
+          void logAuthEvent({
+            userId: profile.userId,
+            event: 'login_success',
+            metadata: { keepLoggedIn },
+          });
+
           const rawTarget = formData.get('redirectTo');
           redirectTarget = safeRedirect(
             typeof rawTarget === 'string' ? rawTarget : null,
@@ -100,51 +164,103 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
         }
         case ProfileStatus.PendingVerification:
         case ProfileStatus.PendingCrpValidation: {
-          // Pending users MUST land on the onboarding hold page regardless
-          // of any `redirectTo` they (or a deep link) supplied — sending
-          // them deeper into the app would bypass the onboarding gate and
-          // surface a half-functional shell.
+          // Set keepLoggedIn cookie even for pending users
+          const cookieStore = await cookies();
+          setKeepLoggedInCookie(cookieStore, keepLoggedIn);
+
+          // Reset lockout counters on successful login
+          await resetLoginCounters(db, profile.userId);
+
+          void logAuthEvent({
+            userId: profile.userId,
+            event: 'login_success',
+            metadata: { keepLoggedIn },
+          });
+
           redirectTarget = PENDING_TARGET;
           break;
         }
         case ProfileStatus.Suspended:
         case ProfileStatus.Cancelled: {
-          // Authentication succeeded but the account is no longer usable.
-          // Clear the session cookie that `signInWithPassword` just wrote,
-          // log the event for support triage, and surface the typed error
-          // so the form renders a support-contact message. NO redirect:
-          // returning a result keeps the user on `/login` with the alert.
           await supabase.auth.signOut();
           logger.warn(
             { event: 'signin_account_unavailable', status: profile.status },
             'sign-in blocked: account unavailable',
           );
+          void logAuthEvent({
+            userId: profile.userId,
+            event: 'login_failure',
+            metadata: { reason: 'account_unavailable', status: profile.status },
+          });
           return { ok: false, error: 'account_unavailable' };
         }
       }
     }
   } catch (err) {
-    // Network failure, Supabase 5xx, profile lookup error, or any other
-    // unexpected throw. Logger redaction strips email/password if they ever
-    // leak into the error payload — see `src/shared/lib/logger.ts`
-    // `redactPaths`. NOTE: `redirect()` is NOT called inside this try block,
-    // so `NEXT_REDIRECT` markers cannot be swallowed here.
     const name = err instanceof Error ? err.name : 'UnknownError';
     logger.warn({ event: 'signin_unknown_error', errorName: name }, 'signin failure');
     return { ok: false, error: 'unknown' };
   }
 
+  // ---- Handle Supabase auth failure ----
   if (supabaseError) {
-    logger.warn(
-      { event: 'signin_failed', errorName: supabaseError.name ?? 'AuthError' },
-      'invalid credentials',
-    );
-    return { ok: false, error: 'invalid_credentials' };
+    if (existingProfile) {
+      // Profile exists — apply failed login attempt (lockout counter)
+      try {
+        const lockoutResult = await applyFailedLoginAttempt(db, existingProfile.userId);
+
+        void logAuthEvent({
+          userId: existingProfile.userId,
+          event: 'login_failure',
+          metadata: { reason: 'invalid_credentials' },
+        });
+
+        // 6.2: If lockout just started, send lockout email best-effort
+        if (lockoutResult.lockoutJustStarted) {
+          void logAuthEvent({
+            userId: existingProfile.userId,
+            event: 'lockout_started',
+          });
+          // Best-effort: fire-and-forget, failure does not derail the action
+          void sendAccountLockedEmail(email).catch(() => {
+            // Swallowed — mail delivery is best-effort
+          });
+        }
+
+        // Log if consecutive lockout threshold reached
+        if (lockoutResult.requiresPasswordReset && lockoutResult.lockoutJustStarted) {
+          void logAuthEvent({
+            userId: existingProfile.userId,
+            event: 'lockout_consecutive_threshold_reached',
+          });
+        }
+
+        // If the atomic UPDATE just triggered lockout, return locked_out
+        if (lockoutResult.lockoutUntil && lockoutResult.lockoutUntil > new Date()) {
+          return {
+            ok: false,
+            error: 'locked_out',
+            lockoutUntil: lockoutResult.lockoutUntil.toISOString(),
+          };
+        }
+      } catch {
+        // If lockout tracking fails, still return invalid_credentials
+      }
+
+      return { ok: false, error: 'invalid_credentials' };
+    } else {
+      // No profile — dummy delay for anti-enumeration timing
+      await dummyDelay();
+      void logAuthEvent({
+        userId: null,
+        event: 'login_failure',
+        metadata: { reason: 'no_account' },
+      });
+      return { ok: false, error: 'invalid_credentials' };
+    }
   }
 
   // Unreachable in normal flow: `redirectTarget` is always set after a
-  // non-pending/non-blocked profile branch above. Fall back defensively to
-  // the default target so a future status enum addition that forgets to set
-  // a target here doesn't dead-end the user.
+  // non-pending/non-blocked profile branch above.
   redirect(redirectTarget ?? DEFAULT_TARGET);
 }

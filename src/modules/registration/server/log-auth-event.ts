@@ -43,7 +43,16 @@ export type AuthLogEvent =
   | 'signup_success'
   | 'signup_failure_duplicate_email'
   | 'signup_failure_duplicate_crp'
-  | 'email_verified';
+  | 'email_verified'
+  | 'login_success'
+  | 'login_failure'
+  | 'lockout_started'
+  | 'lockout_consecutive_threshold_reached'
+  | 'logout'
+  | 'password_reset_requested'
+  | 'password_reset_completed'
+  | 'oauth_signup'
+  | 'social_linked';
 
 export type LogAuthEventInput = {
   /**

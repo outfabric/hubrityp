@@ -9,17 +9,46 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // upstream code and is not the goal here.
 
 const signOutMock = vi.fn();
+const getUserMock = vi.fn();
 
 vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn().mockResolvedValue({
     auth: {
       signOut: signOutMock,
+      getUser: getUserMock,
     },
   }),
 }));
 
+// Mock dependencies introduced by the global signOut rewrite
+vi.mock('@/shared/db/client', () => ({
+  db: {
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+    }),
+  },
+}));
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+  }),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
+vi.mock('@/modules/registration/server/log-auth-event', () => ({
+  logAuthEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 beforeEach(() => {
   signOutMock.mockReset();
+  getUserMock.mockReset();
+  getUserMock.mockResolvedValue({
+    data: { user: { id: '00000000-0000-0000-0000-000000000000' } },
+    error: null,
+  });
 });
 
 afterEach(() => {

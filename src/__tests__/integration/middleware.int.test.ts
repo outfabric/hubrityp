@@ -94,7 +94,13 @@ function asAnon() {
 function asAuthWithStatus(status: ProfileStatus) {
   const userId = '00000000-0000-4000-8000-000000000001';
   getUserMock.mockResolvedValue({
-    data: { user: { id: userId, email: 'doctor@example.com' } },
+    data: {
+      user: {
+        id: userId,
+        email: 'doctor@example.com',
+        app_metadata: { provider: 'email', providers: ['email'] },
+      },
+    },
     error: null,
   });
   getCurrentProfileEdgeMock.mockResolvedValue({
@@ -111,16 +117,29 @@ function asAuthWithStatus(status: ProfileStatus) {
     privacyAcceptedAt: new Date(),
     sensitiveDataConsentAt: new Date(),
     lastResendAt: null,
+    failedLoginCount: 0,
+    lastFailedLoginAt: null,
+    lockoutUntil: null,
+    consecutiveLockouts: 0,
+    requiresPasswordReset: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
 }
 
-// Authenticated session but no profile row (race window). Per spec this is
-// treated identically to "no session" in the decision table.
+// Authenticated session but no profile row (email signup race window).
+// Per spec this is treated identically to "no session" in the decision
+// table. The `app_metadata.provider = 'email'` signals that this is NOT
+// an OAuth user, so the middleware applies the "anonymous" column.
 function asAuthWithoutProfile() {
   getUserMock.mockResolvedValue({
-    data: { user: { id: '00000000-0000-4000-8000-000000000001', email: 'doctor@example.com' } },
+    data: {
+      user: {
+        id: '00000000-0000-4000-8000-000000000001',
+        email: 'doctor@example.com',
+        app_metadata: { provider: 'email', providers: ['email'] },
+      },
+    },
     error: null,
   });
   getCurrentProfileEdgeMock.mockResolvedValue(null);

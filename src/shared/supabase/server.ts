@@ -4,12 +4,21 @@ import { createServerClient as createSsrServerClient, type CookieOptions } from 
 import { cookies } from 'next/headers';
 
 import { clientEnv } from '@/shared/env';
+import { KEEP_LOGGED_IN_COOKIE_NAME } from '@/shared/lib/cookies/keep-logged-in';
+
+/** Max-Age applied to Supabase session cookies when "keep me logged in" is active (24h). */
+const KEEP_LOGGED_IN_MAX_AGE = 86_400;
 
 // Construct a per-request Supabase client for use in RSC, Server Actions, and
 // Route Handlers. We deliberately do NOT memoize across requests — each
 // request must read its own cookies to avoid session bleed between users.
 export async function createServerClient() {
   const cookieStore = await cookies();
+
+  // Read the sidecar cookie to decide Max-Age policy for Supabase session
+  // cookies. When `hp_keep_logged_in=1` the user opted into persistent login;
+  // otherwise cookies are session-scoped (no Max-Age).
+  const keepLoggedIn = cookieStore.get(KEEP_LOGGED_IN_COOKIE_NAME)?.value === '1';
 
   return createSsrServerClient(
     clientEnv.NEXT_PUBLIC_SUPABASE_URL,
@@ -22,7 +31,10 @@ export async function createServerClient() {
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]): void {
           try {
             for (const { name, value, options } of cookiesToSet) {
-              cookieStore.set(name, value, options);
+              const resolvedOptions: CookieOptions = keepLoggedIn
+                ? { ...options, maxAge: KEEP_LOGGED_IN_MAX_AGE }
+                : { ...options, maxAge: undefined };
+              cookieStore.set(name, value, resolvedOptions);
             }
           } catch {
             // `cookies().set` throws when called from a Server Component

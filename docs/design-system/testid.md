@@ -139,6 +139,95 @@ Notes:
   renders different copy). Tests differentiate by asserting the visible heading, not by a
   separate ID.
 
+## Wave-5 IDs (auth-login-hardening-and-recovery)
+
+These are the test IDs introduced by the `auth-login-hardening-and-recovery` change, which
+adds Google OAuth login, password recovery (`/forgot-password`, `/reset-password`), OAuth
+profile completion (`/onboarding/complete-profile`), account linking (`/auth/link-account`),
+and login-page improvements (keep-logged-in checkbox, success banners). Each one is placed by
+hand in the source files cited and is exercised by at least one unit, integration, or e2e
+test under `src/__tests__/`.
+
+### Login form (additions to existing surface)
+
+Surface: `/login` (rendered by `src/app/(auth)/login/page.tsx`, component lives in the `auth`
+module).
+
+| `data-testid`                   | Surface                                      | Element                                                                                                 |
+| ------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `login-form-keep-logged-in`     | `modules/auth/components/login-form.tsx`     | "Manter conectado" `<Checkbox>`, toggles persistent session.                                            |
+| `login-form-google-button`      | `modules/oauth/components/google-button.tsx` | "Entrar com Google" `<Button>`, triggers OAuth flow. Conditionally rendered when Google provider is on. |
+| `login-banner-password_changed` | `app/(auth)/login/page.tsx`                  | Success `<Alert>` banner shown after password reset ("Senha redefinida com sucesso").                   |
+| `login-banner-account_linked`   | `app/(auth)/login/page.tsx`                  | Success `<Alert>` banner shown after account linking ("Conta Google vinculada com sucesso").            |
+
+Notes:
+
+- `login-form-email`, `login-form-password`, `login-form-submit`, and `login-form-error` were
+  introduced in Wave-3 and remain unchanged.
+- The banner IDs use the pattern `login-banner-<variant>` where `<variant>` is the query
+  param value (`password_changed` or `account_linked`). They are rendered via a dynamic
+  `data-testid={`login-banner-${banner}`}` expression in the server component.
+
+### Forgot password form
+
+Surface: `/forgot-password` (rendered by `src/app/(auth)/forgot-password/page.tsx`, component
+lives in the `password-recovery` module).
+
+| `data-testid`                          | Surface                                                         | Element                                                    |
+| -------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
+| `forgot-password-form-email`           | `modules/password-recovery/components/forgot-password-form.tsx` | E-mail `<input type="email">`.                             |
+| `forgot-password-form-submit`          | `modules/password-recovery/components/forgot-password-form.tsx` | Submit `<Button>` ("Enviar link" / pending state).         |
+| `forgot-password-form-success-message` | `modules/password-recovery/components/forgot-password-form.tsx` | Success `<div>` shown after the reset email has been sent. |
+
+### Reset password form
+
+Surface: `/reset-password` (rendered by `src/app/(auth)/reset-password/page.tsx`, component
+lives in the `password-recovery` module).
+
+| `data-testid`                  | Surface                                                        | Element                                                       |
+| ------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `reset-password-form-password` | `modules/password-recovery/components/reset-password-form.tsx` | New password `<input type="password">`.                       |
+| `reset-password-form-confirm`  | `modules/password-recovery/components/reset-password-form.tsx` | Confirm password `<input type="password">`.                   |
+| `reset-password-form-submit`   | `modules/password-recovery/components/reset-password-form.tsx` | Submit `<Button>` ("Redefinir senha" / pending state).        |
+| `reset-password-form-error`    | `modules/password-recovery/components/reset-password-form.tsx` | Inline error region (`role="alert"`), rendered only on error. |
+
+### Complete profile form (OAuth)
+
+Surface: `/onboarding/complete-profile` (rendered by
+`src/app/(app)/onboarding/complete-profile/page.tsx`, component lives in the `oauth` module).
+
+| `data-testid`                          | Surface                                              | Element                                                                 |
+| -------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| `complete-profile-form-name`           | `modules/oauth/components/complete-profile-form.tsx` | Full name `<input>`.                                                    |
+| `complete-profile-form-crp-number`     | `modules/oauth/components/complete-profile-form.tsx` | CRP number `<input>` (digits only).                                     |
+| `complete-profile-form-crp-uf`         | `modules/oauth/components/complete-profile-form.tsx` | CRP state `<Select>` (list of 27 UFs).                                  |
+| `complete-profile-form-terms`          | `modules/oauth/components/complete-profile-form.tsx` | `<Checkbox>` for Terms of Use acceptance.                               |
+| `complete-profile-form-privacy`        | `modules/oauth/components/complete-profile-form.tsx` | `<Checkbox>` for Privacy Policy acceptance.                             |
+| `complete-profile-form-sensitive-data` | `modules/oauth/components/complete-profile-form.tsx` | `<Checkbox>` for sensitive data processing consent (LGPD art. 11).      |
+| `complete-profile-form-submit`         | `modules/oauth/components/complete-profile-form.tsx` | Submit `<Button>` ("Completar cadastro" / "Salvando..." while pending). |
+| `complete-profile-form-error`          | `modules/oauth/components/complete-profile-form.tsx` | Inline error region (`role="alert"`), rendered only on top-level error. |
+
+### Link account form
+
+Surface: `/auth/link-account` (rendered by `src/app/(auth)/auth/link-account/page.tsx`,
+component lives in the `oauth` module).
+
+| `data-testid`                | Surface                                          | Element                                                       |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------- |
+| `link-account-form-password` | `modules/oauth/components/link-account-form.tsx` | Existing account password `<input type="password">`.          |
+| `link-account-form-submit`   | `modules/oauth/components/link-account-form.tsx` | Submit `<Button>` ("Vincular conta" / pending state).         |
+| `link-account-form-error`    | `modules/oauth/components/link-account-form.tsx` | Inline error region (`role="alert"`), rendered only on error. |
+
+Notes:
+
+- The `complete-profile-form-*` consent checkboxes (`terms`, `privacy`, `sensitive-data`) are
+  rendered via a shared `<ConsentRow>` helper component inside the form file. The `testId`
+  prop is forwarded to the underlying `<Checkbox>`.
+- The login banners (`login-banner-password_changed`, `login-banner-account_linked`) are
+  rendered in the server component (`page.tsx`), not in the client `<LoginForm>`. Tests
+  targeting them should assert via `getByTestId` on the full page, not on the form component
+  in isolation.
+
 ## Adding new IDs
 
 A pull request introducing one or more new `data-testid` values must update this document in

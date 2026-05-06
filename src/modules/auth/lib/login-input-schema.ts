@@ -21,6 +21,11 @@ export const loginInputSchema = z.object({
   password: z
     .string({ message: 'Informe sua senha.' })
     .min(8, { message: 'A senha deve ter pelo menos 8 caracteres.' }),
+  keepLoggedIn: z.boolean({ message: 'Valor inválido para manter conectado.' }).default(false),
 });
 
+/** Output type — after Zod applies `.default()`. Used by Server Actions. */
 export type LoginInput = z.infer<typeof loginInputSchema>;
+
+/** Input type — before defaults are applied. Used by RHF forms. */
+export type LoginFormInput = z.input<typeof loginInputSchema>;

@@ -15,6 +15,7 @@ beforeEach(() => {
   createSsrServerClientMock.mockReset();
   cookiesMock.mockReset();
   cookiesMock.mockResolvedValue({
+    get: () => undefined,
     getAll: () => [{ name: 'sb-access-token', value: 'cookie-value' }],
     set: vi.fn(),
   });
