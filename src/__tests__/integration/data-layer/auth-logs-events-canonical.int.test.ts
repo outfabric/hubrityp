@@ -26,6 +26,8 @@ const CANONICAL_EVENTS = new Set([
   'logout',
   'password_reset_requested',
   'password_reset_completed',
+  'oauth_signup',
+  'social_linked',
 ]);
 
 /**

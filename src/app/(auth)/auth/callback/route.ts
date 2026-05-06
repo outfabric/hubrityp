@@ -1,6 +1,7 @@
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { resolveOAuthCallback } from '@/modules/oauth/server/resolve-oauth-callback';
 import { logAuthEvent } from '@/modules/registration/server/log-auth-event';
 import { logger } from '@/shared/lib/logger';
 import { createServerClient } from '@/shared/supabase/server';
@@ -126,43 +127,42 @@ export async function GET(request: NextRequest): Promise<Response> {
 
 async function handleCodeExchange(request: NextRequest, code: string): Promise<Response> {
   const supabase = await createServerClient();
+  const nextParam = request.nextUrl.searchParams.get('next');
 
-  let exchangeError: { name?: string; message?: string; code?: string } | null = null;
-  let userId: string | null = null;
+  // Delegate to `resolveOAuthCallback` which handles ALL code-exchange
+  // flows: email verification, OAuth first-time, OAuth returning, and
+  // email collision (link-account). The function calls
+  // `exchangeCodeForSession` internally and applies the branching table
+  // from the oauth-google spec.
   try {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    exchangeError = error;
-    userId = data?.user?.id ?? null;
+    const result = await resolveOAuthCallback({
+      supabase,
+      code,
+      next: nextParam,
+    });
+
+    if (!result.ok) {
+      logger.warn(
+        {
+          event: 'auth_callback_resolve_failed',
+          error: result.error,
+          route: '/auth/callback',
+        },
+        'resolveOAuthCallback returned an error',
+      );
+      return redirectToError(request, result.error === 'exchange_failed' ? 'invalid' : 'unknown');
+    }
+
+    const url = new URL(result.destination, userFacingOrigin(request));
+    return NextResponse.redirect(url, 307);
   } catch (err) {
     const name = err instanceof Error ? err.name : 'UnknownError';
     logger.warn(
-      { event: 'auth_callback_exchange_threw', errorName: name, route: '/auth/callback' },
-      'exchangeCodeForSession threw',
+      { event: 'auth_callback_resolve_threw', errorName: name, route: '/auth/callback' },
+      'resolveOAuthCallback threw',
     );
     return redirectToError(request, 'unknown');
   }
-
-  if (exchangeError) {
-    logger.warn(
-      {
-        event: 'auth_callback_exchange_failed',
-        errorName: exchangeError.name ?? 'AuthError',
-        errorCode: exchangeError.code,
-        route: '/auth/callback',
-      },
-      'exchangeCodeForSession returned an error',
-    );
-    return redirectToError(request, 'invalid');
-  }
-
-  // Best-effort audit log. `logAuthEvent` swallows its own errors, so this
-  // call cannot break the user-facing flow.
-  await logAuthEvent({
-    userId,
-    event: 'email_verified',
-  });
-
-  return redirectToSuccess(request);
 }
 
 async function handleTokenHashVerify(

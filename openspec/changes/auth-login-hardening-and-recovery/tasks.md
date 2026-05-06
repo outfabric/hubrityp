@@ -78,19 +78,19 @@
 
 ## 8. OAuth module
 
-- [ ] 8.1 Criar `src/modules/oauth/server/resolve-oauth-callback.ts` exportando `resolveOAuthCallback({ supabase, code, next })` que executa `exchangeCodeForSession` e retorna `{ destination: string }` aplicando a tabela de branching do `oauth-google` spec
-- [ ] 8.2 Criar `src/modules/oauth/server/complete-oauth-profile.ts` (`completeOAuthProfileImpl`) com validação, INSERT em `profiles` (status `pending_crp_validation`, `email_verified_at = NOW()`) via service-role Drizzle, INSERT em `oauth_identities`, log `oauth_signup`, redirect `/onboarding/pending`
-- [ ] 8.3 Criar `src/modules/oauth/server/link-oauth-identity.ts` (`linkOAuthIdentityImpl`) com confirmação de senha via cliente Supabase isolado (não toca cookies), `supabase.auth.admin.deleteUser` no pendingUserId, link via admin API, INSERT em `oauth_identities`, log `social_linked`, redirect `/login?banner=account_linked`
-- [ ] 8.4 Criar `src/modules/oauth/components/google-button.tsx` (`'use client'`) que chama `supabase.auth.signInWithOAuth({ provider: 'google', ... })` no click, com `data-testid="login-form-google-button"`
-- [ ] 8.5 Criar `src/modules/oauth/components/complete-profile-form.tsx` (`'use client'`) com email read-only e fullName pré-preenchido a partir de `user.user_metadata.full_name`
-- [ ] 8.6 Criar `src/modules/oauth/components/link-account-form.tsx` (`'use client'`) com campo senha + submit, copy genérica em erro
-- [ ] 8.7 Criar `src/modules/oauth/index.ts` exportando: `completeOAuthProfile`, `linkOAuthIdentity`, `resolveOAuthCallback`, `GoogleButton`, `CompleteProfileForm`, `LinkAccountForm`, schemas
-- [ ] 8.8 Teste de integração `src/__tests__/integration/oauth/complete-oauth-profile.int.test.ts` — happy path (cria profile + identity, status `pending_crp_validation`); duplicate CRP retorna typed error
-- [ ] 8.9 Teste de integração `src/__tests__/integration/oauth/link-oauth-identity.int.test.ts` — senha correta linka (deleta pendingUser, insere oauth_identity, redirect); senha incorreta retorna `invalid_credentials` e incrementa counter no user tradicional
-- [ ] 8.10 **[e2e helper]** `src/__tests__/e2e/seeded/_shared/google-oauth-stub.ts` que via `page.route()` intercepta `accounts.google.com` e callback do Supabase, retornando code controlado e identity sintética
-- [ ] 8.11 Teste E2E `src/__tests__/e2e/seeded/oauth/google-first-time.spec.ts` — stub retorna identity nova; UI redireciona para `/onboarding/complete-profile`; submit cria profile e identity; redirect `/onboarding/pending`
-- [ ] 8.12 Teste E2E `src/__tests__/e2e/seeded/oauth/google-link-account.spec.ts` — pré-seed conta tradicional; stub retorna mesmo email; UI redireciona para `/auth/link-account`; senha correta linka; redirect `/login?banner=account_linked`
-- [ ] 8.13 Teste E2E `src/__tests__/e2e/seeded/oauth/google-returning-active.spec.ts` — pré-seed user active com identity Google; stub retorna mesma identity; redirect direto `/dashboard`
+- [x] 8.1 Criar `src/modules/oauth/server/resolve-oauth-callback.ts` exportando `resolveOAuthCallback({ supabase, code, next })` que executa `exchangeCodeForSession` e retorna `{ destination: string }` aplicando a tabela de branching do `oauth-google` spec
+- [x] 8.2 Criar `src/modules/oauth/server/complete-oauth-profile.ts` (`completeOAuthProfileImpl`) com validação, INSERT em `profiles` (status `pending_crp_validation`, `email_verified_at = NOW()`) via service-role Drizzle, INSERT em `oauth_identities`, log `oauth_signup`, redirect `/onboarding/pending`
+- [x] 8.3 Criar `src/modules/oauth/server/link-oauth-identity.ts` (`linkOAuthIdentityImpl`) com confirmação de senha via cliente Supabase isolado (não toca cookies), `supabase.auth.admin.deleteUser` no pendingUserId, link via admin API, INSERT em `oauth_identities`, log `social_linked`, redirect `/login?banner=account_linked`
+- [x] 8.4 Criar `src/modules/oauth/components/google-button.tsx` (`'use client'`) que chama `supabase.auth.signInWithOAuth({ provider: 'google', ... })` no click, com `data-testid="login-form-google-button"`
+- [x] 8.5 Criar `src/modules/oauth/components/complete-profile-form.tsx` (`'use client'`) com email read-only e fullName pré-preenchido a partir de `user.user_metadata.full_name`
+- [x] 8.6 Criar `src/modules/oauth/components/link-account-form.tsx` (`'use client'`) com campo senha + submit, copy genérica em erro
+- [x] 8.7 Criar `src/modules/oauth/index.ts` exportando: `completeOAuthProfile`, `linkOAuthIdentity`, `resolveOAuthCallback`, `GoogleButton`, `CompleteProfileForm`, `LinkAccountForm`, schemas
+- [x] 8.8 Teste de integração `src/__tests__/integration/oauth/complete-oauth-profile.int.test.ts` — happy path (cria profile + identity, status `pending_crp_validation`); duplicate CRP retorna typed error
+- [x] 8.9 Teste de integração `src/__tests__/integration/oauth/link-oauth-identity.int.test.ts` — senha correta linka (deleta pendingUser, insere oauth_identity, redirect); senha incorreta retorna `invalid_credentials` e incrementa counter no user tradicional
+- [x] 8.10 **[e2e helper]** `src/__tests__/e2e/seeded/_shared/google-oauth-stub.ts` que via `page.route()` intercepta `accounts.google.com` e callback do Supabase, retornando code controlado e identity sintética
+- [x] 8.11 Teste E2E `src/__tests__/e2e/seeded/oauth/google-first-time.spec.ts` — stub retorna identity nova; UI redireciona para `/onboarding/complete-profile`; submit cria profile e identity; redirect `/onboarding/pending`
+- [x] 8.12 Teste E2E `src/__tests__/e2e/seeded/oauth/google-link-account.spec.ts` — pré-seed conta tradicional; stub retorna mesmo email; UI redireciona para `/auth/link-account`; senha correta linka; redirect `/login?banner=account_linked`
+- [x] 8.13 Teste E2E `src/__tests__/e2e/seeded/oauth/google-returning-active.spec.ts` — pré-seed user active com identity Google; stub retorna mesma identity; redirect direto `/dashboard`
 
 ## 9. LoginForm atualizado
 

@@ -65,11 +65,13 @@ const AUTH_PATHS: ReadonlySet<string> = new Set([
   '/reset-password',
 ]);
 
-// `/auth/callback` is the verification flow itself; gating it would deadlock
-// users who clicked the email link before the trigger flipped their status.
-// We classify it explicitly so a future refactor of the path patterns can't
-// accidentally absorb it into a redirect rule.
+// `/auth/callback` and `/auth/link-account` are auth flow intermediaries;
+// gating them would deadlock users mid-OAuth. We classify them explicitly so
+// a future refactor of the path patterns can't accidentally absorb them into
+// a redirect rule.
 const CALLBACK_PATH = '/auth/callback';
+const LINK_ACCOUNT_PATH = '/auth/link-account';
+const COMPLETE_PROFILE_PATH = '/onboarding/complete-profile';
 
 const ONBOARDING_PATH = '/onboarding/pending';
 const DASHBOARD_PATH = '/dashboard';
@@ -83,6 +85,12 @@ type PathClass = 'auth' | 'callback' | 'onboarding' | 'app' | 'public';
 // own row). Public paths fall through to the default `pass` branch.
 function classifyPath(pathname: string): PathClass {
   if (pathname === CALLBACK_PATH || pathname.startsWith(`${CALLBACK_PATH}/`)) {
+    return 'callback';
+  }
+  if (pathname === LINK_ACCOUNT_PATH || pathname.startsWith(`${LINK_ACCOUNT_PATH}/`)) {
+    return 'callback';
+  }
+  if (pathname === COMPLETE_PROFILE_PATH || pathname.startsWith(`${COMPLETE_PROFILE_PATH}/`)) {
     return 'callback';
   }
   if (AUTH_PATHS.has(pathname)) {

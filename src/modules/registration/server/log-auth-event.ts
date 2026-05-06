@@ -50,7 +50,9 @@ export type AuthLogEvent =
   | 'lockout_consecutive_threshold_reached'
   | 'logout'
   | 'password_reset_requested'
-  | 'password_reset_completed';
+  | 'password_reset_completed'
+  | 'oauth_signup'
+  | 'social_linked';
 
 export type LogAuthEventInput = {
   /**

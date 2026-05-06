@@ -1,4 +1,5 @@
 import { LoginForm } from '@/modules/auth';
+import { GoogleButton } from '@/modules/oauth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 
 // Next 16: `searchParams` is a Promise. We await it so the Server Component
@@ -19,8 +20,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <CardTitle>Entrar</CardTitle>
         <CardDescription>Acesse sua conta HubrityP.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <LoginForm redirectTo={redirectTo} />
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card text-muted-foreground px-2">ou</span>
+          </div>
+        </div>
+        <GoogleButton />
       </CardContent>
     </Card>
   );

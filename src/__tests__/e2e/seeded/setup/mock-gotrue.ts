@@ -87,6 +87,25 @@ export type MockGoTrueOptions = {
   fixedPassword?: string;
 };
 
+// ---------------------------------------------------------------------------
+// Dynamic OAuth user registry
+//
+// E2E tests register additional users via `POST /_test/register-oauth-user`
+// and clear them via `POST /_test/clear-oauth-users`. Registered users are
+// available for PKCE code exchange, bearer-authenticated GET /auth/v1/user,
+// and GET /rest/v1/profiles lookups.
+// ---------------------------------------------------------------------------
+export type RegisteredOAuthUser = {
+  user: MockGoTrueUser;
+  jwt: string;
+  code: string;
+  /** When defined, the mock returns this profile row via the PostgREST shim. */
+  profile?: Record<string, unknown> | null;
+};
+
+// Module-scoped registry — shared across all requests within the same process.
+const oauthUserRegistry = new Map<string, RegisteredOAuthUser>();
+
 // Defaults wired in when the caller does not supply overrides. Picking a
 // stable UUID (rather than `randomUUID()`) keeps assertions deterministic
 // across runs and lets reused infrastructure skip re-seeding identical rows.
@@ -155,6 +174,24 @@ async function handleRequest(
   const rawUrl = req.url ?? '/';
   const path = rawUrl.split('?')[0] ?? '/';
 
+  // ---- Test-only API: dynamic OAuth user registration ----
+  if (method === 'POST' && path === '/_test/register-oauth-user') {
+    const body = await readBody(req);
+    try {
+      const entry = JSON.parse(body) as RegisteredOAuthUser;
+      oauthUserRegistry.set(entry.code, entry);
+      respondJson(res, 200, { registered: true, code: entry.code });
+    } catch {
+      respondJson(res, 400, { error: 'invalid JSON' });
+    }
+    return;
+  }
+  if (method === 'POST' && path === '/_test/clear-oauth-users') {
+    oauthUserRegistry.clear();
+    respondJson(res, 200, { cleared: true });
+    return;
+  }
+
   // GoTrue's `/user` endpoint is what `supabase.auth.getUser(jwt)` calls. The
   // SDK passes the access token both via the `Authorization: Bearer …`
   // header and as the JSON body. We only inspect the header — that's what
@@ -165,6 +202,13 @@ async function handleRequest(
     if (header === expected) {
       respondJson(res, 200, context.user);
       return;
+    }
+    // Check registered OAuth users.
+    for (const entry of oauthUserRegistry.values()) {
+      if (header === `Bearer ${entry.jwt}`) {
+        respondJson(res, 200, entry.user);
+        return;
+      }
     }
     respondJson(res, 401, { code: 401, msg: 'invalid token' });
     return;
@@ -216,6 +260,19 @@ async function handleRequest(
       respondJson(res, 200, acceptsObject ? row : [row]);
       return;
     }
+
+    // Check registered OAuth users for profile data.
+    for (const entry of oauthUserRegistry.values()) {
+      if (requestedUserId === entry.user.id && entry.profile !== undefined) {
+        if (entry.profile !== null) {
+          respondJson(res, 200, acceptsObject ? entry.profile : [entry.profile]);
+          return;
+        }
+        // profile is explicitly null — no profile for this user.
+        break;
+      }
+    }
+
     if (acceptsObject) {
       respondJson(res, 406, {
         code: 'PGRST116',
@@ -228,18 +285,149 @@ async function handleRequest(
     return;
   }
 
-  // `POST /auth/v1/token?grant_type=password` is the endpoint
-  // `signInWithPassword` calls. The mock accepts the seeded user's email
-  // and returns a valid session; any other email gets a 400 Bad Request
-  // matching real GoTrue's invalid-credentials response.
+  // OAuth authorize endpoint — `signInWithOAuth` redirects the browser here
+  // before going to the external provider. In the mock, we redirect straight
+  // to `/auth/callback?code=<first-registered-code>` or to Google (which the
+  // E2E stub intercepts at the browser level).
+  if (method === 'GET' && path === '/auth/v1/authorize') {
+    const queryString = rawUrl.includes('?') ? (rawUrl.split('?')[1] ?? '') : '';
+    const params = new URLSearchParams(queryString);
+    const redirectTo = params.get('redirect_to') ?? '';
+
+    // If there's a registered OAuth user, redirect to the callback with
+    // their code. This simulates the full Google consent flow.
+    if (oauthUserRegistry.size > 0) {
+      const firstEntry = oauthUserRegistry.values().next().value;
+      if (firstEntry) {
+        const callbackUrl = new URL(redirectTo || 'http://localhost:3000/auth/callback');
+        callbackUrl.searchParams.set('code', firstEntry.code);
+        res.statusCode = 302;
+        res.setHeader('Location', callbackUrl.toString());
+        res.end();
+        return;
+      }
+    }
+
+    // No registered OAuth users — redirect to Google (the browser-level
+    // stub will intercept). In a real environment this would go to Google.
+    res.statusCode = 302;
+    res.setHeader(
+      'Location',
+      `https://accounts.google.com/o/oauth2/auth?redirect_uri=${encodeURIComponent(redirectTo)}`,
+    );
+    res.end();
+    return;
+  }
+
+  // Admin API: GET /auth/v1/admin/users/:id — getUserById.
+  if (method === 'GET' && path.startsWith('/auth/v1/admin/users/')) {
+    const userId = path.split('/').pop() ?? '';
+    for (const entry of oauthUserRegistry.values()) {
+      if (entry.user.id === userId) {
+        respondJson(res, 200, entry.user);
+        return;
+      }
+    }
+    if (userId === context.user.id) {
+      respondJson(res, 200, context.user);
+      return;
+    }
+    respondJson(res, 404, { code: 404, msg: 'User not found' });
+    return;
+  }
+
+  // Admin API: DELETE /auth/v1/admin/users/:id — deleteUser.
+  if (method === 'DELETE' && path.startsWith('/auth/v1/admin/users/')) {
+    const userId = path.split('/').pop() ?? '';
+    // Remove from registry if present.
+    for (const [code, entry] of oauthUserRegistry.entries()) {
+      if (entry.user.id === userId) {
+        oauthUserRegistry.delete(code);
+        break;
+      }
+    }
+    respondJson(res, 200, { id: userId });
+    return;
+  }
+
+  // `POST /auth/v1/token` handles multiple grant types:
+  //   - `grant_type=password` — signInWithPassword
+  //   - `grant_type=pkce` — exchangeCodeForSession (OAuth PKCE flow)
   if (method === 'POST' && path === '/auth/v1/token') {
+    const queryString = rawUrl.includes('?') ? (rawUrl.split('?')[1] ?? '') : '';
+    const queryParams = new URLSearchParams(queryString);
+    const grantType = queryParams.get('grant_type');
+
     const body = await readBody(req);
+
+    // PKCE code exchange — used by OAuth callback.
+    if (grantType === 'pkce') {
+      let parsed: { auth_code?: string; code_verifier?: string } = {};
+      try {
+        parsed = JSON.parse(body) as { auth_code?: string; code_verifier?: string };
+      } catch {
+        respondJson(res, 400, {
+          error: 'invalid_grant',
+          error_description: 'Invalid request body',
+        });
+        return;
+      }
+
+      const code = parsed.auth_code ?? '';
+      const entry = oauthUserRegistry.get(code);
+      if (entry) {
+        const nowIso = new Date().toISOString();
+        const nowSec = Math.floor(Date.now() / 1000);
+        respondJson(res, 200, {
+          access_token: entry.jwt,
+          token_type: 'bearer',
+          expires_in: 60 * 60 * 24 * 30,
+          expires_at: nowSec + 60 * 60 * 24 * 30,
+          refresh_token: 'mock-refresh-token',
+          user: {
+            ...entry.user,
+            last_sign_in_at: nowIso,
+          },
+        });
+        return;
+      }
+
+      // Fall through to default seeded user for recovery codes, etc.
+      const nowIso = new Date().toISOString();
+      const nowSec = Math.floor(Date.now() / 1000);
+      respondJson(res, 200, {
+        access_token: context.fixedToken,
+        token_type: 'bearer',
+        expires_in: 60 * 60 * 24 * 30,
+        expires_at: nowSec + 60 * 60 * 24 * 30,
+        refresh_token: 'mock-refresh-token',
+        user: {
+          ...context.user,
+          last_sign_in_at: nowIso,
+        },
+      });
+      return;
+    }
+
+    // Password-based login (grant_type=password or no grant_type).
     let parsed: { email?: string; password?: string } = {};
     try {
       parsed = JSON.parse(body) as { email?: string; password?: string };
     } catch {
       respondJson(res, 400, { error: 'invalid_grant', error_description: 'Invalid request body' });
       return;
+    }
+
+    // Check registered OAuth users for password verification (used by
+    // link-account flow's isolated client).
+    for (const entry of oauthUserRegistry.values()) {
+      if (parsed.email === entry.user.email) {
+        // For registered OAuth users, password is always invalid (they
+        // don't have one — they only have Google identity). However, if
+        // a traditional account with the same email exists, we should
+        // let the seeded user handler below handle it.
+        break;
+      }
     }
 
     // If a fixedPassword is set, validate both email and password.
@@ -288,6 +476,13 @@ async function handleRequest(
     if (header === expected) {
       respondJson(res, 200, context.user);
       return;
+    }
+    // Check registered OAuth users.
+    for (const entry of oauthUserRegistry.values()) {
+      if (header === `Bearer ${entry.jwt}`) {
+        respondJson(res, 200, entry.user);
+        return;
+      }
     }
     respondJson(res, 401, { code: 401, msg: 'invalid token' });
     return;
