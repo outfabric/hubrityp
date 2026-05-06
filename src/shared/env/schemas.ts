@@ -25,6 +25,8 @@ export const serverEnvSchema = clientEnvSchema.extend({
   LOG_LEVEL: z.enum(logLevels).default('info'),
   NODE_ENV: z.enum(nodeEnvs).default('development'),
   RESEND_API_KEY: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

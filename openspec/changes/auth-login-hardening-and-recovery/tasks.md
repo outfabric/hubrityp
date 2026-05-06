@@ -121,10 +121,10 @@
 
 ## 12. Configuração Supabase OAuth + env
 
-- [ ] 12.1 Atualizar `supabase/config.toml` para habilitar provider Google (`[auth.external.google]`) com `client_id` e `secret` lidos de env
-- [ ] 12.2 Adicionar a `.env.local.example`: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `RESEND_API_KEY` (todos opcionais em dev)
-- [ ] 12.3 Atualizar `src/shared/env/schemas.ts` (server) para incluir os 3 envs como `string().optional()`
-- [ ] 12.4 Documentar em `docs/runbooks/google-oauth-setup.md` como obter credenciais (Google Cloud Console) e configurar callback URL local + prod (criar arquivo)
+- [x] 12.1 Atualizar `supabase/config.toml` para habilitar provider Google (`[auth.external.google]`) com `client_id` e `secret` lidos de env
+- [x] 12.2 Adicionar a `.env.local.example`: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `RESEND_API_KEY` (todos opcionais em dev)
+- [x] 12.3 Atualizar `src/shared/env/schemas.ts` (server) para incluir os 3 envs como `string().optional()`
+- [x] 12.4 Documentar em `docs/runbooks/google-oauth-setup.md` como obter credenciais (Google Cloud Console) e configurar callback URL local + prod (criar arquivo)
 
 ## 13. Documentação
 
