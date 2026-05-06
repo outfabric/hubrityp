@@ -42,17 +42,17 @@ export async function applyFailedLoginAttempt(db: AppDb, userId: string): Promis
       END,
       last_failed_login_at = NOW(),
       lockout_until = CASE
-        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) >= 5
+        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) = 5
           THEN NOW() + INTERVAL '30 minutes'
         ELSE ${profiles.lockoutUntil}
       END,
       consecutive_lockouts = CASE
-        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) >= 5
+        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) = 5
           THEN ${profiles.consecutiveLockouts} + 1
         ELSE ${profiles.consecutiveLockouts}
       END,
       requires_password_reset = CASE
-        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) >= 5
+        WHEN (CASE WHEN ${profiles.lastFailedLoginAt} < NOW() - INTERVAL '15 minutes' THEN 1 ELSE ${profiles.failedLoginCount} + 1 END) = 5
           AND ${profiles.consecutiveLockouts} + 1 >= 3
           THEN true
         ELSE ${profiles.requiresPasswordReset}

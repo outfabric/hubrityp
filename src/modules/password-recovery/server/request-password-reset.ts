@@ -7,6 +7,7 @@ import { forgotPasswordInputSchema } from '@/modules/password-recovery/lib/forgo
 import { logAuthEvent } from '@/modules/registration/server/log-auth-event';
 import { db } from '@/shared/db/client';
 import { profiles } from '@/shared/db/schema/auth/tables';
+import { hashEmail } from '@/shared/lib/hash-email';
 import { logger } from '@/shared/lib/logger';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -56,15 +57,6 @@ async function resolveOrigin(): Promise<string> {
 async function dummyDelay(): Promise<void> {
   const { randomInt } = await import('node:crypto');
   await new Promise<void>((r) => setTimeout(r, 50 + randomInt(100)));
-}
-
-/**
- * Hash an email for audit log metadata. Never log the raw email — only
- * the hash is stored so ops can correlate attempts without exposing PII.
- */
-async function hashEmail(email: string): Promise<string> {
-  const { createHash } = await import('node:crypto');
-  return createHash('sha256').update(email.toLowerCase().trim()).digest('hex').slice(0, 16);
 }
 
 export async function requestPasswordResetImpl(
@@ -117,7 +109,7 @@ export async function requestPasswordResetImpl(
       // No profile — apply dummy delay for anti-enumeration timing.
       await dummyDelay();
 
-      const emailHash = await hashEmail(email);
+      const emailHash = hashEmail(email);
       void logAuthEvent({
         userId: null,
         event: 'password_reset_requested',

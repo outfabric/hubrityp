@@ -4,7 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { eq, sql } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
-import { applyFailedLoginAttempt } from '@/modules/auth/server/lockout';
+import { applyFailedLoginAttempt, isCurrentlyLockedOut } from '@/modules/auth/server/lockout';
 import { linkAccountInputSchema } from '@/modules/oauth/lib/link-account-input-schema';
 import { logAuthEvent } from '@/modules/registration/server/log-auth-event';
 import { db } from '@/shared/db/client';
@@ -103,6 +103,18 @@ export async function linkOAuthIdentityImpl(formData: FormData): Promise<LinkOAu
 
   const traditionalUserId = existingProfile.userId;
 
+  // 3b. Check lockout state before attempting password verification.
+  //     Return `invalid_credentials` (not `locked_out`) for anti-enumeration.
+  const lockout = isCurrentlyLockedOut(existingProfile);
+  if (lockout.lockedOut) {
+    void logAuthEvent({
+      userId: traditionalUserId,
+      event: 'login_failure',
+      metadata: { source: 'link_account', reason: 'locked_out' },
+    });
+    return { ok: false, error: 'invalid_credentials' };
+  }
+
   // 4. Verify password using an ISOLATED Supabase client (no cookie
   //    interaction). This client is created from scratch with the anon key
   //    and talks to GoTrue's password-sign-in endpoint, which validates the
@@ -117,12 +129,21 @@ export async function linkOAuthIdentityImpl(formData: FormData): Promise<LinkOAu
     password,
   });
 
+  if (!signInError) {
+    // Clean up the isolated session created by signInWithPassword — best-effort.
+    try {
+      void isolatedClient.auth.signOut().catch(() => {});
+    } catch {
+      // signOut may not exist on minimal client instances (e.g., tests).
+    }
+  }
+
   if (signInError) {
     // Password verification failed — increment the failed-attempt counter
     // on the traditional user's profile.
     await applyFailedLoginAttempt(db, traditionalUserId);
 
-    await logAuthEvent({
+    void logAuthEvent({
       userId: traditionalUserId,
       event: 'login_failure',
       metadata: { source: 'link_account', provider: 'google' },

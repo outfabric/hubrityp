@@ -129,7 +129,7 @@ export async function completeOAuthProfileImpl(
   }
 
   // 5. Best-effort audit log.
-  await logAuthEvent({
+  void logAuthEvent({
     userId: user.id,
     event: 'oauth_signup',
     metadata: {

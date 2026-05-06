@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { hashEmail } from '@/shared/lib/hash-email';
 import { logger } from '@/shared/lib/logger';
 
 import { sendEmailViaResend, type SendEmailResult } from './resend';
@@ -50,9 +51,11 @@ export async function sendPasswordChangedEmail(to: string): Promise<SendEmailRes
     text: buildText(to),
   });
 
+  const emailHash = hashEmail(to);
+
   if (!result.ok && result.error === 'no_api_key') {
     logger.warn(
-      { event: 'mail.skipped', reason: 'no_api_key', to },
+      { event: 'mail.skipped', reason: 'no_api_key', emailHash },
       '[dev] would send password-changed email',
     );
     return { ok: true, skipped: true };
@@ -60,7 +63,7 @@ export async function sendPasswordChangedEmail(to: string): Promise<SendEmailRes
 
   if (!result.ok) {
     logger.error(
-      { event: 'mail.send_failed', template: 'password-changed', to },
+      { event: 'mail.send_failed', template: 'password-changed', emailHash },
       'Failed to send password-changed email via Resend',
     );
   }
