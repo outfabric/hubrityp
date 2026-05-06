@@ -114,10 +114,10 @@
 
 ## 11. Middleware atualizado
 
-- [ ] 11.1 Atualizar `src/middleware.ts` para implementar a tabela de decisão completa: novos cases `requires_password_reset = true` (→ `/forgot-password`) e "session sem profile e provider != email" (→ `/onboarding/complete-profile`)
-- [ ] 11.2 Garantir que `/forgot-password`, `/reset-password`, `/auth/link-account` estão no matcher
-- [ ] 11.3 Helper `src/middleware.ts` (ou em `src/modules/auth/server/`) `hasOAuthIdentity(authUser): boolean` para distinguir "sem profile + OAuth" de "sem profile + race window de email signup"
-- [ ] 11.4 Teste de integração `src/__tests__/integration/middleware/middleware-status-gating-v2.int.test.ts` — atualizar combinatória para incluir `requires_password_reset = true` e "OAuth sem profile"
+- [x] 11.1 Atualizar `src/middleware.ts` para implementar a tabela de decisão completa: novos cases `requires_password_reset = true` (→ `/forgot-password`) e "session sem profile e provider != email" (→ `/onboarding/complete-profile`)
+- [x] 11.2 Garantir que `/forgot-password`, `/reset-password`, `/auth/link-account` estão no matcher
+- [x] 11.3 Helper `src/middleware.ts` (ou em `src/modules/auth/server/`) `hasOAuthIdentity(authUser): boolean` para distinguir "sem profile + OAuth" de "sem profile + race window de email signup"
+- [x] 11.4 Teste de integração `src/__tests__/integration/middleware/middleware-status-gating-v2.int.test.ts` — atualizar combinatória para incluir `requires_password_reset = true` e "OAuth sem profile"
 
 ## 12. Configuração Supabase OAuth + env
 

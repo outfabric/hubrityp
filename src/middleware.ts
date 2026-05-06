@@ -1,8 +1,9 @@
+import type { User } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // IMPORTANT: import from the Edge-only barrel, NOT `@/modules/registration`.
-// The canonical barrel transitively pulls Drizzle (`postgres-js` →
-// `node:crypto`), which the Edge runtime does not expose — bundling it
+// The canonical barrel transitively pulls Drizzle (`postgres-js` ->
+// `node:crypto`), which the Edge runtime does not expose -- bundling it
 // crashes the worker at module-evaluation time. The `/edge` entrypoint
 // re-exports the same `getCurrentProfileEdge`, `ProfileStatus`, and
 // `Profile` symbols without touching Node-only deps.
@@ -15,60 +16,65 @@ import { createMiddlewareClient } from '@/shared/supabase/middleware';
 // in `specs/authentication/spec.md` ("Requirement: Middleware enforces auth
 // gating for `(app)` routes").
 //
-// Decision table (path × profile.status — `null` represents "no session"):
+// Decision table (path x session state -- `null` represents "no session"):
 //
-//   Path requested              | null         | pending_*               | active     | suspended/cancelled (*)
-//   ----------------------------|--------------|-------------------------|------------|--------------------------
-//   /login, /signup             | pass         | →/onboarding/pending    | →/dashboard| pass + signOut
-//   /onboarding/pending         | →/login?...  | pass                    | →/dashboard| →/login + signOut
-//   /dashboard*, other (app)    | →/login?...  | →/onboarding/pending    | pass       | →/login + signOut
-//   /auth/callback              | pass         | pass                    | pass       | pass
-//   /, /api/health, marketing   | pass (refresh)| pass                   | pass       | pass
+//   Path requested              | null        | OAuth, no profile        | pending_*             | active + !rpr | active + rpr        | suspended/cancelled (*)
+//   ----------------------------|-------------|--------------------------|----------------------|---------------|---------------------|------------------------
+//   /login, /signup             | pass        | ->/onboarding/c-p         | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | pass + signOut
+//   /forgot-password            | pass        | ->/onboarding/c-p         | pass                 | ->/dashboard   | pass                | ->/login + signOut
+//   /reset-password             | pass        | ->/onboarding/c-p         | pass                 | pass          | pass                | ->/login + signOut
+//   /auth/link-account          | pass        | pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
+//   /onboarding/complete-profile| ->/login?...| pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
+//   /onboarding/pending         | ->/login?...| ->/onboarding/c-p         | pass                 | ->/dashboard   | ->/forgot-password   | ->/login + signOut
+//   /dashboard*, other (app)    | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
+//   /auth/callback              | pass        | pass                     | pass                 | pass          | pass                | pass
+//   /, /api/health, public      | pass        | pass                     | pass                 | pass          | pass                | pass
+//
+// Legend: rpr = requires_password_reset, c-p = complete-profile
 //
 // (*) Suspended/cancelled with a live cookie MUST have the session cleared
-// before any redirect is emitted — otherwise the next request still carries
+// before any redirect is emitted -- otherwise the next request still carries
 // the old JWT and the same row resolves the same status, looping forever.
 // `/login` and `/signup` for suspended users intentionally pass through
 // (rather than self-redirecting) so the visible login form is what greets
 // the user after `signOut` clears the cookie.
 //
 // Why this lives in middleware (Edge), not in a layout (RSC):
-//   • Cookie refresh MUST happen at the edge — the Server Components below
+//   - Cookie refresh MUST happen at the edge -- the Server Components below
 //     read the refreshed cookie via `createServerClient(await cookies())`.
-//   • An RSC layout cannot redirect before the cookie write commits, which
+//   - An RSC layout cannot redirect before the cookie write commits, which
 //     would force a double round-trip on every navigation.
 //
 // Why Edge and not Node: the Next.js 16 `middleware.ts` file convention
-// runs on the Edge runtime (the new `proxy.ts` convention is Node-default).
-// Drizzle (`postgres-js`) doesn't run on Edge — that's why we use
-// `getCurrentProfileEdge`, which goes through the Supabase REST surface
-// authenticated by the user's JWT (RLS-scoped, single-row PK lookup).
+// runs on the Edge runtime (per Next.js 16 docs -- only the new `proxy.ts`
+// convention defaults to Node.js). Drizzle (`postgres-js`) doesn't run on
+// Edge -- that's why we use `getCurrentProfileEdge`, which goes through the
+// Supabase REST surface authenticated by the user's JWT (RLS-scoped,
+// single-row PK lookup).
 //
 // `null` profile semantics: an authenticated user whose `profiles` row
-// hasn't been materialized yet (race window between `auth.signUp`
-// returning and the SECURITY DEFINER trigger committing) is treated as
-// anonymous for gating. The next request — after the trigger commits —
-// applies the correct status row.
+// hasn't been materialized yet depends on the auth provider:
+//   - OAuth user (non-email provider) -> directed to `/onboarding/complete-profile`
+//     to fill in CRP and consent fields that the trigger doesn't populate.
+//   - Email user -> race window (trigger hasn't committed). Treated as
+//     anonymous; the next request applies the correct status row.
 //
 // Cookie-set transplant: `createMiddlewareClient` writes refreshed cookies
 // onto its `response` object via the `@supabase/ssr` cookie adapter. When
 // we replace that response with a redirect, we MUST copy those cookies onto
-// the redirect — otherwise a token rotation that happened during
+// the redirect -- otherwise a token rotation that happened during
 // `getUser()` would be silently dropped, and the redirect would arrive
 // with a stale cookie.
 
-// Auth surfaces — login + signup share the same redirect rules.
-const AUTH_PATHS: ReadonlySet<string> = new Set([
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-]);
+// Auth surfaces -- login + signup share the same redirect rules per the
+// decision table. `/forgot-password` and `/reset-password` have distinct
+// rules and are classified separately.
+const AUTH_PATHS: ReadonlySet<string> = new Set(['/login', '/signup']);
+const FORGOT_PASSWORD_PATH = '/forgot-password';
+const RESET_PASSWORD_PATH = '/reset-password';
 
-// `/auth/callback` and `/auth/link-account` are auth flow intermediaries;
-// gating them would deadlock users mid-OAuth. We classify them explicitly so
-// a future refactor of the path patterns can't accidentally absorb them into
-// a redirect rule.
+// `/auth/callback` is a flow intermediary that always passes through;
+// `/auth/link-account` has its own row in the decision table.
 const CALLBACK_PATH = '/auth/callback';
 const LINK_ACCOUNT_PATH = '/auth/link-account';
 const COMPLETE_PROFILE_PATH = '/onboarding/complete-profile';
@@ -77,21 +83,36 @@ const ONBOARDING_PATH = '/onboarding/pending';
 const DASHBOARD_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 
-type PathClass = 'auth' | 'callback' | 'onboarding' | 'app' | 'public';
+// Each distinct row in the decision table maps to one PathClass value.
+type PathClass =
+  | 'auth'
+  | 'forgot-password'
+  | 'reset-password'
+  | 'link-account'
+  | 'complete-profile'
+  | 'callback'
+  | 'onboarding'
+  | 'app'
+  | 'public';
 
-// Pure path classifier. `(app)` paths are anything mounted under the
-// authenticated shell — today that's `/dashboard*`, but the contract scales
-// to any future `(app)` route except `/onboarding/pending` (which has its
-// own row). Public paths fall through to the default `pass` branch.
+// Pure path classifier. Each distinct row in the decision table gets its own
+// path class so `decide()` can apply fine-grained redirect rules. Public
+// paths fall through to the default `pass` branch.
 function classifyPath(pathname: string): PathClass {
   if (pathname === CALLBACK_PATH || pathname.startsWith(`${CALLBACK_PATH}/`)) {
     return 'callback';
   }
   if (pathname === LINK_ACCOUNT_PATH || pathname.startsWith(`${LINK_ACCOUNT_PATH}/`)) {
-    return 'callback';
+    return 'link-account';
   }
   if (pathname === COMPLETE_PROFILE_PATH || pathname.startsWith(`${COMPLETE_PROFILE_PATH}/`)) {
-    return 'callback';
+    return 'complete-profile';
+  }
+  if (pathname === FORGOT_PASSWORD_PATH) {
+    return 'forgot-password';
+  }
+  if (pathname === RESET_PASSWORD_PATH) {
+    return 'reset-password';
   }
   if (AUTH_PATHS.has(pathname)) {
     return 'auth';
@@ -101,11 +122,29 @@ function classifyPath(pathname: string): PathClass {
   }
   // `(app)` shell: today only `/dashboard*`. The strict prefix check (with
   // a separator or exact match) keeps `/some/dashboard-news` out of the
-  // gated set — see the matcher-boundary regression test.
+  // gated set -- see the matcher-boundary regression test.
   if (pathname === DASHBOARD_PATH || pathname.startsWith(`${DASHBOARD_PATH}/`)) {
     return 'app';
   }
   return 'public';
+}
+
+/**
+ * Edge-compatible check: does the Supabase `User` have a non-email OAuth
+ * identity? Used to distinguish "OAuth user without profile" (directed to
+ * complete-profile) from "email signup race window" (treated as anonymous).
+ *
+ * Checks `app_metadata.providers` (array of provider names stored by
+ * GoTrue). If any entry is not `'email'`, the user signed up via OAuth.
+ */
+export function hasOAuthIdentity(authUser: User): boolean {
+  const { providers } = authUser.app_metadata;
+  if (Array.isArray(providers)) {
+    return providers.some((p) => p !== 'email');
+  }
+  // Fallback: check the single `provider` field (older GoTrue versions)
+  const { provider } = authUser.app_metadata;
+  return provider !== undefined && provider !== 'email';
 }
 
 type Decision =
@@ -119,40 +158,122 @@ type Decision =
   | { kind: 'clear-and-pass'; reason: string }
   | { kind: 'clear-and-redirect'; to: string; reason: string };
 
-// Decide what to do for the (path, profile) pair. The `profile` argument is
-// `null` either when there is no session or when the trigger hasn't
-// materialized the row yet — both cases use the "no session" column per
-// the spec.
-function decide(pathClass: PathClass, profile: Profile | null, requestPath: string): Decision {
+// Session context passed to `decide()`. Covers three states:
+//   1. No session: `authUser` is null, `profile` is null.
+//   2. Authenticated but no profile: `authUser` is non-null, `profile` is null
+//      (either OAuth pending complete-profile, or email signup race window).
+//   3. Authenticated with profile: both non-null.
+interface SessionContext {
+  readonly authUser: User | null;
+  readonly profile: Profile | null;
+}
+
+// Decide what to do for the (path, session) pair. The `profile` field is
+// `null` either when there is no session, when the trigger hasn't
+// materialized the row yet (email signup race window), or when the user is
+// an OAuth user who needs to complete their profile.
+function decide(pathClass: PathClass, ctx: SessionContext, requestPath: string): Decision {
   // /auth/callback ALWAYS passes through, regardless of session state.
   if (pathClass === 'callback') {
     return { kind: 'pass' };
   }
 
-  // No session (or session-without-profile) — apply the leftmost column.
-  if (!profile) {
-    if (pathClass === 'app' || pathClass === 'onboarding') {
+  // When profile exists, skip directly to the status switch regardless of
+  // whether `authUser` was populated (the middleware only fetches `authUser`
+  // when profile is null, so `authUser` is always null here).
+  if (ctx.profile) {
+    return decideWithProfile(pathClass, ctx.profile);
+  }
+
+  // No profile. Two sub-cases:
+  //   a) No session at all (authUser is null) -- "anonymous" column.
+  //   b) Authenticated but no profile row -- depends on provider.
+  if (!ctx.authUser) {
+    // Truly anonymous -- no session cookie or expired session.
+    if (pathClass === 'app' || pathClass === 'onboarding' || pathClass === 'complete-profile') {
       const target = `${LOGIN_PATH}?redirectTo=${encodeURIComponent(requestPath)}`;
       return { kind: 'redirect', to: target, reason: 'anon-on-gated' };
     }
     return { kind: 'pass' };
   }
 
-  // From here on, profile is non-null — switch on status. We narrow on the
-  // closed `ProfileStatus` union so a future status (e.g. `archived`)
-  // forces a compile-time exhaustiveness error here.
+  // Authenticated user but no profile row. Distinguish OAuth from email race.
+  {
+    if (hasOAuthIdentity(ctx.authUser)) {
+      // OAuth user without profile -> direct to complete-profile form.
+      // Three path classes pass: complete-profile itself, link-account
+      // (OAuth intermediary), and public routes (cookie refresh only).
+      if (
+        pathClass === 'complete-profile' ||
+        pathClass === 'link-account' ||
+        pathClass === 'public'
+      ) {
+        return { kind: 'pass' };
+      }
+      return {
+        kind: 'redirect',
+        to: COMPLETE_PROFILE_PATH,
+        reason: 'oauth-needs-complete-profile',
+      };
+    }
+    // Email signup race window -- treat exactly like "no session".
+    if (pathClass === 'app' || pathClass === 'onboarding' || pathClass === 'complete-profile') {
+      const target = `${LOGIN_PATH}?redirectTo=${encodeURIComponent(requestPath)}`;
+      return { kind: 'redirect', to: target, reason: 'anon-on-gated' };
+    }
+    return { kind: 'pass' };
+  }
+}
+
+// Status-based decision when the profile row exists. Extracted from `decide()`
+// so the control flow is linear: decide() handles the null-profile paths,
+// then delegates here for the status switch.
+function decideWithProfile(pathClass: PathClass, profile: Profile): Decision {
   switch (profile.status) {
     case ProfileStatus.PendingVerification:
     case ProfileStatus.PendingCrpValidation:
       // Pending users see only the onboarding page. /auth/callback was
       // handled above. Auth pages (login, signup) bounce to onboarding.
-      if (pathClass === 'onboarding') return { kind: 'pass' };
+      // /forgot-password, /reset-password, and public paths pass through.
+      if (
+        pathClass === 'onboarding' ||
+        pathClass === 'forgot-password' ||
+        pathClass === 'reset-password' ||
+        pathClass === 'public'
+      ) {
+        return { kind: 'pass' };
+      }
       return { kind: 'redirect', to: ONBOARDING_PATH, reason: 'pending-needs-onboarding' };
 
     case ProfileStatus.Active:
-      // Active users see the app. Auth + onboarding bounce to dashboard.
-      if (pathClass === 'app') return { kind: 'pass' };
-      if (pathClass === 'auth' || pathClass === 'onboarding') {
+      // Active users with `requires_password_reset` MUST reset their
+      // password before accessing anything except the password-reset flow
+      // itself and public routes.
+      if (profile.requiresPasswordReset) {
+        if (
+          pathClass === 'forgot-password' ||
+          pathClass === 'reset-password' ||
+          pathClass === 'public'
+        ) {
+          return { kind: 'pass' };
+        }
+        return {
+          kind: 'redirect',
+          to: FORGOT_PASSWORD_PATH,
+          reason: 'requires-password-reset',
+        };
+      }
+      // Active users (no password reset needed) see the app. Auth +
+      // onboarding bounce to dashboard. /reset-password passes through
+      // (user may want to change password voluntarily).
+      if (pathClass === 'app' || pathClass === 'reset-password') return { kind: 'pass' };
+      if (
+        pathClass === 'auth' ||
+        pathClass === 'onboarding' ||
+        pathClass === 'forgot-password' ||
+        pathClass === 'link-account' ||
+        pathClass === 'complete-profile'
+      ) {
         return { kind: 'redirect', to: DASHBOARD_PATH, reason: 'active-already-in' };
       }
       return { kind: 'pass' };
@@ -163,7 +284,7 @@ function decide(pathClass: PathClass, profile: Profile | null, requestPath: stri
       // call signOut + clear cookies regardless of which path they hit.
       // For /login and /signup we let the request through (so the form is
       // visible after the cookie is gone); for /onboarding and /(app) we
-      // redirect to /login. Public paths still pass — clearing the cookie
+      // redirect to /login. Public paths still pass -- clearing the cookie
       // there is harmless and keeps the contract uniform.
       if (pathClass === 'auth' || pathClass === 'public') {
         return { kind: 'clear-and-pass', reason: 'account-unavailable' };
@@ -180,16 +301,28 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
 
   // `getCurrentProfileEdge` calls `supabase.auth.getUser()` itself before
-  // hitting the `profiles` table — so we don't need to call it twice. This
-  // also means the cookie refresh side-effect (managed inside
-  // `createMiddlewareClient` via the cookie adapter) still runs.
+  // hitting the `profiles` table -- so we don't need to call it twice for
+  // the common case (user has a profile). For the null-profile case, we
+  // do a second `getUser()` call to check OAuth identity -- this is rare
+  // enough that the extra round-trip is acceptable.
   const profile = await getCurrentProfileEdge(supabase);
+
+  // When profile is null, we need the auth user to distinguish OAuth users
+  // (-> complete-profile) from email signup race window (-> treat as anon).
+  // When profile exists, we don't need the auth user for decisions.
+  let authUser: User | null = null;
+  if (!profile) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    authUser = user;
+  }
 
   const { pathname, search } = request.nextUrl;
   const pathClass = classifyPath(pathname);
   const requestPath = pathname + (search ?? '');
 
-  const decision = decide(pathClass, profile, requestPath);
+  const decision = decide(pathClass, { authUser, profile }, requestPath);
 
   // Telemetry: minimal pino-shaped log line for debugging redirects in dev.
   // We log `status` as the resolved status string (or `anonymous`) so a
@@ -200,7 +333,7 @@ export async function middleware(request: NextRequest) {
   edgeLogger.debug(
     {
       path: pathname,
-      status: profile?.status ?? 'anonymous',
+      status: profile?.status ?? (authUser ? 'oauth-no-profile' : 'anonymous'),
       decision: describeDecision(decision),
     },
     'mw-decision',
@@ -212,14 +345,14 @@ export async function middleware(request: NextRequest) {
   // cookie deletions onto a redirect.
   if (decision.kind === 'clear-and-pass' || decision.kind === 'clear-and-redirect') {
     // Best-effort: a signOut failure (e.g. GoTrue 5xx) must not block the
-    // user-facing flow — the cookie clear below is the safety net that
+    // user-facing flow -- the cookie clear below is the safety net that
     // breaks the loop even if the remote call never succeeds.
     try {
       await supabase.auth.signOut();
     } catch (err) {
       edgeLogger.warn(
         { event: 'mw_signout_failed', errorName: err instanceof Error ? err.name : 'unknown' },
-        'middleware signOut threw — continuing with explicit cookie clear',
+        'middleware signOut threw -- continuing with explicit cookie clear',
       );
     }
     // Belt-and-suspenders: even if signOut succeeded and wrote deletions,
@@ -240,7 +373,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // `request.nextUrl` (not `request.url`) is the user-facing URL with the
-  // `Host` header preserved — using `request.url` would produce
+  // `Host` header preserved -- using `request.url` would produce
   // `0.0.0.0:3000` in dev (Next binds to all interfaces) and the wrong
   // hostname behind some proxies in prod.
   const url = new URL(decision.to, request.nextUrl);
@@ -264,7 +397,7 @@ function buildRedirect(url: URL, sourceResponse: NextResponse): NextResponse {
 // the incoming request mirror and the outgoing response. The request mirror
 // is what `@supabase/ssr` reads on the next pass; the response is what the
 // browser stores. We delete by exact name (any present `sb-*` cookie) so
-// we don't leak future cookie names — the prefix match is conservative.
+// we don't leak future cookie names -- the prefix match is conservative.
 function clearSupabaseCookies(request: NextRequest, response: NextResponse): void {
   for (const cookie of request.cookies.getAll()) {
     if (cookie.name.startsWith('sb-')) {
@@ -288,7 +421,7 @@ function describeDecision(decision: Decision): string {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static assets, and the favicon — middleware
+    // Skip Next.js internals, static assets, and the favicon -- middleware
     // would otherwise add cookie-set overhead to every fetched chunk. The
     // negation pattern is the documented Next.js way to exclude path
     // prefixes; everything else (including `/auth/callback`) is matched.
