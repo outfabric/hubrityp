@@ -94,10 +94,10 @@
 
 ## 9. LoginForm atualizado
 
-- [ ] 9.1 Atualizar `src/modules/auth/components/login-form.tsx` para incluir checkbox "Manter conectado" (`data-testid="login-form-keep-logged-in"`) controlando `keepLoggedIn`
-- [ ] 9.2 Adicionar import e render do `<GoogleButton/>` de `@/modules/oauth` abaixo do submit
-- [ ] 9.3 Renderizar copies pt-BR específicas para os 5 erros: `invalid_credentials`, `locked_out` (com tempo restante computado de `lockoutUntil` + link para `/forgot-password`), `requires_password_reset` (link com email pré-preenchido), `account_unavailable`, `unknown`
-- [ ] 9.4 Adicionar estado de banner em `/login` (query param `?banner=password_changed` ou `?banner=account_linked`) com `data-testid` correspondente
+- [x] 9.1 Atualizar `src/modules/auth/components/login-form.tsx` para incluir checkbox "Manter conectado" (`data-testid="login-form-keep-logged-in"`) controlando `keepLoggedIn`
+- [x] 9.2 Adicionar import e render do `<GoogleButton/>` de `@/modules/oauth` abaixo do submit
+- [x] 9.3 Renderizar copies pt-BR específicas para os 5 erros: `invalid_credentials`, `locked_out` (com tempo restante computado de `lockoutUntil` + link para `/forgot-password`), `requires_password_reset` (link com email pré-preenchido), `account_unavailable`, `unknown`
+- [x] 9.4 Adicionar estado de banner em `/login` (query param `?banner=password_changed` ou `?banner=account_linked`) com `data-testid` correspondente
 
 ## 10. Route shells e páginas
 
