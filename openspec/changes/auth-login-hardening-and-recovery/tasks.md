@@ -101,16 +101,16 @@
 
 ## 10. Route shells e páginas
 
-- [ ] 10.1 Criar `src/app/(auth)/forgot-password/page.tsx` (Server Component) renderizando `<ForgotPasswordForm/>`
-- [ ] 10.2 Criar `src/app/(auth)/forgot-password/actions.ts` com `'use server'` re-exportando `requestPasswordReset`
-- [ ] 10.3 Criar `src/app/(auth)/reset-password/page.tsx` que verifica session de recovery; se ausente, renderiza error UI com link para `/forgot-password`; se presente, renderiza `<ResetPasswordForm/>`
-- [ ] 10.4 Criar `src/app/(auth)/reset-password/actions.ts` com `'use server'` re-exportando `resetPassword`
-- [ ] 10.5 Atualizar `src/app/(auth)/auth/callback/route.ts` para delegar a `resolveOAuthCallback` quando o código for OAuth (detectar via `next` query param ou via `session.user.app_metadata.provider != 'email'`); manter caminho atual de email-verification + recovery
-- [ ] 10.6 Criar `src/app/(app)/onboarding/complete-profile/page.tsx` que carrega session, redireciona se já tem profile, renderiza `<CompleteProfileForm email={user.email} suggestedName={user.user_metadata.full_name}/>`
-- [ ] 10.7 Criar `src/app/(app)/onboarding/complete-profile/actions.ts` com `'use server'` re-exportando `completeOAuthProfile`
-- [ ] 10.8 Criar `src/app/(auth)/auth/link-account/page.tsx` que lê `pendingUserId` da query, valida que existe e renderiza `<LinkAccountForm/>`
-- [ ] 10.9 Criar `src/app/(auth)/auth/link-account/actions.ts` com `'use server'` re-exportando `linkOAuthIdentity`
-- [ ] 10.10 Atualizar `playwright.seeded.config.ts` se necessário para incluir os novos subdirs
+- [x] 10.1 Criar `src/app/(auth)/forgot-password/page.tsx` (Server Component) renderizando `<ForgotPasswordForm/>`
+- [x] 10.2 Criar `src/app/(auth)/forgot-password/actions.ts` com `'use server'` re-exportando `requestPasswordReset`
+- [x] 10.3 Criar `src/app/(auth)/reset-password/page.tsx` que verifica session de recovery; se ausente, renderiza error UI com link para `/forgot-password`; se presente, renderiza `<ResetPasswordForm/>`
+- [x] 10.4 Criar `src/app/(auth)/reset-password/actions.ts` com `'use server'` re-exportando `resetPassword`
+- [x] 10.5 Atualizar `src/app/(auth)/auth/callback/route.ts` para delegar a `resolveOAuthCallback` quando o código for OAuth (detectar via `next` query param ou via `session.user.app_metadata.provider != 'email'`); manter caminho atual de email-verification + recovery
+- [x] 10.6 Criar `src/app/(app)/onboarding/complete-profile/page.tsx` que carrega session, redireciona se já tem profile, renderiza `<CompleteProfileForm email={user.email} suggestedName={user.user_metadata.full_name}/>`
+- [x] 10.7 Criar `src/app/(app)/onboarding/complete-profile/actions.ts` com `'use server'` re-exportando `completeOAuthProfile`
+- [x] 10.8 Criar `src/app/(auth)/auth/link-account/page.tsx` que lê `pendingUserId` da query, valida que existe e renderiza `<LinkAccountForm/>`
+- [x] 10.9 Criar `src/app/(auth)/auth/link-account/actions.ts` com `'use server'` re-exportando `linkOAuthIdentity`
+- [x] 10.10 Atualizar `playwright.seeded.config.ts` se necessário para incluir os novos subdirs
 
 ## 11. Middleware atualizado
 
