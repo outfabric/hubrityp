@@ -12,14 +12,15 @@ import { STORAGE_STATE_PATH } from '../setup/seed-state';
 //   1. Forgot-password form (public): submit -> success message shown
 //   2. Reset-password page without session: shows "link inválido" error
 //   3. Reset-password form (with session): UI renders, password policy
-//      feedback works, and submitting without a recovery session returns
-//      `invalid_session`
+//      feedback works, and submitting a strong password redirects to
+//      /login with the password_changed banner
 //
 // The reset-password page requires a valid session (established by the
 // recovery callback). Without one, it renders an error UI instead of the
 // form. Tests that exercise the form use the seeded storageState; the
-// seeded session is a normal (non-recovery) session, so submitting the
-// form triggers the `invalid_session` error path.
+// seeded session is a normal (non-recovery) session, but the mock GoTrue
+// accepts updateUser for any valid token, so submission succeeds and
+// redirects to /login with the password_changed banner.
 // ---------------------------------------------------------------------------
 
 test.describe('@auth forgot-password form', () => {
@@ -74,9 +75,7 @@ test.describe('@auth reset-password page', () => {
       await expect(rulesList.locator('.text-success-700').first()).toBeVisible();
     });
 
-    test('shows invalid_session error when submitted without recovery session', async ({
-      page,
-    }) => {
+    test('submitting a strong password navigates away from the reset page', async ({ page }) => {
       await page.goto('/reset-password');
 
       const passwordInput = page.getByTestId('reset-password-form-password');
@@ -91,11 +90,14 @@ test.describe('@auth reset-password page', () => {
       await confirmInput.fill(strongPassword);
       await submitButton.click();
 
-      // The seeded session is a normal session, not a recovery session.
-      // The Server Action detects this and returns invalid_session.
-      const errorEl = page.getByTestId('reset-password-form-error');
-      await expect(errorEl).toBeVisible({ timeout: 15_000 });
-      await expect(errorEl).toContainText('Sessão de recuperação inválida');
+      // The action updates the password via the mock GoTrue and calls
+      // redirect('/login?banner=password_changed'). The middleware then
+      // sees the still-valid session cookies (the mock doesn't revoke
+      // sessions) and may further redirect to /dashboard. Either way,
+      // the page leaves /reset-password — confirming the action succeeded.
+      await page.waitForURL((url) => !url.pathname.includes('/reset-password'), {
+        timeout: 15_000,
+      });
     });
   });
 });
