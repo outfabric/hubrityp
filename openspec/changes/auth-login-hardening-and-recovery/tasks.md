@@ -133,4 +133,4 @@
 
 ## 14. Validação final
 
-- [ ] 14.1 `openspec validate auth-login-hardening-and-recovery --strict` retorna OK
+- [x] 14.1 `openspec validate auth-login-hardening-and-recovery --strict` retorna OK
