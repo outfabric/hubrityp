@@ -1,5 +1,20 @@
 import type { NextConfig } from 'next';
 
+// Derive HTTP and WebSocket origins from NEXT_PUBLIC_SUPABASE_URL so that
+// GoTrue, REST, and Realtime connections are permitted by the CSP.
+// Falls back to an empty string when the var is absent (CI, storybook, etc.).
+function supabaseConnectSrc(): string {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return '';
+  try {
+    const { protocol, host } = new URL(raw);
+    const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+    return ` ${protocol}//${host} ${wsProtocol}//${host}`;
+  } catch {
+    return '';
+  }
+}
+
 const securityHeaders = [
   {
     key: 'Strict-Transport-Security',
@@ -28,7 +43,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
-      "connect-src 'self'",
+      `connect-src 'self'${supabaseConnectSrc()}`,
       "font-src 'self' data:",
     ].join('; '),
   },
