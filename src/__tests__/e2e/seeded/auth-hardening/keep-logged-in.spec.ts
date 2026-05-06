@@ -28,21 +28,14 @@ test.describe('@auth keep-logged-in checkbox', () => {
     await page.goto('/login');
     await expect(page.getByTestId('login-form-email')).toBeVisible();
 
-    // The keepLoggedIn checkbox should be present in the form.
-    // It may not have a data-testid yet (section 9 adds the UI), so we
-    // look for the hidden input or checkbox by name.
-    const keepLoggedInInput = page.locator('input[name="keepLoggedIn"]');
+    // The keepLoggedIn control is a shadcn Checkbox (renders as
+    // <button role="checkbox">) paired with a hidden input for FormData.
+    // We target the Checkbox via its data-testid.
+    const keepLoggedInCheckbox = page.getByTestId('login-form-keep-logged-in');
+    await expect(keepLoggedInCheckbox).toBeVisible();
+    await expect(keepLoggedInCheckbox).not.toBeChecked();
 
-    // If the checkbox is not yet rendered (section 9 scope), the test
-    // asserts that the form at least does NOT send keepLoggedIn=true by
-    // default — the default is `false` per the Zod schema.
-    const count = await keepLoggedInInput.count();
-    if (count > 0) {
-      // Checkbox exists — verify it defaults to unchecked
-      const isChecked = await keepLoggedInInput.isChecked();
-      expect(isChecked).toBe(false);
-    }
-    // Either way, the form should be submittable
+    // The form should be submittable
     await expect(page.getByTestId('login-form-submit')).toBeVisible();
   });
 

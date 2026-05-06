@@ -23,26 +23,14 @@ test.describe('@auth Google OAuth first-time sign-in', () => {
   test.describe('complete-profile page', () => {
     test.use({ storageState: STORAGE_STATE_PATH });
 
-    test('renders form with correct test IDs and pre-filled fields', async ({ page }) => {
-      // Navigate to the complete-profile page as an authenticated user.
-      // The page renders even if the user already has a profile — it
-      // doesn't gate on "no profile" at the page level, only the callback
-      // route sends users here.
+    test('redirects to dashboard when user already has a profile', async ({ page }) => {
+      // The seeded user already has an active profile. The page guard
+      // detects this and redirects to /dashboard instead of rendering the
+      // complete-profile form.
       await page.goto('/onboarding/complete-profile');
 
-      // Form elements should be visible with correct test IDs.
-      await expect(page.getByTestId('complete-profile-form-name')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-crp-number')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-crp-uf')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-terms')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-privacy')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-sensitive-data')).toBeVisible();
-      await expect(page.getByTestId('complete-profile-form-submit')).toBeVisible();
-
-      // Submit button should have correct text.
-      await expect(page.getByTestId('complete-profile-form-submit')).toHaveText(
-        'Completar cadastro',
-      );
+      await page.waitForURL('**/dashboard');
+      await expect(page.getByTestId('dashboard-greeting')).toBeVisible();
     });
   });
 });
