@@ -271,6 +271,34 @@ async function handleRequest(
     return;
   }
 
+  // `POST /auth/v1/recover` is the endpoint `resetPasswordForEmail` calls.
+  // The mock always returns 200 — the real GoTrue sends an email with a
+  // recovery link, but the mock just acknowledges the request.
+  if (method === 'POST' && path === '/auth/v1/recover') {
+    respondJson(res, 200, {});
+    return;
+  }
+
+  // `PUT /auth/v1/user` is the endpoint `updateUser` calls (e.g. password
+  // change after a recovery flow). The mock always succeeds when the bearer
+  // token matches.
+  if (method === 'PUT' && path === '/auth/v1/user') {
+    const header = req.headers.authorization ?? '';
+    const expected = `Bearer ${context.fixedToken}`;
+    if (header === expected) {
+      respondJson(res, 200, context.user);
+      return;
+    }
+    respondJson(res, 401, { code: 401, msg: 'invalid token' });
+    return;
+  }
+
+  // `POST /auth/v1/token?grant_type=recovery` — called by
+  // `exchangeCodeForSession` when the recovery code comes through the
+  // PKCE flow (which is what the callback route uses). We return a valid
+  // session, same as password-based login.
+  // Already handled above by the existing `/auth/v1/token` handler.
+
   respondJson(res, 404, { code: 404, msg: 'mock-gotrue: route not found', method, path });
 }
 

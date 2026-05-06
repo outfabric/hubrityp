@@ -48,7 +48,9 @@ export type AuthLogEvent =
   | 'login_failure'
   | 'lockout_started'
   | 'lockout_consecutive_threshold_reached'
-  | 'logout';
+  | 'logout'
+  | 'password_reset_requested'
+  | 'password_reset_completed';
 
 export type LogAuthEventInput = {
   /**

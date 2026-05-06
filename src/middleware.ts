@@ -58,7 +58,12 @@ import { createMiddlewareClient } from '@/shared/supabase/middleware';
 // with a stale cookie.
 
 // Auth surfaces — login + signup share the same redirect rules.
-const AUTH_PATHS: ReadonlySet<string> = new Set(['/login', '/signup']);
+const AUTH_PATHS: ReadonlySet<string> = new Set([
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+]);
 
 // `/auth/callback` is the verification flow itself; gating it would deadlock
 // users who clicked the email link before the trigger flipped their status.

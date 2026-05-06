@@ -66,15 +66,15 @@
 
 ## 7. Password-recovery module
 
-- [ ] 7.1 Criar `src/modules/password-recovery/server/request-password-reset.ts` (`requestPasswordResetImpl`) com lookup de profile, anti-enumeração (Supabase reset chamado só se profile existe; dummy delay no path negativo via `await sleep(50 + crypto.randomInt(0, 100))`), log uniforme `password_reset_requested`, retorno único `{ ok: true }`
-- [ ] 7.2 Criar `src/modules/password-recovery/server/reset-password.ts` (`resetPasswordImpl`) com validação Zod, `supabase.auth.updateUser({ password })`, `supabase.auth.admin.signOut(userId, 'global')`, UPDATE em `profiles` resetando lockout state, `sendPasswordChangedEmail` best-effort, log `password_reset_completed`, redirect `/login?banner=password_changed`
-- [ ] 7.3 Criar `src/modules/password-recovery/components/forgot-password-form.tsx` (`'use client'`) com react-hook-form + Zod, `data-testid` correspondentes
-- [ ] 7.4 Criar `src/modules/password-recovery/components/reset-password-form.tsx` (`'use client'`) com lista de critérios em tempo real (reusa `passwordPolicy`), `data-testid`s
-- [ ] 7.5 Criar `src/modules/password-recovery/index.ts` exportando: `requestPasswordReset`, `resetPassword`, `ForgotPasswordForm`, `ResetPasswordForm`, schemas
-- [ ] 7.6 Teste de integração `src/__tests__/integration/password-recovery/request-password-reset.int.test.ts` — happy path chama Supabase resetPasswordForEmail; email inexistente noop com mesma resposta
-- [ ] 7.7 Teste de integração `src/__tests__/integration/password-recovery/reset-password.int.test.ts` — atualiza senha; revoga todas sessões; reseta lockout state; sendPasswordChangedEmail invocado (mock); banner redirect; senha fraca rejeitada
-- [ ] 7.8 Teste E2E `src/__tests__/e2e/seeded/password-recovery/forgot-and-reset.spec.ts` — fluxo completo: forgot → email no inbucket → click link → reset com senha forte → banner em /login → login com nova senha funciona
-- [ ] 7.9 Teste E2E `src/__tests__/e2e/seeded/password-recovery/anti-enumeration.spec.ts` — UI mostra mesma copy para email existente e inexistente
+- [x] 7.1 Criar `src/modules/password-recovery/server/request-password-reset.ts` (`requestPasswordResetImpl`) com lookup de profile, anti-enumeração (Supabase reset chamado só se profile existe; dummy delay no path negativo via `await sleep(50 + crypto.randomInt(0, 100))`), log uniforme `password_reset_requested`, retorno único `{ ok: true }`
+- [x] 7.2 Criar `src/modules/password-recovery/server/reset-password.ts` (`resetPasswordImpl`) com validação Zod, `supabase.auth.updateUser({ password })`, `supabase.auth.admin.signOut(userId, 'global')`, UPDATE em `profiles` resetando lockout state, `sendPasswordChangedEmail` best-effort, log `password_reset_completed`, redirect `/login?banner=password_changed`
+- [x] 7.3 Criar `src/modules/password-recovery/components/forgot-password-form.tsx` (`'use client'`) com react-hook-form + Zod, `data-testid` correspondentes
+- [x] 7.4 Criar `src/modules/password-recovery/components/reset-password-form.tsx` (`'use client'`) com lista de critérios em tempo real (reusa `passwordPolicy`), `data-testid`s
+- [x] 7.5 Criar `src/modules/password-recovery/index.ts` exportando: `requestPasswordReset`, `resetPassword`, `ForgotPasswordForm`, `ResetPasswordForm`, schemas
+- [x] 7.6 Teste de integração `src/__tests__/integration/password-recovery/request-password-reset.int.test.ts` — happy path chama Supabase resetPasswordForEmail; email inexistente noop com mesma resposta
+- [x] 7.7 Teste de integração `src/__tests__/integration/password-recovery/reset-password.int.test.ts` — atualiza senha; revoga todas sessões; reseta lockout state; sendPasswordChangedEmail invocado (mock); banner redirect; senha fraca rejeitada
+- [x] 7.8 Teste E2E `src/__tests__/e2e/seeded/password-recovery/forgot-and-reset.spec.ts` — fluxo completo: forgot → email no inbucket → click link → reset com senha forte → banner em /login → login com nova senha funciona
+- [x] 7.9 Teste E2E `src/__tests__/e2e/seeded/password-recovery/anti-enumeration.spec.ts` — UI mostra mesma copy para email existente e inexistente
 
 ## 8. OAuth module
 

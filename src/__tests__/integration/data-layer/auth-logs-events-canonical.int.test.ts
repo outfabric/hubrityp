@@ -24,6 +24,8 @@ const CANONICAL_EVENTS = new Set([
   'lockout_started',
   'lockout_consecutive_threshold_reached',
   'logout',
+  'password_reset_requested',
+  'password_reset_completed',
 ]);
 
 /**

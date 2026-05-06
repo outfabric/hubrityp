@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { passwordPolicy } from '@/modules/registration';
+import { passwordPolicy } from '@/modules/registration/lib/password-validators';
 
 /**
  * Validation schema for the "reset password" step — the user provides a

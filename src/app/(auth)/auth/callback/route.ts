@@ -39,6 +39,12 @@ import { createServerClient } from '@/shared/supabase/server';
 const ERROR_PATH = '/auth/callback/error';
 const SUCCESS_PATH = '/onboarding/pending';
 
+// Allowed `next` parameter values for post-callback redirection. The
+// password-recovery flow sends `?next=/reset-password` so the callback
+// redirects to the reset form instead of the default onboarding page.
+// Only allow-listed paths are honored — open-redirect prevention.
+const ALLOWED_NEXT_PATHS: ReadonlySet<string> = new Set(['/reset-password']);
+
 type FailureReason = 'missing' | 'invalid' | 'unknown';
 
 // Allow-listed `type` values for verify-by-token-hash. Anything outside
@@ -73,8 +79,16 @@ function redirectToError(request: NextRequest, reason: FailureReason): Response 
   return NextResponse.redirect(url, 307);
 }
 
+function resolveSuccessPath(request: NextRequest): string {
+  const nextParam = request.nextUrl.searchParams.get('next');
+  if (nextParam && ALLOWED_NEXT_PATHS.has(nextParam)) {
+    return nextParam;
+  }
+  return SUCCESS_PATH;
+}
+
 function redirectToSuccess(request: NextRequest): Response {
-  const url = new URL(SUCCESS_PATH, userFacingOrigin(request));
+  const url = new URL(resolveSuccessPath(request), userFacingOrigin(request));
   return NextResponse.redirect(url, 307);
 }
 
