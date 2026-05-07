@@ -1,0 +1,2 @@
+- [Auth hardening patterns](project_auth_hardening_patterns.md) -- lockout state machine, anti-enumeration, cookie sidecar, middleware decision table, Resend mail
+- [PII in logs is BLOCKER](feedback_pii_in_logs.md) -- email in logger payloads violates LGPD; use truncated SHA-256 hash
