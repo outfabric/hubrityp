@@ -118,16 +118,17 @@ O `/dev-cycle` itera **por seção**, não por subtask — uma invocação do `f
 
 **Camadas de teste**: não anotamos tags nas subtasks. O `fullstack-developer` decide quais camadas (unit / integration / e2e) cobrem o **conjunto da seção** analisando o que está sendo implementado. Tipicamente uma seção mistura naturezas (ex.: "Database schema, migration, RLS e triggers" = unit + integration; "Components" = unit + integration + e2e) — o agent seleciona o **superset** das camadas necessárias.
 
-| Natureza das subtasks da seção                                                                                                                                 | Camadas esperadas                                                                                                    |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Lógica pura, validators Zod, helpers, hooks isolados                                                                                                           | unit                                                                                                                 |
-| Server Action, Route Handler, query Drizzle, política RLS, função Inngest, integração externa, schema/migration                                                | unit (quando há lógica isolada testável) + integration (sempre, contra Postgres real via Testcontainers)             |
-| Fluxo crítico de UI (auth, criação/edição de paciente, agendamento, lembrete WhatsApp, geração de receita, cobrança/PIX, sessão de telepsicologia, prontuário) | unit + integration + e2e (Playwright; tag `@<dominio>` no teste, p.ex. `@patients`, `@billing`)                      |
-| Refactor mecânico ou doc-only                                                                                                                                  | re-rodar suítes existentes que cobrem o caminho tocado; criar testes novos só se a refactor expõe lógica não-coberta |
+| Natureza das subtasks da seção                                                                                                                                 | Camadas esperadas                                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Lógica pura, validators Zod, helpers, hooks isolados                                                                                                           | unit                                                                                                                                |
+| Server Action, Route Handler, query Drizzle, política RLS, função Inngest, integração externa, schema/migration                                                | unit (quando há lógica isolada testável) + integration (sempre, contra Postgres real via Testcontainers)                            |
+| Fluxo crítico de UI (auth, criação/edição de paciente, agendamento, lembrete WhatsApp, geração de receita, cobrança/PIX, sessão de telepsicologia, prontuário) | unit + integration + e2e (Playwright; tag `@<dominio>` no teste, p.ex. `@patients`, `@billing`)                                     |
+| Refactor mecânico (toca código)                                                                                                                                | re-rodar suítes existentes que cobrem o caminho tocado; criar testes novos só se a refactor expõe lógica não-coberta                |
+| Doc-only ou OpenSpec-only (nenhum arquivo `.ts`/`.tsx`/`.js`/`.jsx`/`.css`/config modificado)                                                                  | **nenhuma** — pular re-validação inteira (lint, typecheck, testes). Declarar `VERDICT: PASS — no code changes, validation skipped.` |
 
 O agent consulta as skills `unit-tests`, `integration-tests` e `e2e-tests` para os padrões concretos (setup, mocks, factories, helpers de auth) de cada camada.
 
-**Escopo dentro da camada**: a tabela escolhe **quais camadas** rodam; dentro de cada camada o agent aplica o **mesmo padrão escopado do modo fix** (ver §7) — `lint`+`typecheck`+`unit` full, `integration` via `--related`, `e2e` via `--grep "@<tags>"` (combinando múltiplos domínios quando a seção tocar mais de um). A re-validação roda **uma vez no fim da seção**, não após cada subtask. Forced-fallback (schema/types/env/auth/configs/>10 arquivos) reverte para suíte full quando o sinal dispara — diff de seção é maior que diff de subtask, então o sinal de >10 arquivos dispara mais frequentemente, comportamento correto.
+**Escopo dentro da camada**: a tabela escolhe **quais camadas** rodam; dentro de cada camada o agent aplica o **mesmo padrão escopado do modo fix** (ver §7) — `lint`+`typecheck`+`unit` full, `integration` via `--changed`, `e2e` via `--grep "@<tags>"` (combinando múltiplos domínios quando a seção tocar mais de um). A re-validação roda **uma vez no fim da seção**, não após cada subtask. Integration e e2e **nunca rodam full em section ou fix mode** — suítes full são exclusividade da regression sweep (step 3.bis), que cobre o drift cross-section.
 
 **WIP commits per-section**: depois de cada seção PASSar, o orquestrador (a) flipa **atomicamente** todas as `- [ ] N.M` da seção para `- [x] N.M` em `tasks.md`, e (b) commita o working tree com Conventional Commits derivado do **título da seção** (`feat:` default, `test:`/`docs:`/`fix:`/`chore:` por keywords no título), com body listando as subtasks completadas. Razão: (a) o agent calcula `git diff HEAD --name-only` para escopar `--related` apenas aos arquivos da seção atual; (b) o step 7 (Commits semânticos + PR) já encontra a história linear pronta. **Atomicidade per-section é por construção**: em FAIL no meio da seção, nenhuma subtask vira `[x]` e nenhum commit é criado — a seção é tudo ou nada.
 
@@ -165,7 +166,7 @@ Parseia `tasks.md` em seções (`## N. <título>` + linhas `- [ ] N.M ...` até 
    - `worktree_path` (absoluto)
    - `section`: texto literal da seção (header + todas as subtasks + qualquer prosa) + trechos relevantes de proposal/specs/design referenciados pelas subtasks
    - instrução explícita "implemente todas as subtasks como uma unidade; não pause entre subtasks; rode re-validação UMA vez no fim"
-   - o agent escolhe o **superset** das camadas pela tabela da §5 e aplica a **re-validação escopada (§7)** dentro de cada camada — `lint`+`typecheck`+`unit` full, `integration --related $(git diff HEAD --name-only)`, `e2e --grep "@<tags>"` (só se alguma subtask tocar UI crítico, podendo combinar múltiplas tags)
+   - o agent escolhe o **superset** das camadas pela natureza dos arquivos modificados (regra interna do agent, §7) e aplica a **re-validação escopada** — `lint`+`typecheck`+`unit` full, `integration --changed`, `e2e --grep "@<tags>"` (só se alguma subtask tocar UI crítico). Seções non-code pulam validação inteira.
    - cap interno de 3 tentativas de fix
    - contrato de saída: `VERDICT: PASS — ...` ou `VERDICT: FAIL — ...` (em FAIL, indica qual subtask específica quebrou)
 3. **PASS** → flipa **atomicamente** todas as `- [ ] N.M` da seção para `- [x] N.M` em `tasks.md` (via `Edit` por linha — cada linha é única pelo prefixo `N.M`); **commita o working tree** com Conventional Commits derivado do **título da seção** (`feat:` default, `test:`/`docs:`/`fix:`/`chore:` por keywords) + body listando as subtasks completadas + `OpenSpec change: <name>`. Hooks rodam normalmente; falha de hook vira fix-iteration. A próxima seção vai ver `git diff HEAD --name-only` refletindo só o trabalho dela.
@@ -328,22 +329,15 @@ Sem essa escopagem, suíte full-por-seção numa change com 14 seções gastaria
 | 3   | Integration (escopado)  | `npm run test:integration -- --related $CHANGED_FILES` | Vitest `--related` resolve o grafo de dependência e roda apenas testes transitivamente afetados.                                                                                                          |
 | 4   | E2E (escopado)          | `npm run test:e2e:seeded -- --grep "@<flow-tags>"`     | Playwright filtra por tags `@<dominio>`. Em section mode, agent infere as tags pelos paths tocados (`src/app/(app)/<dominio>/**` → `@<dominio>`), combinando múltiplas quando a seção atravessa domínios. |
 
-E2E é **opcional em section mode** (só roda quando alguma subtask da seção toca fluxo crítico de UI per tabela da §5). Em fix mode, sempre roda — fallback para full se `affected_e2e_tags` veio vazio.
+E2E é **opcional em section mode** (só roda quando alguma subtask da seção toca fluxo crítico de UI — paths em `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/`). Em fix mode, roda se `affected_e2e_tags` foi fornecido; se vazio, pula — a sweep cobre.
 
-### Sinais que forçam fallback para suítes completas
+### Por que não há fallback para suítes full em section/fix mode
 
-Qualquer um basta (mesma lista nos dois modos):
-
-- Mudou `src/shared/db/schema/**`, `src/shared/lib/types/**`, ou `src/shared/env/**` (schema/tipos globais).
-- Mudou `src/shared/lib/utils/**` ou `src/modules/auth/**` (utilitários compartilhados / módulo de auth).
-- Mudou `next.config.ts`, `tailwind.config.*`, ou `drizzle.config.*` (config).
-- Mais de 10 arquivos modificados (proxy de "mudança ampla").
-
-O agent deve nomear explicitamente o sinal acionado no resumo pré-`VERDICT`.
+Integration e e2e **nunca rodam full fora da regression sweep**. Mesmo quando a seção toca paths cross-cutting (`src/shared/db/schema/**`, `src/modules/auth/**`, configs raiz), os testes permanecem escopados. Razão: a regression sweep (step 3.bis) roda **todas** as suítes full uma vez após todas as seções — qualquer regressão que o escopamento per-section perdeu é capturada ali. Forçar full per-section era redundante com a sweep e adicionava minutos a cada seção.
 
 ### Cross-section drift e a regression sweep
 
-Escopar per-section tem um custo: regressão da seção 5 que quebra um teste integration da seção 2 sem que `--related` da seção 5 inclua aquele teste. **Step 3.bis** fecha esse buraco rodando `test:integration` full (e `test:e2e:seeded` full, condicional) entre o fim do step 3 e o início do step 4. Custo ~2–3min uma vez. Falha → fix mode com synthetic feedback que força full re-validação.
+Escopar per-section tem um custo: regressão da seção 5 que quebra um teste integration da seção 2 sem que `--changed` da seção 5 inclua aquele teste. **Step 3.bis** fecha esse buraco rodando `test:integration` full (e `test:e2e:seeded` full, condicional) entre o fim do step 3 e o início do step 4. Custo ~2–3min uma vez. Falha → fix mode com synthetic feedback que força full re-validação (a única exceção onde fix mode roda full — por instrução explícita do synthetic feedback, não por sinal automático).
 
 ### Custo esperado por iteração (estimado)
 
@@ -357,7 +351,7 @@ Escopar per-section tem um custo: regressão da seção 5 que quebra um teste in
 
 Com escopagem em section mode + sweep no fim:
 
-- Change de 14 seções (1 UI crítico, 13 backend): 13×~2min + 1×~3min + sweep ~3min ≈ **~32min** de re-validação. Diff por seção é maior, então o fallback de >10 arquivos dispara mais — esperado.
+- Change de 14 seções (1 UI crítico, 13 backend): 13×~2min + 1×~3min + sweep ~3min ≈ **~32min** de re-validação. Integration e e2e rodam sempre escopados per-section; full suites ficam exclusivamente na sweep.
 - Ganho real **não é tempo de teste** mas **tokens economizados em invocações do agent**: ~6× menos invocações (~14 vs. ~90) × overhead de boot por invocação (~18KB system prompt + CLAUDE.md + contexto da change) ≈ centenas de milhares de tokens em changes médias.
 
 ### Onde a estratégia vive
@@ -478,8 +472,8 @@ O orquestrador:
 | `npm run supabase:start` falha no step 5.1                           | Porta 54321 ocupada (suíte `@auth-real` rodando? mock GoTrue da seeded suite?), Docker indisponível, ou crash da CLI | Mensagem de stderr da CLI é surfaceada. Resolver o conflito de porta (`lsof -i:54321`) ou subir o Docker primeiro; re-invocar `/dev-cycle <name>`.                       |
 | Infra ficou de pé após QA escalar                                    | Comportamento esperado — step 5.2 não roda em `issues-found`                                                         | Cheque `<worktree>/.dev-cycle/infra-owned.json` para saber o que é seu (true) e derrube manualmente: `npm run supabase:stop` e/ou `docker compose down`.                 |
 | "gh: command not found" ou "not authenticated" no step PR            | `gh` ausente ou sem login                                                                                            | Instale GitHub CLI; rode `gh auth login`.                                                                                                                                |
-| Vitest `--related` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                                                   | O agent faz fallback automático para suíte full integration e anuncia.                                                                                                   |
-| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `src/__tests__/e2e/seeded/tags.json` nem segue a convenção `src/app/(app)/<dominio>/**`      | O agent faz fallback para suíte e2e completa. Considere atualizar `src/__tests__/e2e/seeded/tags.json`.                                                                  |
+| Vitest `--changed` retorna zero testes onde claramente deveria rodar | Grafo de dependência não resolveu (alias quebrado, dynamic import)                                                   | O agent pula integration nessa iteração; a regression sweep (step 3.bis) cobre com suíte full.                                                                           |
+| Mapping path → e2e tag retorna vazio                                 | Path mudado não está em `src/__tests__/e2e/seeded/tags.json` nem segue a convenção `src/app/(app)/<dominio>/**`      | O agent pula e2e nessa iteração; a regression sweep cobre com suíte full. Considere atualizar `src/__tests__/e2e/seeded/tags.json`.                                      |
 | Cap de 3 iterações atingido no loop dev↔reviewer                     | Issues estruturais que o agent não consegue resolver autonomamente                                                   | Revise o `review-3.md` manualmente; ajuste a tarefa ou o design da change e re-invoque.                                                                                  |
 | Worktree em estado sujo de invocação anterior                        | `/dev-cycle` foi interrompido com mudanças não commitadas                                                            | `git -C ../hubrityp-<name> status` para inspecionar; se for resíduo de tentativa abandonada, `git stash` ou `git restore .` no worktree. Não delete o worktree às cegas. |
 | `qa-tester` aborta porque não há cenários                            | `specs/` vazio E `proposal.md` sem critérios de aceite                                                               | Adicione cenários em `openspec/changes/<name>/specs/` (formato `#### Scenario: ...`) e re-invoque.                                                                       |

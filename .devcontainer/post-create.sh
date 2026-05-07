@@ -22,6 +22,27 @@ echo "==> Instalando openspec CLI..."
 # Instalado globalmente no host via nvm — precisa ser reinstalado no container.
 npm install -g @fission-ai/openspec@latest
 
+echo "==> Verificando GitHub CLI..."
+if command -v gh &> /dev/null; then
+  echo "    gh encontrado em $(which gh)"
+  if gh auth status &> /dev/null; then
+    echo "    gh autenticado ✓"
+  else
+    echo "    ⚠ gh NÃO autenticado. Execute 'gh auth login' manualmente."
+  fi
+else
+  echo "    ⚠ gh NÃO encontrado. O feature github-cli pode ter falhado no build."
+  echo "    Tentando instalar via apt..."
+  (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+    && sudo mkdir -p -m 755 /etc/apt/keyrings \
+    && out=$(mktemp) && wget -nv -O"$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && cat "$out" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt update \
+    && sudo apt install gh -y
+fi
+
 echo "==> Instalando dependências do projeto..."
 npm install --no-audit --no-fund
 

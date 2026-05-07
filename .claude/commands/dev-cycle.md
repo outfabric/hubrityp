@@ -79,13 +79,7 @@ Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt
 - **Scope marker**: "You are operating on worktree `<absolute-path>`. All file edits and bash commands must run inside it (`cd <path> && ...`). Do not touch the main repo working tree."
 - **`section`** field: the literal section text from `tasks.md` — header `## N. <title>` plus every subtask line (`- [ ] N.M ...`) and any prose paragraphs between them. Plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by the section's subtasks.
 - **Section-as-unit instruction**: "Implement every subtask in this section as a single unit of work. Do not pause between subtasks. Run scoped re-validation ONCE at the end of the section, not after each subtask. The orchestrator will atomically flip every `- [ ]` in this section to `- [x]` only on `VERDICT: PASS` — partial completion produces nothing."
-- **Test layers (agent picks superset for the section)**: agent uses the table in `docs/dev-cycle.md` §5 to pick layers (unit / integration / e2e). A section's subtasks typically span multiple natures — agent selects the **superset** of layers needed across all subtasks. For each chosen layer, agent applies the **scoped re-validation contract** documented in `.claude/agents/fullstack-developer.md` ("Re-validação escopada — sempre, section e fix"):
-  - `npm run lint` + `npm run typecheck` (full — both modes)
-  - `npm run test:unit` (full — cheap, cross-section safety net)
-  - `npm run test:integration -- --changed` (`--changed` is a valid `vitest run` flag that detects uncommitted changes via git automatically; no file collection needed — the working tree holds only this section's work because step 3a asserts a clean state before each section)
-  - `npm run test:e2e:seeded -- --grep "@<inferred-tags>"` (only if any subtask in the section touches a critical UI flow per the table; the agent may need to grep multiple `@<dom>` tags into the `--grep` regex)
-  - Forced fallback to full suites when changed files include `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`, `src/shared/lib/utils/**`, `src/modules/auth/**`, root configs, or >10 files. **A section's diff is naturally larger than a single subtask's, so the >10-files signal fires more often by design — that is the correct, non-degenerate behavior.**
-  - The agent must declare in its `VERDICT: PASS` summary which layers ran, scoped vs. full, and which fallback signals (if any) triggered.
+- **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (defined in `.claude/agents/fullstack-developer.md`). It decides which layers to run based on the nature of the files changed — from skip-total (non-code sections) through lint+typecheck+unit+integration+e2e (UI flows). Integration and e2e are **always scoped, never full** — full suites run exclusively in the regression sweep (step 3c).
 - **Reporting contract**: end the response with one of:
   - `VERDICT: PASS — implementation complete, tests pass, npm run check green.`
   - `VERDICT: FAIL — <one-line reason, including which subtask broke if applicable>. Logs: <path under .dev-cycle/>.` (Save full logs to `<worktree>/.dev-cycle/section-<N>-fail.log`.)
@@ -390,18 +384,8 @@ When invoking `fullstack-developer` to address feedback:
 - **Scope**: worktree path (same as before).
 - **Feedback file**: absolute path to `review-N.md` or `qa-N.md`.
 - **Fix instruction**: "Address every BLOCKER/HIGH from the review (or every CRÍTICO/ALTO from the QA report). Do not introduce out-of-scope refactors."
-- **Re-validation contract** (mandatory before returning PASS):
-  1. Compute `CHANGED=$(git -C <worktree> diff <fix-base>...HEAD --name-only)` where `<fix-base>` = the SHA at the start of this fix iteration.
-  2. Run `npm run lint` and `npm run typecheck` (full). If either fails → fix and retry (internal cap 3).
-  3. Run `npm run test:unit` (full suite). If fails → fix and retry.
-  4. Run `npm run test:integration -- --changed <fix-base>` (covers all changes since the fix iteration started, committed or uncommitted). If `--changed` resolves to zero test files, fall back to full integration. If fails → fix and retry.
-  5. Run `npm run test:e2e:seeded -- --grep "@<flow-tags>"` where `<flow-tags>` is the orchestrator-supplied list. If empty/ambiguous, fall back to full E2E.
-  6. **Forced fallback to full suites** when any of these signals applies (announce which signal triggered it):
-     - Changed any file under `src/shared/db/schema/**`, `src/shared/lib/types/**`, `src/shared/env/**`
-     - Changed any file under `src/shared/lib/utils/**`, `src/modules/auth/**`
-     - Changed any of `next.config.ts`, `tailwind.config.*`, `drizzle.config.*`
-     - Changed more than 10 files
-- **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b. On PASS, also print the re-validation summary (which suites ran, scoped or full, and pass/fail).
+- **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (same as section mode, but using `--changed <fix-base>` and `affected_e2e_tags` from the orchestrator). Always scoped, never full.
+- **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b.
 
 The orchestrator computes `changed_files` and `affected_e2e_tags` itself before invoking the agent — the agent receives them as plain lists in the prompt. Tag mapping comes from `src/__tests__/e2e/seeded/tags.json` if it exists, else inferred from the path (e.g., `src/app/(app)/patients/**` → `@patients`).
 
