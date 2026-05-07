@@ -26,9 +26,9 @@
 
 ## 4. Server Actions — Archive & Delete
 
-- [ ] 4.1 Criar `src/modules/patients/server/archive-patient.ts` — Server Action com `archivePatientImpl` (set status=archived, archived_at=now) e `unarchivePatientImpl` (set status=active, archived_at=null)
-- [ ] 4.2 Criar `src/modules/patients/server/delete-patient.ts` — Server Action que verifica ausência de sessões/anamnese/consent antes de permitir hard delete
-- [ ] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-archive.int.test.ts` — testar archive (sucesso, preserva dados), unarchive (sucesso, limpa archived_at), delete (paciente sem registros OK, paciente com registros bloqueado)
+- [x] 4.1 Criar `src/modules/patients/server/archive-patient.ts` — Server Action com `archivePatientImpl` (set status=archived, archived_at=now) e `unarchivePatientImpl` (set status=active, archived_at=null)
+- [x] 4.2 Criar `src/modules/patients/server/delete-patient.ts` — Server Action que verifica ausência de sessões/anamnese/consent antes de permitir hard delete
+- [x] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-archive.int.test.ts` — testar archive (sucesso, preserva dados), unarchive (sucesso, limpa archived_at), delete (paciente sem registros OK, paciente com registros bloqueado)
 
 ## 5. Server Actions — Listing & Search
 
