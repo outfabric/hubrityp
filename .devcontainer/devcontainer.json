@@ -26,8 +26,9 @@
     "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
     // ~/.claude.json → MCPs da web app do Claude (context7, etc.)
     "source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind,consistency=cached",
-    // ~/.config/gh/ → auth do GitHub CLI (necessário para gh pr create no step 8c do dev-cycle)
-    "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind,readonly,consistency=cached",
+    // ~/.config/gh/ → auth do GitHub CLI (necessário para gh pr create no step 8c do dev-cycle).
+    // NÃO usar readonly: gh precisa escrever para refresh de tokens OAuth.
+    "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind,consistency=cached",
     // Volume nomeado para o daemon DinD: persiste imagens Docker entre restarts.
     // Sem isso, npm run supabase:start re-puxa ~1.5 GB de imagens a cada restart.
     "type=volume,source=devcontainer-docker-data,target=/var/lib/docker"
