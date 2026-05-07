@@ -1,0 +1,249 @@
+'use client';
+
+import { Check, Copy, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+
+import type { Patient } from '@/shared/db/schema/patients/tables';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
+  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
+}
+
+/** Extracts digits from a phone string for building a wa.me link. */
+function extractPhoneDigits(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+/**
+ * Calculates age from a birth date. Returns `null` when no date is provided.
+ */
+function calculateAge(birthDate: Date | null): number | null {
+  if (!birthDate) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+function statusBadgeVariant(status: string) {
+  if (status === 'active') return 'success' as const;
+  return 'neutral' as const;
+}
+
+function statusLabel(status: string) {
+  if (status === 'active') return 'Ativo';
+  return 'Arquivado';
+}
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface PatientDetailHeaderProps {
+  patient: Patient;
+  /** Signed URL for the patient photo (if available). */
+  photoUrl?: string;
+  /** Server Action to archive the patient. */
+  archiveAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Server Action to unarchive the patient. */
+  unarchiveAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Server Action to delete the patient. */
+  deleteAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function PatientDetailHeader({
+  patient,
+  photoUrl,
+  archiveAction,
+  unarchiveAction,
+  deleteAction,
+}: PatientDetailHeaderProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [copied, setCopied] = useState(false);
+
+  const age = calculateAge(patient.birthDate);
+  const ageDisplay =
+    age !== null
+      ? `${age} anos`
+      : patient.approximateAge
+        ? `~${patient.approximateAge} anos`
+        : null;
+
+  const whatsappHref = patient.phone
+    ? `https://wa.me/${extractPhoneDigits(patient.phone)}`
+    : undefined;
+
+  const handleCopyEmail = () => {
+    if (!patient.email) return;
+    void navigator.clipboard.writeText(patient.email).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleArchiveToggle = () => {
+    startTransition(async () => {
+      if (patient.status === 'active') {
+        await archiveAction(patient.id);
+      } else {
+        await unarchiveAction(patient.id);
+      }
+      router.refresh();
+    });
+  };
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const result = await deleteAction(patient.id);
+      if (result.ok) {
+        router.push('/pacientes');
+      }
+    });
+  };
+
+  return (
+    <div
+      className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      data-testid="patient-detail-header"
+    >
+      {/* Left: Avatar + Info */}
+      <div className="flex items-start gap-4">
+        <Avatar className="h-14 w-14" data-testid="patient-avatar">
+          {photoUrl ? <AvatarImage src={photoUrl} alt={patient.fullName} /> : null}
+          <AvatarFallback className="text-base">{getInitials(patient.fullName)}</AvatarFallback>
+        </Avatar>
+
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1
+              className="text-text-primary text-[28px] leading-[1.25] font-semibold"
+              data-testid="patient-name"
+            >
+              {patient.fullName}
+            </h1>
+            <Badge variant={statusBadgeVariant(patient.status)} data-testid="patient-status-badge">
+              {statusLabel(patient.status)}
+            </Badge>
+          </div>
+
+          {ageDisplay && (
+            <span className="text-text-secondary text-[13px]" data-testid="patient-age">
+              {ageDisplay}
+            </span>
+          )}
+
+          {/* Tags */}
+          {patient.tags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1" data-testid="patient-tags">
+              {patient.tags.map((tag) => (
+                <Badge key={tag} variant="neutral">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Contact actions */}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {whatsappHref && (
+              <Button variant="ghost" size="sm" asChild data-testid="patient-whatsapp-button">
+                <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  Abrir no WhatsApp
+                </a>
+              </Button>
+            )}
+
+            {patient.email && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyEmail}
+                      data-testid="patient-copy-email-button"
+                      aria-label={`Copiar e-mail ${patient.email}`}
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <Copy className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      {patient.email}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{copied ? 'Copiado!' : 'Copiar e-mail'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Actions menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isPending}
+            aria-label="Mais opcoes"
+            data-testid="patient-actions-menu"
+          >
+            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => router.push(`/pacientes/${patient.id}/editar`)}
+            data-testid="patient-action-edit"
+          >
+            <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
+            Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleArchiveToggle} data-testid="patient-action-archive">
+            {patient.status === 'active' ? 'Arquivar' : 'Desarquivar'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="text-danger-700 focus:text-danger-700"
+            data-testid="patient-action-delete"
+          >
+            <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            Excluir
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}

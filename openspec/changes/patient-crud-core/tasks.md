@@ -67,11 +67,11 @@
 
 > **Design System Sálvia**: Avatar (`radius-full`, tamanho lg 56px), Tabs underline, Badge semântico, ícones do mapa fixo.
 
-- [ ] 10.1 Criar componente `src/modules/patients/components/patient-detail-header.tsx` — **Design system:** Avatar lg (56px, fallback iniciais bg `brand-100` text `brand-700`). Nome em h1 (28px/600). Idade em body-sm `text-secondary`. Status badge: `success` (Ativo) / `neutral` (Arquivado). Tags como `Badge neutral`. Botão WhatsApp: `Button ghost` com ícone `MessageCircle` + "Abrir no WhatsApp". Botão copiar email: `Button ghost` com tooltip. Menu ações: shadcn `DropdownMenu` trigger `MoreHorizontal`
-- [ ] 10.2 Criar componente `src/modules/patients/components/patient-tabs.tsx` — shadcn `Tabs` underline style (tab ativa: text `primary`, border-bottom 2px `brand-500`; idle: text `secondary`; padding `space-3 space-4`). Tabs: "Visão geral" (ativo), demais como placeholder com ícone + "Em breve" em `text-tertiary`
-- [ ] 10.3 Criar componente `src/modules/patients/components/patient-overview-tab.tsx` — layout em card `default` (bg `surface`, border, radius `xl`, shadow `xs`, padding `space-6`). Dados em grid 2-col desktop / 1-col mobile. CPF mascarado como "***.***.***-XX". Labels em caption-upper (12px/500/uppercase/tracking). Valores em body (15px/400)
-- [ ] 10.4 Criar Server Component `src/app/(app)/pacientes/[id]/page.tsx` — carrega paciente, gera signed URL da foto, renderiza header + tabs
-- [ ] 10.5 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts` — verificar que cabeçalho mostra nome/telefone/tags, tab "Visão geral" mostra dados, botão WhatsApp tem href correto, tabs placeholder mostram "Em breve"
+- [x] 10.1 Criar componente `src/modules/patients/components/patient-detail-header.tsx` — **Design system:** Avatar lg (56px, fallback iniciais bg `brand-100` text `brand-700`). Nome em h1 (28px/600). Idade em body-sm `text-secondary`. Status badge: `success` (Ativo) / `neutral` (Arquivado). Tags como `Badge neutral`. Botão WhatsApp: `Button ghost` com ícone `MessageCircle` + "Abrir no WhatsApp". Botão copiar email: `Button ghost` com tooltip. Menu ações: shadcn `DropdownMenu` trigger `MoreHorizontal`
+- [x] 10.2 Criar componente `src/modules/patients/components/patient-tabs.tsx` — shadcn `Tabs` underline style (tab ativa: text `primary`, border-bottom 2px `brand-500`; idle: text `secondary`; padding `space-3 space-4`). Tabs: "Visão geral" (ativo), demais como placeholder com ícone + "Em breve" em `text-tertiary`
+- [x] 10.3 Criar componente `src/modules/patients/components/patient-overview-tab.tsx` — layout em card `default` (bg `surface`, border, radius `xl`, shadow `xs`, padding `space-6`). Dados em grid 2-col desktop / 1-col mobile. CPF mascarado como "***.***.***-XX". Labels em caption-upper (12px/500/uppercase/tracking). Valores em body (15px/400)
+- [x] 10.4 Criar Server Component `src/app/(app)/pacientes/[id]/page.tsx` — carrega paciente, gera signed URL da foto, renderiza header + tabs
+- [x] 10.5 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts` — verificar que cabeçalho mostra nome/telefone/tags, tab "Visão geral" mostra dados, botão WhatsApp tem href correto, tabs placeholder mostram "Em breve"
 
 ## 11. Frontend — Patient Edit & Actions
 
