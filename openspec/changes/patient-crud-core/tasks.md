@@ -10,12 +10,12 @@
 
 ## 2. Validators & Types
 
-- [ ] 2.1 Instalar dependência `cpf-cnpj-validator` (`npm install cpf-cnpj-validator`)
-- [ ] 2.2 Criar `src/modules/patients/lib/patient-validators.ts` com funções de validação: `isValidBrazilianPhone(phone: string)`, `isValidCpf(cpf: string)`, `formatPhone(phone: string)`
-- [ ] 2.3 Criar `src/modules/patients/lib/patient-input-schema.ts` com Zod schemas: `createPatientSchema` (step 1 + step 2 fields), `updatePatientSchema` (partial), `listPatientsQuerySchema` (page, status, search, tags, sort, order)
-- [ ] 2.4 Criar `src/modules/patients/lib/patient-types.ts` com tipos TypeScript do domínio: `PatientStatus`, `PatientType`, tipos de input/output
-- [ ] 2.5 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/patient-validators.test.ts` — testar validação de telefone BR (formatos válidos/inválidos), CPF (válidos/inválidos incluindo edge cases como 000.000.000-00)
-- [ ] 2.6 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/patient-input-schema.test.ts` — testar createPatientSchema (campos obrigatórios, opcionais, rejeição de formatos inválidos), updatePatientSchema (parcialidade), listPatientsQuerySchema (defaults, validação de page/sort)
+- [x] 2.1 Instalar dependência `cpf-cnpj-validator` (`npm install cpf-cnpj-validator`)
+- [x] 2.2 Criar `src/modules/patients/lib/patient-validators.ts` com funções de validação: `isValidBrazilianPhone(phone: string)`, `isValidCpf(cpf: string)`, `formatPhone(phone: string)`
+- [x] 2.3 Criar `src/modules/patients/lib/patient-input-schema.ts` com Zod schemas: `createPatientSchema` (step 1 + step 2 fields), `updatePatientSchema` (partial), `listPatientsQuerySchema` (page, status, search, tags, sort, order)
+- [x] 2.4 Criar `src/modules/patients/lib/patient-types.ts` com tipos TypeScript do domínio: `PatientStatus`, `PatientType`, tipos de input/output
+- [x] 2.5 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/patient-validators.test.ts` — testar validação de telefone BR (formatos válidos/inválidos), CPF (válidos/inválidos incluindo edge cases como 000.000.000-00)
+- [x] 2.6 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/patient-input-schema.test.ts` — testar createPatientSchema (campos obrigatórios, opcionais, rejeição de formatos inválidos), updatePatientSchema (parcialidade), listPatientsQuerySchema (defaults, validação de page/sort)
 
 ## 3. Server Actions — CRUD
 
