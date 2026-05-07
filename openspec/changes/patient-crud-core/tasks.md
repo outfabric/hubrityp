@@ -37,9 +37,9 @@
 
 ## 6. Server Actions — Photo Upload
 
-- [ ] 6.1 Criar `src/modules/patients/server/upload-patient-photo.ts` — Server Action que valida file type (JPEG, PNG, WebP) e size (<2MB), faz upload para bucket `patient-photos` via Supabase Storage client, atualiza patient.photo_path
-- [ ] 6.2 Criar `src/modules/patients/server/get-patient-photo-url.ts` — Server Action que gera signed URL (5min expiration) para patient.photo_path
-- [ ] 6.3 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/server/upload-patient-photo.test.ts` — testar validação de tipo e tamanho de arquivo (mock Supabase Storage)
+- [x] 6.1 Criar `src/modules/patients/server/upload-patient-photo.ts` — Server Action que valida file type (JPEG, PNG, WebP) e size (<2MB), faz upload para bucket `patient-photos` via Supabase Storage client, atualiza patient.photo_path
+- [x] 6.2 Criar `src/modules/patients/server/get-patient-photo-url.ts` — Server Action que gera signed URL (5min expiration) para patient.photo_path
+- [x] 6.3 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/server/upload-patient-photo.test.ts` — testar validação de tipo e tamanho de arquivo (mock Supabase Storage)
 
 ## 7. Module Barrel & Route Shells
 
