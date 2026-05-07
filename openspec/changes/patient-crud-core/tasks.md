@@ -19,10 +19,10 @@
 
 ## 3. Server Actions — CRUD
 
-- [ ] 3.1 Criar `src/modules/patients/server/create-patient.ts` — Server Action que valida input (createPatientSchema), verifica duplicata (phone e email), insere no banco via Drizzle, retorna patient ID. Tratar unique constraint violation com mensagem user-friendly
-- [ ] 3.2 Criar `src/modules/patients/server/get-patient.ts` — Server Action que busca paciente por ID via Drizzle (RLS garante ownership)
-- [ ] 3.3 Criar `src/modules/patients/server/update-patient.ts` — Server Action que valida input (updatePatientSchema), verifica duplicata em update, atualiza via Drizzle com `updated_at=now()`
-- [ ] 3.4 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-crud.int.test.ts` — testar createPatient (sucesso, duplicata phone, duplicata email, campos inválidos), getPatient (own vs. other user), updatePatient (sucesso, duplicata em update, patient de outro user)
+- [x] 3.1 Criar `src/modules/patients/server/create-patient.ts` — Server Action que valida input (createPatientSchema), verifica duplicata (phone e email), insere no banco via Drizzle, retorna patient ID. Tratar unique constraint violation com mensagem user-friendly
+- [x] 3.2 Criar `src/modules/patients/server/get-patient.ts` — Server Action que busca paciente por ID via Drizzle (RLS garante ownership)
+- [x] 3.3 Criar `src/modules/patients/server/update-patient.ts` — Server Action que valida input (updatePatientSchema), verifica duplicata em update, atualiza via Drizzle com `updated_at=now()`
+- [x] 3.4 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-crud.int.test.ts` — testar createPatient (sucesso, duplicata phone, duplicata email, campos inválidos), getPatient (own vs. other user), updatePatient (sucesso, duplicata em update, patient de outro user)
 
 ## 4. Server Actions — Archive & Delete
 
