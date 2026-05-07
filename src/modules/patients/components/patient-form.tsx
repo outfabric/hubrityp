@@ -139,7 +139,7 @@ function maskCpf(raw: string): string {
 
 const PATIENT_TYPE_LABELS: Record<string, string> = {
   individual: 'Adulto',
-  child: 'Crianca',
+  child: 'Criança',
   adolescent: 'Adolescente',
   couple: 'Casal',
   elderly: 'Idoso',
@@ -247,7 +247,7 @@ export function PatientForm(props: PatientFormProps) {
   const patient = isEdit ? props.patient : undefined;
 
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(isEdit ? 2 : 1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
