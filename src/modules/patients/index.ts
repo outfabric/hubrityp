@@ -71,3 +71,4 @@ export { isValidBrazilianPhone, isValidCpf, formatPhone } from './lib/patient-va
 
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
+export { PatientForm } from './components/patient-form';
