@@ -1,8 +1,9 @@
 'use client';
 
-import { Check, Copy, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Archive, Check, Copy, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import type { Patient } from '@/shared/db/schema/patients/tables';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
@@ -16,6 +17,9 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+
+import { ArchiveConfirmModal } from './archive-confirm-modal';
+import { DeleteConfirmModal } from './delete-confirm-modal';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,6 +90,8 @@ export function PatientDetailHeader({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const age = calculateAge(patient.birthDate);
   const ageDisplay =
@@ -107,23 +113,32 @@ export function PatientDetailHeader({
     });
   };
 
-  const handleArchiveToggle = () => {
+  const handleArchiveConfirm = () => {
     startTransition(async () => {
       if (patient.status === 'active') {
-        await archiveAction(patient.id);
+        const result = await archiveAction(patient.id);
+        if (result.ok) {
+          toast.success('Paciente arquivado');
+        }
       } else {
-        await unarchiveAction(patient.id);
+        const result = await unarchiveAction(patient.id);
+        if (result.ok) {
+          toast.success('Paciente desarquivado');
+        }
       }
+      setArchiveModalOpen(false);
       router.refresh();
     });
   };
 
-  const handleDelete = () => {
+  const handleDeleteConfirm = () => {
     startTransition(async () => {
       const result = await deleteAction(patient.id);
       if (result.ok) {
+        toast.success('Paciente excluido');
         router.push('/pacientes');
       }
+      setDeleteModalOpen(false);
     });
   };
 
@@ -230,12 +245,16 @@ export function PatientDetailHeader({
             <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
             Editar
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleArchiveToggle} data-testid="patient-action-archive">
+          <DropdownMenuItem
+            onClick={() => setArchiveModalOpen(true)}
+            data-testid="patient-action-archive"
+          >
+            <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
             {patient.status === 'active' ? 'Arquivar' : 'Desarquivar'}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleDelete}
+            onClick={() => setDeleteModalOpen(true)}
             className="text-danger-700 focus:text-danger-700"
             data-testid="patient-action-delete"
           >
@@ -244,6 +263,22 @@ export function PatientDetailHeader({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Archive confirmation modal */}
+      <ArchiveConfirmModal
+        open={archiveModalOpen}
+        onOpenChange={setArchiveModalOpen}
+        onConfirm={handleArchiveConfirm}
+        isPending={isPending}
+      />
+
+      {/* Delete confirmation modal */}
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        onConfirm={handleDeleteConfirm}
+        isPending={isPending}
+      />
     </div>
   );
 }

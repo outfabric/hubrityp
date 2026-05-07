@@ -175,16 +175,52 @@ const SOURCE_LABELS: Record<string, string> = {
 // Props
 // ---------------------------------------------------------------------------
 
-interface PatientFormProps {
-  /** Server Action to call on submit (createPatient) */
-  createAction: (input: unknown) => Promise<{
-    ok: boolean;
-    patientId?: string;
-    error?: string;
-    fieldErrors?: Record<string, string[]>;
-    message?: string;
-  }>;
+/** Common result shape for form submission actions. */
+interface FormActionResult {
+  ok: boolean;
+  patientId?: string;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  message?: string;
 }
+
+interface PatientFormCreateProps {
+  mode?: 'create';
+  /** Server Action to call on submit (createPatient) */
+  createAction: (input: unknown) => Promise<FormActionResult>;
+  updateAction?: never;
+  patient?: never;
+  onSuccess?: never;
+}
+
+interface PatientFormEditProps {
+  mode: 'edit';
+  /** Server Action to call on submit (updatePatient) */
+  updateAction: (patientId: string, input: unknown) => Promise<FormActionResult>;
+  /** Patient data to pre-fill the form */
+  patient: {
+    id: string;
+    fullName: string;
+    patientType: string;
+    birthDate: Date | null;
+    approximateAge: string | null;
+    phone: string | null;
+    gender: string | null;
+    email: string | null;
+    cpf: string | null;
+    address: string | null;
+    profession: string | null;
+    maritalStatus: string | null;
+    source: string | null;
+    tags: string[];
+    notes: string | null;
+  };
+  /** Callback on successful save (e.g. to show toast + redirect) */
+  onSuccess?: () => void;
+  createAction?: never;
+}
+
+type PatientFormProps = PatientFormCreateProps | PatientFormEditProps;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -205,25 +241,39 @@ interface PatientFormProps {
  *   - "Proximo" as secondary, "Pular" as ghost
  *   - Mobile: single column
  */
-export function PatientForm({ createAction }: PatientFormProps) {
+export function PatientForm(props: PatientFormProps) {
+  const { mode = 'create' } = props;
+  const isEdit = mode === 'edit';
+  const patient = isEdit ? props.patient : undefined;
+
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(isEdit ? 2 : 1);
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Parse address from JSON string (edit mode)
+  const parsedAddress = (() => {
+    if (!patient?.address) return undefined;
+    try {
+      return JSON.parse(patient.address) as Record<string, string>;
+    } catch {
+      return undefined;
+    }
+  })();
 
   // Step 1 form
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     mode: 'onBlur',
     defaultValues: {
-      fullName: '',
-      patientType: undefined,
-      useBirthDate: true,
-      birthDate: '',
-      approximateAge: '',
-      phone: '',
+      fullName: patient?.fullName ?? '',
+      patientType: (patient?.patientType as Step1Data['patientType']) ?? undefined,
+      useBirthDate: patient ? Boolean(patient.birthDate) : true,
+      birthDate: patient?.birthDate ? patient.birthDate.toISOString().split('T')[0] : '',
+      approximateAge: patient?.approximateAge ?? '',
+      phone: patient?.phone ?? '',
     },
   });
 
@@ -232,21 +282,21 @@ export function PatientForm({ createAction }: PatientFormProps) {
     resolver: zodResolver(step2Schema),
     mode: 'onBlur',
     defaultValues: {
-      gender: '',
-      email: '',
-      cpf: '',
-      street: '',
-      number: '',
-      complement: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      profession: '',
-      maritalStatus: '',
-      source: '',
-      tags: '',
-      notes: '',
+      gender: (patient?.gender as Step2Data['gender']) ?? '',
+      email: patient?.email ?? '',
+      cpf: patient?.cpf ?? '',
+      street: parsedAddress?.street ?? '',
+      number: parsedAddress?.number ?? '',
+      complement: parsedAddress?.complement ?? '',
+      neighborhood: parsedAddress?.neighborhood ?? '',
+      city: parsedAddress?.city ?? '',
+      state: parsedAddress?.state ?? '',
+      zipCode: parsedAddress?.zipCode ?? '',
+      profession: patient?.profession ?? '',
+      maritalStatus: (patient?.maritalStatus as Step2Data['maritalStatus']) ?? '',
+      source: (patient?.source as Step2Data['source']) ?? '',
+      tags: patient?.tags?.join(', ') ?? '',
+      notes: patient?.notes ?? '',
     },
   });
 
@@ -338,24 +388,46 @@ export function PatientForm({ createAction }: PatientFormProps) {
         setServerError(null);
 
         startTransition(async () => {
-          const result = await createAction(payload);
-          if (result.ok && result.patientId) {
-            router.push(`/pacientes/${result.patientId}`);
-          } else {
-            // Handle server errors
-            if (result.error === 'invalid_input' && result.fieldErrors) {
-              // Map field errors back to forms
-              Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-                const msg = messages[0] ?? 'Campo invalido.';
-                if (field in step1Form.getValues()) {
-                  step1Form.setError(field as keyof Step1Data, { message: msg });
-                  setStep(1);
-                } else {
-                  step2Form.setError(field as keyof Step2Data, { message: msg });
-                }
-              });
+          if (isEdit && props.updateAction && patient) {
+            // Edit mode: call updateAction
+            const result = await props.updateAction(patient.id, payload);
+            if (result.ok) {
+              props.onSuccess?.();
+              router.push(`/pacientes/${patient.id}`);
             } else {
-              setServerError(result.message ?? 'Erro inesperado ao criar paciente.');
+              if (result.error === 'invalid_input' && result.fieldErrors) {
+                Object.entries(result.fieldErrors).forEach(([field, messages]) => {
+                  const msg = messages[0] ?? 'Campo invalido.';
+                  if (field in step1Form.getValues()) {
+                    step1Form.setError(field as keyof Step1Data, { message: msg });
+                    setStep(1);
+                  } else {
+                    step2Form.setError(field as keyof Step2Data, { message: msg });
+                  }
+                });
+              } else {
+                setServerError(result.message ?? 'Erro inesperado ao atualizar paciente.');
+              }
+            }
+          } else if (props.createAction) {
+            // Create mode: call createAction
+            const result = await props.createAction(payload);
+            if (result.ok && result.patientId) {
+              router.push(`/pacientes/${result.patientId}`);
+            } else {
+              if (result.error === 'invalid_input' && result.fieldErrors) {
+                Object.entries(result.fieldErrors).forEach(([field, messages]) => {
+                  const msg = messages[0] ?? 'Campo invalido.';
+                  if (field in step1Form.getValues()) {
+                    step1Form.setError(field as keyof Step1Data, { message: msg });
+                    setStep(1);
+                  } else {
+                    step2Form.setError(field as keyof Step2Data, { message: msg });
+                  }
+                });
+              } else {
+                setServerError(result.message ?? 'Erro inesperado ao criar paciente.');
+              }
             }
           }
         });
@@ -369,7 +441,7 @@ export function PatientForm({ createAction }: PatientFormProps) {
         void step2Form.handleSubmit(submitFn)();
       }
     },
-    [step1Form, step2Form, createAction, router, startTransition],
+    [step1Form, step2Form, props, patient, isEdit, router, startTransition],
   );
 
   // Photo handling
@@ -870,15 +942,17 @@ export function PatientForm({ createAction }: PatientFormProps) {
             </Button>
 
             <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => handleSubmit(true)}
-                disabled={isPending}
-                data-testid="patient-form-skip"
-              >
-                Pular
-              </Button>
+              {!isEdit && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => handleSubmit(true)}
+                  disabled={isPending}
+                  data-testid="patient-form-skip"
+                >
+                  Pular
+                </Button>
+              )}
               <Button type="submit" disabled={isPending} data-testid="patient-form-save">
                 {isPending ? (
                   <>

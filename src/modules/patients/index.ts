@@ -72,6 +72,9 @@ export { isValidBrazilianPhone, isValidCpf, formatPhone } from './lib/patient-va
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
 export { PatientForm } from './components/patient-form';
+export { PatientEditForm } from './components/patient-edit-form';
 export { PatientDetailHeader } from './components/patient-detail-header';
+export { ArchiveConfirmModal } from './components/archive-confirm-modal';
+export { DeleteConfirmModal } from './components/delete-confirm-modal';
 export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
