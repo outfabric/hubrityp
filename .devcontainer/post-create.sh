@@ -15,7 +15,10 @@ echo "==> Registrando plugins do Claude Code para o container..."
 # /home/node/ e o projeto está em /workspaces/hubrityp, então o Claude Code
 # não encontra o plugin. Este comando adiciona um novo entry com os caminhos
 # corretos do container — os dois entries coexistem sem conflito.
-claude plugins install typescript-lsp@claude-plugins-official
+# Não-fatal: se o marketplace não tiver o source cacheado, o plugin ainda
+# funciona via bind mount do ~/.claude do host.
+claude plugins install typescript-lsp@claude-plugins-official || \
+  echo "    ⚠ Plugin typescript-lsp não pôde ser instalado (marketplace source ausente). Continuando..."
 
 echo "==> Instalando openspec CLI..."
 # @fission-ai/openspec é usado pelo /dev-cycle (openspec status, openspec list).
