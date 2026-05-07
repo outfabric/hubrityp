@@ -43,9 +43,9 @@
 
 ## 7. Module Barrel & Route Shells
 
-- [ ] 7.1 Criar `src/modules/patients/index.ts` — barrel reexportando: Server Actions (createPatient, getPatient, updatePatient, archivePatient, unarchivePatient, deletePatient, listPatients, uploadPatientPhoto, getPatientPhotoUrl), Zod schemas, types, e componentes
-- [ ] 7.2 Criar `src/app/(app)/pacientes/actions.ts` com diretiva `'use server'` — delegar para módulo (padrão route shell)
-- [ ] 7.3 Criar route shell `src/app/(app)/pacientes/[id]/actions.ts` com `'use server'`
+- [x] 7.1 Criar `src/modules/patients/index.ts` — barrel reexportando: Server Actions (createPatient, getPatient, updatePatient, archivePatient, unarchivePatient, deletePatient, listPatients, uploadPatientPhoto, getPatientPhotoUrl), Zod schemas, types, e componentes
+- [x] 7.2 Criar `src/app/(app)/pacientes/actions.ts` com diretiva `'use server'` — delegar para módulo (padrão route shell)
+- [x] 7.3 Criar route shell `src/app/(app)/pacientes/[id]/actions.ts` com `'use server'`
 
 ## 8. Frontend — Patient Listing Page
 
