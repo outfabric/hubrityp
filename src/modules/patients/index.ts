@@ -70,4 +70,4 @@ export {
 export { isValidBrazilianPhone, isValidCpf, formatPhone } from './lib/patient-validators';
 
 // ---- Components --------------------------------------------------------------
-// Components will be added here as they are created (sections 8-11).
+export { PatientList } from './components/patient-list';
