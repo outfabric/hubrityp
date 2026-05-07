@@ -3,3 +3,4 @@
 // relational API can resolve cross-domain joins.
 export * from './auth/tables';
 export * from './health/tables';
+export * from './patients/tables';

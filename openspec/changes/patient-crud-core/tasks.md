@@ -1,12 +1,12 @@
 ## 1. Database Schema & Migration
 
-- [ ] 1.1 Criar Drizzle schema `src/shared/db/schema/patients/tables.ts` com tabela `patients` (todas as colunas: id, user_id, full_name, patient_type, birth_date, approximate_age, gender, phone, email, cpf, address, profession, marital_status, source, tags, photo_path, notes, status, consent_signed_at, consent_revoked_at, couple_id, created_at, updated_at, archived_at)
-- [ ] 1.2 Criar `src/shared/db/schema/patients/policies.ts` com RLS policies owner-scoped (SELECT, INSERT, UPDATE, DELETE via `auth.uid() = user_id`)
-- [ ] 1.3 Atualizar barrel `src/shared/db/schema/index.ts` para reexportar `./patients/tables`
-- [ ] 1.4 Rodar `npm run db:generate` para gerar migration SQL
-- [ ] 1.5 Editar migration gerada para adicionar: `CREATE EXTENSION IF NOT EXISTS unaccent`, RLS policies (do policies.ts), partial unique index em `(user_id, email) WHERE email IS NOT NULL`, índice GIN em `to_tsvector('portuguese', full_name)`, compound index em `(user_id, status)`
-- [ ] 1.6 Testar migration com `npm run db:migrate` em ambiente local (docker compose up)
-- [ ] 1.7 **Teste de integração:** Criar `src/__tests__/integration/patients/patient-schema.int.test.ts` — verificar que a tabela patients existe, RLS está habilitado, policies existem, índices existem, e que a policy-coverage do projeto continua passando
+- [x] 1.1 Criar Drizzle schema `src/shared/db/schema/patients/tables.ts` com tabela `patients` (todas as colunas: id, user_id, full_name, patient_type, birth_date, approximate_age, gender, phone, email, cpf, address, profession, marital_status, source, tags, photo_path, notes, status, consent_signed_at, consent_revoked_at, couple_id, created_at, updated_at, archived_at)
+- [x] 1.2 Criar `src/shared/db/schema/patients/policies.ts` com RLS policies owner-scoped (SELECT, INSERT, UPDATE, DELETE via `auth.uid() = user_id`)
+- [x] 1.3 Atualizar barrel `src/shared/db/schema/index.ts` para reexportar `./patients/tables`
+- [x] 1.4 Rodar `npm run db:generate` para gerar migration SQL
+- [x] 1.5 Editar migration gerada para adicionar: `CREATE EXTENSION IF NOT EXISTS unaccent`, RLS policies (do policies.ts), partial unique index em `(user_id, email) WHERE email IS NOT NULL`, índice GIN em `to_tsvector('portuguese', full_name)`, compound index em `(user_id, status)`
+- [x] 1.6 Testar migration com `npm run db:migrate` em ambiente local (docker compose up)
+- [x] 1.7 **Teste de integração:** Criar `src/__tests__/integration/patients/patient-schema.int.test.ts` — verificar que a tabela patients existe, RLS está habilitado, policies existem, índices existem, e que a policy-coverage do projeto continua passando
 
 ## 2. Validators & Types
 
