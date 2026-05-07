@@ -32,8 +32,8 @@
 
 ## 5. Server Actions — Listing & Search
 
-- [ ] 5.1 Criar `src/modules/patients/server/list-patients.ts` — Server Action que aceita query params (page, status, search, tags, sort, order), aplica filtros via Drizzle (ILIKE com unaccent para busca, @> para tags, WHERE status para filtro), pagina com LIMIT/OFFSET, retorna {patients, total, page, pageSize}
-- [ ] 5.2 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-listing.int.test.ts` — testar listagem (default, filtro por status, busca por nome parcial, busca por telefone, filtro por tags, paginação, ordenação, combinação de filtros)
+- [x] 5.1 Criar `src/modules/patients/server/list-patients.ts` — Server Action que aceita query params (page, status, search, tags, sort, order), aplica filtros via Drizzle (ILIKE com unaccent para busca, @> para tags, WHERE status para filtro), pagina com LIMIT/OFFSET, retorna {patients, total, page, pageSize}
+- [x] 5.2 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-listing.int.test.ts` — testar listagem (default, filtro por status, busca por nome parcial, busca por telefone, filtro por tags, paginação, ordenação, combinação de filtros)
 
 ## 6. Server Actions — Photo Upload
 
