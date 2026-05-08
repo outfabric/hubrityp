@@ -104,8 +104,9 @@ test.describe('@patients couple patient creation', () => {
     // Navigate to listing
     await page.goto('/pacientes');
 
-    // Both names should appear in the listing
-    await expect(page.getByText('Diego Santos')).toBeVisible();
-    await expect(page.getByText('Bianca Santos')).toBeVisible();
+    // Both names should appear in the listing (desktop table + mobile cards
+    // both render the name, so we scope to the first visible match).
+    await expect(page.getByText('Diego Santos').first()).toBeVisible();
+    await expect(page.getByText('Bianca Santos').first()).toBeVisible();
   });
 });

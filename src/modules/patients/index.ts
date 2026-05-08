@@ -82,10 +82,19 @@ export {
   type SortColumn,
   SORT_ORDERS,
   type SortOrder,
+  PATIENT_TYPE_LABELS,
+  GENDER_LABELS,
+  MARITAL_STATUS_LABELS,
+  SOURCE_LABELS,
 } from './lib/patient-types';
 
 // ---- Validators --------------------------------------------------------------
-export { isValidBrazilianPhone, isValidCpf, formatPhone } from './lib/patient-validators';
+export {
+  isValidBrazilianPhone,
+  isValidCpf,
+  formatPhone,
+  maskPhone,
+} from './lib/patient-validators';
 
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';

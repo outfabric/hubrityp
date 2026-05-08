@@ -33,15 +33,15 @@ test.describe('@patients patient creation', () => {
     // Step 1 form should be visible
     await expect(page.getByTestId('patient-form-step1')).toBeVisible();
 
+    // Use a timestamped name to avoid collision with reused Testcontainers
+    const uniqueSuffix = Date.now().toString().slice(-6);
+
     // Fill full name
-    await page.getByTestId('patient-form-fullname').fill('Maria Silva Santos');
+    await page.getByTestId('patient-form-fullname').fill(`Maria Silva ${uniqueSuffix}`);
 
     // Select patient type "Adulto" (value: individual)
     await page.getByTestId('patient-form-type').click();
     await page.getByRole('option', { name: 'Adulto' }).click();
-
-    // Fill phone with mask
-    await page.getByTestId('patient-form-phone').fill('11987654321');
 
     // Click "Proximo" to advance to step 2
     await page.getByTestId('patient-form-next').click();

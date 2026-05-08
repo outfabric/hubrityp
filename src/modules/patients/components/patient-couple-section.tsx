@@ -103,8 +103,8 @@ export function PatientCoupleSection({
                 <AlertDialogTitle>Desvincular casal?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Ao desvincular, ambos os pacientes deixam de estar associados como casal e passam
-                  a ser tratados como pacientes individuais. Essa acao nao exclui nenhum registro
-                  clinico.
+                  a ser tratados como pacientes individuais. Essa ação não exclui nenhum registro
+                  clínico.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 

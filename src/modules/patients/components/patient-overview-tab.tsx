@@ -1,5 +1,11 @@
 import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
 
+import {
+  GENDER_LABELS,
+  MARITAL_STATUS_LABELS,
+  PATIENT_TYPE_LABELS,
+  SOURCE_LABELS,
+} from '../lib/patient-types';
 import type { AddGuardianResult } from '../server/add-guardian';
 import type { ListGuardiansResult } from '../server/list-guardians';
 import type { RemoveGuardianResult } from '../server/remove-guardian';
@@ -8,44 +14,6 @@ import type { UpdateGuardianResult } from '../server/update-guardian';
 
 import { PatientCoupleSection } from './patient-couple-section';
 import { PatientGuardiansSection } from './patient-guardians-section';
-
-// ---------------------------------------------------------------------------
-// Label maps (pt-BR display)
-// ---------------------------------------------------------------------------
-
-const PATIENT_TYPE_LABELS: Record<string, string> = {
-  individual: 'Adulto',
-  child: 'Crianca',
-  adolescent: 'Adolescente',
-  couple: 'Casal',
-  elderly: 'Idoso',
-};
-
-const GENDER_LABELS: Record<string, string> = {
-  male: 'Masculino',
-  female: 'Feminino',
-  non_binary: 'Nao-binario',
-  other: 'Outro',
-  prefer_not_to_say: 'Prefiro nao dizer',
-};
-
-const MARITAL_STATUS_LABELS: Record<string, string> = {
-  single: 'Solteiro(a)',
-  married: 'Casado(a)',
-  divorced: 'Divorciado(a)',
-  widowed: 'Viuvo(a)',
-  civil_union: 'Uniao estavel',
-  other: 'Outro',
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  indication: 'Indicacao',
-  social_media: 'Redes sociais',
-  google: 'Google',
-  insurance: 'Convenio',
-  return: 'Retorno',
-  other: 'Outro',
-};
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -14,8 +14,17 @@ import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Textarea } from '@/shared/ui/textarea';
 
-import { GENDERS, MARITAL_STATUSES, PATIENT_TYPES, SOURCES } from '../lib/patient-types';
-import { isValidBrazilianPhone, isValidCpf } from '../lib/patient-validators';
+import {
+  GENDERS,
+  GENDER_LABELS,
+  MARITAL_STATUSES,
+  MARITAL_STATUS_LABELS,
+  PATIENT_TYPES,
+  PATIENT_TYPE_LABELS,
+  SOURCES,
+  SOURCE_LABELS,
+} from '../lib/patient-types';
+import { isValidBrazilianPhone, isValidCpf, maskPhone } from '../lib/patient-validators';
 
 // ---------------------------------------------------------------------------
 // Form schema — client-side with user-friendly pt-BR messages
@@ -177,31 +186,6 @@ type Step2Data = z.infer<typeof step2Schema>;
 // ---------------------------------------------------------------------------
 
 /**
- * Formats a phone input progressively into `+55 DD NNNNN-NNNN`.
- * Strips non-digits and applies the mask as the user types.
- */
-function maskPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-
-  // Always prepend country code display
-  if (digits.length === 0) return '';
-  if (digits.length <= 2) return `+55 ${digits}`;
-  if (digits.length <= 7) return `+55 ${digits.slice(0, 2)} ${digits.slice(2)}`;
-  if (digits.length <= 11) {
-    return `+55 ${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-  // If user started typing with 55 prefix
-  if (digits.startsWith('55') && digits.length <= 13) {
-    const rest = digits.slice(2);
-    if (rest.length <= 2) return `+55 ${rest}`;
-    if (rest.length <= 7) return `+55 ${rest.slice(0, 2)} ${rest.slice(2)}`;
-    return `+55 ${rest.slice(0, 2)} ${rest.slice(2, 7)}-${rest.slice(7)}`;
-  }
-  // Truncate
-  return `+55 ${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-}
-
-/**
  * Formats a CPF input progressively into `XXX.XXX.XXX-XX`.
  */
 function maskCpf(raw: string): string {
@@ -211,44 +195,6 @@ function maskCpf(raw: string): string {
   if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
-
-// ---------------------------------------------------------------------------
-// Label map for selects (pt-BR display)
-// ---------------------------------------------------------------------------
-
-const PATIENT_TYPE_LABELS: Record<string, string> = {
-  individual: 'Adulto',
-  child: 'Criança',
-  adolescent: 'Adolescente',
-  couple: 'Casal',
-  elderly: 'Idoso',
-};
-
-const GENDER_LABELS: Record<string, string> = {
-  male: 'Masculino',
-  female: 'Feminino',
-  non_binary: 'Nao-binario',
-  other: 'Outro',
-  prefer_not_to_say: 'Prefiro nao dizer',
-};
-
-const MARITAL_STATUS_LABELS: Record<string, string> = {
-  single: 'Solteiro(a)',
-  married: 'Casado(a)',
-  divorced: 'Divorciado(a)',
-  widowed: 'Viuvo(a)',
-  civil_union: 'Uniao estavel',
-  other: 'Outro',
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  indication: 'Indicacao',
-  social_media: 'Redes sociais',
-  google: 'Google',
-  insurance: 'Convenio',
-  return: 'Retorno',
-  other: 'Outro',
-};
 
 // ---------------------------------------------------------------------------
 // Props
