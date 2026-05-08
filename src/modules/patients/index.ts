@@ -41,6 +41,10 @@ export {
 } from './server/create-couple-patient';
 export { unlinkCoupleImpl, type UnlinkCoupleResult } from './server/unlink-couple';
 export { getCouplePartnerImpl, type GetCouplePartnerResult } from './server/get-couple-partner';
+export { addGuardianImpl, type AddGuardianResult } from './server/add-guardian';
+export { updateGuardianImpl, type UpdateGuardianResult } from './server/update-guardian';
+export { removeGuardianImpl, type RemoveGuardianResult } from './server/remove-guardian';
+export { listGuardiansImpl, type ListGuardiansResult } from './server/list-guardians';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
@@ -48,6 +52,12 @@ export {
   updatePatientSchema,
   listPatientsQuerySchema,
 } from './lib/patient-input-schema';
+export {
+  createGuardianSchema,
+  updateGuardianSchema,
+  type CreateGuardianInput,
+  type UpdateGuardianInput,
+} from './lib/guardian-input-schema';
 
 // ---- Types -------------------------------------------------------------------
 export type {

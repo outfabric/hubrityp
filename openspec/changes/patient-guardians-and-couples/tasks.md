@@ -33,7 +33,7 @@
 
 ## 6. Module Barrel Update
 
-- [ ] 6.1 Atualizar `src/modules/patients/index.ts` para reexportar: addGuardian, updateGuardian, removeGuardian, listGuardians, createCouplePatient, unlinkCouple, getCouplePartner, guardian schemas e types
+- [x] 6.1 Atualizar `src/modules/patients/index.ts` para reexportar: addGuardian, updateGuardian, removeGuardian, listGuardians, createCouplePatient, unlinkCouple, getCouplePartner, guardian schemas e types
 
 ## 7. Frontend — Conditional Form Sections
 
