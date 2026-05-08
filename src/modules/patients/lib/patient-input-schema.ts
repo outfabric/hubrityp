@@ -112,74 +112,74 @@ export type PartnerInput = z.infer<typeof partnerSchema>;
  *   - child/adolescent: at least 1 guardian required
  *   - couple: partner data required (fullName is mandatory)
  */
-export const createPatientSchema = z
-  .object({
-    // Step 1 — required
-    fullName: fullNameField,
-    patientType: patientTypeField,
+const createPatientBaseSchema = z.object({
+  // Step 1 — required
+  fullName: fullNameField,
+  patientType: patientTypeField,
 
-    // Step 2 — optional demographics
-    birthDate: z.coerce.date().optional(),
-    approximateAge: z
-      .string()
-      .max(20, { message: 'Idade aproximada deve ter no máximo 20 caracteres.' })
-      .optional(),
-    gender: z.enum(GENDERS, { message: 'Gênero inválido.' }).optional(),
+  // Step 2 — optional demographics
+  birthDate: z.coerce.date().optional(),
+  approximateAge: z
+    .string()
+    .max(20, { message: 'Idade aproximada deve ter no máximo 20 caracteres.' })
+    .optional(),
+  gender: z.enum(GENDERS, { message: 'Gênero inválido.' }).optional(),
 
-    // Contact
-    phone: phoneField,
-    email: emailField,
+  // Contact
+  phone: phoneField,
+  email: emailField,
 
-    // Documents
-    cpf: cpfField,
+  // Documents
+  cpf: cpfField,
 
-    // Address
-    address: addressField,
+  // Address
+  address: addressField,
 
-    // Professional/social
-    profession: z
-      .string()
-      .max(100, { message: 'Profissão deve ter no máximo 100 caracteres.' })
-      .optional(),
-    maritalStatus: z.enum(MARITAL_STATUSES, { message: 'Estado civil inválido.' }).optional(),
-    source: z.enum(SOURCES, { message: 'Origem do encaminhamento inválida.' }).optional(),
+  // Professional/social
+  profession: z
+    .string()
+    .max(100, { message: 'Profissão deve ter no máximo 100 caracteres.' })
+    .optional(),
+  maritalStatus: z.enum(MARITAL_STATUSES, { message: 'Estado civil inválido.' }).optional(),
+  source: z.enum(SOURCES, { message: 'Origem do encaminhamento inválida.' }).optional(),
 
-    // Tags
-    tags: tagsField,
+  // Tags
+  tags: tagsField,
 
-    // Notes
-    notes: z
-      .string()
-      .max(5000, { message: 'Anotações devem ter no máximo 5000 caracteres.' })
-      .optional(),
+  // Notes
+  notes: z
+    .string()
+    .max(5000, { message: 'Anotações devem ter no máximo 5000 caracteres.' })
+    .optional(),
 
-    // Guardians — required for child/adolescent (at least 1, max 2)
-    guardians: z.array(createGuardianSchema).max(2).optional(),
+  // Guardians — required for child/adolescent (at least 1, max 2)
+  guardians: z.array(createGuardianSchema).max(2).optional(),
 
-    // Partner — required for couple
-    partner: partnerSchema.optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.patientType === 'child' || data.patientType === 'adolescent') {
-      if (!data.guardians || data.guardians.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Pacientes menores precisam de pelo menos 1 responsável.',
-          path: ['guardians'],
-        });
-      }
+  // Partner — required for couple
+  partner: partnerSchema.optional(),
+});
+
+export const createPatientSchema = createPatientBaseSchema.superRefine((data, ctx) => {
+  if (data.patientType === 'child' || data.patientType === 'adolescent') {
+    if (!data.guardians || data.guardians.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Pacientes menores precisam de pelo menos 1 responsável.',
+        path: ['guardians'],
+      });
     }
+  }
 
-    if (data.patientType === 'couple') {
-      if (!data.partner || !data.partner.fullName) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Preencha os dados do parceiro(a).',
-          path: ['partner'],
-        });
-      }
+  if (data.patientType === 'couple') {
+    if (!data.partner || !data.partner.fullName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Preencha os dados do parceiro(a).',
+        path: ['partner'],
+      });
     }
-  });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // updatePatientSchema — partial update
@@ -189,7 +189,7 @@ export const createPatientSchema = z
  * Schema for partially updating a patient. All fields are optional.
  * Includes `status` to allow archiving/reactivation.
  */
-export const updatePatientSchema = createPatientSchema.partial().extend({
+export const updatePatientSchema = createPatientBaseSchema.partial().extend({
   status: z.enum(PATIENT_STATUSES, { message: 'Status inválido.' }).optional(),
 });
 
