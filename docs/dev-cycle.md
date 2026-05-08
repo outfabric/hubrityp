@@ -10,7 +10,7 @@ O HubrityP usa três subagents especializados:
 
 - **`fullstack-developer`** — implementa código e testes (Next.js / Supabase / Drizzle / etc.).
 - **`code-reviewer`** — faz code review do diff da branch contra `main`, com severidades `BLOCKER` / `HIGH` / `MEDIUM` / `NIT` / `PRAISE`.
-- **`qa-tester`** — testa visualmente a aplicação no navegador (Playwright MCP), com severidades `CRÍTICO` / `ALTO` / `MÉDIO` / `BAIXO` / `INFO`.
+- **`qa-tester`** — testa visualmente a aplicação no navegador (playwright-cli skill), com severidades `CRÍTICO` / `ALTO` / `MÉDIO` / `BAIXO` / `INFO`.
 
 Sem orquestração, esses agents operam de forma isolada: o usuário precisa invocar manualmente cada um, decidir quando passar do um para o outro, gerenciar o worktree, criar commits e abrir o PR. O ciclo "implementação → revisão → QA → entrega" fica frouxo e suscetível a esquecimento.
 

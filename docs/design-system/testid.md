@@ -20,7 +20,7 @@ pt-BR product like HubrityP they have two specific weaknesses, which `data-testi
   ambiguity.
 
 `data-testid` is also the deterministic surface that the `qa-tester` agent relies on when it
-explores the app via Playwright MCP — agent-driven testing without it is brittle.
+explores the app via Playwright skill — agent-driven testing without it is brittle.
 
 ## Locator preference order
 
