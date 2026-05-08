@@ -17,6 +17,7 @@ import type {
   ListGuardiansResult,
   RemoveGuardianResult,
   UnarchivePatientResult,
+  UnlinkCoupleResult,
   UpdateGuardianResult,
   UpdatePatientResult,
 } from '@/modules/patients';
@@ -29,6 +30,7 @@ import {
   listGuardiansImpl,
   removeGuardianImpl,
   unarchivePatientImpl,
+  unlinkCoupleImpl,
   updateGuardianImpl,
   updatePatientImpl,
 } from '@/modules/patients';
@@ -88,4 +90,9 @@ export async function updateGuardian(
 export async function removeGuardian(guardianId: string): Promise<RemoveGuardianResult> {
   const supabase = await createServerClient();
   return removeGuardianImpl(supabase, guardianId);
+}
+
+export async function unlinkCouple(patientId: string): Promise<UnlinkCoupleResult> {
+  const supabase = await createServerClient();
+  return unlinkCoupleImpl(supabase, patientId);
 }

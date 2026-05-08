@@ -3,8 +3,10 @@ import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/table
 import type { AddGuardianResult } from '../server/add-guardian';
 import type { ListGuardiansResult } from '../server/list-guardians';
 import type { RemoveGuardianResult } from '../server/remove-guardian';
+import type { UnlinkCoupleResult } from '../server/unlink-couple';
 import type { UpdateGuardianResult } from '../server/update-guardian';
 
+import { PatientCoupleSection } from './patient-couple-section';
 import { PatientGuardiansSection } from './patient-guardians-section';
 
 // ---------------------------------------------------------------------------
@@ -112,6 +114,10 @@ interface PatientOverviewTabProps {
   updateGuardianAction?: (guardianId: string, input: unknown) => Promise<UpdateGuardianResult>;
   /** Server Action to remove a guardian. */
   removeGuardianAction?: (guardianId: string) => Promise<RemoveGuardianResult>;
+  /** Pre-fetched couple partner (only for couple patients). */
+  couplePartner?: Patient;
+  /** Server Action to unlink the couple. */
+  unlinkCoupleAction?: (patientId: string) => Promise<UnlinkCoupleResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +131,8 @@ export function PatientOverviewTab({
   addGuardianAction,
   updateGuardianAction,
   removeGuardianAction,
+  couplePartner,
+  unlinkCoupleAction,
 }: PatientOverviewTabProps) {
   const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
   const hasGuardianActions =
@@ -133,6 +141,7 @@ export function PatientOverviewTab({
     addGuardianAction &&
     updateGuardianAction &&
     removeGuardianAction;
+  const isCouple = patient.patientType === 'couple' && couplePartner && unlinkCoupleAction;
 
   return (
     <div className="space-y-6">
@@ -212,6 +221,14 @@ export function PatientOverviewTab({
           />
         </dl>
       </div>
+
+      {isCouple && (
+        <PatientCoupleSection
+          patientId={patient.id}
+          partner={couplePartner}
+          unlinkCoupleAction={unlinkCoupleAction}
+        />
+      )}
 
       {isMinor && hasGuardianActions && (
         <PatientGuardiansSection

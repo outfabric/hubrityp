@@ -459,6 +459,11 @@ export function PatientList({
                         <AvatarFallback>{getInitials(patient.fullName)}</AvatarFallback>
                       </Avatar>
                       <span className="text-text-primary font-medium">{patient.fullName}</span>
+                      {patient.coupleId && (
+                        <Badge variant="info" data-testid="patient-couple-badge">
+                          Casal
+                        </Badge>
+                      )}
                     </Link>
                   </TableCell>
                   <TableCell>
@@ -515,7 +520,14 @@ export function PatientList({
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-text-primary font-medium">{patient.fullName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-text-primary font-medium">{patient.fullName}</span>
+                      {patient.coupleId && (
+                        <Badge variant="info" data-testid="patient-couple-badge">
+                          Casal
+                        </Badge>
+                      )}
+                    </div>
                     <Badge variant={statusBadgeVariant(patient.status)}>
                       {statusLabel(patient.status)}
                     </Badge>

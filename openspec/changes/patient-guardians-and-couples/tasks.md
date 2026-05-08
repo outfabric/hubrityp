@@ -56,5 +56,5 @@
 
 > **Design System Sálvia**: Badge info para casal, Button link para parceiro, AlertDialog para desvincular.
 
-- [ ] 9.1 Adicionar `Badge info` (bg `info-50`, text `info-700`) "Casal" ao lado do nome na listagem de pacientes
-- [ ] 9.2 Adicionar seção "Parceiro(a)" no overview-tab: `Card flat` com título h4 "Parceiro(a)", nome como `Button link` (text `brand-700`, underline em hover) linkando para detail page, e botão "Desvincular casal" `Button ghost` text `danger-700` com ícone. Confirmação via shadcn `AlertDialog` (max-width 480px)
+- [x] 9.1 Adicionar `Badge info` (bg `info-50`, text `info-700`) "Casal" ao lado do nome na listagem de pacientes
+- [x] 9.2 Adicionar seção "Parceiro(a)" no overview-tab: `Card flat` com título h4 "Parceiro(a)", nome como `Button link` (text `brand-700`, underline em hover) linkando para detail page, e botão "Desvincular casal" `Button ghost` text `danger-700` com ícone. Confirmação via shadcn `AlertDialog` (max-width 480px)

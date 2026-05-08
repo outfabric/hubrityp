@@ -96,4 +96,5 @@ export { ArchiveConfirmModal } from './components/archive-confirm-modal';
 export { DeleteConfirmModal } from './components/delete-confirm-modal';
 export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
+export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';

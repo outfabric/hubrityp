@@ -2,7 +2,12 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { getPatientImpl, getPatientPhotoUrlImpl, listGuardiansImpl } from '@/modules/patients';
+import {
+  getCouplePartnerImpl,
+  getPatientImpl,
+  getPatientPhotoUrlImpl,
+  listGuardiansImpl,
+} from '@/modules/patients';
 import { PatientDetailHeader } from '@/modules/patients/components/patient-detail-header';
 import { PatientOverviewTab } from '@/modules/patients/components/patient-overview-tab';
 import { PatientTabs } from '@/modules/patients/components/patient-tabs';
@@ -16,6 +21,7 @@ import {
   listGuardians,
   removeGuardian,
   unarchivePatient,
+  unlinkCouple,
   updateGuardian,
 } from './actions';
 
@@ -48,10 +54,17 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { patient } = patientResult;
   const photoUrl = photoResult.ok ? photoResult.signedUrl : undefined;
 
-  // Fetch guardians for minor patients (child/adolescent)
+  // Fetch conditional data in parallel: guardians for minors, couple partner for couples
   const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
-  const guardiansResult = isMinor ? await listGuardiansImpl(supabase, id) : null;
+  const isCouple = patient.patientType === 'couple' && patient.coupleId !== null;
+
+  const [guardiansResult, couplePartnerResult] = await Promise.all([
+    isMinor ? listGuardiansImpl(supabase, id) : null,
+    isCouple ? getCouplePartnerImpl(supabase, id) : null,
+  ]);
+
   const initialGuardians = guardiansResult?.ok ? guardiansResult.guardians : [];
+  const couplePartner = couplePartnerResult?.ok ? couplePartnerResult.partner : undefined;
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -85,6 +98,8 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
               addGuardianAction={addGuardian}
               updateGuardianAction={updateGuardian}
               removeGuardianAction={removeGuardian}
+              couplePartner={couplePartner}
+              unlinkCoupleAction={unlinkCouple}
             />
           }
         />
