@@ -17,6 +17,23 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const SEED_STATE_PATH = path.resolve(HERE, '.auth/seed-state.json');
 export const STORAGE_STATE_PATH = path.resolve(HERE, '.auth/state.json');
 
+export const SEED_PATIENTS = {
+  activeWithPhone: {
+    id: '00000000-0000-4000-8000-000000000010',
+    fullName: 'Maria Silva',
+    phone: '+55 11 99999-0001',
+    tags: ['adulto', 'presencial'],
+  },
+  activeMinimal: {
+    id: '00000000-0000-4000-8000-000000000011',
+    fullName: 'João Santos',
+  },
+  archived: {
+    id: '00000000-0000-4000-8000-000000000012',
+    fullName: 'Ana Oliveira',
+  },
+} as const;
+
 export type SeedState = {
   // Stable UUID seeded into `auth.users` by `global-setup.ts`. Tests can
   // assert that the dashboard greeting matches `email`, so changes here

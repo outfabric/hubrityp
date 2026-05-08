@@ -3,7 +3,7 @@ import postgres from 'postgres';
 
 import { healthPings } from '@/shared/db/schema/health/tables';
 
-import { readSeedState } from './seed-state';
+import { readSeedState, SEED_PATIENTS } from './seed-state';
 
 // Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
 // Playwright's `runner/tasks.ts::createGlobalSetupTasks`), so by the time
@@ -84,6 +84,28 @@ export default async function globalSetup() {
       .insert(healthPings)
       .values({ ownerId: seed.userId, note: 'e2e-seed ping' })
       .onConflictDoNothing();
+
+    const p = SEED_PATIENTS;
+    for (const [patient, status, phone] of [
+      [p.activeWithPhone, 'active', p.activeWithPhone.phone] as const,
+      [p.activeMinimal, 'active', null] as const,
+      [p.archived, 'archived', null] as const,
+    ]) {
+      await sql`
+        INSERT INTO public.patients (id, user_id, full_name, patient_type, phone, tags, status, archived_at)
+        VALUES (
+          ${patient.id}, ${seed.userId}, ${patient.fullName}, 'individual',
+          ${phone}, ${'tags' in patient ? [...patient.tags] : sql`'{}'::text[]`},
+          ${status}, ${status === 'archived' ? sql`now()` : null}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          full_name  = EXCLUDED.full_name,
+          phone      = EXCLUDED.phone,
+          tags       = EXCLUDED.tags,
+          status     = EXCLUDED.status,
+          archived_at = EXCLUDED.archived_at;
+      `;
+    }
   } finally {
     await sql.end();
   }
