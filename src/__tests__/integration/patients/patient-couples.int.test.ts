@@ -172,7 +172,7 @@ describe('createCouplePatientImpl', () => {
 // ---------------------------------------------------------------------------
 
 describe('unlinkCoupleImpl', () => {
-  it('unlinks both patients: sets couple_id to null and patient_type to adult', async () => {
+  it('unlinks both patients: sets couple_id to null and patient_type to individual', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
     const client = fakeSupabaseClient(userId);
@@ -198,7 +198,7 @@ describe('unlinkCoupleImpl', () => {
     expect(rows).toHaveLength(2);
     for (const row of rows) {
       expect(row.coupleId).toBeNull();
-      expect(row.patientType).toBe('adult');
+      expect(row.patientType).toBe('individual');
     }
   });
 

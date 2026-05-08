@@ -65,43 +65,49 @@ export async function removeGuardianImpl(
 
   const { patientId, isPrimary } = existing;
 
-  // 3. Delete the guardian
+  // 3. Delete the guardian + promote remaining (atomically in a transaction)
   try {
-    const deleted = await db
-      .delete(patientGuardians)
-      .where(eq(patientGuardians.id, guardianId))
-      .returning({ id: patientGuardians.id });
+    let noGuardiansRemaining = false;
 
-    if (deleted.length === 0) {
-      return { ok: false, error: 'not_found' };
-    }
+    await db.transaction(async (tx) => {
+      const deleted = await tx
+        .delete(patientGuardians)
+        .where(eq(patientGuardians.id, guardianId))
+        .returning({ id: patientGuardians.id });
 
-    // 4. If the removed guardian was primary, check for remaining guardians
-    if (isPrimary) {
-      const [remaining] = await db
-        .select({ id: patientGuardians.id })
-        .from(patientGuardians)
-        .where(and(eq(patientGuardians.patientId, patientId), ne(patientGuardians.id, guardianId)))
-        .limit(1);
-
-      if (remaining) {
-        // Promote the remaining guardian to primary
-        await db
-          .update(patientGuardians)
-          .set({ isPrimary: true })
-          .where(eq(patientGuardians.id, remaining.id));
+      if (deleted.length === 0) {
+        throw new Error('NOT_FOUND');
       }
-    }
 
-    // 5. Check if any guardians remain after deletion
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(patientGuardians)
-      .where(eq(patientGuardians.patientId, patientId));
+      // 4. If the removed guardian was primary, promote the next remaining one
+      if (isPrimary) {
+        const [remaining] = await tx
+          .select({ id: patientGuardians.id })
+          .from(patientGuardians)
+          .where(
+            and(eq(patientGuardians.patientId, patientId), ne(patientGuardians.id, guardianId)),
+          )
+          .limit(1);
 
-    const remainingCount = countResult?.count ?? 0;
+        if (remaining) {
+          await tx
+            .update(patientGuardians)
+            .set({ isPrimary: true })
+            .where(eq(patientGuardians.id, remaining.id));
+        }
+      }
 
-    if (remainingCount === 0) {
+      // 5. Check if any guardians remain after deletion
+      const [countResult] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(patientGuardians)
+        .where(eq(patientGuardians.patientId, patientId));
+
+      const remainingCount = countResult?.count ?? 0;
+      noGuardiansRemaining = remainingCount === 0;
+    });
+
+    if (noGuardiansRemaining) {
       return {
         ok: true,
         warning: 'Este paciente menor está sem responsável cadastrado.',
@@ -110,6 +116,10 @@ export async function removeGuardianImpl(
 
     return { ok: true };
   } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'NOT_FOUND') {
+      return { ok: false, error: 'not_found' };
+    }
+
     const pgError = err as { code?: string };
     logger.error(
       { event: 'remove_guardian_failed', errorCode: pgError.code },

@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
 import {
@@ -62,7 +62,7 @@ export async function listGuardiansImpl(
     .select()
     .from(patientGuardians)
     .where(eq(patientGuardians.patientId, patientId))
-    .orderBy(patientGuardians.isPrimary, patientGuardians.createdAt);
+    .orderBy(desc(patientGuardians.isPrimary), patientGuardians.createdAt);
 
   return { ok: true, guardians };
 }

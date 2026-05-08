@@ -24,14 +24,14 @@ export type UnlinkCoupleResult =
 
 /**
  * Unlinks two coupled patients by clearing their `couple_id` and resetting
- * `patient_type` to `"adult"`.
+ * `patient_type` to `"individual"`.
  *
  * Flow:
  *   1. Authenticate via Supabase session.
  *   2. Look up the patient by ID, scoped to the authenticated user.
  *   3. Verify the patient has a `couple_id` (otherwise nothing to unlink).
  *   4. In a transaction, update BOTH patients with the same `couple_id`:
- *      set `couple_id = null`, `patient_type = 'adult'`, `updated_at = now()`.
+ *      set `couple_id = null`, `patient_type = 'individual'`, `updated_at = now()`.
  *   5. Return success or appropriate error.
  */
 export async function unlinkCoupleImpl(
@@ -78,7 +78,7 @@ export async function unlinkCoupleImpl(
         .update(patients)
         .set({
           coupleId: null,
-          patientType: 'adult',
+          patientType: 'individual',
           updatedAt: sql`now()`,
         })
         .where(and(eq(patients.coupleId, coupleId), eq(patients.userId, userId)));
