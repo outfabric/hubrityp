@@ -1,0 +1,89 @@
+import { sql } from 'drizzle-orm';
+import { index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+
+// `patients` is the core domain table for the patient module. It stores all
+// demographic and administrative data for patients belonging to a given
+// psychologist. The table is owner-scoped via RLS — every row is tied to a
+// single `user_id` (the psychologist's `auth.users.id`), and the four
+// canonical policies (SELECT, INSERT, UPDATE, DELETE) enforce that only the
+// owner can access their patients.
+//
+// Nullable columns follow the PRD: only `full_name` and `patient_type` are
+// required at creation time (2-step form: essentials first, details later).
+//
+// Future changes will add related tables (guardians, anamnesis, consent_terms)
+// that reference `patients.id` — the schema is designed to be extensible
+// without breaking changes.
+export const patients = pgTable(
+  'patients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. The cross-schema reference is emitted manually in
+    // the migration (same pattern as profiles.user_id, health_pings.owner_id).
+    userId: uuid('user_id').notNull(),
+
+    // --- Essential fields (required at creation) ---
+    fullName: varchar('full_name', { length: 200 }).notNull(),
+    patientType: text('patient_type').notNull().default('individual'),
+
+    // --- Demographics (optional) ---
+    birthDate: timestamp('birth_date', { withTimezone: true, mode: 'date' }),
+    approximateAge: text('approximate_age'),
+    gender: text('gender'),
+
+    // --- Contact (optional) ---
+    phone: varchar('phone', { length: 20 }),
+    email: varchar('email', { length: 255 }),
+
+    // --- Documents (optional) ---
+    cpf: varchar('cpf', { length: 14 }),
+
+    // --- Address (optional, stored as JSON-like text for flexibility) ---
+    address: text('address'),
+
+    // --- Professional/social (optional) ---
+    profession: varchar('profession', { length: 100 }),
+    maritalStatus: text('marital_status'),
+    source: text('source'),
+
+    // --- Tags (free-form array, normalized to lowercase before insert) ---
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+
+    // --- Photo (path in Supabase Storage bucket `patient-photos`) ---
+    photoPath: text('photo_path'),
+
+    // --- Clinical notes (free-form) ---
+    notes: text('notes'),
+
+    // --- Status lifecycle ---
+    status: text('status').notNull().default('active'),
+
+    // --- Consent tracking ---
+    consentSignedAt: timestamp('consent_signed_at', { withTimezone: true }),
+    consentRevokedAt: timestamp('consent_revoked_at', { withTimezone: true }),
+
+    // --- Couple linking (for future `patient-guardians-and-couples` change) ---
+    coupleId: uuid('couple_id'),
+
+    // --- Timestamps ---
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+  },
+  (table) => [
+    // Compound index for the most common query: "all active patients for this
+    // psychologist". Covers the listPatients Server Action's default filter.
+    index('patients_user_id_status_idx').on(table.userId, table.status),
+  ],
+);
+
+export type Patient = typeof patients.$inferSelect;
+export type NewPatient = typeof patients.$inferInsert;
