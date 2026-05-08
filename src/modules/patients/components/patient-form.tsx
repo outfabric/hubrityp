@@ -380,7 +380,7 @@ export function PatientForm(props: PatientFormProps) {
       approximateAge: patient?.approximateAge ?? '',
       phone: patient?.phone ?? '',
       guardians: [],
-      partner: { fullName: '', phone: '', useBirthDate: true, birthDate: '', approximateAge: '' },
+      partner: undefined,
     },
   });
 
@@ -696,9 +696,33 @@ export function PatientForm(props: PatientFormProps) {
             <Select
               value={step1Form.watch('patientType') ?? ''}
               onValueChange={(value) => {
-                step1Form.setValue('patientType', value as Step1Data['patientType'], {
+                const typed = value as Step1Data['patientType'];
+                step1Form.setValue('patientType', typed, {
                   shouldValidate: true,
                 });
+
+                // When switching to couple, initialize partner with empty defaults
+                // so the sub-form fields are registered — but don't trigger validation
+                // to avoid showing errors before the user interacts with the fields.
+                if (typed === 'couple') {
+                  step1Form.setValue(
+                    'partner',
+                    {
+                      fullName: '',
+                      phone: '',
+                      useBirthDate: true,
+                      birthDate: '',
+                      approximateAge: '',
+                    },
+                    { shouldValidate: false },
+                  );
+                } else {
+                  // Clear partner data when switching away from couple
+                  step1Form.setValue('partner', undefined, { shouldValidate: false });
+                }
+
+                // Clear any stale partner validation errors when switching types
+                step1Form.clearErrors('partner');
               }}
             >
               <SelectTrigger
