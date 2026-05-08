@@ -18,11 +18,11 @@
 
 ## 4. Server Actions — Guardians
 
-- [ ] 4.1 Criar `src/modules/patients/server/add-guardian.ts` — valida input, verifica que patient é menor, verifica limite de 2, insere guardian. Se é o primeiro, marca is_primary=true
-- [ ] 4.2 Criar `src/modules/patients/server/update-guardian.ts` — valida input, atualiza guardian via Drizzle
-- [ ] 4.3 Criar `src/modules/patients/server/remove-guardian.ts` — remove guardian, se era primary e existe outro, promove o restante a primary. Se era o último, mostra warning
-- [ ] 4.4 Criar `src/modules/patients/server/list-guardians.ts` — lista guardians de um paciente
-- [ ] 4.5 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-guardians-crud.int.test.ts` — testar add (sucesso, limite 2, auto-primary), update, remove (promoção, warning), RLS (cross-user bloqueado)
+- [x] 4.1 Criar `src/modules/patients/server/add-guardian.ts` — valida input, verifica que patient é menor, verifica limite de 2, insere guardian. Se é o primeiro, marca is_primary=true
+- [x] 4.2 Criar `src/modules/patients/server/update-guardian.ts` — valida input, atualiza guardian via Drizzle
+- [x] 4.3 Criar `src/modules/patients/server/remove-guardian.ts` — remove guardian, se era primary e existe outro, promove o restante a primary. Se era o último, mostra warning
+- [x] 4.4 Criar `src/modules/patients/server/list-guardians.ts` — lista guardians de um paciente
+- [x] 4.5 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-guardians-crud.int.test.ts` — testar add (sucesso, limite 2, auto-primary), update, remove (promoção, warning), RLS (cross-user bloqueado)
 
 ## 5. Server Actions — Couples
 
