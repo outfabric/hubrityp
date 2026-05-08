@@ -2,7 +2,7 @@
 
 ### Requirement: Psychologist can create a patient
 
-The system SHALL allow an authenticated psychologist to create a new patient record with required fields (full_name, patient_type, phone) and optional fields (birth_date, approximate_age, gender, email, cpf, address, profession, marital_status, source, tags, photo, notes). The patient is always owned by the creating psychologist (`user_id`).
+The system SHALL allow an authenticated psychologist to create a new patient record with required fields (full_name, patient_type, phone) and optional fields (birth_date, approximate_age, gender, email, cpf, address, profession, marital_status, source, tags, photo, notes). The patient is always owned by the creating psychologist (`user_id`). **When patient_type is "child" or "adolescent", the creation form SHALL additionally collect guardian information. When patient_type is "couple", the form SHALL collect data for both partners.**
 
 #### Scenario: Successful creation of adult patient with minimal fields
 
@@ -13,6 +13,16 @@ The system SHALL allow an authenticated psychologist to create a new patient rec
 
 - **WHEN** psychologist submits a patient form with all required fields plus email, cpf, address, profession, marital_status, source, tags=["TCC","infantil"], and notes
 - **THEN** system creates the patient record with all provided fields stored correctly
+
+#### Scenario: Creation of child patient requires at least one guardian
+
+- **WHEN** psychologist submits a patient form with patient_type="child" without any guardian information
+- **THEN** system rejects with validation error "Paciente menor requer pelo menos um responsavel legal"
+
+#### Scenario: Creation of couple patient requires partner data
+
+- **WHEN** psychologist submits a patient form with patient_type="couple" without partner data
+- **THEN** system rejects with validation error "Paciente tipo casal requer dados do parceiro(a)"
 
 #### Scenario: Phone validation rejects invalid format
 
