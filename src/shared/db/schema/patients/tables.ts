@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 // `patients` is the core domain table for the patient module. It stores all
 // demographic and administrative data for patients belonging to a given
@@ -87,3 +87,38 @@ export const patients = pgTable(
 
 export type Patient = typeof patients.$inferSelect;
 export type NewPatient = typeof patients.$inferInsert;
+
+// `patient_guardians` stores legal guardians for minor patients. Each guardian
+// is linked to a single patient via `patient_id` (FK with ON DELETE CASCADE).
+// The table has no `user_id` column — RLS policies use a subquery to check
+// that the guardian's patient belongs to the authenticated psychologist:
+//   `patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())`
+export const patientGuardians = pgTable(
+  'patient_guardians',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `patients.id`, set manually in migration with ON DELETE CASCADE.
+    patientId: uuid('patient_id').notNull(),
+
+    // --- Guardian details ---
+    fullName: varchar('full_name', { length: 200 }).notNull(),
+    relationship: text('relationship').notNull(),
+    cpf: varchar('cpf', { length: 14 }),
+    phone: varchar('phone', { length: 20 }),
+    email: varchar('email', { length: 255 }),
+    isPrimary: boolean('is_primary').notNull().default(false),
+
+    // --- Timestamps ---
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Index for the most common query: "all guardians for a given patient".
+    index('patient_guardians_patient_id_idx').on(table.patientId),
+  ],
+);
+
+export type PatientGuardian = typeof patientGuardians.$inferSelect;
+export type NewPatientGuardian = typeof patientGuardians.$inferInsert;
