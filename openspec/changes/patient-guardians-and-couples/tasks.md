@@ -13,8 +13,8 @@
 
 ## 3. Validators & Types — Guardians
 
-- [ ] 3.1 Criar `src/modules/patients/lib/guardian-input-schema.ts` com Zod schemas: `createGuardianSchema` (full_name required, relationship required, phone required, cpf optional, email optional), `updateGuardianSchema` (partial)
-- [ ] 3.2 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/guardian-input-schema.test.ts` — testar validação de campos obrigatórios, CPF opcional, limite de 2 guardians
+- [x] 3.1 Criar `src/modules/patients/lib/guardian-input-schema.ts` com Zod schemas: `createGuardianSchema` (full_name required, relationship required, phone required, cpf optional, email optional), `updateGuardianSchema` (partial)
+- [x] 3.2 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/guardian-input-schema.test.ts` — testar validação de campos obrigatórios, CPF opcional, limite de 2 guardians
 
 ## 4. Server Actions — Guardians
 
