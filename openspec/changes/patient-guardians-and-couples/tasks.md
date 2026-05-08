@@ -39,11 +39,11 @@
 
 > **Design System Sálvia** (`docs/design-system/rules.md`): Card flat para guardians, inputs com validação blur, máscaras BR, ícones Lucide do mapa fixo.
 
-- [ ] 7.1 Estender `patient-form.tsx`: quando patient_type="child" ou "adolescent", mostrar seção de guardians. **Design system:** cada guardian em shadcn `Card flat` (bg `surface`, border, radius `xl`, padding `space-6`). Título h4 "Responsável 1" / "Responsável 2". Campos com shadcn `Input` (validação blur, erro inline `AlertCircle` + `danger-700`). Máscara CPF e telefone BR. Botão "Adicionar responsável" como `Button ghost` + ícone `Plus` (disabled se 2). Usar react-hook-form `useFieldArray`
-- [ ] 7.2 Estender `patient-form.tsx`: quando patient_type="couple", mostrar seção do parceiro(a). **Design system:** `Card flat` com título h4 "Parceiro(a)". Mesmos padrões de input/validação. Botões em mobile: full-width
-- [ ] 7.3 Adicionar validação condicional no createPatientSchema: child/adolescent requer pelo menos 1 guardian, couple requer dados do partner
-- [ ] 7.4 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-minor.spec.ts` — fluxo: selecionar tipo "Criança", preencher dados do paciente + 1 guardian, salvar, verificar na detail que guardian aparece
-- [ ] 7.5 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-couple.spec.ts` — fluxo: selecionar tipo "Casal", preencher dados dos 2 parceiros, salvar, verificar que ambos aparecem na listagem com indicador visual de casal
+- [x] 7.1 Estender `patient-form.tsx`: quando patient_type="child" ou "adolescent", mostrar seção de guardians. **Design system:** cada guardian em shadcn `Card flat` (bg `surface`, border, radius `xl`, padding `space-6`). Título h4 "Responsável 1" / "Responsável 2". Campos com shadcn `Input` (validação blur, erro inline `AlertCircle` + `danger-700`). Máscara CPF e telefone BR. Botão "Adicionar responsável" como `Button ghost` + ícone `Plus` (disabled se 2). Usar react-hook-form `useFieldArray`
+- [x] 7.2 Estender `patient-form.tsx`: quando patient_type="couple", mostrar seção do parceiro(a). **Design system:** `Card flat` com título h4 "Parceiro(a)". Mesmos padrões de input/validação. Botões em mobile: full-width
+- [x] 7.3 Adicionar validação condicional no createPatientSchema: child/adolescent requer pelo menos 1 guardian, couple requer dados do partner
+- [x] 7.4 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-minor.spec.ts` — fluxo: selecionar tipo "Criança", preencher dados do paciente + 1 guardian, salvar, verificar na detail que guardian aparece
+- [x] 7.5 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-couple.spec.ts` — fluxo: selecionar tipo "Casal", preencher dados dos 2 parceiros, salvar, verificar que ambos aparecem na listagem com indicador visual de casal
 
 ## 8. Frontend — Guardians in Patient Detail
 

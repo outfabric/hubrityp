@@ -51,6 +51,8 @@ export {
   createPatientSchema,
   updatePatientSchema,
   listPatientsQuerySchema,
+  partnerSchema,
+  type PartnerInput,
 } from './lib/patient-input-schema';
 export {
   createGuardianSchema,

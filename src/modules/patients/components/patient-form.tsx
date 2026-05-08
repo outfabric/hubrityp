@@ -1,13 +1,14 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, ArrowLeft, ArrowRight, Loader2, Upload, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef, useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
@@ -20,8 +21,61 @@ import { isValidBrazilianPhone, isValidCpf } from '../lib/patient-validators';
 // Form schema — client-side with user-friendly pt-BR messages
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Guardian sub-schema (inline for the form — matches createGuardianSchema shape)
+// ---------------------------------------------------------------------------
+
+const guardianFormSchema = z.object({
+  fullName: z
+    .string({ message: 'Informe o nome do responsável.' })
+    .trim()
+    .min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' })
+    .max(200, { message: 'O nome deve ter no máximo 200 caracteres.' }),
+  relationship: z
+    .string({ message: 'Informe o parentesco.' })
+    .trim()
+    .min(2, { message: 'O parentesco deve ter pelo menos 2 caracteres.' })
+    .max(100, { message: 'O parentesco deve ter no máximo 100 caracteres.' }),
+  phone: z.string({ message: 'Informe o telefone.' }).refine((v) => isValidBrazilianPhone(v), {
+    message: 'Telefone invalido. Use o formato +55 DD NNNNN-NNNN.',
+  }),
+  cpf: z
+    .string()
+    .optional()
+    .refine((v) => !v || v === '' || isValidCpf(v), {
+      message: 'CPF invalido.',
+    }),
+  email: z.string().email({ message: 'E-mail invalido.' }).max(255).optional().or(z.literal('')),
+});
+
+// Type inferred from guardianFormSchema — used implicitly by useFieldArray
+
+// ---------------------------------------------------------------------------
+// Partner sub-schema (for couple patients)
+// ---------------------------------------------------------------------------
+
+const partnerFormSchema = z.object({
+  fullName: z
+    .string({ message: 'Informe o nome do parceiro(a).' })
+    .trim()
+    .min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' })
+    .max(200, { message: 'O nome deve ter no máximo 200 caracteres.' }),
+  phone: z
+    .string()
+    .optional()
+    .refine((v) => !v || v === '' || isValidBrazilianPhone(v), {
+      message: 'Telefone invalido. Use o formato +55 DD NNNNN-NNNN.',
+    }),
+  useBirthDate: z.boolean(),
+  birthDate: z.string().optional(),
+  approximateAge: z.string().max(20).optional(),
+});
+
+// Type inferred from partnerFormSchema — used implicitly by partner sub-form
+
 /**
  * Step 1 schema: essential fields required to create a patient.
+ * Includes conditional guardian/partner sub-forms.
  */
 const step1Schema = z
   .object({
@@ -42,17 +96,42 @@ const step1Schema = z
       .refine((v) => !v || v === '' || isValidBrazilianPhone(v), {
         message: 'Telefone invalido. Use o formato (11) 98765-4321.',
       }),
+    // Guardian array for minor patients (child/adolescent)
+    guardians: z.array(guardianFormSchema).max(2).optional(),
+    // Partner data for couple patients
+    partner: partnerFormSchema.optional(),
   })
   .superRefine((data, ctx) => {
     // Require at least one age identifier when useBirthDate is toggled
     if (data.useBirthDate && data.birthDate) {
-      // Optional: validate date format
       const d = new Date(data.birthDate);
       if (Number.isNaN(d.getTime())) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Data de nascimento invalida.',
           path: ['birthDate'],
+        });
+      }
+    }
+
+    // Conditional: child/adolescent requires at least 1 guardian
+    if (data.patientType === 'child' || data.patientType === 'adolescent') {
+      if (!data.guardians || data.guardians.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Pacientes menores precisam de pelo menos 1 responsavel.',
+          path: ['guardians'],
+        });
+      }
+    }
+
+    // Conditional: couple requires partner data
+    if (data.patientType === 'couple') {
+      if (!data.partner || !data.partner.fullName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Preencha os dados do parceiro(a).',
+          path: ['partner'],
         });
       }
     }
@@ -184,10 +263,34 @@ interface FormActionResult {
   message?: string;
 }
 
+/** Result shape for addGuardian action. */
+interface AddGuardianActionResult {
+  ok: boolean;
+  guardianId?: string;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  message?: string;
+}
+
+/** Result shape for createCouplePatient action. */
+interface CreateCoupleActionResult {
+  ok: boolean;
+  patientAId?: string;
+  patientBId?: string;
+  coupleId?: string;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  message?: string;
+}
+
 interface PatientFormCreateProps {
   mode?: 'create';
   /** Server Action to call on submit (createPatient) */
   createAction: (input: unknown) => Promise<FormActionResult>;
+  /** Server Action to add a guardian to a minor patient */
+  addGuardianAction?: (patientId: string, input: unknown) => Promise<AddGuardianActionResult>;
+  /** Server Action to create a couple patient atomically */
+  createCoupleAction?: (partnerA: unknown, partnerB: unknown) => Promise<CreateCoupleActionResult>;
   updateAction?: never;
   patient?: never;
   onSuccess?: never;
@@ -218,6 +321,8 @@ interface PatientFormEditProps {
   /** Callback on successful save (e.g. to show toast + redirect) */
   onSuccess?: () => void;
   createAction?: never;
+  addGuardianAction?: never;
+  createCoupleAction?: never;
 }
 
 type PatientFormProps = PatientFormCreateProps | PatientFormEditProps;
@@ -274,8 +379,23 @@ export function PatientForm(props: PatientFormProps) {
       birthDate: patient?.birthDate ? patient.birthDate.toISOString().split('T')[0] : '',
       approximateAge: patient?.approximateAge ?? '',
       phone: patient?.phone ?? '',
+      guardians: [],
+      partner: { fullName: '', phone: '', useBirthDate: true, birthDate: '', approximateAge: '' },
     },
   });
+
+  // useFieldArray for guardians (child/adolescent patients)
+  const {
+    fields: guardianFields,
+    append: appendGuardian,
+    remove: removeGuardian,
+  } = useFieldArray({
+    control: step1Form.control,
+    name: 'guardians',
+  });
+
+  // Watch patient type to show/hide conditional sections
+  const watchedPatientType = step1Form.watch('patientType');
 
   // Step 2 form
   const step2Form = useForm<Step2Data>({
@@ -409,10 +529,62 @@ export function PatientForm(props: PatientFormProps) {
                 setServerError(result.message ?? 'Erro inesperado ao atualizar paciente.');
               }
             }
-          } else if (props.createAction) {
-            // Create mode: call createAction
+            return;
+          }
+
+          // Create mode — three paths based on patient type:
+          // 1. Couple → createCoupleAction (atomic insert of both partners)
+          // 2. Minor (child/adolescent) → createAction + addGuardianAction per guardian
+          // 3. Normal → createAction
+
+          if (s1.patientType === 'couple' && props.createCoupleAction) {
+            // Build partner payload from the partner sub-form
+            const partnerData = s1.partner;
+            const partnerPayload: Record<string, unknown> = {
+              fullName: partnerData?.fullName ?? '',
+            };
+            if (partnerData?.phone) partnerPayload.phone = partnerData.phone;
+            if (partnerData?.useBirthDate && partnerData.birthDate) {
+              partnerPayload.birthDate = partnerData.birthDate;
+            } else if (!partnerData?.useBirthDate && partnerData?.approximateAge) {
+              partnerPayload.approximateAge = partnerData.approximateAge;
+            }
+
+            const coupleResult = await props.createCoupleAction(payload, partnerPayload);
+            if (coupleResult.ok && coupleResult.patientAId) {
+              router.push(`/pacientes/${coupleResult.patientAId}`);
+            } else {
+              setServerError(coupleResult.message ?? 'Erro inesperado ao criar casal.');
+            }
+            return;
+          }
+
+          if (props.createAction) {
             const result = await props.createAction(payload);
             if (result.ok && result.patientId) {
+              // If minor patient, add guardians sequentially
+              const isMinor = s1.patientType === 'child' || s1.patientType === 'adolescent';
+              if (isMinor && props.addGuardianAction && s1.guardians && s1.guardians.length > 0) {
+                for (const guardian of s1.guardians) {
+                  const guardianResult = await props.addGuardianAction(result.patientId, {
+                    fullName: guardian.fullName,
+                    relationship: guardian.relationship,
+                    phone: guardian.phone,
+                    cpf: guardian.cpf || undefined,
+                    email: guardian.email || undefined,
+                  });
+                  if (!guardianResult.ok) {
+                    // Guardian failed — patient is created but guardian not attached.
+                    // Redirect to patient detail so user can add guardians manually.
+                    setServerError(
+                      guardianResult.message ??
+                        `Paciente criado, mas houve erro ao adicionar responsavel "${guardian.fullName}".`,
+                    );
+                    router.push(`/pacientes/${result.patientId}`);
+                    return;
+                  }
+                }
+              }
               router.push(`/pacientes/${result.patientId}`);
             } else {
               if (result.error === 'invalid_input' && result.fieldErrors) {
@@ -618,6 +790,290 @@ export function PatientForm(props: PatientFormProps) {
               }}
             />
           </FormField>
+
+          {/* Guardians section — visible for child/adolescent */}
+          {(watchedPatientType === 'child' || watchedPatientType === 'adolescent') && (
+            <div className="space-y-4" data-testid="guardians-section">
+              <div className="flex items-center justify-between">
+                <h4 className="text-text-primary text-base font-medium">Responsaveis</h4>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={guardianFields.length >= 2}
+                  data-testid="add-guardian-btn"
+                  onClick={() =>
+                    appendGuardian({
+                      fullName: '',
+                      relationship: '',
+                      phone: '',
+                      cpf: '',
+                      email: '',
+                    })
+                  }
+                >
+                  <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                  Adicionar responsavel
+                </Button>
+              </div>
+
+              {/* Top-level guardian validation error */}
+              {step1Form.formState.errors.guardians?.message && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {step1Form.formState.errors.guardians.message}
+                </p>
+              )}
+
+              {guardianFields.map((field, index) => (
+                <Card
+                  key={field.id}
+                  className="bg-surface rounded-xl border p-6 shadow-none"
+                  data-testid={`guardian-card-${index}`}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h4 className="text-text-primary text-base font-medium">
+                      Responsavel {index + 1}
+                    </h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger-700 hover:text-danger-500"
+                      onClick={() => removeGuardian(index)}
+                      data-testid={`remove-guardian-${index}`}
+                      aria-label={`Remover responsavel ${index + 1}`}
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" aria-hidden="true" />
+                      Remover
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Guardian full name */}
+                    <FormField
+                      id={`guardian-${index}-fullName`}
+                      label="Nome completo"
+                      error={step1Form.formState.errors.guardians?.[index]?.fullName?.message}
+                      required
+                    >
+                      <Input
+                        id={`guardian-${index}-fullName-form-item`}
+                        placeholder="Nome do responsavel"
+                        aria-invalid={Boolean(
+                          step1Form.formState.errors.guardians?.[index]?.fullName,
+                        )}
+                        data-testid={`guardian-${index}-fullname`}
+                        {...step1Form.register(`guardians.${index}.fullName`)}
+                      />
+                    </FormField>
+
+                    {/* Guardian relationship */}
+                    <FormField
+                      id={`guardian-${index}-relationship`}
+                      label="Parentesco"
+                      error={step1Form.formState.errors.guardians?.[index]?.relationship?.message}
+                      required
+                    >
+                      <Input
+                        id={`guardian-${index}-relationship-form-item`}
+                        placeholder="Ex: Mae, Pai, Tio(a)"
+                        aria-invalid={Boolean(
+                          step1Form.formState.errors.guardians?.[index]?.relationship,
+                        )}
+                        data-testid={`guardian-${index}-relationship`}
+                        {...step1Form.register(`guardians.${index}.relationship`)}
+                      />
+                    </FormField>
+
+                    {/* Guardian phone (masked) */}
+                    <FormField
+                      id={`guardian-${index}-phone`}
+                      label="Telefone"
+                      error={step1Form.formState.errors.guardians?.[index]?.phone?.message}
+                      required
+                    >
+                      <Input
+                        id={`guardian-${index}-phone-form-item`}
+                        type="tel"
+                        placeholder="+55 11 91234-5678"
+                        aria-invalid={Boolean(step1Form.formState.errors.guardians?.[index]?.phone)}
+                        data-testid={`guardian-${index}-phone`}
+                        value={step1Form.watch(`guardians.${index}.phone`) ?? ''}
+                        onChange={(e) => {
+                          const masked = maskPhone(e.target.value);
+                          step1Form.setValue(`guardians.${index}.phone`, masked, {
+                            shouldValidate: false,
+                          });
+                        }}
+                        onBlur={() => {
+                          void step1Form.trigger(`guardians.${index}.phone`);
+                        }}
+                      />
+                    </FormField>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {/* Guardian CPF (optional, masked) */}
+                      <FormField
+                        id={`guardian-${index}-cpf`}
+                        label="CPF"
+                        error={step1Form.formState.errors.guardians?.[index]?.cpf?.message}
+                      >
+                        <Input
+                          id={`guardian-${index}-cpf-form-item`}
+                          type="text"
+                          placeholder="000.000.000-00"
+                          aria-invalid={Boolean(step1Form.formState.errors.guardians?.[index]?.cpf)}
+                          data-testid={`guardian-${index}-cpf`}
+                          value={step1Form.watch(`guardians.${index}.cpf`) ?? ''}
+                          onChange={(e) => {
+                            const masked = maskCpf(e.target.value);
+                            step1Form.setValue(`guardians.${index}.cpf`, masked, {
+                              shouldValidate: false,
+                            });
+                          }}
+                          onBlur={() => {
+                            void step1Form.trigger(`guardians.${index}.cpf`);
+                          }}
+                        />
+                      </FormField>
+
+                      {/* Guardian email (optional) */}
+                      <FormField
+                        id={`guardian-${index}-email`}
+                        label="E-mail"
+                        error={step1Form.formState.errors.guardians?.[index]?.email?.message}
+                      >
+                        <Input
+                          id={`guardian-${index}-email-form-item`}
+                          type="email"
+                          placeholder="responsavel@email.com"
+                          aria-invalid={Boolean(
+                            step1Form.formState.errors.guardians?.[index]?.email,
+                          )}
+                          data-testid={`guardian-${index}-email`}
+                          {...step1Form.register(`guardians.${index}.email`)}
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Partner section — visible for couple */}
+          {watchedPatientType === 'couple' && (
+            <Card
+              className="bg-surface rounded-xl border p-6 shadow-none"
+              data-testid="partner-section"
+            >
+              <h4 className="text-text-primary mb-4 text-base font-medium">Parceiro(a)</h4>
+
+              {/* Top-level partner validation error */}
+              {step1Form.formState.errors.partner?.message && (
+                <p className="text-danger-700 mb-4 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {step1Form.formState.errors.partner.message}
+                </p>
+              )}
+
+              <div className="space-y-4">
+                {/* Partner full name */}
+                <FormField
+                  id="partner-fullName"
+                  label="Nome completo"
+                  error={step1Form.formState.errors.partner?.fullName?.message}
+                  required
+                >
+                  <Input
+                    id="partner-fullName-form-item"
+                    placeholder="Nome completo do parceiro(a)"
+                    aria-invalid={Boolean(step1Form.formState.errors.partner?.fullName)}
+                    data-testid="partner-fullname"
+                    {...step1Form.register('partner.fullName')}
+                  />
+                </FormField>
+
+                {/* Partner phone (optional, masked) */}
+                <FormField
+                  id="partner-phone"
+                  label="Telefone"
+                  error={step1Form.formState.errors.partner?.phone?.message}
+                >
+                  <Input
+                    id="partner-phone-form-item"
+                    type="tel"
+                    placeholder="+55 11 91234-5678"
+                    aria-invalid={Boolean(step1Form.formState.errors.partner?.phone)}
+                    data-testid="partner-phone"
+                    value={step1Form.watch('partner.phone') ?? ''}
+                    onChange={(e) => {
+                      const masked = maskPhone(e.target.value);
+                      step1Form.setValue('partner.phone', masked, { shouldValidate: false });
+                    }}
+                    onBlur={() => {
+                      void step1Form.trigger('partner.phone');
+                    }}
+                  />
+                </FormField>
+
+                {/* Partner birth date / approximate age toggle */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      className={`text-sm font-medium ${step1Form.watch('partner.useBirthDate') ? 'text-brand-700 underline' : 'text-text-secondary'}`}
+                      onClick={() => step1Form.setValue('partner.useBirthDate', true)}
+                      data-testid="partner-use-birthdate"
+                    >
+                      Data de nascimento
+                    </button>
+                    <button
+                      type="button"
+                      className={`text-sm font-medium ${!step1Form.watch('partner.useBirthDate') ? 'text-brand-700 underline' : 'text-text-secondary'}`}
+                      onClick={() => step1Form.setValue('partner.useBirthDate', false)}
+                      data-testid="partner-use-age"
+                    >
+                      Idade aproximada
+                    </button>
+                  </div>
+
+                  {step1Form.watch('partner.useBirthDate') ? (
+                    <FormField
+                      id="partner-birthDate"
+                      label=""
+                      error={step1Form.formState.errors.partner?.birthDate?.message}
+                    >
+                      <Input
+                        id="partner-birthDate-form-item"
+                        type="date"
+                        max={new Date().toISOString().split('T')[0]}
+                        aria-invalid={Boolean(step1Form.formState.errors.partner?.birthDate)}
+                        data-testid="partner-birthdate"
+                        {...step1Form.register('partner.birthDate')}
+                      />
+                    </FormField>
+                  ) : (
+                    <FormField
+                      id="partner-approximateAge"
+                      label=""
+                      error={step1Form.formState.errors.partner?.approximateAge?.message}
+                    >
+                      <Input
+                        id="partner-approximateAge-form-item"
+                        type="text"
+                        placeholder="Ex: 35 anos"
+                        aria-invalid={Boolean(step1Form.formState.errors.partner?.approximateAge)}
+                        data-testid="partner-age"
+                        {...step1Form.register('partner.approximateAge')}
+                      />
+                    </FormField>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
