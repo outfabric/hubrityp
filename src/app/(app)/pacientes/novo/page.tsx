@@ -1,12 +1,13 @@
 import { PatientForm } from '@/modules/patients/components/patient-form';
 
-import { createPatient } from '../actions';
+import { addGuardian, createCouplePatient, createPatient } from '../actions';
 
 /**
  * Server Component page for creating a new patient.
  *
  * Renders h1 title and the PatientForm client component in creation mode.
  * The form calls the `createPatient` Server Action from the parent actions shell.
+ * Additional actions for guardians (minors) and couples are passed as well.
  */
 export default function NovoPacientePage() {
   return (
@@ -18,7 +19,11 @@ export default function NovoPacientePage() {
         Novo paciente
       </h1>
 
-      <PatientForm createAction={createPatient} />
+      <PatientForm
+        createAction={createPatient}
+        addGuardianAction={addGuardian}
+        createCoupleAction={createCouplePatient}
+      />
     </div>
   );
 }

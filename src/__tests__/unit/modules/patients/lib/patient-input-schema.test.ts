@@ -85,8 +85,22 @@ describe('createPatientSchema — happy path', () => {
   });
 
   it('accepts all valid patient types', () => {
+    const guardian = {
+      fullName: 'Ana Silva',
+      relationship: 'mãe',
+      phone: '+55 11 98765-4321',
+    };
+    const partner = { fullName: 'João Silva' };
+
     for (const type of ['individual', 'child', 'adolescent', 'couple', 'elderly']) {
-      const result = createPatientSchema.safeParse({ ...VALID_CREATE, patientType: type });
+      const extra: Record<string, unknown> = {};
+      if (type === 'child' || type === 'adolescent') extra.guardians = [guardian];
+      if (type === 'couple') extra.partner = partner;
+      const result = createPatientSchema.safeParse({
+        ...VALID_CREATE,
+        patientType: type,
+        ...extra,
+      });
       expect(result.success, `expected '${type}' to be valid`).toBe(true);
     }
   });

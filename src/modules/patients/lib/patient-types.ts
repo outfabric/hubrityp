@@ -76,6 +76,48 @@ export const SORT_ORDERS = ['asc', 'desc'] as const;
 export type SortOrder = (typeof SORT_ORDERS)[number];
 
 // ---------------------------------------------------------------------------
+// Label maps (pt-BR display strings — single source of truth)
+// ---------------------------------------------------------------------------
+
+/** Human-readable patient type labels. */
+export const PATIENT_TYPE_LABELS: Record<string, string> = {
+  individual: 'Adulto',
+  child: 'Criança',
+  adolescent: 'Adolescente',
+  couple: 'Casal',
+  elderly: 'Idoso',
+} satisfies Record<PatientType, string>;
+
+/** Human-readable gender labels. */
+export const GENDER_LABELS: Record<string, string> = {
+  male: 'Masculino',
+  female: 'Feminino',
+  non_binary: 'Não-binário',
+  other: 'Outro',
+  prefer_not_to_say: 'Prefiro não dizer',
+} satisfies Record<Gender, string>;
+
+/** Human-readable marital status labels. */
+export const MARITAL_STATUS_LABELS: Record<string, string> = {
+  single: 'Solteiro(a)',
+  married: 'Casado(a)',
+  divorced: 'Divorciado(a)',
+  widowed: 'Viúvo(a)',
+  civil_union: 'União estável',
+  other: 'Outro',
+} satisfies Record<MaritalStatus, string>;
+
+/** Human-readable source labels. */
+export const SOURCE_LABELS: Record<string, string> = {
+  indication: 'Indicação',
+  social_media: 'Redes sociais',
+  google: 'Google',
+  insurance: 'Convênio',
+  return: 'Retorno',
+  other: 'Outro',
+} satisfies Record<Source, string>;
+
+// ---------------------------------------------------------------------------
 // Input/Output types (derived from Zod schemas)
 // ---------------------------------------------------------------------------
 

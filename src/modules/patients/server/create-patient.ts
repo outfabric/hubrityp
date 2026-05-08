@@ -3,7 +3,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq } from 'drizzle-orm';
 
-import { createPatientSchema } from '@/modules/patients/lib/patient-input-schema';
+import { createPatientBaseSchema } from '@/modules/patients/lib/patient-input-schema';
 import type { CreatePatientInput } from '@/modules/patients/lib/patient-types';
 import { formatPhone } from '@/modules/patients/lib/patient-validators';
 import { db } from '@/shared/db/client';
@@ -55,7 +55,12 @@ export async function createPatientImpl(
   }
 
   // 2. Validate input
-  const parsed = createPatientSchema.safeParse(input);
+  // Use createPatientBaseSchema (without superRefine) because the guardian
+  // requirement is a *form-level* concern enforced by the client.  The server
+  // action creates the patient record first; guardians are added separately
+  // via addGuardianImpl. The superRefine on createPatientSchema would reject
+  // child/adolescent payloads that arrive without inline guardians.
+  const parsed = createPatientBaseSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,

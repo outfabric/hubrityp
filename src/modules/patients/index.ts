@@ -35,13 +35,31 @@ export {
   getPatientPhotoUrlImpl,
   type GetPatientPhotoUrlResult,
 } from './server/get-patient-photo-url';
+export {
+  createCouplePatientImpl,
+  type CreateCouplePatientResult,
+} from './server/create-couple-patient';
+export { unlinkCoupleImpl, type UnlinkCoupleResult } from './server/unlink-couple';
+export { getCouplePartnerImpl, type GetCouplePartnerResult } from './server/get-couple-partner';
+export { addGuardianImpl, type AddGuardianResult } from './server/add-guardian';
+export { updateGuardianImpl, type UpdateGuardianResult } from './server/update-guardian';
+export { removeGuardianImpl, type RemoveGuardianResult } from './server/remove-guardian';
+export { listGuardiansImpl, type ListGuardiansResult } from './server/list-guardians';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
   createPatientSchema,
   updatePatientSchema,
   listPatientsQuerySchema,
+  partnerSchema,
+  type PartnerInput,
 } from './lib/patient-input-schema';
+export {
+  createGuardianSchema,
+  updateGuardianSchema,
+  type CreateGuardianInput,
+  type UpdateGuardianInput,
+} from './lib/guardian-input-schema';
 
 // ---- Types -------------------------------------------------------------------
 export type {
@@ -64,10 +82,19 @@ export {
   type SortColumn,
   SORT_ORDERS,
   type SortOrder,
+  PATIENT_TYPE_LABELS,
+  GENDER_LABELS,
+  MARITAL_STATUS_LABELS,
+  SOURCE_LABELS,
 } from './lib/patient-types';
 
 // ---- Validators --------------------------------------------------------------
-export { isValidBrazilianPhone, isValidCpf, formatPhone } from './lib/patient-validators';
+export {
+  isValidBrazilianPhone,
+  isValidCpf,
+  formatPhone,
+  maskPhone,
+} from './lib/patient-validators';
 
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
@@ -78,3 +105,5 @@ export { ArchiveConfirmModal } from './components/archive-confirm-modal';
 export { DeleteConfirmModal } from './components/delete-confirm-modal';
 export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
+export { PatientCoupleSection } from './components/patient-couple-section';
+export { PatientGuardiansSection } from './components/patient-guardians-section';

@@ -100,6 +100,7 @@ describe('createPatientImpl', () => {
       source: 'indication',
       tags: ['ansiedade', 'tcc'],
       notes: 'Paciente encaminhado',
+      partner: { fullName: 'Maria Santos' },
     });
 
     expect(result.ok).toBe(true);

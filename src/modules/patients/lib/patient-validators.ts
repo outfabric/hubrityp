@@ -41,6 +41,33 @@ export function isValidCpf(value: string): boolean {
 }
 
 /**
+ * Formats a phone input progressively into `+55 DD NNNNN-NNNN`.
+ * Strips non-digits and applies the mask as the user types.
+ *
+ * Designed for controlled inputs: call on every `onChange` and set the
+ * returned value back into the field.
+ */
+export function maskPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return `+55 ${digits}`;
+  if (digits.length <= 7) return `+55 ${digits.slice(0, 2)} ${digits.slice(2)}`;
+  if (digits.length <= 11) {
+    return `+55 ${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  // If user started typing with 55 prefix
+  if (digits.startsWith('55') && digits.length <= 13) {
+    const rest = digits.slice(2);
+    if (rest.length <= 2) return `+55 ${rest}`;
+    if (rest.length <= 7) return `+55 ${rest.slice(0, 2)} ${rest.slice(2)}`;
+    return `+55 ${rest.slice(0, 2)} ${rest.slice(2, 7)}-${rest.slice(7)}`;
+  }
+  // Truncate
+  return `+55 ${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+}
+
+/**
  * Formats a raw phone string into the canonical `+55 DD NNNNN-NNNN` format.
  *
  * Strips all non-digit characters, then re-assembles. If the resulting digits

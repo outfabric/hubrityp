@@ -14,16 +14,37 @@
 // use the type through the function return type).
 
 import type {
+  AddGuardianResult,
+  CreateCouplePatientResult,
   CreatePatientResult,
   ListPatientsResult,
   UploadPatientPhotoResult,
 } from '@/modules/patients';
-import { createPatientImpl, listPatientsImpl, uploadPatientPhotoImpl } from '@/modules/patients';
+import {
+  addGuardianImpl,
+  createCouplePatientImpl,
+  createPatientImpl,
+  listPatientsImpl,
+  uploadPatientPhotoImpl,
+} from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function createPatient(input: unknown): Promise<CreatePatientResult> {
   const supabase = await createServerClient();
   return createPatientImpl(supabase, input);
+}
+
+export async function createCouplePatient(
+  partnerA: unknown,
+  partnerB: unknown,
+): Promise<CreateCouplePatientResult> {
+  const supabase = await createServerClient();
+  return createCouplePatientImpl(supabase, partnerA, partnerB);
+}
+
+export async function addGuardian(patientId: string, input: unknown): Promise<AddGuardianResult> {
+  const supabase = await createServerClient();
+  return addGuardianImpl(supabase, patientId, input);
 }
 
 export async function listPatients(query: unknown): Promise<ListPatientsResult> {
