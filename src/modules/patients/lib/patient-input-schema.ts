@@ -112,7 +112,7 @@ export type PartnerInput = z.infer<typeof partnerSchema>;
  *   - child/adolescent: at least 1 guardian required
  *   - couple: partner data required (fullName is mandatory)
  */
-const createPatientBaseSchema = z.object({
+export const createPatientBaseSchema = z.object({
   // Step 1 — required
   fullName: fullNameField,
   patientType: patientTypeField,

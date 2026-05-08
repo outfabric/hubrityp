@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { createPatientSchema } from '@/modules/patients/lib/patient-input-schema';
+import { createPatientBaseSchema } from '@/modules/patients/lib/patient-input-schema';
 import type { CreatePatientInput } from '@/modules/patients/lib/patient-types';
 import { formatPhone } from '@/modules/patients/lib/patient-validators';
 import { db } from '@/shared/db/client';
@@ -92,7 +92,7 @@ export async function createCouplePatientImpl(
   }
 
   // 2. Validate both inputs — force patientType to "couple"
-  const parsedA = createPatientSchema.safeParse({
+  const parsedA = createPatientBaseSchema.safeParse({
     ...(partnerA as PartnerInput),
     patientType: 'couple',
   });
@@ -104,7 +104,7 @@ export async function createCouplePatientImpl(
     };
   }
 
-  const parsedB = createPatientSchema.safeParse({
+  const parsedB = createPatientBaseSchema.safeParse({
     ...(partnerB as PartnerInput),
     patientType: 'couple',
   });
