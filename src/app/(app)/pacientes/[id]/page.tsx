@@ -2,14 +2,22 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { getPatientImpl, getPatientPhotoUrlImpl } from '@/modules/patients';
+import { getPatientImpl, getPatientPhotoUrlImpl, listGuardiansImpl } from '@/modules/patients';
 import { PatientDetailHeader } from '@/modules/patients/components/patient-detail-header';
 import { PatientOverviewTab } from '@/modules/patients/components/patient-overview-tab';
 import { PatientTabs } from '@/modules/patients/components/patient-tabs';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
-import { archivePatient, deletePatient, unarchivePatient } from './actions';
+import {
+  addGuardian,
+  archivePatient,
+  deletePatient,
+  listGuardians,
+  removeGuardian,
+  unarchivePatient,
+  updateGuardian,
+} from './actions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,6 +48,11 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { patient } = patientResult;
   const photoUrl = photoResult.ok ? photoResult.signedUrl : undefined;
 
+  // Fetch guardians for minor patients (child/adolescent)
+  const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
+  const guardiansResult = isMinor ? await listGuardiansImpl(supabase, id) : null;
+  const initialGuardians = guardiansResult?.ok ? guardiansResult.guardians : [];
+
   return (
     <div className="mx-auto max-w-[1200px]">
       {/* Back navigation */}
@@ -63,7 +76,18 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
 
       {/* Tabs */}
       <div className="mt-8">
-        <PatientTabs overviewContent={<PatientOverviewTab patient={patient} />} />
+        <PatientTabs
+          overviewContent={
+            <PatientOverviewTab
+              patient={patient}
+              initialGuardians={initialGuardians}
+              listGuardiansAction={listGuardians}
+              addGuardianAction={addGuardian}
+              updateGuardianAction={updateGuardian}
+              removeGuardianAction={removeGuardian}
+            />
+          }
+        />
       </div>
     </div>
   );

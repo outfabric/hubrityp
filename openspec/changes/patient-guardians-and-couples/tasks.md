@@ -49,8 +49,8 @@
 
 > **Design System Sálvia**: Card para seção, Badge brand para primary, ícones `Pencil`/`Trash2`, Alert warning.
 
-- [ ] 8.1 Criar componente `src/modules/patients/components/patient-guardians-section.tsx` — **Design system:** `Card flat` com título h4 "Responsáveis". Cada guardian como row: nome (body), parentesco (caption `text-secondary`), telefone com ícone `MessageCircle` (link WhatsApp), `Badge brand` (bg `brand-100`, text `brand-700`) "Principal" se is_primary. Botões `ghost` com ícones `Pencil`/`Trash2`. Botão "Adicionar responsável" `ghost` + `Plus` (disabled se 2). Alert `warning` se paciente menor sem guardians: "Este paciente menor está sem responsável cadastrado" com ícone `AlertTriangle`
-- [ ] 8.2 Integrar guardians-section no overview-tab (renderizado condicionalmente para patient_type child/adolescent)
+- [x] 8.1 Criar componente `src/modules/patients/components/patient-guardians-section.tsx` — **Design system:** `Card flat` com título h4 "Responsáveis". Cada guardian como row: nome (body), parentesco (caption `text-secondary`), telefone com ícone `MessageCircle` (link WhatsApp), `Badge brand` (bg `brand-100`, text `brand-700`) "Principal" se is_primary. Botões `ghost` com ícones `Pencil`/`Trash2`. Botão "Adicionar responsável" `ghost` + `Plus` (disabled se 2). Alert `warning` se paciente menor sem guardians: "Este paciente menor está sem responsável cadastrado" com ícone `AlertTriangle`
+- [x] 8.2 Integrar guardians-section no overview-tab (renderizado condicionalmente para patient_type child/adolescent)
 
 ## 9. Frontend — Couple Display
 

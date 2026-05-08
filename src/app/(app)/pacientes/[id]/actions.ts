@@ -9,19 +9,27 @@
 // be an async function; types cannot be re-exported from here.
 
 import type {
+  AddGuardianResult,
   ArchivePatientResult,
   DeletePatientResult,
   GetPatientPhotoUrlResult,
   GetPatientResult,
+  ListGuardiansResult,
+  RemoveGuardianResult,
   UnarchivePatientResult,
+  UpdateGuardianResult,
   UpdatePatientResult,
 } from '@/modules/patients';
 import {
+  addGuardianImpl,
   archivePatientImpl,
   deletePatientImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
+  listGuardiansImpl,
+  removeGuardianImpl,
   unarchivePatientImpl,
+  updateGuardianImpl,
   updatePatientImpl,
 } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
@@ -57,4 +65,27 @@ export async function deletePatient(patientId: string): Promise<DeletePatientRes
 export async function getPatientPhotoUrl(patientId: string): Promise<GetPatientPhotoUrlResult> {
   const supabase = await createServerClient();
   return getPatientPhotoUrlImpl(supabase, patientId);
+}
+
+export async function listGuardians(patientId: string): Promise<ListGuardiansResult> {
+  const supabase = await createServerClient();
+  return listGuardiansImpl(supabase, patientId);
+}
+
+export async function addGuardian(patientId: string, input: unknown): Promise<AddGuardianResult> {
+  const supabase = await createServerClient();
+  return addGuardianImpl(supabase, patientId, input);
+}
+
+export async function updateGuardian(
+  guardianId: string,
+  input: unknown,
+): Promise<UpdateGuardianResult> {
+  const supabase = await createServerClient();
+  return updateGuardianImpl(supabase, guardianId, input);
+}
+
+export async function removeGuardian(guardianId: string): Promise<RemoveGuardianResult> {
+  const supabase = await createServerClient();
+  return removeGuardianImpl(supabase, guardianId);
 }
