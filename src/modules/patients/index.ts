@@ -35,6 +35,12 @@ export {
   getPatientPhotoUrlImpl,
   type GetPatientPhotoUrlResult,
 } from './server/get-patient-photo-url';
+export {
+  createCouplePatientImpl,
+  type CreateCouplePatientResult,
+} from './server/create-couple-patient';
+export { unlinkCoupleImpl, type UnlinkCoupleResult } from './server/unlink-couple';
+export { getCouplePartnerImpl, type GetCouplePartnerResult } from './server/get-couple-partner';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {

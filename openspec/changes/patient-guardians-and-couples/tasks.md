@@ -26,10 +26,10 @@
 
 ## 5. Server Actions — Couples
 
-- [ ] 5.1 Criar `src/modules/patients/server/create-couple-patient.ts` — transação atômica: gera couple_id, cria 2 patients com mesmo couple_id e patient_type="couple"
-- [ ] 5.2 Criar `src/modules/patients/server/unlink-couple.ts` — transação: limpa couple_id e muda patient_type para "adult" em ambos os pacientes
-- [ ] 5.3 Criar `src/modules/patients/server/get-couple-partner.ts` — dado um patient com couple_id, retorna o outro patient com mesmo couple_id
-- [ ] 5.4 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-couples.int.test.ts` — testar criação de casal (2 records, mesmo couple_id), unlink (ambos ficam adult, couple_id null), get partner (retorna correto)
+- [x] 5.1 Criar `src/modules/patients/server/create-couple-patient.ts` — transação atômica: gera couple_id, cria 2 patients com mesmo couple_id e patient_type="couple"
+- [x] 5.2 Criar `src/modules/patients/server/unlink-couple.ts` — transação: limpa couple_id e muda patient_type para "adult" em ambos os pacientes
+- [x] 5.3 Criar `src/modules/patients/server/get-couple-partner.ts` — dado um patient com couple_id, retorna o outro patient com mesmo couple_id
+- [x] 5.4 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-couples.int.test.ts` — testar criação de casal (2 records, mesmo couple_id), unlink (ambos ficam adult, couple_id null), get partner (retorna correto)
 
 ## 6. Module Barrel Update
 
