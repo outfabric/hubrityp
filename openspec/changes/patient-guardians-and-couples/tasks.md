@@ -8,8 +8,8 @@
 
 ## 2. Database Schema — Couple ID
 
-- [ ] 2.1 Adicionar coluna `couple_id UUID` na tabela `patients` em `src/shared/db/schema/patients/tables.ts` (se não existir — pode já ter sido adicionada no patient-crud-core como placeholder)
-- [ ] 2.2 Gerar e aplicar migration para a nova coluna
+- [x] 2.1 Adicionar coluna `couple_id UUID` na tabela `patients` em `src/shared/db/schema/patients/tables.ts` (se não existir — pode já ter sido adicionada no patient-crud-core como placeholder)
+- [x] 2.2 Gerar e aplicar migration para a nova coluna
 
 ## 3. Validators & Types — Guardians
 
