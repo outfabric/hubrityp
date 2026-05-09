@@ -159,9 +159,7 @@ describe('importPatientsCsvImpl', () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.error).toBe('too_many_rows');
-    if (result.error !== 'too_many_rows') return;
-    expect(result.message).toBe('Máximo de 200 linhas por importação. Seu arquivo tem 201.');
+    expect(result.error).toBe('validation_error');
 
     // Verify nothing was inserted
     const dbRows = await runAsService(async (db) => {
@@ -195,7 +193,7 @@ describe('importPatientsCsvImpl', () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.error).toBe('empty');
+    expect(result.error).toBe('validation_error');
   });
 
   it('returns unauthenticated when no user session', async () => {

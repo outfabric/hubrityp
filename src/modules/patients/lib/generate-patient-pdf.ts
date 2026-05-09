@@ -77,13 +77,13 @@ const SOURCE_LABELS: Record<string, string> = {
 /** Anamnesis section keys → pt-BR labels (same order as the UI). */
 const ANAMNESIS_SECTION_LABELS: Record<string, string> = {
   chiefComplaint: 'Queixa Principal',
-  historyPresentIllness: 'Historia da Queixa',
-  familyHistory: 'Historia Familiar',
+  historyPresentIllness: 'História da Queixa',
+  familyHistory: 'História Familiar',
   educationalProfessional: 'Escolar/Profissional',
-  physicalHealth: 'Saude Fisica',
-  priorTherapy: 'Historico Psicoterapeutico',
-  initialHypothesis: 'Hipoteses Diagnosticas',
-  treatmentPlan: 'Plano Terapeutico',
+  physicalHealth: 'Saúde Física',
+  priorTherapy: 'Histórico Psicoterapêutico',
+  initialHypothesis: 'Hipóteses Diagnósticas',
+  treatmentPlan: 'Plano Terapêutico',
 };
 
 /** Ordered anamnesis section keys for consistent PDF output. */
@@ -111,7 +111,7 @@ function maskCpf(cpf: string): string {
   const digits = cpf.replace(/\D/g, '');
   if (digits.length !== 11) return cpf; // return as-is if invalid length
 
-  return `***.***. ${digits.slice(6, 9)}-${digits.slice(9)}`;
+  return `***.***.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
 /**
@@ -154,7 +154,7 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
       info: {
         Title: `Ficha do Paciente — ${input.fullName}`,
         Author: input.psychologistName,
-        Subject: 'Exportacao de dados do paciente',
+        Subject: 'Exportação de dados do paciente',
       },
     });
 
@@ -173,7 +173,7 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
       .moveDown(0.3);
 
     const exportDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-    doc.fontSize(9).text(`Data de emissao: ${exportDate}`, { align: 'center' }).moveDown(1.5);
+    doc.fontSize(9).text(`Data de emissão: ${exportDate}`, { align: 'center' }).moveDown(1.5);
 
     // --- Separator line ---
     doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke().moveDown(1);
@@ -204,11 +204,11 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
     }
 
     if (input.address) {
-      addField(doc, 'Endereco', input.address);
+      addField(doc, 'Endereço', input.address);
     }
 
     if (input.profession) {
-      addField(doc, 'Profissao', input.profession);
+      addField(doc, 'Profissão', input.profession);
     }
 
     if (input.maritalStatus) {
@@ -228,7 +228,7 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
     }
 
     if (input.notes) {
-      addField(doc, 'Observacoes', input.notes);
+      addField(doc, 'Observações', input.notes);
     }
 
     addField(doc, 'Status', STATUS_LABELS[input.status] ?? input.status);
@@ -241,7 +241,7 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
       doc.moveDown(1);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke().moveDown(1);
 
-      doc.fontSize(13).text('Dados Clinicos — Anamnese', { underline: true }).moveDown(0.8);
+      doc.fontSize(13).text('Dados Clínicos — Anamnese', { underline: true }).moveDown(0.8);
 
       if (!input.anamnesis) {
         doc.fontSize(10).text('Sem anamnese registrada', { oblique: true }).moveDown(0.5);

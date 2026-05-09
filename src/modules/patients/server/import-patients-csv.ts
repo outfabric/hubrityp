@@ -6,32 +6,22 @@ import { db } from '@/shared/db/client';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Maximum number of rows allowed in a single CSV import. */
-const MAX_IMPORT_ROWS = 200;
+import { type CsvPatientRow, importCsvInputSchema } from '../lib/csv-import-schema';
 
 // ---------------------------------------------------------------------------
-// Input / Result types
+// Re-export the Zod-derived type so existing consumers keep working
 // ---------------------------------------------------------------------------
 
-/** A single validated patient row ready for insertion. */
-export interface CsvPatientRow {
-  fullName: string;
-  phone?: string | null;
-  email?: string | null;
-  birthDate?: string | null;
-  tags?: string[];
-  notes?: string | null;
-}
+export type { CsvPatientRow };
+
+// ---------------------------------------------------------------------------
+// Result types
+// ---------------------------------------------------------------------------
 
 export type ImportPatientsCsvResult =
   | { ok: true; importedCount: number }
   | { ok: false; error: 'unauthenticated' }
-  | { ok: false; error: 'too_many_rows'; message: string }
-  | { ok: false; error: 'empty'; message: string }
+  | { ok: false; error: 'validation_error'; message: string }
   | { ok: false; error: 'db_error'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -52,12 +42,12 @@ export type ImportPatientsCsvResult =
  *
  * Callers are expected to have already run client-side validation (phone/email
  * format, required fields) and duplicate checking via `checkCsvDuplicatesImpl`
- * before calling this function. This function does NOT re-validate individual
- * fields — it trusts the pre-validated input.
+ * before calling this function, but this function re-validates via Zod as a
+ * defense-in-depth measure against crafted requests.
  */
 export async function importPatientsCsvImpl(
   supabase: SupabaseClient,
-  rows: CsvPatientRow[],
+  rows: unknown,
 ): Promise<ImportPatientsCsvResult> {
   // 1. Authenticate
   const {
@@ -68,27 +58,21 @@ export async function importPatientsCsvImpl(
     return { ok: false, error: 'unauthenticated' };
   }
 
-  // 2. Validate row count
-  if (rows.length === 0) {
+  // 2. Validate input via Zod (shape, bounds, and row count: 1..200)
+  const parsed = importCsvInputSchema.safeParse(rows);
+  if (!parsed.success) {
     return {
       ok: false,
-      error: 'empty',
-      message: 'Nenhum paciente para importar.',
+      error: 'validation_error',
+      message: 'Dados de importação inválidos. Verifique o formato e o limite de 200 linhas.',
     };
   }
 
-  if (rows.length > MAX_IMPORT_ROWS) {
-    return {
-      ok: false,
-      error: 'too_many_rows',
-      message: `Máximo de ${MAX_IMPORT_ROWS} linhas por importação. Seu arquivo tem ${rows.length}.`,
-    };
-  }
-
+  const validatedRows = parsed.data;
   const userId = user.id;
 
   // 3. Build values for batch insert
-  const values = rows.map((row) => ({
+  const values = validatedRows.map((row) => ({
     userId,
     fullName: row.fullName,
     patientType: 'adult' as const,
@@ -106,7 +90,7 @@ export async function importPatientsCsvImpl(
       await tx.insert(patients).values(values);
     });
 
-    return { ok: true, importedCount: rows.length };
+    return { ok: true, importedCount: validatedRows.length };
   } catch {
     logger.error(
       { event: 'import_patients_csv_failed' },

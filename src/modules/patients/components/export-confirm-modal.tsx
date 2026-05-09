@@ -85,7 +85,7 @@ export function ExportConfirmModal({
               data-testid="export-include-clinical-checkbox"
             />
             <Label htmlFor="include-clinical-data" className="cursor-pointer text-sm leading-none">
-              Incluir dados clinicos (anamnese)
+              Incluir dados clínicos (anamnese)
             </Label>
           </div>
 
@@ -94,7 +94,7 @@ export function ExportConfirmModal({
             <Alert variant="warning" data-testid="export-secrecy-warning">
               <AlertTriangle className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>
-                Os dados clinicos sao sigilosos. Compartilhe apenas quando estritamente necessario.
+                Os dados clínicos são sigilosos. Compartilhe apenas quando estritamente necessário.
               </AlertDescription>
             </Alert>
           )}

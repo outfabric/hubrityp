@@ -8,6 +8,7 @@ import { profiles } from '@/shared/db/schema/auth/tables';
 import { anamnesis, patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
+import { exportPatientPdfInputSchema } from '../lib/csv-import-schema';
 import { generatePatientPdf } from '../lib/generate-patient-pdf';
 
 // ---------------------------------------------------------------------------
@@ -17,6 +18,7 @@ import { generatePatientPdf } from '../lib/generate-patient-pdf';
 export type ExportPatientPdfResult =
   | { ok: true; pdfBase64: string; fileName: string }
   | { ok: false; error: 'unauthenticated' }
+  | { ok: false; error: 'validation_error'; message: string }
   | { ok: false; error: 'patient_not_found' }
   | { ok: false; error: 'unknown'; message: string };
 
@@ -39,8 +41,8 @@ export type ExportPatientPdfResult =
  */
 export async function exportPatientPdfImpl(
   supabase: SupabaseClient,
-  patientId: string,
-  includeClinicalData: boolean,
+  patientId: unknown,
+  includeClinicalData: unknown,
 ): Promise<ExportPatientPdfResult> {
   // 1. Authenticate
   const {
@@ -51,20 +53,31 @@ export async function exportPatientPdfImpl(
     return { ok: false, error: 'unauthenticated' };
   }
 
+  // 2. Validate input via Zod
+  const parsed = exportPatientPdfInputSchema.safeParse({ patientId, includeClinicalData });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'validation_error',
+      message: 'Parâmetros de exportação inválidos.',
+    };
+  }
+
+  const { patientId: validPatientId, includeClinicalData: validIncludeClinical } = parsed.data;
   const userId = user.id;
 
-  // 2. Fetch patient (defense-in-depth filter on userId + RLS)
+  // 3. Fetch patient (defense-in-depth filter on userId + RLS)
   const [patient] = await db
     .select()
     .from(patients)
-    .where(and(eq(patients.id, patientId), eq(patients.userId, userId)))
+    .where(and(eq(patients.id, validPatientId), eq(patients.userId, userId)))
     .limit(1);
 
   if (!patient) {
     return { ok: false, error: 'patient_not_found' };
   }
 
-  // 3. Fetch psychologist profile for PDF header
+  // 4. Fetch psychologist profile for PDF header
   const [profile] = await db
     .select({
       fullName: profiles.fullName,
@@ -87,20 +100,20 @@ export async function exportPatientPdfImpl(
     };
   }
 
-  // 4. Optionally fetch anamnesis
+  // 5. Optionally fetch anamnesis
   let anamnesisRow = null;
 
-  if (includeClinicalData) {
+  if (validIncludeClinical) {
     const [row] = await db
       .select()
       .from(anamnesis)
-      .where(eq(anamnesis.patientId, patientId))
+      .where(eq(anamnesis.patientId, validPatientId))
       .limit(1);
 
     anamnesisRow = row ?? null;
   }
 
-  // 5. Generate PDF
+  // 6. Generate PDF
   try {
     const pdfBuffer = await generatePatientPdf({
       psychologistName: profile.fullName,
@@ -120,7 +133,7 @@ export async function exportPatientPdfImpl(
       status: patient.status,
       createdAt: patient.createdAt,
       anamnesis: anamnesisRow,
-      includeClinicalData,
+      includeClinicalData: validIncludeClinical,
     });
 
     // Sanitize patient name for file name (remove accents + special chars)
@@ -140,7 +153,11 @@ export async function exportPatientPdfImpl(
     };
   } catch (err: unknown) {
     logger.error(
-      { event: 'export_patient_pdf_failed', patientId, err },
+      {
+        event: 'export_patient_pdf_failed',
+        patientId: validPatientId,
+        err: err instanceof Error ? { message: err.message } : 'unknown',
+      },
       'unexpected error generating patient PDF',
     );
     return {

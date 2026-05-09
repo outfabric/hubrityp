@@ -11,6 +11,9 @@ import { Card } from '@/shared/ui/card';
 
 const MAX_ROWS = 200;
 
+/** Maximum file size in bytes (2 MB). Prevents browser freeze on large files. */
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -69,7 +72,7 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
 
             if (results.data.length > MAX_ROWS) {
               setError(
-                `Maximo de ${MAX_ROWS} linhas por importacao. Seu arquivo tem ${results.data.length}.`,
+                `Máximo de ${MAX_ROWS} linhas por importação. Seu arquivo tem ${results.data.length}.`,
               );
               return;
             }
@@ -97,7 +100,12 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
       if (!file) return;
 
       if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
-        setError('Apenas arquivos .csv sao aceitos.');
+        setError('Apenas arquivos .csv são aceitos.');
+        return;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError('O arquivo excede o tamanho máximo de 2 MB.');
         return;
       }
 

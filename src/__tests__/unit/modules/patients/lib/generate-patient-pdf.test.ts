@@ -100,11 +100,11 @@ describe('generatePatientPdf', () => {
 
   it('sets the PDF title containing the patient name', async () => {
     const buf = await generatePatientPdf(makeInput({ fullName: 'Carlos Mendes' }));
-    const text = pdfToString(buf);
 
-    // PDFKit encodes the Title as UTF-16BE with BOM — convert to check.
-    // The Subject field uses only ASCII, so it remains plain in latin1.
-    expect(text).toContain('Exportacao de dados do paciente');
+    // PDFKit encodes info strings containing non-ASCII as UTF-16BE with BOM.
+    // Search for the Subject fragment in the raw buffer.
+    const subjectUtf16 = Buffer.from('de dados do paciente', 'utf16le').swap16();
+    expect(buf.includes(subjectUtf16)).toBe(true);
 
     // The patient name appears in the UTF-16BE title. To verify, search
     // the raw buffer for the UTF-16BE encoded name bytes.

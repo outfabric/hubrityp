@@ -48,7 +48,7 @@ const COLUMN_LABELS: Record<PatientField, string> = {
   email: 'E-mail',
   birth_date: 'Nascimento',
   tags: 'Tags',
-  notes: 'Observacoes',
+  notes: 'Observações',
 };
 
 // ---------------------------------------------------------------------------
@@ -95,9 +95,9 @@ export function CsvPreviewTable({ rows, columns, isImporting, onImport }: CsvPre
         data-testid="csv-preview-empty"
       >
         <FileText className="text-text-tertiary mb-4 h-12 w-12" aria-hidden="true" />
-        <h4 className="text-text-primary text-base font-medium">Nenhuma linha valida</h4>
+        <h4 className="text-text-primary text-base font-medium">Nenhuma linha válida</h4>
         <p className="text-text-secondary mt-2 max-w-sm text-[15px]">
-          O arquivo CSV nao contem linhas que possam ser importadas. Verifique o formato e tente
+          O arquivo CSV não contém linhas que possam ser importadas. Verifique o formato e tente
           novamente.
         </p>
       </div>
@@ -113,7 +113,7 @@ export function CsvPreviewTable({ rows, columns, isImporting, onImport }: CsvPre
       {/* Summary badges */}
       <div className="flex flex-wrap items-center gap-2" data-testid="csv-preview-summary">
         <Badge variant="neutral">{totalRows} linhas</Badge>
-        <Badge variant="success">{validRows} validas</Badge>
+        <Badge variant="success">{validRows} válidas</Badge>
         {errorRows > 0 && <Badge variant="danger">{errorRows} com erros</Badge>}
         {duplicateRows > 0 && <Badge variant="warning">{duplicateRows} duplicadas</Badge>}
       </div>
@@ -140,7 +140,7 @@ export function CsvPreviewTable({ rows, columns, isImporting, onImport }: CsvPre
                   </TableCell>
                 ))}
                 <TableCell>
-                  {row.status === 'valid' && <Badge variant="success">Valida</Badge>}
+                  {row.status === 'valid' && <Badge variant="success">Válida</Badge>}
                   {row.status === 'error' && (
                     <div className="space-y-1">
                       <Badge variant="danger">Erro</Badge>
@@ -228,7 +228,7 @@ export function CsvPreviewTable({ rows, columns, isImporting, onImport }: CsvPre
           ) : validRows > 0 ? (
             `Importar ${validRows} paciente${validRows !== 1 ? 's' : ''}`
           ) : (
-            'Nenhuma linha valida para importar'
+            'Nenhuma linha válida para importar'
           )}
         </Button>
       </div>

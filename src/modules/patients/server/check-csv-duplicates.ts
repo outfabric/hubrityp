@@ -7,15 +7,17 @@ import { db } from '@/shared/db/client';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
+import { type DuplicateCandidate, checkDuplicatesInputSchema } from '../lib/csv-import-schema';
+
 // ---------------------------------------------------------------------------
-// Input / Result types
+// Re-export the Zod-derived type so existing consumers keep working
 // ---------------------------------------------------------------------------
 
-/** A single candidate for duplicate checking — at least one of phone/email must be present. */
-export interface DuplicateCandidate {
-  phone?: string | null;
-  email?: string | null;
-}
+export type { DuplicateCandidate };
+
+// ---------------------------------------------------------------------------
+// Result types
+// ---------------------------------------------------------------------------
 
 export type CheckCsvDuplicatesResult =
   | {
@@ -26,6 +28,7 @@ export type CheckCsvDuplicatesResult =
       duplicateEmails: string[];
     }
   | { ok: false; error: 'unauthenticated' }
+  | { ok: false; error: 'validation_error'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +44,7 @@ export type CheckCsvDuplicatesResult =
  */
 export async function checkCsvDuplicatesImpl(
   supabase: SupabaseClient,
-  candidates: DuplicateCandidate[],
+  candidates: unknown,
 ): Promise<CheckCsvDuplicatesResult> {
   // 1. Authenticate
   const {
@@ -52,13 +55,24 @@ export async function checkCsvDuplicatesImpl(
     return { ok: false, error: 'unauthenticated' };
   }
 
+  // 2. Validate input via Zod (shape + cap at 200 candidates)
+  const parsed = checkDuplicatesInputSchema.safeParse(candidates);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'validation_error',
+      message: 'Dados de verificação de duplicatas inválidos.',
+    };
+  }
+
+  const validatedCandidates = parsed.data;
   const userId = user.id;
 
   try {
-    // 2. Collect non-empty, unique phones and emails from the candidates
+    // 3. Collect non-empty, unique phones and emails from the candidates
     const phonesToCheck = [
       ...new Set(
-        candidates
+        validatedCandidates
           .map((c) => c.phone?.trim())
           .filter((p): p is string => p != null && p.length > 0),
       ),
@@ -66,13 +80,13 @@ export async function checkCsvDuplicatesImpl(
 
     const emailsToCheck = [
       ...new Set(
-        candidates
+        validatedCandidates
           .map((c) => c.email?.trim().toLowerCase())
           .filter((e): e is string => e != null && e.length > 0),
       ),
     ];
 
-    // 3. Query for existing phones (scoped to this psychologist)
+    // 4. Query for existing phones (scoped to this psychologist)
     let duplicatePhones: string[] = [];
     if (phonesToCheck.length > 0) {
       const rows = await db
@@ -83,7 +97,7 @@ export async function checkCsvDuplicatesImpl(
       duplicatePhones = rows.map((r) => r.phone).filter((p): p is string => p != null);
     }
 
-    // 4. Query for existing emails (scoped to this psychologist)
+    // 5. Query for existing emails (scoped to this psychologist)
     let duplicateEmails: string[] = [];
     if (emailsToCheck.length > 0) {
       const rows = await db

@@ -19,7 +19,7 @@ const FIELD_LABELS: Record<PatientField | '__skip__', string> = {
   email: 'E-mail',
   birth_date: 'Data de nascimento',
   tags: 'Tags',
-  notes: 'Observacoes',
+  notes: 'Observações',
   __skip__: 'Ignorar coluna',
 };
 
