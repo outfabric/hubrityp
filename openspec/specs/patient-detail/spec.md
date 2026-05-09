@@ -26,7 +26,7 @@ The system SHALL render a patient detail page at `/app/pacientes/:id` with a hea
 
 ### Requirement: Patient detail page uses a tab layout
 
-The system SHALL organize patient details into tabs. In this change, only the "Visão geral" tab is functional. Other tabs (Histórico de sessões, Prontuário, Anamnese, Documentos, Financeiro) SHALL be rendered as placeholders with "Em breve" message.
+The system SHALL organize patient details into tabs. The "Visão geral" and "Anamnese" tabs are functional. Other tabs (Histórico de sessões, Prontuário, Documentos, Financeiro) SHALL be rendered as placeholders with "Em breve" message.
 
 #### Scenario: Default tab is "Visão geral"
 
@@ -38,10 +38,15 @@ The system SHALL organize patient details into tabs. In this change, only the "V
 - **WHEN** the "Visão geral" tab is active
 - **THEN** system displays: notes (observação livre), patient_type, birth_date/age, gender, profession, marital_status, source, address, cpf (masked as "***.***.***-XX"), and created_at
 
-#### Scenario: Placeholder tabs are visible but show coming-soon message
+#### Scenario: Anamnese tab is functional
 
 - **WHEN** psychologist clicks on "Anamnese" tab
-- **THEN** system shows the tab content area with message "Em breve" (not a broken page or error)
+- **THEN** system displays the anamnesis editor with all standard sections (or empty form if no anamnesis exists)
+
+#### Scenario: Remaining placeholder tabs show coming-soon message
+
+- **WHEN** psychologist clicks on "Prontuário" tab
+- **THEN** system shows the tab content area with message "Em breve"
 
 ### Requirement: Patient detail page has an actions menu
 
