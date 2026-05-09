@@ -13,6 +13,7 @@ interface TabDefinition {
   value: string;
   label: string;
   icon: ReactNode;
+  /** Whether the tab shows a generic "Em breve" placeholder. */
   placeholder: boolean;
 }
 
@@ -39,7 +40,7 @@ const TABS: TabDefinition[] = [
     value: 'anamnesis',
     label: 'Anamnese',
     icon: <Clock className="h-4 w-4" aria-hidden="true" />,
-    placeholder: true,
+    placeholder: false,
   },
   {
     value: 'documents',
@@ -62,13 +63,15 @@ const TABS: TabDefinition[] = [
 interface PatientTabsProps {
   /** Content for the "Visao geral" tab. */
   overviewContent: ReactNode;
+  /** Content for the "Anamnese" tab. */
+  anamnesisContent: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function PatientTabs({ overviewContent }: PatientTabsProps) {
+export function PatientTabs({ overviewContent, anamnesisContent }: PatientTabsProps) {
   return (
     <Tabs defaultValue="overview" data-testid="patient-tabs">
       <TabsList className="w-full overflow-x-auto" data-testid="patient-tabs-list">
@@ -83,6 +86,11 @@ export function PatientTabs({ overviewContent }: PatientTabsProps) {
       {/* Active tab: overview */}
       <TabsContent value="overview" data-testid="patient-tab-content-overview">
         {overviewContent}
+      </TabsContent>
+
+      {/* Active tab: anamnesis */}
+      <TabsContent value="anamnesis" data-testid="patient-tab-content-anamnesis">
+        {anamnesisContent}
       </TabsContent>
 
       {/* Placeholder tabs */}

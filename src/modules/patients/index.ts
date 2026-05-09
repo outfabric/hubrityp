@@ -115,6 +115,7 @@ export { PatientOverviewTab } from './components/patient-overview-tab';
 export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
 export { TiptapEditor } from './components/tiptap-editor';
+export { AnamnesisTab } from './components/anamnesis-tab';
 
 // ---- Hooks ------------------------------------------------------------------
 export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';

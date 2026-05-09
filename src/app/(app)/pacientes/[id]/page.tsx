@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
+  getAnamnesisImpl,
   getCouplePartnerImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
   listGuardiansImpl,
 } from '@/modules/patients';
+import { AnamnesisTab } from '@/modules/patients/components/anamnesis-tab';
 import { PatientDetailHeader } from '@/modules/patients/components/patient-detail-header';
 import { PatientOverviewTab } from '@/modules/patients/components/patient-overview-tab';
 import { PatientTabs } from '@/modules/patients/components/patient-tabs';
@@ -23,6 +25,7 @@ import {
   unarchivePatient,
   unlinkCouple,
   updateGuardian,
+  upsertAnamnesis,
 } from './actions';
 
 // ---------------------------------------------------------------------------
@@ -54,17 +57,19 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { patient } = patientResult;
   const photoUrl = photoResult.ok ? photoResult.signedUrl : undefined;
 
-  // Fetch conditional data in parallel: guardians for minors, couple partner for couples
+  // Fetch conditional data in parallel: guardians for minors, couple partner for couples, anamnesis
   const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
   const isCouple = patient.patientType === 'couple' && patient.coupleId !== null;
 
-  const [guardiansResult, couplePartnerResult] = await Promise.all([
+  const [guardiansResult, couplePartnerResult, anamnesisResult] = await Promise.all([
     isMinor ? listGuardiansImpl(supabase, id) : null,
     isCouple ? getCouplePartnerImpl(supabase, id) : null,
+    getAnamnesisImpl(supabase, id),
   ]);
 
   const initialGuardians = guardiansResult?.ok ? guardiansResult.guardians : [];
   const couplePartner = couplePartnerResult?.ok ? couplePartnerResult.partner : undefined;
+  const initialAnamnesis = anamnesisResult.ok ? anamnesisResult.anamnesis : null;
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -100,6 +105,13 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
               removeGuardianAction={removeGuardian}
               couplePartner={couplePartner}
               unlinkCoupleAction={unlinkCouple}
+            />
+          }
+          anamnesisContent={
+            <AnamnesisTab
+              patientId={id}
+              initialAnamnesis={initialAnamnesis}
+              upsertAction={upsertAnamnesis}
             />
           }
         />

@@ -20,7 +20,9 @@ import type {
   UnlinkCoupleResult,
   UpdateGuardianResult,
   UpdatePatientResult,
+  UpsertAnamnesisResult,
 } from '@/modules/patients';
+import type { UpsertAnamnesisInput } from '@/modules/patients';
 import {
   addGuardianImpl,
   archivePatientImpl,
@@ -33,6 +35,7 @@ import {
   unlinkCoupleImpl,
   updateGuardianImpl,
   updatePatientImpl,
+  upsertAnamnesisImpl,
 } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -95,4 +98,9 @@ export async function removeGuardian(guardianId: string): Promise<RemoveGuardian
 export async function unlinkCouple(patientId: string): Promise<UnlinkCoupleResult> {
   const supabase = await createServerClient();
   return unlinkCoupleImpl(supabase, patientId);
+}
+
+export async function upsertAnamnesis(input: UpsertAnamnesisInput): Promise<UpsertAnamnesisResult> {
+  const supabase = await createServerClient();
+  return upsertAnamnesisImpl(supabase, input);
 }
