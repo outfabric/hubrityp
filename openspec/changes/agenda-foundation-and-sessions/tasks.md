@@ -126,7 +126,7 @@
 
 > **Design System Salvia**: Sheet (right 480px desktop, bottom-up mobile), Separator entre secoes, Badge para status, Button secondary/primary para acoes.
 
-- [ ] 15.1 Criar componente `src/modules/agenda/components/session-detail-drawer.tsx` (Client Component) — **Design system:** shadcn `Sheet` (side="right" desktop, side="bottom" mobile). Header: nome do paciente h3 (18px/600), `Badge neutral` "Agendada" com icone `Clock` (12px) ou `Badge success` "Realizada" com icone `CheckCircle2`. Body secoes separadas por shadcn `Separator`:
+- [x] 15.1 Criar componente `src/modules/agenda/components/session-detail-drawer.tsx` (Client Component) — **Design system:** shadcn `Sheet` (side="right" desktop, side="bottom" mobile). Header: nome do paciente h3 (18px/600), `Badge neutral` "Agendada" com icone `Clock` (12px) ou `Badge success` "Realizada" com icone `CheckCircle2`. Body secoes separadas por shadcn `Separator`:
   - Data/hora: icone `Calendar` 16px + data formatada (formatSessionDateFull) + horario (14:00 - 14:50)
   - Local: icone `Building2`/`Video` 16px + nome do local + endereco em body-sm `text-secondary`
   - Modalidade: label em body

@@ -10,16 +10,22 @@
 
 import type {
   CreateSessionResult,
+  DeleteSessionResult,
   GetAgendaSettingsResult,
+  GetSessionHistoryResult,
   ListLocationsResult,
   ListSessionsResult,
+  MarkSessionDoneResult,
   UpdateSessionResult,
 } from '@/modules/agenda';
 import {
   createSessionImpl,
+  deleteSessionImpl,
   getAgendaSettingsImpl,
+  getSessionHistoryImpl,
   listLocationsImpl,
   listSessionsImpl,
+  markSessionDoneImpl,
   updateSessionImpl,
 } from '@/modules/agenda';
 import type { ListPatientsResult } from '@/modules/patients';
@@ -79,4 +85,19 @@ export async function searchPatients(
     ok: true,
     patients: result.patients.map((p) => ({ id: p.id, fullName: p.fullName })),
   };
+}
+
+export async function markSessionDone(sessionId: string): Promise<MarkSessionDoneResult> {
+  const supabase = await createServerClient();
+  return markSessionDoneImpl(supabase, sessionId);
+}
+
+export async function deleteSession(sessionId: string): Promise<DeleteSessionResult> {
+  const supabase = await createServerClient();
+  return deleteSessionImpl(supabase, sessionId);
+}
+
+export async function getSessionHistory(sessionId: string): Promise<GetSessionHistoryResult> {
+  const supabase = await createServerClient();
+  return getSessionHistoryImpl(supabase, sessionId);
 }

@@ -16,6 +16,7 @@ export interface SessionWithDetails extends Session {
   patientName: string | null;
   locationName: string | null;
   locationType: string | null;
+  locationAddress: string | null;
 }
 
 export type ListSessionsResult =
@@ -59,6 +60,7 @@ export async function listSessionsImpl(
         patientName: patients.fullName,
         locationName: locations.name,
         locationType: locations.type,
+        locationAddress: locations.address,
       })
       .from(sessions)
       .leftJoin(patients, eq(sessions.patientId, patients.id))
@@ -77,6 +79,7 @@ export async function listSessionsImpl(
       patientName: row.patientName,
       locationName: row.locationName,
       locationType: row.locationType,
+      locationAddress: row.locationAddress,
     }));
 
     return { ok: true, sessions: result };

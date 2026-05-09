@@ -1,6 +1,6 @@
 'use client';
 
-import type { EventContentArg, EventDropArg } from '@fullcalendar/core';
+import type { EventClickArg, EventContentArg, EventDropArg } from '@fullcalendar/core';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import type { DateClickArg } from '@fullcalendar/interaction';
@@ -13,6 +13,7 @@ import type { SessionWithDetails } from '@/modules/agenda';
 import { Card } from '@/shared/ui/card';
 
 import { AgendaNavBar } from './agenda-nav-bar';
+import { SessionDetailDrawer } from './session-detail-drawer';
 import { SessionEventChip } from './session-event-chip';
 import './session-event-chip.css';
 
@@ -111,9 +112,13 @@ function sessionsToEvents(sessions: SessionWithDetails[]) {
       patientName: s.patientName,
       locationName: s.locationName,
       locationType: s.locationType,
+      locationAddress: s.locationAddress,
       modality: s.modality,
       status: s.status,
       color: s.color,
+      amount: s.amount,
+      notes: s.notes,
+      durationMinutes: s.durationMinutes,
     },
   }));
 }
@@ -128,6 +133,10 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
   const [currentView, setCurrentView] = useState<CalendarViewName>(getInitialView);
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [sessions, setSessions] = useState<SessionWithDetails[]>(initialSessions);
+
+  // Session detail drawer state
+  const [selectedSession, setSelectedSession] = useState<SessionWithDetails | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Derive business hours config
   const businessHours = useMemo(
@@ -173,6 +182,44 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
     );
   }, []);
 
+  // Refreshes sessions for the current visible range after a mutation
+  const refreshSessions = useCallback(() => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+
+    const { activeStart, activeEnd } = api.view;
+    void import('@/app/(app)/agenda/actions').then(({ listSessions }) =>
+      listSessions(activeStart, activeEnd).then((result) => {
+        if (result.ok) {
+          setSessions(result.sessions);
+        }
+      }),
+    );
+  }, []);
+
+  const handleEventClick = useCallback(
+    (arg: EventClickArg) => {
+      const sessionId = arg.event.id;
+      const match = sessions.find((s) => s.id === sessionId);
+      if (match) {
+        setSelectedSession(match);
+        setDrawerOpen(true);
+      }
+    },
+    [sessions],
+  );
+
+  const handleDrawerClose = useCallback(() => {
+    setDrawerOpen(false);
+    // Clear selectedSession after animation completes to avoid flash
+    setTimeout(() => setSelectedSession(null), 300);
+  }, []);
+
+  const handleSessionMutated = useCallback(() => {
+    refreshSessions();
+    handleDrawerClose();
+  }, [refreshSessions, handleDrawerClose]);
+
   const handleDateClick = useCallback((_: DateClickArg) => {
     // Future: opens session creation modal pre-filled with date/time
     void _;
@@ -214,6 +261,7 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
             droppable={false}
             events={events}
             eventContent={renderEventContent}
+            eventClick={handleEventClick}
             dateClick={handleDateClick}
             eventDrop={handleEventDrop}
             datesSet={handleDatesSet}
@@ -223,6 +271,15 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
           />
         </div>
       </Card>
+
+      <SessionDetailDrawer
+        session={selectedSession}
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          if (!open) handleDrawerClose();
+        }}
+        onSessionMutated={handleSessionMutated}
+      />
     </div>
   );
 }
