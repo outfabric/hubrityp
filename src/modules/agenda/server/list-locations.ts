@@ -29,9 +29,7 @@ export type ListLocationsResult =
  * RLS guarantees ownership scope, but we add an explicit `userId` filter for
  * defense-in-depth.
  */
-export async function listLocationsImpl(
-  supabase: SupabaseClient,
-): Promise<ListLocationsResult> {
+export async function listLocationsImpl(supabase: SupabaseClient): Promise<ListLocationsResult> {
   // 1. Authenticate
   const {
     data: { user },

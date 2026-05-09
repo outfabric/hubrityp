@@ -16,5 +16,16 @@ export { createLocationImpl, type CreateLocationResult } from './server/create-l
 export { updateLocationImpl, type UpdateLocationResult } from './server/update-location';
 export { deleteLocationImpl, type DeleteLocationResult } from './server/delete-location';
 
+// ---- Server Actions (agenda settings) ----------------------------------------
+export { getAgendaSettingsImpl, type GetAgendaSettingsResult } from './server/get-agenda-settings';
+export {
+  saveAgendaSettingsImpl,
+  type SaveAgendaSettingsResult,
+} from './server/save-agenda-settings';
+
 // ---- Zod Schemas ------------------------------------------------------------
 export { locationInputSchema, type LocationInput } from './lib/location-input-schema';
+export {
+  agendaSettingsInputSchema,
+  type AgendaSettingsInput,
+} from './lib/agenda-settings-input-schema';

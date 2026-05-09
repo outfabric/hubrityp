@@ -45,9 +45,9 @@
 
 ## 7. Server Actions — Agenda Settings
 
-- [ ] 7.1 Criar `src/modules/agenda/server/get-agenda-settings.ts` — Server Action que busca agenda_settings por user_id. Se nao existe, retorna defaults (duration 50, interval 10, business hours padrao)
-- [ ] 7.2 Criar `src/modules/agenda/server/save-agenda-settings.ts` — Server Action que valida input com agendaSettingsInputSchema, faz upsert (INSERT ON CONFLICT user_id DO UPDATE)
-- [ ] 7.3 **Testes de integracao:** Criar `src/__tests__/integration/agenda/agenda-settings.int.test.ts` — testar: get sem registro (retorna defaults), save cria registro, save atualiza registro existente, RLS cross-user bloqueado
+- [x] 7.1 Criar `src/modules/agenda/server/get-agenda-settings.ts` — Server Action que busca agenda_settings por user_id. Se nao existe, retorna defaults (duration 50, interval 10, business hours padrao)
+- [x] 7.2 Criar `src/modules/agenda/server/save-agenda-settings.ts` — Server Action que valida input com agendaSettingsInputSchema, faz upsert (INSERT ON CONFLICT user_id DO UPDATE)
+- [x] 7.3 **Testes de integracao:** Criar `src/__tests__/integration/agenda/agenda-settings.int.test.ts` — testar: get sem registro (retorna defaults), save cria registro, save atualiza registro existente, RLS cross-user bloqueado
 
 ## 8. Server Actions — Sessions
 
