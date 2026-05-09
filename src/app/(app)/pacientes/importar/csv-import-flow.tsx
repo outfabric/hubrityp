@@ -145,8 +145,8 @@ export function CsvImportFlow({ checkDuplicatesAction, importAction }: CsvImport
 
           if (isDupPhone || isDupEmail) {
             const warnings: string[] = [];
-            if (isDupPhone) warnings.push('Paciente com este telefone ja existe.');
-            if (isDupEmail) warnings.push('Paciente com este e-mail ja existe.');
+            if (isDupPhone) warnings.push('Paciente com este telefone já existe.');
+            if (isDupEmail) warnings.push('Paciente com este e-mail já existe.');
 
             return {
               index: v.index,

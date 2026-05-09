@@ -181,7 +181,7 @@ export function CsvPreviewTable({ rows, columns, isImporting, onImport }: CsvPre
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="text-text-secondary text-[13px]">Linha {row.index + 1}</span>
-              {row.status === 'valid' && <Badge variant="success">Valida</Badge>}
+              {row.status === 'valid' && <Badge variant="success">Válida</Badge>}
               {row.status === 'error' && <Badge variant="danger">Erro</Badge>}
               {row.status === 'duplicate' && <Badge variant="warning">Duplicada</Badge>}
             </div>

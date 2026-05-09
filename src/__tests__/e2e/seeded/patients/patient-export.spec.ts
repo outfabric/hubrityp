@@ -94,7 +94,7 @@ test.describe('@patients patient PDF export', () => {
     // Secrecy warning should now be visible
     const secrecyWarning = page.getByTestId('export-secrecy-warning');
     await expect(secrecyWarning).toBeVisible();
-    await expect(secrecyWarning).toContainText('dados clinicos sao sigilosos');
+    await expect(secrecyWarning).toContainText('dados clínicos são sigilosos');
   });
 
   test('cancel button closes the export modal without downloading', async ({ page }) => {

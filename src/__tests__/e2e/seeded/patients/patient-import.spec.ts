@@ -59,7 +59,7 @@ test.describe('@patients patient CSV import', () => {
 
     // The CSV has 6 rows: 5 valid + 1 invalid (missing name)
     await expect(summary).toContainText('6 linhas');
-    await expect(summary).toContainText('5 validas');
+    await expect(summary).toContainText('5 válidas');
     await expect(summary).toContainText('1 com erros');
 
     // Step 5: Click the import button to confirm
@@ -112,7 +112,7 @@ test.describe('@patients patient CSV import', () => {
     }
   });
 
-  test('shows error for CSV upload with invalid file type', async ({ page }) => {
+  test('renders the dropzone on the import page', async ({ page }) => {
     await page.goto('/pacientes/importar');
 
     const pageTitle = page.getByTestId('import-patients-page-title');
