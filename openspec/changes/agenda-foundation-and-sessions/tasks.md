@@ -37,11 +37,11 @@
 
 ## 6. Server Actions — Locations
 
-- [ ] 6.1 Criar `src/modules/agenda/server/list-locations.ts` — Server Action que lista todos os locations do psicólogo autenticado, ordenados por is_default DESC, name ASC
-- [ ] 6.2 Criar `src/modules/agenda/server/create-location.ts` — Server Action que valida input com locationInputSchema, autentica via session, insere location com user_id = session.user.id. Se is_default=true, limpa default anterior em transacao
-- [ ] 6.3 Criar `src/modules/agenda/server/update-location.ts` — Server Action que valida input, verifica ownership (query por id + user_id), atualiza. Se is_default mudou para true, limpa default anterior em transacao
-- [ ] 6.4 Criar `src/modules/agenda/server/delete-location.ts` — Server Action que verifica ownership, verifica se nao tem sessions vinculadas, deleta. Retorna erro se tem sessions vinculadas
-- [ ] 6.5 **Testes de integracao:** Criar `src/__tests__/integration/agenda/location-crud.int.test.ts` — testar contra Postgres real (Testcontainers): criar location, listar (retorna criado), editar (nome muda), deletar (some da lista), default toggle (limpa anterior), tentar deletar com session vinculada (erro), RLS cross-user (psicologo A nao ve locations de B)
+- [x] 6.1 Criar `src/modules/agenda/server/list-locations.ts` — Server Action que lista todos os locations do psicólogo autenticado, ordenados por is_default DESC, name ASC
+- [x] 6.2 Criar `src/modules/agenda/server/create-location.ts` — Server Action que valida input com locationInputSchema, autentica via session, insere location com user_id = session.user.id. Se is_default=true, limpa default anterior em transacao
+- [x] 6.3 Criar `src/modules/agenda/server/update-location.ts` — Server Action que valida input, verifica ownership (query por id + user_id), atualiza. Se is_default mudou para true, limpa default anterior em transacao
+- [x] 6.4 Criar `src/modules/agenda/server/delete-location.ts` — Server Action que verifica ownership, verifica se nao tem sessions vinculadas, deleta. Retorna erro se tem sessions vinculadas
+- [x] 6.5 **Testes de integracao:** Criar `src/__tests__/integration/agenda/location-crud.int.test.ts` — testar contra Postgres real (Testcontainers): criar location, listar (retorna criado), editar (nome muda), deletar (some da lista), default toggle (limpa anterior), tentar deletar com session vinculada (erro), RLS cross-user (psicologo A nao ve locations de B)
 
 ## 7. Server Actions — Agenda Settings
 
