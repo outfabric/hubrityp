@@ -41,8 +41,14 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+/**
+ * SheetContent stacks at z-[51] — one level above the SheetOverlay (z-50) —
+ * so its interactive elements (buttons, links) are always hit-testable.
+ * Without this, the overlay's `fixed inset-0` at the same z-index can
+ * intercept pointer events in some rendering engines / test runners.
+ */
 const sheetVariants = cva(
-  'bg-surface fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-slow data-[state=open]:duration-slow',
+  'bg-surface fixed z-[51] flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:duration-slow data-[state=open]:duration-slow',
   {
     variants: {
       side: {

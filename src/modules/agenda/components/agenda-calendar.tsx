@@ -8,6 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { format } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { Lock, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -116,8 +117,49 @@ function deriveSlotBounds(hours: unknown): {
   };
 }
 
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
+/**
+ * Converts a UTC date to a timezone-naive ISO string in America/Sao_Paulo.
+ *
+ * FullCalendar uses the browser's local timezone by default (`timeZone:
+ * 'local'`). To ensure the calendar always displays São Paulo wall-clock
+ * times — regardless of the browser timezone — we strip the offset and
+ * provide a bare ISO string (e.g., `2026-05-18T10:00:00`). FullCalendar
+ * interprets these as "floating" local times and renders them as-is.
+ */
+function toSaoPauloIso(utcDate: Date): string {
+  return formatInTimeZone(utcDate, SAO_PAULO_TZ, "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+/**
+ * Converts a FullCalendar Date (browser-local, representing Sao Paulo
+ * wall-clock) back to a proper UTC Date.
+ *
+ * Because we feed FullCalendar timezone-naive strings (Sao Paulo wall-clock),
+ * dates returned by FullCalendar callbacks (dateClick, eventDrop) have the
+ * Sao Paulo hour values as their browser-local components. This helper reads
+ * those local components and creates the correct UTC representation.
+ */
+function fcDateToUtc(localDate: Date): Date {
+  // Read browser-local components (which represent Sao Paulo wall-clock)
+  const wall = new Date(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    localDate.getHours(),
+    localDate.getMinutes(),
+    localDate.getSeconds(),
+    0,
+  );
+  return fromZonedTime(wall, SAO_PAULO_TZ);
+}
+
 /**
  * Maps SessionWithDetails[] to FullCalendar event objects.
+ *
+ * Converts UTC start/end to São Paulo wall-clock strings so the calendar
+ * renders correct times even when the browser is not in BRT.
  */
 function sessionsToEvents(sessions: SessionWithDetails[]) {
   return sessions.map((s) => {
@@ -127,8 +169,8 @@ function sessionsToEvents(sessions: SessionWithDetails[]) {
     return {
       id: s.id,
       title: s.isBlocking ? (s.blockingTitle ?? 'Bloqueio') : (displayName ?? 'Paciente'),
-      start: s.startAt,
-      end: s.endAt,
+      start: toSaoPauloIso(new Date(s.startAt)),
+      end: toSaoPauloIso(new Date(s.endAt)),
       extendedProps: {
         isBlocking: s.isBlocking,
         blockingTitle: s.blockingTitle,
@@ -286,6 +328,11 @@ export function AgendaCalendar({
 
   const handleDateClick = useCallback((arg: DateClickArg) => {
     setEditingSession(null);
+    // arg.date is in browser-local time but represents Sao Paulo wall-clock
+    // since we feed FullCalendar timezone-naive strings. Extract the time
+    // as HH:mm (browser-local = Sao Paulo wall-clock) for the form picker,
+    // and pass the date as-is — buildIsoDatetime in the form reads the
+    // local components and converts via fromZonedTime.
     setPreselectedDate(arg.date);
     setPreselectedTime(format(arg.date, 'HH:mm'));
     setSessionModalOpen(true);
@@ -405,7 +452,10 @@ export function AgendaCalendar({
       const match = sessions.find((s) => s.id === sessionId);
       if (!match || !info.event.start) return;
 
-      const newStart = info.event.start;
+      // Convert FullCalendar's browser-local date (Sao Paulo wall-clock)
+      // to proper UTC so the reschedule dialog and server action work
+      // correctly.
+      const newStart = fcDateToUtc(info.event.start);
       const newEnd = calculateEndTime(newStart, match.durationMinutes);
       const label = match.isBlocking
         ? (match.blockingTitle ?? 'Bloqueio')

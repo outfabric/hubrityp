@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import {
   AlertCircle,
   AlertTriangle,
@@ -99,12 +100,25 @@ function computeEndTime(date: Date | null, startTime: string, durationMinutes: n
   return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 }
 
-/** Builds an ISO 8601 datetime string from a date and a time slot (HH:mm). */
+/**
+ * Builds an ISO 8601 datetime string from a date and a time slot (HH:mm).
+ *
+ * Uses `fromZonedTime` to treat the selected date+time as America/Sao_Paulo
+ * and convert to UTC. This ensures correct storage regardless of the browser's
+ * local timezone (e.g., a developer or CI runner in UTC).
+ */
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
 function buildIsoDatetime(date: Date, time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const dt = new Date(date);
-  dt.setHours(h ?? 0, m ?? 0, 0, 0);
-  return dt.toISOString();
+  // Build a "wall clock" date in Sao Paulo: take the calendar date (year,
+  // month, day) and combine with the user-selected time.
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const wall = new Date(year, month, day, h ?? 0, m ?? 0, 0, 0);
+  // Convert from Sao Paulo wall-clock to UTC
+  return fromZonedTime(wall, SAO_PAULO_TZ).toISOString();
 }
 
 // ---------------------------------------------------------------------------
@@ -397,13 +411,16 @@ export function SessionFormModal({
   const endTimeDisplay = computeEndTime(selectedDate, selectedTime, durationMinutes);
   const selectedColor = form.watch('color');
 
-  // Combined date+time for LateRecordToggle
+  // Combined date+time for LateRecordToggle — produces a proper UTC Date
+  // so that isPast() comparisons work correctly.
   const selectedDateTime = useMemo(() => {
     if (!selectedDate || !selectedTime) return null;
     const [h, m] = selectedTime.split(':').map(Number);
-    const dt = new Date(selectedDate);
-    dt.setHours(h ?? 0, m ?? 0, 0, 0);
-    return dt;
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const day = selectedDate.getDate();
+    const wall = new Date(year, month, day, h ?? 0, m ?? 0, 0, 0);
+    return fromZonedTime(wall, SAO_PAULO_TZ);
   }, [selectedDate, selectedTime]);
 
   // Sync couple/recurrence refs from form state so handleSubmit can read them.
@@ -443,10 +460,16 @@ export function SessionFormModal({
     recurrenceStateRef.current = {};
 
     if (session) {
-      // Edit mode: populate from session data
+      // Edit mode: populate from session data.
+      // Extract time in Sao Paulo timezone for the time picker.
       const timeStr = formatSessionTime(session.startAt);
+      // Convert to a "zoned" Date whose local components match the Sao Paulo
+      // wall-clock. This ensures buildIsoDatetime picks up the correct
+      // calendar date even when UTC and BRT dates differ (e.g., 22:00 BRT
+      // = 01:00+1 UTC → the UTC date is the next day).
+      const zonedDate = toZonedTime(session.startAt, SAO_PAULO_TZ);
 
-      setSelectedDate(session.startAt);
+      setSelectedDate(zonedDate);
       setSelectedTime(timeStr);
       setSelectedPatientName(session.patientName);
 

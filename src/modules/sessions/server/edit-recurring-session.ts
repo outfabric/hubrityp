@@ -117,34 +117,70 @@ export async function editRecurringSessionImpl(
 
     const scopeResult = computeEditScope(scope, sessionId, seriesForScope);
 
-    // 5. Build the update payload
-    const updatePayload: Record<string, unknown> = { updatedAt: sql`now()` };
-    if (updates.start_at !== undefined) {
-      const newStartAt = new Date(updates.start_at);
-      updatePayload.startAt = newStartAt;
-      const durationMinutes = updates.duration_minutes ?? target.durationMinutes;
-      updatePayload.endAt = new Date(newStartAt.getTime() + durationMinutes * 60 * 1000);
-    }
-    if (updates.duration_minutes !== undefined) {
-      updatePayload.durationMinutes = updates.duration_minutes;
-      // Recalculate endAt if startAt was also updated, or use existing
-      const baseStart = updates.start_at ? new Date(updates.start_at) : target.startAt;
-      updatePayload.endAt = new Date(baseStart.getTime() + updates.duration_minutes * 60 * 1000);
-    }
+    // 5. Build the non-temporal update payload (fields that don't depend on
+    //    the individual session's date).
+    const sharedPayload: Record<string, unknown> = { updatedAt: sql`now()` };
     if (updates.location_id !== undefined) {
-      updatePayload.locationId = updates.location_id;
+      sharedPayload.locationId = updates.location_id;
     }
     if (updates.modality !== undefined) {
-      updatePayload.modality = updates.modality;
+      sharedPayload.modality = updates.modality;
     }
     if (updates.amount !== undefined) {
-      updatePayload.amount = updates.amount;
+      sharedPayload.amount = updates.amount;
     }
     if (updates.notes !== undefined) {
-      updatePayload.notes = updates.notes;
+      sharedPayload.notes = updates.notes;
     }
     if (updates.color !== undefined) {
-      updatePayload.color = updates.color;
+      sharedPayload.color = updates.color;
+    }
+    if (updates.duration_minutes !== undefined) {
+      sharedPayload.durationMinutes = updates.duration_minutes;
+    }
+
+    // For the "this" scope, the full start_at/end_at can be applied directly
+    // because only one session is affected.
+    const singleSessionPayload: Record<string, unknown> = { ...sharedPayload };
+    if (updates.start_at !== undefined) {
+      const newStartAt = new Date(updates.start_at);
+      singleSessionPayload.startAt = newStartAt;
+      const durationMinutes = updates.duration_minutes ?? target.durationMinutes;
+      singleSessionPayload.endAt = new Date(newStartAt.getTime() + durationMinutes * 60 * 1000);
+    } else if (updates.duration_minutes !== undefined) {
+      singleSessionPayload.endAt = new Date(
+        target.startAt.getTime() + updates.duration_minutes * 60 * 1000,
+      );
+    }
+
+    // For "this_and_future" / "all" scopes, time changes must be applied
+    // per-session: keep each session's original date and only change the
+    // time-of-day (and/or duration). Compute new time components here.
+    const hasTimeChange = updates.start_at !== undefined;
+    const newTimeHours = hasTimeChange ? new Date(updates.start_at!).getUTCHours() : null;
+    const newTimeMinutes = hasTimeChange ? new Date(updates.start_at!).getUTCMinutes() : null;
+    const effectiveDuration = updates.duration_minutes ?? target.durationMinutes;
+
+    /**
+     * Builds per-session temporal fields (startAt/endAt) for bulk scopes.
+     * Replaces only the time-of-day on the session's existing date.
+     */
+    function buildPerSessionPayload(existingStartAt: Date): Record<string, unknown> {
+      const perSession = { ...sharedPayload };
+
+      if (hasTimeChange) {
+        const updated = new Date(existingStartAt);
+        updated.setUTCHours(newTimeHours!, newTimeMinutes!, 0, 0);
+        perSession.startAt = updated;
+        perSession.endAt = new Date(updated.getTime() + effectiveDuration * 60 * 1000);
+      } else if (updates.duration_minutes !== undefined) {
+        // Duration changed but time didn't — recalculate endAt from existing startAt
+        perSession.endAt = new Date(
+          existingStartAt.getTime() + updates.duration_minutes * 60 * 1000,
+        );
+      }
+
+      return perSession;
     }
 
     // 6. Execute scope-specific logic in a transaction
@@ -154,7 +190,7 @@ export async function editRecurringSessionImpl(
           // Detach from series
           await tx
             .update(sessions)
-            .set({ recurrenceId: null, ...updatePayload })
+            .set({ recurrenceId: null, ...singleSessionPayload })
             .where(eq(sessions.id, sessionId));
 
           await tx.insert(sessionHistory).values({
@@ -207,13 +243,34 @@ export async function editRecurringSessionImpl(
             // Reassign (UPDATE, not DELETE+INSERT) sessions from target onward
             // to the new recurrence and apply field edits.
             if (scopeResult.toUpdate.length > 0 && newRecurrence) {
-              await tx
-                .update(sessions)
-                .set({
-                  recurrenceId: newRecurrence.id,
-                  ...updatePayload,
-                })
-                .where(inArray(sessions.id, scopeResult.toUpdate));
+              // When time or duration changed, we must update each session
+              // individually to preserve its original date.
+              if (hasTimeChange || updates.duration_minutes !== undefined) {
+                // Fetch the full startAt for each session being updated
+                const sessionsToUpdate = await tx
+                  .select({ id: sessions.id, startAt: sessions.startAt })
+                  .from(sessions)
+                  .where(inArray(sessions.id, scopeResult.toUpdate));
+
+                for (const s of sessionsToUpdate) {
+                  await tx
+                    .update(sessions)
+                    .set({
+                      recurrenceId: newRecurrence.id,
+                      ...buildPerSessionPayload(s.startAt),
+                    })
+                    .where(eq(sessions.id, s.id));
+                }
+              } else {
+                // No temporal changes — bulk update is safe
+                await tx
+                  .update(sessions)
+                  .set({
+                    recurrenceId: newRecurrence.id,
+                    ...sharedPayload,
+                  })
+                  .where(inArray(sessions.id, scopeResult.toUpdate));
+              }
 
               // History entries for each updated session
               const historyValues = scopeResult.toUpdate.map((sid) => ({
@@ -233,10 +290,26 @@ export async function editRecurringSessionImpl(
 
         case 'all': {
           if (scopeResult.toUpdate.length > 0) {
-            await tx
-              .update(sessions)
-              .set(updatePayload)
-              .where(inArray(sessions.id, scopeResult.toUpdate));
+            // When time or duration changed, update each session individually
+            // to preserve its original date.
+            if (hasTimeChange || updates.duration_minutes !== undefined) {
+              const sessionsToUpdate = await tx
+                .select({ id: sessions.id, startAt: sessions.startAt })
+                .from(sessions)
+                .where(inArray(sessions.id, scopeResult.toUpdate));
+
+              for (const s of sessionsToUpdate) {
+                await tx
+                  .update(sessions)
+                  .set(buildPerSessionPayload(s.startAt))
+                  .where(eq(sessions.id, s.id));
+              }
+            } else {
+              await tx
+                .update(sessions)
+                .set(sharedPayload)
+                .where(inArray(sessions.id, scopeResult.toUpdate));
+            }
 
             // History entries
             const historyValues = scopeResult.toUpdate.map((sid) => ({
