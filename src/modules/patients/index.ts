@@ -135,6 +135,7 @@ export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
+export { ConsentSignForm } from './components/consent-sign-form';
 
 // ---- Hooks ------------------------------------------------------------------
 export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';

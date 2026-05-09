@@ -494,6 +494,19 @@ async function handleRequest(
   // session, same as password-based login.
   // Already handled above by the existing `/auth/v1/token` handler.
 
+  // Supabase Storage shim: accept any request to /storage/v1/* with a mock
+  // response. The consent signing flow generates a PDF and uploads it via the
+  // service-role client. In the e2e environment there is no real Storage
+  // service, so we return minimal success responses to avoid throwing.
+  if (path.startsWith('/storage/v1/')) {
+    // Consume the request body for POST/PUT
+    if (method === 'POST' || method === 'PUT') {
+      await readBody(req);
+    }
+    respondJson(res, 200, { Key: path.replace('/storage/v1/object/', '') });
+    return;
+  }
+
   respondJson(res, 404, { code: 404, msg: 'mock-gotrue: route not found', method, path });
 }
 

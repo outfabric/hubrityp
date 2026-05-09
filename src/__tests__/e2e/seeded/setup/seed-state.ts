@@ -34,6 +34,25 @@ export const SEED_PATIENTS = {
   },
 } as const;
 
+export const SEED_CONSENT_TERMS = {
+  /** Unsigned consent term — the happy-path test will sign this one. */
+  unsigned: {
+    id: '00000000-0000-4000-8000-000000000020',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+    // 64-char hex token (deterministic for test assertions)
+    signatureToken: 'a'.repeat(64),
+    termText:
+      'Eu, paciente, autorizo o tratamento psicologico conforme descrito neste documento. Este termo visa garantir o consentimento informado.',
+  },
+  /** Already-signed consent term — used to test the "already signed" state. */
+  alreadySigned: {
+    id: '00000000-0000-4000-8000-000000000021',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    signatureToken: 'b'.repeat(64),
+    termText: 'Termo de consentimento ja assinado.',
+  },
+} as const;
+
 export type SeedState = {
   // Stable UUID seeded into `auth.users` by `global-setup.ts`. Tests can
   // assert that the dashboard greeting matches `email`, so changes here

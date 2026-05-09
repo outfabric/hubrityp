@@ -52,6 +52,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Next.js auto-detects `src/app/` as the App Router root, so no `app` config is needed here.
+  // pdfkit uses Node's `fs` at runtime to load built-in font metrics (.afm)
+  // and must NOT be bundled by Turbopack — keep it as an external require.
+  serverExternalPackages: ['pdfkit'],
   // Defense-in-depth: ensure test files never leak into the production bundle even if a stray
   // import sneaks in. Tests are dead code from the bundler's perspective (no route imports them).
   outputFileTracingExcludes: {
