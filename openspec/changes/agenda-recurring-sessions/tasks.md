@@ -61,9 +61,9 @@
 
 ## 9. Frontend — Integration with Session Form & Calendar Views
 
-- [ ] 9.1 Integrate `RecurrenceFormSection`, `CoupleSessionFields`, and `LateRecordToggle` into the session creation/edit form from foundation (extend, do not rewrite). Add route actions in `src/app/(app)/agenda/actions.ts` delegating to `createRecurringSession`, `editRecurringSession`, `cancelRecurringSession`, `createCoupleSession`, `createLateRecord`
-- [ ] 9.2 Integrate `EditScopeDialog` into session edit flow: when editing a session with non-null `recurrence_id`, show the dialog before applying edits. When cancelling a recurring session, show the same dialog with cancel-specific title/description
-- [ ] 9.3 Update calendar view components (from foundation) to show recurring session indicator (Lucide `Repeat` 12px icon, bottom-right of cell) for sessions with `recurrence_id`. Show "Ana & Carlos" format for couple sessions with `patient_ids.length === 2`
+- [x] 9.1 Integrate `RecurrenceFormSection`, `CoupleSessionFields`, and `LateRecordToggle` into the session creation/edit form from foundation (extend, do not rewrite). Add route actions in `src/app/(app)/agenda/actions.ts` delegating to `createRecurringSession`, `editRecurringSession`, `cancelRecurringSession`, `createCoupleSession`, `createLateRecord`
+- [x] 9.2 Integrate `EditScopeDialog` into session edit flow: when editing a session with non-null `recurrence_id`, show the dialog before applying edits. When cancelling a recurring session, show the same dialog with cancel-specific title/description
+- [x] 9.3 Update calendar view components (from foundation) to show recurring session indicator (Lucide `Repeat` 12px icon, bottom-right of cell) for sessions with `recurrence_id`. Show "Ana & Carlos" format for couple sessions with `patient_ids.length === 2`
 
 ## 10. E2E Tests
 

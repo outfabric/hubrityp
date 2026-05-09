@@ -2,7 +2,17 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Building2, Calendar, CheckCircle2, Clock, Pencil, Trash2, Video } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Pencil,
+  Repeat,
+  Trash2,
+  Video,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -39,6 +49,10 @@ interface SessionDetailDrawerProps {
   onOpenChange: (open: boolean) => void;
   /** Called after a mutation (mark done, delete) so the parent can refresh. */
   onSessionMutated: () => void;
+  /** Called when the user wants to edit a session. */
+  onEdit?: (session: SessionWithDetails) => void;
+  /** Called when the user wants to cancel a recurring session. */
+  onCancelRecurring?: (session: SessionWithDetails) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +149,8 @@ export function SessionDetailDrawer({
   open,
   onOpenChange,
   onSessionMutated,
+  onEdit,
+  onCancelRecurring,
 }: SessionDetailDrawerProps) {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [history, setHistory] = useState<SessionHistory[]>([]);
@@ -378,6 +394,17 @@ export function SessionDetailDrawer({
             )}
           </div>
 
+          {/* Recurring indicator */}
+          {!isBlocking && session.recurrenceId && (
+            <>
+              <Separator />
+              <div className="flex items-center gap-2">
+                <Repeat className="text-text-tertiary h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="text-text-secondary text-[13px]">Sessao recorrente</span>
+              </div>
+            </>
+          )}
+
           {/* Footer actions */}
           <Separator />
           <div className="flex items-center justify-end gap-3">
@@ -387,6 +414,7 @@ export function SessionDetailDrawer({
                   variant="secondary"
                   size="default"
                   disabled={isPending}
+                  onClick={() => onEdit?.(session)}
                   data-testid="session-edit-button"
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -409,11 +437,24 @@ export function SessionDetailDrawer({
                   variant="secondary"
                   size="default"
                   disabled={isPending}
+                  onClick={() => onEdit?.(session)}
                   data-testid="session-edit-button"
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                   Editar
                 </Button>
+                {!isDone && session.recurrenceId && (
+                  <Button
+                    variant="secondary"
+                    size="default"
+                    disabled={isPending}
+                    onClick={() => onCancelRecurring?.(session)}
+                    data-testid="session-cancel-recurring-button"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                    Cancelar recorrencia
+                  </Button>
+                )}
                 {!isDone && (
                   <Button
                     variant="default"

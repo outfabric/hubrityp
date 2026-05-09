@@ -10,9 +10,12 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { format } from 'date-fns';
 import { Lock, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
 import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
+import { EditScopeDialog } from '@/modules/sessions/components/edit-scope-dialog';
+import type { EditScope } from '@/modules/sessions/lib/compute-edit-scope';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 
@@ -118,26 +121,34 @@ function deriveSlotBounds(hours: unknown): {
  * Maps SessionWithDetails[] to FullCalendar event objects.
  */
 function sessionsToEvents(sessions: SessionWithDetails[]) {
-  return sessions.map((s) => ({
-    id: s.id,
-    title: s.isBlocking ? (s.blockingTitle ?? 'Bloqueio') : (s.patientName ?? 'Paciente'),
-    start: s.startAt,
-    end: s.endAt,
-    extendedProps: {
-      isBlocking: s.isBlocking,
-      blockingTitle: s.blockingTitle,
-      patientName: s.patientName,
-      locationName: s.locationName,
-      locationType: s.locationType,
-      locationAddress: s.locationAddress,
-      modality: s.modality,
-      status: s.status,
-      color: s.color,
-      amount: s.amount,
-      notes: s.notes,
-      durationMinutes: s.durationMinutes,
-    },
-  }));
+  return sessions.map((s) => {
+    // For couple sessions, prefer the "Ana & Carlos" display name
+    const displayName = s.coupleDisplayName ?? s.patientName;
+
+    return {
+      id: s.id,
+      title: s.isBlocking ? (s.blockingTitle ?? 'Bloqueio') : (displayName ?? 'Paciente'),
+      start: s.startAt,
+      end: s.endAt,
+      extendedProps: {
+        isBlocking: s.isBlocking,
+        blockingTitle: s.blockingTitle,
+        patientName: displayName,
+        locationName: s.locationName,
+        locationType: s.locationType,
+        locationAddress: s.locationAddress,
+        modality: s.modality,
+        status: s.status,
+        color: s.color,
+        amount: s.amount,
+        notes: s.notes,
+        durationMinutes: s.durationMinutes,
+        recurrenceId: s.recurrenceId,
+        patientIds: s.patientIds,
+        coupleDisplayName: s.coupleDisplayName,
+      },
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -171,6 +182,15 @@ export function AgendaCalendar({
   // Reschedule confirmation dialog state
   const [rescheduleInfo, setRescheduleInfo] = useState<RescheduleInfo | null>(null);
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+
+  // Edit scope dialog state — shown when editing or cancelling a recurring session
+  const [editScopeOpen, setEditScopeOpen] = useState(false);
+  const [editScopeMode, setEditScopeMode] = useState<'edit' | 'cancel'>('edit');
+  const [pendingRecurringSession, setPendingRecurringSession] = useState<SessionWithDetails | null>(
+    null,
+  );
+  // Stores the chosen edit scope so the update handler can pass it to editRecurringSession
+  const pendingEditScopeRef = useRef<EditScope | null>(null);
 
   // Derive business hours config
   const businessHours = useMemo(
@@ -279,6 +299,99 @@ export function AgendaCalendar({
     setSessionModalOpen(true);
   }, []);
 
+  // Opens the edit form for a session. If the session is part of a recurrence,
+  // shows the EditScopeDialog first; otherwise opens the form directly.
+  const handleEditSession = useCallback(
+    (session: SessionWithDetails) => {
+      if (session.recurrenceId) {
+        // Recurring session — show scope dialog before editing
+        setPendingRecurringSession(session);
+        setEditScopeMode('edit');
+        setEditScopeOpen(true);
+      } else {
+        // Non-recurring — open edit form directly
+        setEditingSession({
+          id: session.id,
+          patientId: session.patientId,
+          patientName: session.patientName,
+          isBlocking: session.isBlocking,
+          blockingTitle: session.blockingTitle,
+          startAt: new Date(session.startAt),
+          durationMinutes: session.durationMinutes,
+          locationId: session.locationId,
+          modality: session.modality,
+          amount: session.amount,
+          notes: session.notes,
+          color: session.color,
+        });
+        setSessionModalOpen(true);
+        handleDrawerClose();
+      }
+    },
+    [handleDrawerClose],
+  );
+
+  // Opens the cancel recurring dialog (EditScopeDialog with cancel title)
+  const handleCancelRecurring = useCallback((session: SessionWithDetails) => {
+    setPendingRecurringSession(session);
+    setEditScopeMode('cancel');
+    setEditScopeOpen(true);
+  }, []);
+
+  // Handles scope selection from EditScopeDialog
+  const handleEditScopeSelect = useCallback(
+    (scope: EditScope) => {
+      if (!pendingRecurringSession) return;
+      const session = pendingRecurringSession;
+
+      setEditScopeOpen(false);
+
+      if (editScopeMode === 'cancel') {
+        // Cancel recurring session with selected scope
+        void import('@/app/(app)/agenda/actions').then(({ cancelRecurringSession }) =>
+          cancelRecurringSession({
+            sessionId: session.id,
+            scope,
+          }).then((result) => {
+            if (result.ok) {
+              toast.success(`Recorrencia cancelada (${result.cancelledCount} sessao(es)).`);
+              refreshSessions();
+              handleDrawerClose();
+            } else {
+              const msg = 'message' in result ? result.message : 'Erro ao cancelar recorrencia.';
+              toast.error(msg);
+            }
+            setPendingRecurringSession(null);
+          }),
+        );
+      } else {
+        // Edit recurring session — for "this" scope, detach and open form.
+        // For "this_and_future" / "all", open the form with scope context.
+        // The edit form will pass scope to editRecurringSession.
+        setEditingSession({
+          id: session.id,
+          patientId: session.patientId,
+          patientName: session.patientName,
+          isBlocking: session.isBlocking,
+          blockingTitle: session.blockingTitle,
+          startAt: new Date(session.startAt),
+          durationMinutes: session.durationMinutes,
+          locationId: session.locationId,
+          modality: session.modality,
+          amount: session.amount,
+          notes: session.notes,
+          color: session.color,
+        });
+        // Store the selected scope so the update handler knows to use editRecurringSession
+        pendingEditScopeRef.current = scope;
+        setSessionModalOpen(true);
+        handleDrawerClose();
+        setPendingRecurringSession(null);
+      }
+    },
+    [pendingRecurringSession, editScopeMode, refreshSessions, handleDrawerClose],
+  );
+
   const handleOpenBlockModal = useCallback(() => {
     setBlockModalOpen(true);
   }, []);
@@ -383,6 +496,8 @@ export function AgendaCalendar({
           if (!open) handleDrawerClose();
         }}
         onSessionMutated={handleSessionMutated}
+        onEdit={handleEditSession}
+        onCancelRecurring={handleCancelRecurring}
       />
 
       <RescheduleConfirmDialog
@@ -415,6 +530,29 @@ export function AgendaCalendar({
           return createSession(input);
         }}
         onUpdate={async (id, input) => {
+          const scope = pendingEditScopeRef.current;
+          if (scope) {
+            // Recurring session edit with scope — delegate to editRecurringSession
+            pendingEditScopeRef.current = null;
+            const { editRecurringSession } = await import('@/app/(app)/agenda/actions');
+            const result = await editRecurringSession({
+              sessionId: id,
+              scope,
+              updates: input,
+            });
+            // Map the result to match the expected shape of onUpdate
+            if (result.ok) {
+              return { ok: true };
+            }
+            if (result.error === 'invalid_input' && 'fieldErrors' in result) {
+              return { ok: false, error: 'invalid_input', fieldErrors: result.fieldErrors };
+            }
+            return {
+              ok: false,
+              error: result.error,
+              message: 'message' in result ? result.message : 'Erro ao editar sessao recorrente.',
+            };
+          }
           const { updateSession } = await import('@/app/(app)/agenda/actions');
           return updateSession(id, input);
         }}
@@ -422,7 +560,10 @@ export function AgendaCalendar({
           const { searchPatients } = await import('@/app/(app)/agenda/actions');
           return searchPatients(query);
         }}
-        onSuccess={refreshSessions}
+        onSuccess={() => {
+          pendingEditScopeRef.current = null;
+          refreshSessions();
+        }}
       />
 
       <BlockFormModal
@@ -440,6 +581,25 @@ export function AgendaCalendar({
           return updateSession(id, input);
         }}
         onSuccess={refreshSessions}
+      />
+
+      <EditScopeDialog
+        open={editScopeOpen}
+        onOpenChange={(open) => {
+          setEditScopeOpen(open);
+          if (!open) {
+            setTimeout(() => setPendingRecurringSession(null), 300);
+          }
+        }}
+        onSelect={handleEditScopeSelect}
+        title={
+          editScopeMode === 'cancel' ? 'Cancelar sessao recorrente' : 'Editar sessao recorrente'
+        }
+        description={
+          editScopeMode === 'cancel'
+            ? 'Escolha o escopo do cancelamento para esta sessao recorrente.'
+            : 'Escolha o escopo da alteracao para esta sessao recorrente.'
+        }
       />
     </div>
   );

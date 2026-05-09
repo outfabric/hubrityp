@@ -13,14 +13,16 @@ import {
   User,
   Video,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
 import { formatSessionTime, toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
 import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
+import { LateRecordToggle } from '@/modules/sessions/components/late-record-toggle';
+import { RecurrenceFormSection } from '@/modules/sessions/components/recurrence-form-section';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -378,6 +380,15 @@ export function SessionFormModal({
   const endTimeDisplay = computeEndTime(selectedDate, selectedTime, durationMinutes);
   const selectedColor = form.watch('color');
 
+  // Combined date+time for LateRecordToggle
+  const selectedDateTime = useMemo(() => {
+    if (!selectedDate || !selectedTime) return null;
+    const [h, m] = selectedTime.split(':').map(Number);
+    const dt = new Date(selectedDate);
+    dt.setHours(h ?? 0, m ?? 0, 0, 0);
+    return dt;
+  }, [selectedDate, selectedTime]);
+
   // Reset form when dialog opens
   useEffect(() => {
     if (!open) return;
@@ -491,335 +502,343 @@ export function SessionFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setConflicts([]);
-            void form.handleSubmit(handleSubmit)();
-          }}
-          className="space-y-4"
-          noValidate
-          data-testid="session-form"
-        >
-          {/* Patient (hidden when is_blocking) */}
-          <div className="space-y-2">
-            <Label>
-              <span className="flex items-center gap-1.5">
-                <User className="h-4 w-4" aria-hidden="true" />
-                Paciente
-                <span className="text-danger-500">*</span>
-              </span>
-            </Label>
-            <PatientCombobox
-              value={form.watch('patient_id')}
-              patientName={selectedPatientName}
-              onSelect={handlePatientSelect}
-              onSearch={onSearchPatients}
-              error={form.formState.errors.patient_id?.message}
-            />
-            {form.formState.errors.patient_id && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.patient_id.message}
-              </p>
-            )}
-          </div>
-
-          {/* Date */}
-          <div className="space-y-2">
-            <Label>
-              <span className="flex items-center gap-1.5">
-                <CalendarIcon className="h-4 w-4" aria-hidden="true" />
-                Data
-                <span className="text-danger-500">*</span>
-              </span>
-            </Label>
-            <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-start text-left font-normal"
-                  data-testid="session-form-date-trigger"
-                >
-                  {selectedDate
-                    ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
-                    : 'Selecione uma data'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate ?? undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                      setDatePopoverOpen(false);
-                    }
-                  }}
-                  locale={ptBR}
-                  data-testid="session-form-calendar"
-                />
-              </PopoverContent>
-            </Popover>
-            {form.formState.errors.start_at && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.start_at.message}
-              </p>
-            )}
-          </div>
-
-          {/* Start time + Duration (side by side) */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Start time */}
+        <FormProvider {...form}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setConflicts([]);
+              void form.handleSubmit(handleSubmit)();
+            }}
+            className="space-y-4"
+            noValidate
+            data-testid="session-form"
+          >
+            {/* Patient (hidden when is_blocking) */}
             <div className="space-y-2">
-              <Label htmlFor="session-start-time">Hora inicio</Label>
-              <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
-                <SelectTrigger id="session-start-time" data-testid="session-form-start-time">
-                  <SelectValue placeholder="Horario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label htmlFor="session-duration">Duracao</Label>
-              <Select
-                value={String(durationMinutes)}
-                onValueChange={(val) =>
-                  form.setValue('duration_minutes', Number(val), { shouldValidate: true })
-                }
-              >
-                <SelectTrigger
-                  id="session-duration"
-                  aria-invalid={Boolean(form.formState.errors.duration_minutes)}
-                  data-testid="session-form-duration"
-                >
-                  <SelectValue placeholder="Duracao" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DURATION_OPTIONS.map((mins) => (
-                    <SelectItem key={mins} value={String(mins)}>
-                      {mins} min
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.duration_minutes && (
+              <Label>
+                <span className="flex items-center gap-1.5">
+                  <User className="h-4 w-4" aria-hidden="true" />
+                  Paciente
+                  <span className="text-danger-500">*</span>
+                </span>
+              </Label>
+              <PatientCombobox
+                value={form.watch('patient_id')}
+                patientName={selectedPatientName}
+                onSelect={handlePatientSelect}
+                onSearch={onSearchPatients}
+                error={form.formState.errors.patient_id?.message}
+              />
+              {form.formState.errors.patient_id && (
                 <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {form.formState.errors.duration_minutes.message}
+                  {form.formState.errors.patient_id.message}
                 </p>
               )}
             </div>
-          </div>
 
-          {/* End time (computed, read-only) */}
-          <p className="text-text-tertiary text-xs" data-testid="session-form-end-time">
-            Hora fim: {endTimeDisplay}
-          </p>
-
-          {/* Location */}
-          {locations.length > 0 && (
+            {/* Date */}
             <div className="space-y-2">
-              <Label htmlFor="session-location">Local</Label>
-              <Select
-                value={form.watch('location_id') ?? ''}
-                onValueChange={(val) =>
-                  form.setValue('location_id', val || undefined, { shouldValidate: true })
-                }
-              >
-                <SelectTrigger id="session-location" data-testid="session-form-location">
-                  <SelectValue placeholder="Selecione um local" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Modality */}
-          <div className="space-y-2">
-            <Label>Modalidade</Label>
-            <RadioGroup
-              value={form.watch('modality') ?? 'in_person'}
-              onValueChange={(val) =>
-                form.setValue('modality', val as 'in_person' | 'online', {
-                  shouldValidate: true,
-                })
-              }
-              className="flex gap-4"
-              data-testid="session-form-modality"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="in_person" id="modality-in-person" />
-                <Label
-                  htmlFor="modality-in-person"
-                  className="flex cursor-pointer items-center gap-1.5 font-normal"
-                >
-                  <Building2 className="h-4 w-4" aria-hidden="true" />
-                  Presencial
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="online" id="modality-online" />
-                <Label
-                  htmlFor="modality-online"
-                  className="flex cursor-pointer items-center gap-1.5 font-normal"
-                >
-                  <Video className="h-4 w-4" aria-hidden="true" />
-                  Online
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="session-amount">Valor</Label>
-            <div className="relative">
-              <span className="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-                R$
-              </span>
-              <Input
-                id="session-amount"
-                type="text"
-                inputMode="decimal"
-                className="pl-10"
-                placeholder="0,00"
-                aria-invalid={Boolean(form.formState.errors.amount)}
-                data-testid="session-form-amount"
-                {...form.register('amount')}
-              />
-            </div>
-            {form.formState.errors.amount && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.amount.message}
-              </p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="session-notes">Observacao</Label>
-            <Textarea
-              id="session-notes"
-              rows={3}
-              placeholder="Observacoes sobre a sessao (opcional)"
-              aria-invalid={Boolean(form.formState.errors.notes)}
-              data-testid="session-form-notes"
-              {...form.register('notes')}
-            />
-            {form.formState.errors.notes && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.notes.message}
-              </p>
-            )}
-          </div>
-
-          {/* Color */}
-          <div className="space-y-2">
-            <Label>Cor</Label>
-            <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessao">
-              {PRESET_COLORS.map((preset) => (
-                <button
-                  key={preset.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedColor === preset.value}
-                  aria-label={preset.label}
-                  className={`duration-fast h-8 w-8 rounded-full border-2 transition-all ${
-                    selectedColor === preset.value
-                      ? 'border-brand-500 scale-110'
-                      : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: preset.value }}
-                  onClick={() => {
-                    if (selectedColor === preset.value) {
-                      form.setValue('color', undefined, { shouldValidate: true });
-                    } else {
-                      form.setValue('color', preset.value, { shouldValidate: true });
-                    }
-                  }}
-                  data-testid={`session-color-${preset.value.replace('#', '')}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Conflict Warning */}
-          {conflicts.length > 0 && (
-            <Alert variant="warning" data-testid="session-form-conflict-alert">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  {conflicts.map((c) => (
-                    <p key={c.sessionId}>
-                      Voce ja tem {c.label} das{' '}
-                      {formatSessionTime(toSaoPauloTime(new Date(c.conflictStart)))} as{' '}
-                      {formatSessionTime(toSaoPauloTime(new Date(c.conflictEnd)))} nesse horario.
-                    </p>
-                  ))}
+              <Label>
+                <span className="flex items-center gap-1.5">
+                  <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                  Data
+                  <span className="text-danger-500">*</span>
+                </span>
+              </Label>
+              <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="secondary"
-                    size="sm"
-                    onClick={handleForceConflict}
-                    disabled={isPending}
-                    data-testid="session-form-force-conflict"
+                    className="w-full justify-start text-left font-normal"
+                    data-testid="session-form-date-trigger"
                   >
-                    {isPending ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                        Agendando...
-                      </>
-                    ) : (
-                      'Agendar mesmo assim'
-                    )}
+                    {selectedDate
+                      ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      : 'Selecione uma data'}
                   </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Footer */}
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              data-testid="session-form-cancel"
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isPending} data-testid="session-form-save">
-              {isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  Salvando...
-                </>
-              ) : (
-                'Salvar'
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate ?? undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(date);
+                        setDatePopoverOpen(false);
+                      }
+                    }}
+                    locale={ptBR}
+                    data-testid="session-form-calendar"
+                  />
+                </PopoverContent>
+              </Popover>
+              {form.formState.errors.start_at && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.start_at.message}
+                </p>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            </div>
+
+            {/* Start time + Duration (side by side) */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Start time */}
+              <div className="space-y-2">
+                <Label htmlFor="session-start-time">Hora inicio</Label>
+                <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
+                  <SelectTrigger id="session-start-time" data-testid="session-form-start-time">
+                    <SelectValue placeholder="Horario" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-2">
+                <Label htmlFor="session-duration">Duracao</Label>
+                <Select
+                  value={String(durationMinutes)}
+                  onValueChange={(val) =>
+                    form.setValue('duration_minutes', Number(val), { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger
+                    id="session-duration"
+                    aria-invalid={Boolean(form.formState.errors.duration_minutes)}
+                    data-testid="session-form-duration"
+                  >
+                    <SelectValue placeholder="Duracao" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DURATION_OPTIONS.map((mins) => (
+                      <SelectItem key={mins} value={String(mins)}>
+                        {mins} min
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.duration_minutes && (
+                  <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {form.formState.errors.duration_minutes.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* End time (computed, read-only) */}
+            <p className="text-text-tertiary text-xs" data-testid="session-form-end-time">
+              Hora fim: {endTimeDisplay}
+            </p>
+
+            {/* Location */}
+            {locations.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="session-location">Local</Label>
+                <Select
+                  value={form.watch('location_id') ?? ''}
+                  onValueChange={(val) =>
+                    form.setValue('location_id', val || undefined, { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger id="session-location" data-testid="session-form-location">
+                    <SelectValue placeholder="Selecione um local" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Modality */}
+            <div className="space-y-2">
+              <Label>Modalidade</Label>
+              <RadioGroup
+                value={form.watch('modality') ?? 'in_person'}
+                onValueChange={(val) =>
+                  form.setValue('modality', val as 'in_person' | 'online', {
+                    shouldValidate: true,
+                  })
+                }
+                className="flex gap-4"
+                data-testid="session-form-modality"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="in_person" id="modality-in-person" />
+                  <Label
+                    htmlFor="modality-in-person"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal"
+                  >
+                    <Building2 className="h-4 w-4" aria-hidden="true" />
+                    Presencial
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="online" id="modality-online" />
+                  <Label
+                    htmlFor="modality-online"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal"
+                  >
+                    <Video className="h-4 w-4" aria-hidden="true" />
+                    Online
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="session-amount">Valor</Label>
+              <div className="relative">
+                <span className="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+                  R$
+                </span>
+                <Input
+                  id="session-amount"
+                  type="text"
+                  inputMode="decimal"
+                  className="pl-10"
+                  placeholder="0,00"
+                  aria-invalid={Boolean(form.formState.errors.amount)}
+                  data-testid="session-form-amount"
+                  {...form.register('amount')}
+                />
+              </div>
+              {form.formState.errors.amount && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.amount.message}
+                </p>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="session-notes">Observacao</Label>
+              <Textarea
+                id="session-notes"
+                rows={3}
+                placeholder="Observacoes sobre a sessao (opcional)"
+                aria-invalid={Boolean(form.formState.errors.notes)}
+                data-testid="session-form-notes"
+                {...form.register('notes')}
+              />
+              {form.formState.errors.notes && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.notes.message}
+                </p>
+              )}
+            </div>
+
+            {/* Color */}
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessao">
+                {PRESET_COLORS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedColor === preset.value}
+                    aria-label={preset.label}
+                    className={`duration-fast h-8 w-8 rounded-full border-2 transition-all ${
+                      selectedColor === preset.value
+                        ? 'border-brand-500 scale-110'
+                        : 'border-transparent hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: preset.value }}
+                    onClick={() => {
+                      if (selectedColor === preset.value) {
+                        form.setValue('color', undefined, { shouldValidate: true });
+                      } else {
+                        form.setValue('color', preset.value, { shouldValidate: true });
+                      }
+                    }}
+                    data-testid={`session-color-${preset.value.replace('#', '')}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Recurrence (create mode only — recurring edits use EditScopeDialog) */}
+            {!isEdit && <RecurrenceFormSection />}
+
+            {/* Late Record (shown only when selected date/time is in the past) */}
+            {!isEdit && <LateRecordToggle selectedDateTime={selectedDateTime} />}
+
+            {/* Conflict Warning */}
+            {conflicts.length > 0 && (
+              <Alert variant="warning" data-testid="session-form-conflict-alert">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    {conflicts.map((c) => (
+                      <p key={c.sessionId}>
+                        Voce ja tem {c.label} das{' '}
+                        {formatSessionTime(toSaoPauloTime(new Date(c.conflictStart)))} as{' '}
+                        {formatSessionTime(toSaoPauloTime(new Date(c.conflictEnd)))} nesse horario.
+                      </p>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleForceConflict}
+                      disabled={isPending}
+                      data-testid="session-form-force-conflict"
+                    >
+                      {isPending ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                          Agendando...
+                        </>
+                      ) : (
+                        'Agendar mesmo assim'
+                      )}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Footer */}
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+                data-testid="session-form-cancel"
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending} data-testid="session-form-save">
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

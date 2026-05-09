@@ -30,6 +30,20 @@ import {
 } from '@/modules/agenda';
 import type { ListPatientsResult } from '@/modules/patients';
 import { listPatientsImpl } from '@/modules/patients';
+import type {
+  CancelRecurringSessionResult,
+  CreateCoupleSessionResult,
+  CreateLateRecordResult,
+  CreateRecurringSessionResult,
+  EditRecurringSessionResult,
+} from '@/modules/sessions';
+import {
+  cancelRecurringSessionImpl,
+  createCoupleSessionImpl,
+  createLateRecordImpl,
+  createRecurringSessionImpl,
+  editRecurringSessionImpl,
+} from '@/modules/sessions';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function listSessions(startDate: Date, endDate: Date): Promise<ListSessionsResult> {
@@ -100,4 +114,48 @@ export async function deleteSession(sessionId: string): Promise<DeleteSessionRes
 export async function getSessionHistory(sessionId: string): Promise<GetSessionHistoryResult> {
   const supabase = await createServerClient();
   return getSessionHistoryImpl(supabase, sessionId);
+}
+
+// ---------------------------------------------------------------------------
+// Recurring sessions
+// ---------------------------------------------------------------------------
+
+export async function createRecurringSession(
+  input: unknown,
+): Promise<CreateRecurringSessionResult> {
+  const supabase = await createServerClient();
+  return createRecurringSessionImpl(
+    supabase,
+    input as Parameters<typeof createRecurringSessionImpl>[1],
+  );
+}
+
+export async function editRecurringSession(input: unknown): Promise<EditRecurringSessionResult> {
+  const supabase = await createServerClient();
+  return editRecurringSessionImpl(supabase, input);
+}
+
+export async function cancelRecurringSession(
+  input: unknown,
+): Promise<CancelRecurringSessionResult> {
+  const supabase = await createServerClient();
+  return cancelRecurringSessionImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Couple sessions
+// ---------------------------------------------------------------------------
+
+export async function createCoupleSession(input: unknown): Promise<CreateCoupleSessionResult> {
+  const supabase = await createServerClient();
+  return createCoupleSessionImpl(supabase, input as Parameters<typeof createCoupleSessionImpl>[1]);
+}
+
+// ---------------------------------------------------------------------------
+// Late records
+// ---------------------------------------------------------------------------
+
+export async function createLateRecord(input: unknown): Promise<CreateLateRecordResult> {
+  const supabase = await createServerClient();
+  return createLateRecordImpl(supabase, input as Parameters<typeof createLateRecordImpl>[1]);
 }
