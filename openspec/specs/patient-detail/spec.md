@@ -65,7 +65,7 @@ The system SHALL organize patient details into tabs. The "Visão geral" and "Ana
 
 ### Requirement: Patient detail page has an actions menu
 
-The system SHALL provide an actions menu (three-dot or dropdown) with options: Editar, Arquivar/Desarquivar (based on current status), and Excluir (only for patients without clinical records).
+The system SHALL provide an actions menu (three-dot or dropdown) with options: Editar, Arquivar/Desarquivar (based on current status), **Exportar PDF**, and Excluir (only for patients without clinical records).
 
 #### Scenario: Actions menu for active patient
 
@@ -81,6 +81,16 @@ The system SHALL provide an actions menu (three-dot or dropdown) with options: E
 
 - **WHEN** psychologist clicks "Arquivar" in the actions menu
 - **THEN** system displays a confirmation modal explaining legal retention obligation (CFP 5 anos / Lei 13.787/2018 20 anos) with "Confirmar" and "Cancelar" buttons
+
+#### Scenario: Actions menu includes export option
+
+- **WHEN** psychologist opens the actions menu for any patient
+- **THEN** menu includes "Exportar PDF" option
+
+#### Scenario: Export PDF from actions menu
+
+- **WHEN** psychologist clicks "Exportar PDF" in the actions menu
+- **THEN** system shows the secrecy confirmation dialog before generating PDF
 
 ### Requirement: Patient creation form has two steps
 
