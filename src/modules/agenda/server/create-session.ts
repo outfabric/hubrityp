@@ -4,10 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, gte, lte } from 'drizzle-orm';
 
 import { calculateEndTime, isInPast } from '@/modules/agenda/lib/date-helpers';
-import {
-  type ConflictResult,
-  detectConflicts,
-} from '@/modules/agenda/lib/detect-conflicts';
+import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';

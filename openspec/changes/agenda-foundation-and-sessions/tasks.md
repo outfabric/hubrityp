@@ -61,7 +61,7 @@
 
 ## 9. Module Barrel
 
-- [ ] 9.1 Criar `src/modules/agenda/index.ts` — barrel reexportando: Server Actions (listLocations, createLocation, updateLocation, deleteLocation, getAgendaSettings, saveAgendaSettings, listSessions, createSession, updateSession, deleteSession, markSessionDone, getSessionHistory), validators (locationInputSchema, agendaSettingsInputSchema, sessionInputSchema), lib (detectConflicts, date helpers), tipos inferidos dos schemas
+- [x] 9.1 Criar `src/modules/agenda/index.ts` — barrel reexportando: Server Actions (listLocations, createLocation, updateLocation, deleteLocation, getAgendaSettings, saveAgendaSettings, listSessions, createSession, updateSession, deleteSession, markSessionDone, getSessionHistory), validators (locationInputSchema, agendaSettingsInputSchema, sessionInputSchema), lib (detectConflicts, date helpers), tipos inferidos dos schemas
 
 ## 10. Frontend — Sidebar Update
 

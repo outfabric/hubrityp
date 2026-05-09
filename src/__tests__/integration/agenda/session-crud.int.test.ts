@@ -107,10 +107,7 @@ describe('createSessionImpl', () => {
 
     // Verify history entry was created
     const historyRows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(sessionHistory)
-        .where(eq(sessionHistory.sessionId, result.sessionId));
+      return db.select().from(sessionHistory).where(eq(sessionHistory.sessionId, result.sessionId));
     });
     expect(historyRows).toHaveLength(1);
     expect(historyRows[0]!.action).toBe('created');

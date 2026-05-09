@@ -4,11 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, asc, eq, gte, lte } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
-import {
-  locations,
-  sessions,
-  type Session,
-} from '@/shared/db/schema/agenda/tables';
+import { locations, sessions, type Session } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 

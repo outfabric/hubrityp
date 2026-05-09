@@ -33,10 +33,7 @@ export { createSessionImpl, type CreateSessionResult } from './server/create-ses
 export { updateSessionImpl, type UpdateSessionResult } from './server/update-session';
 export { deleteSessionImpl, type DeleteSessionResult } from './server/delete-session';
 export { markSessionDoneImpl, type MarkSessionDoneResult } from './server/mark-session-done';
-export {
-  getSessionHistoryImpl,
-  type GetSessionHistoryResult,
-} from './server/get-session-history';
+export { getSessionHistoryImpl, type GetSessionHistoryResult } from './server/get-session-history';
 
 // ---- Zod Schemas ------------------------------------------------------------
 export { locationInputSchema, type LocationInput } from './lib/location-input-schema';
@@ -45,3 +42,21 @@ export {
   type AgendaSettingsInput,
 } from './lib/agenda-settings-input-schema';
 export { sessionInputSchema, type SessionInput } from './lib/session-input-schema';
+
+// ---- Lib — conflict detection -----------------------------------------------
+export {
+  detectConflicts,
+  type CandidateInterval,
+  type ExistingSession,
+  type ConflictResult,
+} from './lib/detect-conflicts';
+
+// ---- Lib — date/timezone helpers --------------------------------------------
+export {
+  toSaoPauloTime,
+  formatSessionTime,
+  formatSessionDate,
+  formatSessionDateFull,
+  calculateEndTime,
+  isInPast,
+} from './lib/date-helpers';

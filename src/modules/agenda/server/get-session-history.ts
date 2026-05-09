@@ -4,11 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
-import {
-  sessions,
-  sessionHistory,
-  type SessionHistory,
-} from '@/shared/db/schema/agenda/tables';
+import { sessions, sessionHistory, type SessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
