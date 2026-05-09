@@ -1,0 +1,106 @@
+/*
+ * FullCalendar style overrides for Salvia design system.
+ *
+ * All values reference CSS custom properties from globals.css so they
+ * automatically adapt to dark mode via `[data-theme='dark']`. Overrides
+ * target the `.agenda-calendar-wrapper` parent to avoid leaking into
+ * other FullCalendar instances (if any).
+ */
+
+/* --- Event chip: strip default bg/border, let SessionEventChip own styles */
+.agenda-calendar-wrapper .fc-event {
+  background: transparent;
+  border: none;
+  border-radius: var(--ds-radius-sm);
+  cursor: pointer;
+}
+
+.agenda-calendar-wrapper .fc-event:focus {
+  box-shadow: var(--ds-shadow-focus);
+  outline: none;
+}
+
+/* Month-view events: remove extra padding FullCalendar adds */
+.agenda-calendar-wrapper .fc-daygrid-event {
+  padding: 0;
+  margin: 1px 2px;
+}
+
+/* --- Timegrid slot hover */
+.agenda-calendar-wrapper .fc-timegrid-slot:hover {
+  background-color: var(--ds-brand-50);
+}
+
+/* --- Today column highlight */
+.agenda-calendar-wrapper .fc-day-today {
+  background-color: var(--ds-brand-50) !important;
+}
+
+/* --- Column header: muted background + DS font */
+.agenda-calendar-wrapper .fc-col-header-cell {
+  background-color: var(--ds-surface-muted);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ds-text-secondary);
+  padding: 8px 0;
+}
+
+.agenda-calendar-wrapper .fc-col-header-cell a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* --- Time axis labels */
+.agenda-calendar-wrapper .fc-timegrid-axis {
+  font-size: 12px;
+  color: var(--ds-text-tertiary);
+}
+
+.agenda-calendar-wrapper .fc-timegrid-slot-label {
+  font-size: 12px;
+  color: var(--ds-text-tertiary);
+}
+
+/* --- Now indicator line */
+.agenda-calendar-wrapper .fc-timegrid-now-indicator-line {
+  border-color: var(--ds-brand-500);
+  border-width: 2px;
+}
+
+.agenda-calendar-wrapper .fc-timegrid-now-indicator-arrow {
+  border-color: var(--ds-brand-500);
+}
+
+/* --- Grid borders */
+.agenda-calendar-wrapper .fc-scrollgrid {
+  border-color: var(--ds-border);
+}
+
+.agenda-calendar-wrapper .fc-scrollgrid td,
+.agenda-calendar-wrapper .fc-scrollgrid th {
+  border-color: var(--ds-border);
+}
+
+/* --- Business hour dimming */
+.agenda-calendar-wrapper .fc-non-business {
+  background-color: var(--ds-surface-muted);
+}
+
+/* --- Day-grid (month view) cell hover */
+.agenda-calendar-wrapper .fc-daygrid-day:hover {
+  background-color: var(--ds-brand-50);
+}
+
+/* --- Remove default event dot in month view */
+.agenda-calendar-wrapper .fc-daygrid-event-dot {
+  display: none;
+}
+
+/* --- Remove FullCalendar's default time text (we render our own) */
+.agenda-calendar-wrapper .fc-event-time {
+  display: none;
+}
+
+.agenda-calendar-wrapper .fc-event-title {
+  display: none;
+}
