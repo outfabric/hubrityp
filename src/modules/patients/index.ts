@@ -61,7 +61,9 @@ export {
   type ConsentByTokenData,
 } from './server/get-consent-by-token';
 export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { exportPatientPdfImpl, type ExportPatientPdfResult } from './server/export-patient-pdf';
 export { generateConsentPdf, type ConsentPdfInput } from './lib/generate-consent-pdf';
+export { generatePatientPdf, type PatientPdfInput } from './lib/generate-patient-pdf';
 export {
   getDefaultConsentTemplate,
   type DefaultConsentTemplateData,

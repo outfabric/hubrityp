@@ -5,9 +5,9 @@
 
 ## 2. PDF Export — Server Action
 
-- [ ] 2.1 Criar `src/modules/patients/server/export-patient-pdf.ts` — Server Action que recebe patient_id e flag `includeClinicalData`. Busca patient + profile (psicólogo). Se includeClinicalData, busca anamnesis. Gera PDF via pdfkit e retorna como base64 ou stream URL. PDF inclui: header (psicólogo nome/CRP, data), dados cadastrais, e opcionalmente anamnese
-- [ ] 2.2 Criar `src/modules/patients/lib/generate-patient-pdf.ts` — função pura que recebe dados estruturados e retorna Buffer de PDF. Reutiliza pattern similar ao consent PDF
-- [ ] 2.3 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/generate-patient-pdf.test.ts` — testar que PDF é gerado com dados cadastrais, com e sem anamnese, header inclui dados do psicólogo
+- [x] 2.1 Criar `src/modules/patients/server/export-patient-pdf.ts` — Server Action que recebe patient_id e flag `includeClinicalData`. Busca patient + profile (psicólogo). Se includeClinicalData, busca anamnesis. Gera PDF via pdfkit e retorna como base64 ou stream URL. PDF inclui: header (psicólogo nome/CRP, data), dados cadastrais, e opcionalmente anamnese
+- [x] 2.2 Criar `src/modules/patients/lib/generate-patient-pdf.ts` — função pura que recebe dados estruturados e retorna Buffer de PDF. Reutiliza pattern similar ao consent PDF
+- [x] 2.3 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/generate-patient-pdf.test.ts` — testar que PDF é gerado com dados cadastrais, com e sem anamnese, header inclui dados do psicólogo
 
 ## 3. CSV Import — Parsing & Validation
 
