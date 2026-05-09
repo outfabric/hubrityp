@@ -144,10 +144,8 @@ Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta 
 - `worktree_path` (sempre) — caminho absoluto do git worktree dedicado a esta change. **Toda** edição de arquivo e **todo** comando bash deve operar dentro dele. Em bash, prefixe com `cd <worktree_path> && ...` (ou `git -C <worktree_path> ...`). Nunca toque na working tree principal do repo.
 - `section` (modo section) — texto literal de uma seção do `tasks.md` (`## N. Título` + todas as linhas `- [ ] N.M ...` daquela seção, mais qualquer prosa entre elas). **Implemente TODAS as subtasks da seção como uma unidade de trabalho** — não pause entre subtasks, não rode re-validação após cada subtask. Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em section mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta seção; o orquestrador commita um WIP entre seções, então `HEAD` reflete o fim da seção anterior).
 - `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
-- `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`). Para o comando de integration test, use `--changed <fix-base>` — não `--related` (que é subcomando, não flag do `vitest run`). (Em section mode, você não recebe este campo — use `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
-- `affected_e2e_tags` (modo fix) — lista de tags `@<dominio>` para passar a `--grep` do Playwright. Se a lista estiver vazia, **pule e2e** — a regression sweep cobre. (Em section mode, infira a tag a partir dos paths tocados: `src/app/(app)/<dominio>/**` → `@<dominio>`. Se nenhuma subtask da seção toca fluxo crítico de UI, **pule e2e**.)
+- `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`). Para o comando de integration test, use `--changed <fix-base>` — não `--related` (que é subcomando, não flag do `vitest run`). Para escopar e2e, filtre esta lista por `src/__tests__/e2e/seeded/**/*.spec.ts` (ver "Re-validação escopada"). (Em section mode, você não recebe este campo — use `git -C <worktree_path> diff HEAD --name-only` para computar a lista de specs alterados/criados localmente, e `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
 - `mode: sweep` (modo sweep) — marca a invocação como regression sweep do step 3.bis. Em modo sweep você é **read-only**: só roda os comandos pedidos e devolve veredicto, sem modificar código.
-- `e2e_required` (modo sweep) — boolean. Se `true`, rode `npm run test:e2e:seeded` full além do integration. Se `false`, só integration.
 - `sweep_log_path` (modo sweep) — caminho absoluto onde você deve appendar stdout+stderr de **ambas** as suítes (use `>> "$sweep_log_path" 2>&1`).
 
 > [!IMPORTANT]
@@ -161,7 +159,7 @@ Termine sua resposta com **exatamente uma** das linhas (a forma exata depende do
   - `VERDICT: PASS — <resumo de uma linha do que foi feito>`
   - `VERDICT: FAIL — <causa raiz em uma linha>. Logs: <path absoluto sob .dev-cycle/>`
 - Modo sweep (ver seção dedicada abaixo):
-  - `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests | e2e: skipped)`
+  - `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests)`
   - `VERDICT: FAIL — <causa de uma linha>. Logs: <sweep_log_path>`
 
 Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (suítes executadas, escopo, contagem de testes). **Em FAIL no modo section, indique qual subtask específica quebrou** (ex.: "completou 1.1-1.4, falhou em 1.5: <causa>") para facilitar debugging.
@@ -179,16 +177,26 @@ Analise o `git diff HEAD --name-only` (section) ou `changed_files` (fix) e apliq
 | **Apenas non-code** (`.md`, `docs/**`, `openspec/**`, `.github/**`, imagens — nenhum `.ts`/`.tsx`/`.js`/`.jsx`/`.css`/config) | **Nenhuma** — pule re-validação inteira. Devolva `VERDICT: PASS — no code changes, validation skipped.` |
 | **Lógica pura** (validators Zod, helpers, hooks isolados — sem Server Action/RLS/query/integração) | lint + typecheck + unit |
 | **Server Action, Route Handler, query Drizzle, RLS, migration, Inngest, integração externa** | lint + typecheck + unit + integration (escopado) |
-| **Fluxo crítico de UI** (paths em `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/`) | lint + typecheck + unit + integration (escopado) + e2e (escopado) |
+| **Fluxo crítico de UI** (paths em `src/app/(app)/`, `src/app/(auth)/`, `src/modules/<dom>/components/`, `src/shared/ui/`) | lint + typecheck + unit + integration (escopado) |
 
 Se a seção mistura naturezas, selecione o **superset** das camadas necessárias.
+
+**E2E é uma camada ortogonal à matriz acima**, com gatilho independente: rode e2e escopado se — e somente se — a lista de arquivos alterados/criados contiver pelo menos um path matching `src/__tests__/e2e/seeded/**/*.spec.ts`. Mudanças em UI sem alteração no spec correspondente **não disparam e2e per-section** — a regression sweep (step 3c) roda o suíte completo como salvaguarda.
 
 #### Sequência de execução (ordem fixa, falha-rápido)
 
 1. `npm run lint && npm run typecheck` (full). Falhou? Corrija e retente (cap 3).
 2. `npm run test:unit` (full, <30s).
 3. `npm run test:integration -- --changed` (section) ou `-- --changed <fix-base>` (fix). Se resolver zero testes, **pule** — a regression sweep cobre. **Nunca rode integration full.**
-4. `npm run test:e2e:seeded -- --grep "@<tags>"`. Em section mode, infira tags: `src/app/(app)/<dominio>/**` → `@<dominio>`. Sem tags determinadas ou sem UI crítico, **pule**. Em fix mode, use `affected_e2e_tags`; se vazio, pule. **Nunca rode e2e full.**
+4. **E2E escopado por arquivo de spec alterado/criado.** Compute a lista assim:
+   - Section mode: `git -C <worktree_path> diff HEAD --name-only | grep -E '^src/__tests__/e2e/seeded/.*\.spec\.ts$'`
+   - Fix mode: filtre `changed_files` pelo mesmo regex.
+
+   Se a lista estiver vazia, **pule e2e** — a regression sweep rodará o suíte completo no fim da change. Se não-vazia, rode passando os paths como argumentos posicionais ao Playwright:
+   ```bash
+   cd "$worktree_path" && npm run test:e2e:seeded -- <path1> <path2> ...
+   ```
+   **Nunca rode e2e full** em section/fix mode — o gatilho é estritamente "spec foi alterado ou criado nesta unidade de trabalho".
 
 Integration e e2e rodam full **exclusivamente** na regression sweep. A única exceção: fix acionado por `sweep-fail-N.md` — esse arquivo contém instrução explícita de rodar full.
 
@@ -196,27 +204,26 @@ Integration e e2e rodam full **exclusivamente** na regression sweep. A única ex
 
 No step 3.bis do `/dev-cycle`, depois de todas as seções estarem completas (todas as subtasks `[x]`) e commitadas, o orquestrador te invoca em **modo sweep** para rodar uma re-validação full das camadas que foram escopadas per-section. **Você não modifica código nesse modo** — só roda testes e devolve veredicto. Princípio: o orquestrador nunca dispara `npm run test:*` direto; toda execução de testes passa por você.
 
-**Comandos a executar** (na ordem, do worktree):
+**Comandos a executar** (na ordem, do worktree — ambos sempre rodam, sem condicional):
 
-1. `npm run test:integration` (full). Append stdout+stderr a `sweep_log_path`:
+1. `npm run test:integration` (full):
    ```bash
    cd "$worktree_path" && npm run test:integration >> "$sweep_log_path" 2>&1
    ```
-2. Se `e2e_required` for `true`:
+2. `npm run test:e2e:seeded` (full):
    ```bash
    cd "$worktree_path" && npm run test:e2e:seeded >> "$sweep_log_path" 2>&1
    ```
 
-Se `e2e_required` for `false`, **não** rode e2e — significa que nenhuma seção tocou UI crítica e não há nada para regress nessa camada.
+Sweep sempre executa as duas suítes completas. A divisão de trabalho é: per-section escopa e2e estritamente aos specs alterados/criados na seção; sweep cobre o resto como salvaguarda final, garantindo que nenhum spec novo ou pré-existente passe sem ser exercido pelo menos uma vez no ciclo.
 
-**Não rode** lint, typecheck, ou unit. Eles já rodaram full em toda invocação per-section (passos 1 e 2 da seção "Re-validação escopada"), então re-rodar aqui é redundante. Sweep é exclusivamente para integration e e2e, que eram escopados per-section.
+**Não rode** lint, typecheck, ou unit. Eles já rodaram full em toda invocação per-section (passos 1 e 2 da seção "Re-validação escopada"), então re-rodar aqui é redundante. Sweep é exclusivamente para integration e e2e.
 
 **Não tente corrigir falhas em modo sweep.** Se a integration ou e2e falhar, devolva `VERDICT: FAIL` imediatamente — o orquestrador vai escrever o synthetic feedback em `sweep-fail-<N>.md` e te re-invocar em **modo fix** com o caminho desse arquivo. Em modo fix, aí sim você corrige e roda re-validação full conforme a instrução do próprio synthetic feedback.
 
 **Reporting contract (modo sweep)**:
 
-- Sucesso com e2e: `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests)`
-- Sucesso sem e2e: `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: skipped)`
+- Sucesso: `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests)`
 - Falha: `VERDICT: FAIL — <causa de uma linha>. Logs: <sweep_log_path>`
 
 Antes do `VERDICT`, inclua um bloco curto com: comandos rodados, contagem de testes por suíte, e (em FAIL) os 3-5 nomes dos primeiros testes que falharam para o orquestrador conseguir extrair rapidamente para o synthetic feedback.
