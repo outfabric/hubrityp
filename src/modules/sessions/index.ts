@@ -58,3 +58,6 @@ export {
   type SeriesSession,
   type EditScopeResult,
 } from './lib/compute-edit-scope';
+
+// ---- Components — edit scope dialog -----------------------------------------
+export { EditScopeDialog, type EditScopeDialogProps } from './components/edit-scope-dialog';
