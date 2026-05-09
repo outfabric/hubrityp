@@ -69,10 +69,15 @@ test.describe('@agenda session drag and drop', () => {
       .first();
     await dayButton.click();
 
-    // Set start time to 14:00
+    // Set start time to 08:00. This must not overlap with any other agenda
+    // e2e test when running in parallel:
+    //   - session-create: 14:00–14:50
+    //   - block-create:   12:00–13:00
+    // After the drag (4 × 30-min slots = +2h), the session lands at
+    // 10:00–10:50, which also avoids conflicts with the other tests.
     const startTimeSelect = page.getByTestId('session-form-start-time');
     await startTimeSelect.click();
-    await page.getByRole('option', { name: '14:00' }).click();
+    await page.getByRole('option', { name: '08:00' }).click();
 
     // Use default duration (50 min) — just click save
     await page.getByTestId('session-form-save').click();
@@ -133,8 +138,11 @@ test.describe('@agenda session drag and drop', () => {
     // Click "Confirmar" to accept the reschedule
     await page.getByTestId('reschedule-confirm').click();
 
-    // Verify success toast appeared
-    await expect(page.getByText('Sessao remarcada')).toBeVisible({ timeout: 5000 });
+    // Verify success toast appeared. Use `exact: true` to match only the
+    // toast title and not the description (which also contains "Sessao remarcada").
+    await expect(page.getByText('Sessao remarcada', { exact: true })).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify the dialog is closed
     await expect(rescheduleDialog).toBeHidden({ timeout: 5000 });

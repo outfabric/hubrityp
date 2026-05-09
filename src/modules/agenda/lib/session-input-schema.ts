@@ -46,16 +46,19 @@ const baseSessionSchema = z.object({
     })
     .optional(),
 
-  amount: z
-    .string()
-    .refine(
-      (v) => {
-        const num = Number(v);
-        return !Number.isNaN(num) && num > 0;
-      },
-      { message: 'O valor deve ser um número positivo.' },
-    )
-    .optional(),
+  amount: z.preprocess(
+    (v) => (v == null || (typeof v === 'string' && v.trim() === '') ? undefined : v),
+    z
+      .string()
+      .refine(
+        (v) => {
+          const num = Number(v);
+          return !Number.isNaN(num) && num > 0;
+        },
+        { message: 'O valor deve ser um número positivo.' },
+      )
+      .optional(),
+  ),
 
   notes: z
     .string()

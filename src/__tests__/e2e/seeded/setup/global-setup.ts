@@ -85,6 +85,13 @@ export default async function globalSetup() {
       .values({ ownerId: seed.userId, note: 'e2e-seed ping' })
       .onConflictDoNothing();
 
+    // Clean up sessions (and their history) from previous test runs so the
+    // agenda tests start with a blank slate. With Testcontainers `.withReuse()`
+    // the DB persists across runs, and leftover sessions cause spurious
+    // conflict warnings that make the session-create flow fail.
+    await sql`DELETE FROM public.session_history WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${seed.userId}`;
+
     const p = SEED_PATIENTS;
     for (const [patient, status, phone] of [
       [p.activeWithPhone, 'active', p.activeWithPhone.phone] as const,
