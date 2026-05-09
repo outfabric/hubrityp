@@ -27,8 +27,8 @@
 
 ## 4. Conflict Detection — Pure Function
 
-- [ ] 4.1 Criar `src/modules/agenda/lib/detect-conflicts.ts` — funcao pura `detectConflicts(candidate: { startAt: Date, endAt: Date }, existingSessions: Array<{ id: string, startAt: Date, endAt: Date, patientName: string | null, blockingTitle: string | null }>): ConflictResult[]`. Retorna array de sessoes que fazem overlap (existingStart < candidateEnd AND existingEnd > candidateStart). ConflictResult inclui session id, nome do paciente ou titulo do bloqueio, horario conflitante
-- [ ] 4.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/agenda/lib/detect-conflicts.test.ts` — testar: sem conflito, overlap total, overlap parcial (inicio), overlap parcial (fim), sessao adjacente (sem overlap), multiplos conflitos, conflito com bloqueio, array vazio de existentes
+- [x] 4.1 Criar `src/modules/agenda/lib/detect-conflicts.ts` — funcao pura `detectConflicts(candidate: { startAt: Date, endAt: Date }, existingSessions: Array<{ id: string, startAt: Date, endAt: Date, patientName: string | null, blockingTitle: string | null }>): ConflictResult[]`. Retorna array de sessoes que fazem overlap (existingStart < candidateEnd AND existingEnd > candidateStart). ConflictResult inclui session id, nome do paciente ou titulo do bloqueio, horario conflitante
+- [x] 4.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/agenda/lib/detect-conflicts.test.ts` — testar: sem conflito, overlap total, overlap parcial (inicio), overlap parcial (fim), sessao adjacente (sem overlap), multiplos conflitos, conflito com bloqueio, array vazio de existentes
 
 ## 5. Date/Timezone Helpers
 
