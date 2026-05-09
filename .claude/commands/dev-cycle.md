@@ -123,24 +123,16 @@ cd "$WORKTREE"
 # Pick the next sweep number (resume-safe).
 SWEEP_N=$(( $(ls .dev-cycle/sweep-*.log 2>/dev/null | wc -l) + 1 ))
 SWEEP_LOG="$(pwd)/.dev-cycle/sweep-${SWEEP_N}.log"
-
-# E2E sweep only if any per-section ran e2e (no UI scope → nothing to regress at e2e level).
-# Detect via the agent's VERDICT summaries persisted under .dev-cycle/.
-if grep -lE "ran e2e|--grep '@" .dev-cycle/section-*.summary 2>/dev/null | grep -q .; then
-  E2E_REQUIRED=true
-else
-  E2E_REQUIRED=false
-fi
 ```
 
 Then invoke `fullstack-developer` (Agent tool) in **sweep mode** with:
 
 - **Scope marker**: `worktree_path = <absolute-path>`.
 - **Mode**: `sweep`.
-- **Flags**: `e2e_required = <true|false>`, `sweep_log_path = <absolute path to $SWEEP_LOG>`.
-- **Instruction**: "Run `npm run test:integration` (full). If `e2e_required` is true, also run `npm run test:e2e:seeded` (full). Append all stdout+stderr to `sweep_log_path`. Do NOT modify code, run lint/typecheck/unit, or scope via `--related`/`--grep` — sweep is full-only and read-only."
+- **Flags**: `sweep_log_path = <absolute path to $SWEEP_LOG>`.
+- **Instruction**: "Run `npm run test:integration` (full) and `npm run test:e2e:seeded` (full). Append all stdout+stderr to `sweep_log_path`. Do NOT modify code, run lint/typecheck/unit, or scope via `--related`/`--grep`/file paths — sweep is full-only and read-only."
 - **Reporting contract**:
-  - `VERDICT: PASS — sweep clean (integration: X tests, e2e: Y tests | e2e: skipped)`
+  - `VERDICT: PASS — sweep clean (integration: X tests, e2e: Y tests)`
   - `VERDICT: FAIL — <one-line cause>. Logs: <sweep_log_path>`
 
 Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-section invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-section.
@@ -184,7 +176,7 @@ Increment `REVIEW_ITER` after the agent returns.
 - `request-changes`:
   - If `REVIEW_ITER >= 3` → **stop**: print the persistent BLOCKER/HIGH list from `review-<REVIEW_ITER>.md`, escalate to user.
   - **Loop guard**: diff `review-<REVIEW_ITER>.md` against `review-<REVIEW_ITER-1>.md` (if it exists). If the BLOCKER/HIGH titles are identical, stop immediately ("non-converging loop") and escalate.
-  - Otherwise: invoke `fullstack-developer` in **fix mode** (see step 6 prompt template), passing the review file path and the orchestrator's computed `changed_files` and `affected_e2e_tags`. Then re-invoke `code-reviewer` (back to 4a).
+  - Otherwise: invoke `fullstack-developer` in **fix mode** (see step 6 prompt template), passing the review file path and the orchestrator's computed `changed_files`. Then re-invoke `code-reviewer` (back to 4a).
 
 ### 5. End-of-review: qa-tester loop (cap 3)
 
@@ -387,7 +379,7 @@ When invoking `fullstack-developer` to address feedback:
 - **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (same as section mode, but using `--changed <fix-base>` and `affected_e2e_tags` from the orchestrator). Always scoped, never full.
 - **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b.
 
-The orchestrator computes `changed_files` and `affected_e2e_tags` itself before invoking the agent — the agent receives them as plain lists in the prompt. Tag mapping comes from `src/__tests__/e2e/seeded/tags.json` if it exists, else inferred from the path (e.g., `src/app/(app)/patients/**` → `@patients`).
+The orchestrator computes `changed_files` itself before invoking the agent — the agent receives it as a plain list in the prompt. The agent extracts the subset matching `src/__tests__/e2e/seeded/**/*.spec.ts` to drive scoped e2e (see the agent's "Re-validação escopada" contract). Per-section e2e covers only the specs the section touched; the regression sweep at step 3c runs the full e2e suite as the safety net.
 
 ### 7. Archive in-place
 
