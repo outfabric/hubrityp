@@ -57,6 +57,13 @@
       "when": 1778294314517,
       "tag": "0007_new_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778326175595,
+      "tag": "0008_tiny_eternals",
+      "breakpoints": true
     }
   ]
 }
