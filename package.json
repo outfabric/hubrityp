@@ -31,6 +31,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
     "@hookform/resolvers": "^5.2.2",
     "@playwright/cli": "^0.1.13",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -52,6 +57,7 @@
     "clsx": "^2.1.1",
     "cpf-cnpj-validator": "^2.1.0",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.468.0",

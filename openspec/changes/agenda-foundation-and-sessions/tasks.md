@@ -1,7 +1,7 @@
 ## 1. Dependencies
 
-- [ ] 1.1 Instalar FullCalendar packages: `npm install @fullcalendar/react @fullcalendar/core @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction`
-- [ ] 1.2 Instalar date-fns-tz para timezone handling: `npm install date-fns-tz`
+- [x] 1.1 Instalar FullCalendar packages: `npm install @fullcalendar/react @fullcalendar/core @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction`
+- [x] 1.2 Instalar date-fns-tz para timezone handling: `npm install date-fns-tz`
 
 ## 2. Database Schema — Locations
 
