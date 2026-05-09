@@ -61,3 +61,10 @@ export {
 
 // ---- Components — edit scope dialog -----------------------------------------
 export { EditScopeDialog, type EditScopeDialogProps } from './components/edit-scope-dialog';
+
+// ---- Components — couple session fields -------------------------------------
+export {
+  CoupleSessionFields,
+  type CoupleSessionFieldsProps,
+  type PatientOption,
+} from './components/couple-session-fields';

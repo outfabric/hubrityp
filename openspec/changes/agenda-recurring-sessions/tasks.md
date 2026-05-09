@@ -49,8 +49,8 @@
 
 > **Design System Salvia**: Checkbox + second Select, inline validation error in `danger-700`.
 
-- [ ] 7.1 Create component `src/modules/sessions/components/couple-session-fields.tsx` (Client Component) — **Design system:** shadcn `Checkbox` + `Label` "Atendimento de casal", gap `space-3`. When checked, reveals second patient `Select` (label "Segundo paciente") with gap `space-3`. Same patient list as primary, filters out already-selected patient. Inline validation error `danger-700` "Selecione pacientes diferentes" if same patient in both. Integrates with React Hook Form
-- [ ] 7.2 **Unit test:** Create `src/__tests__/unit/modules/sessions/components/couple-session-fields.test.tsx` — test: checkbox toggles second select visibility; second select excludes already-selected patient; shows error when same patient selected in both
+- [x] 7.1 Create component `src/modules/sessions/components/couple-session-fields.tsx` (Client Component) — **Design system:** shadcn `Checkbox` + `Label` "Atendimento de casal", gap `space-3`. When checked, reveals second patient `Select` (label "Segundo paciente") with gap `space-3`. Same patient list as primary, filters out already-selected patient. Inline validation error `danger-700` "Selecione pacientes diferentes" if same patient in both. Integrates with React Hook Form
+- [x] 7.2 **Unit test:** Create `src/__tests__/unit/modules/sessions/components/couple-session-fields.test.tsx` — test: checkbox toggles second select visibility; second select excludes already-selected patient; shows error when same patient selected in both
 
 ## 8. Frontend — Late Record Toggle
 
