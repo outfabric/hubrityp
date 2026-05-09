@@ -183,3 +183,60 @@ export const anamnesis = pgTable(
 
 export type Anamnesis = typeof anamnesis.$inferSelect;
 export type NewAnamnesis = typeof anamnesis.$inferInsert;
+
+// `consent_terms` stores informed consent terms that patients must sign before
+// their first session. Each term is linked to both a patient (via `patient_id`)
+// and a psychologist (via `user_id`). The `signature_token` is a 64-char hex
+// string generated via `crypto.randomBytes(32)` — it serves as the unique,
+// unguessable identifier for the public signing page.
+//
+// Signing metadata (`signed_at`, `signed_ip`, `signed_user_agent`) provides a
+// legally defensible audit trail. The signed PDF is stored in Supabase Storage
+// and referenced by `signed_pdf_path`.
+//
+// RLS policies use `user_id = auth.uid()` (same pattern as `patients`). The
+// public signing endpoint bypasses RLS via service-role.
+export const consentTerms = pgTable(
+  'consent_terms',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `patients.id`, set manually in migration with ON DELETE CASCADE.
+    patientId: uuid('patient_id').notNull(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // --- Term content ---
+    termText: text('term_text').notNull(),
+
+    // --- Signature token (64-char hex, UNIQUE — set in migration) ---
+    signatureToken: varchar('signature_token', { length: 64 }).notNull(),
+
+    // --- Signing metadata (populated when patient signs) ---
+    signedAt: timestamp('signed_at', { withTimezone: true }),
+    signedIp: text('signed_ip'),
+    signedUserAgent: text('signed_user_agent'),
+
+    // --- Signed PDF reference (path in Supabase Storage) ---
+    signedPdfPath: text('signed_pdf_path'),
+
+    // --- Revocation ---
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+
+    // --- Timestamps ---
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Index for the most common query: "all consent terms for a given patient".
+    index('consent_terms_patient_id_idx').on(table.patientId),
+    // UNIQUE constraint on signature_token is enforced in the migration SQL
+    // (Drizzle will generate this from the `unique()` call).
+    unique('consent_terms_signature_token_unique').on(table.signatureToken),
+  ],
+);
+
+export type ConsentTerm = typeof consentTerms.$inferSelect;
+export type NewConsentTerm = typeof consentTerms.$inferInsert;

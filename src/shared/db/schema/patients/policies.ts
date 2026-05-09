@@ -47,6 +47,28 @@ export const patientGuardiansPolicies = [
      USING (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
 ] as const;
 
+// Owner-scoped RLS policies for `consent_terms`. The table has its own
+// `user_id` column (FK to `auth.users`), so policies enforce ownership
+// directly via `user_id = auth.uid()` — the same pattern as `patients`.
+//
+// The public signing endpoint bypasses RLS using a service-role connection.
+export const consentTermsPolicies = [
+  `ALTER TABLE consent_terms ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select consent_terms" ON consent_terms
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert consent_terms" ON consent_terms
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update consent_terms" ON consent_terms
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can delete consent_terms" ON consent_terms
+     FOR DELETE TO authenticated
+     USING (auth.uid() = user_id);`,
+] as const;
+
 // Owner-scoped RLS policies for `anamnesis`. The table has no `user_id` column
 // — ownership is derived via the parent `patients` row:
 //   patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())

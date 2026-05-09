@@ -3,7 +3,7 @@ import postgres from 'postgres';
 
 import { healthPings } from '@/shared/db/schema/health/tables';
 
-import { readSeedState, SEED_PATIENTS } from './seed-state';
+import { readSeedState, SEED_CONSENT_TERMS, SEED_PATIENTS } from './seed-state';
 
 // Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
 // Playwright's `runner/tasks.ts::createGlobalSetupTasks`), so by the time
@@ -106,6 +106,88 @@ export default async function globalSetup() {
           archived_at = EXCLUDED.archived_at;
       `;
     }
+
+    // Seed consent terms for the consent signing e2e tests.
+    const ct = SEED_CONSENT_TERMS;
+
+    // Unsigned consent term — patient can sign this one
+    await sql`
+      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token)
+      VALUES (
+        ${ct.unsigned.id},
+        ${ct.unsigned.patientId},
+        ${seed.userId},
+        ${ct.unsigned.termText},
+        ${ct.unsigned.signatureToken}
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        term_text       = EXCLUDED.term_text,
+        signature_token = EXCLUDED.signature_token,
+        signed_at       = NULL,
+        signed_ip       = NULL,
+        signed_user_agent = NULL,
+        revoked_at      = NULL;
+    `;
+
+    // Already-signed consent term — used to test "already signed" state
+    await sql`
+      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent)
+      VALUES (
+        ${ct.alreadySigned.id},
+        ${ct.alreadySigned.patientId},
+        ${seed.userId},
+        ${ct.alreadySigned.termText},
+        ${ct.alreadySigned.signatureToken},
+        now(),
+        '127.0.0.1',
+        'e2e-seed-agent'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        term_text       = EXCLUDED.term_text,
+        signature_token = EXCLUDED.signature_token,
+        signed_at       = EXCLUDED.signed_at,
+        signed_ip       = EXCLUDED.signed_ip,
+        signed_user_agent = EXCLUDED.signed_user_agent,
+        revoked_at      = NULL;
+    `;
+
+    // Mark the patient with the signed consent as having consent_signed_at set
+    await sql`
+      UPDATE public.patients
+      SET consent_signed_at = now()
+      WHERE id = ${ct.alreadySigned.patientId};
+    `;
+
+    // Revoked consent term — used to test the "revoked" badge state
+    await sql`
+      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent, revoked_at)
+      VALUES (
+        ${ct.revoked.id},
+        ${ct.revoked.patientId},
+        ${seed.userId},
+        ${ct.revoked.termText},
+        ${ct.revoked.signatureToken},
+        now() - interval '7 days',
+        '127.0.0.1',
+        'e2e-seed-agent',
+        now()
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        term_text         = EXCLUDED.term_text,
+        signature_token   = EXCLUDED.signature_token,
+        signed_at         = EXCLUDED.signed_at,
+        signed_ip         = EXCLUDED.signed_ip,
+        signed_user_agent = EXCLUDED.signed_user_agent,
+        revoked_at        = EXCLUDED.revoked_at;
+    `;
+
+    // Mark the patient with the revoked consent (cleared consent_signed_at, set consent_revoked_at)
+    await sql`
+      UPDATE public.patients
+      SET consent_signed_at = NULL,
+          consent_revoked_at = now()
+      WHERE id = ${ct.revoked.patientId};
+    `;
   } finally {
     await sql.end();
   }

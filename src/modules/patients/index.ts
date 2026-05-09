@@ -47,6 +47,25 @@ export { removeGuardianImpl, type RemoveGuardianResult } from './server/remove-g
 export { listGuardiansImpl, type ListGuardiansResult } from './server/list-guardians';
 export { getAnamnesisImpl, type GetAnamnesisResult } from './server/get-anamnesis';
 export { upsertAnamnesisImpl, type UpsertAnamnesisResult } from './server/upsert-anamnesis';
+export { generateConsentImpl, type GenerateConsentResult } from './server/generate-consent';
+export { revokeConsentImpl, type RevokeConsentResult } from './server/revoke-consent';
+export {
+  getConsentStatusImpl,
+  type GetConsentStatusResult,
+  type ConsentStatus,
+  type ConsentStatusInfo,
+} from './server/get-consent-status';
+export {
+  getConsentByTokenImpl,
+  type GetConsentByTokenResult,
+  type ConsentByTokenData,
+} from './server/get-consent-by-token';
+export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { generateConsentPdf, type ConsentPdfInput } from './lib/generate-consent-pdf';
+export {
+  getDefaultConsentTemplate,
+  type DefaultConsentTemplateData,
+} from './lib/default-consent-template';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
@@ -116,6 +135,7 @@ export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
+export { ConsentSignForm } from './components/consent-sign-form';
 
 // ---- Hooks ------------------------------------------------------------------
 export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';

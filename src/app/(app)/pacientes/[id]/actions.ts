@@ -12,10 +12,12 @@ import type {
   AddGuardianResult,
   ArchivePatientResult,
   DeletePatientResult,
+  GenerateConsentResult,
   GetPatientPhotoUrlResult,
   GetPatientResult,
   ListGuardiansResult,
   RemoveGuardianResult,
+  RevokeConsentResult,
   UnarchivePatientResult,
   UnlinkCoupleResult,
   UpdateGuardianResult,
@@ -26,10 +28,12 @@ import {
   addGuardianImpl,
   archivePatientImpl,
   deletePatientImpl,
+  generateConsentImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
   listGuardiansImpl,
   removeGuardianImpl,
+  revokeConsentImpl,
   unarchivePatientImpl,
   unlinkCoupleImpl,
   updateGuardianImpl,
@@ -102,4 +106,14 @@ export async function unlinkCouple(patientId: string): Promise<UnlinkCoupleResul
 export async function upsertAnamnesis(input: unknown): Promise<UpsertAnamnesisResult> {
   const supabase = await createServerClient();
   return upsertAnamnesisImpl(supabase, input);
+}
+
+export async function generateConsent(patientId: string): Promise<GenerateConsentResult> {
+  const supabase = await createServerClient();
+  return generateConsentImpl(supabase, patientId);
+}
+
+export async function revokeConsent(patientId: string): Promise<RevokeConsentResult> {
+  const supabase = await createServerClient();
+  return revokeConsentImpl(supabase, patientId);
 }
