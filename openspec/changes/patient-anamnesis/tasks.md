@@ -1,10 +1,10 @@
 ## 1. Database Schema — Anamnesis
 
-- [ ] 1.1 Adicionar tabela `anamnesis` em `src/shared/db/schema/patients/tables.ts` (colunas: id, patient_id FK UNIQUE, chief_complaint, history_present_illness, family_history, educational_professional, physical_health, prior_therapy, initial_hypothesis, treatment_plan, custom_sections JSONB, created_at, updated_at)
-- [ ] 1.2 Adicionar RLS policies para `anamnesis` em `src/shared/db/schema/patients/policies.ts` — policy via subquery: `patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())`
-- [ ] 1.3 Rodar `npm run db:generate`, editar migration para incluir RLS policies, FK constraint para patients(id) com ON DELETE CASCADE, UNIQUE constraint em patient_id
-- [ ] 1.4 Testar migration com `npm run db:migrate` local
-- [ ] 1.5 **Teste de integração:** Criar `src/__tests__/integration/patients/anamnesis-schema.int.test.ts` — verificar tabela existe, RLS habilitado, UNIQUE em patient_id, policies existem
+- [x] 1.1 Adicionar tabela `anamnesis` em `src/shared/db/schema/patients/tables.ts` (colunas: id, patient_id FK UNIQUE, chief_complaint, history_present_illness, family_history, educational_professional, physical_health, prior_therapy, initial_hypothesis, treatment_plan, custom_sections JSONB, created_at, updated_at)
+- [x] 1.2 Adicionar RLS policies para `anamnesis` em `src/shared/db/schema/patients/policies.ts` — policy via subquery: `patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())`
+- [x] 1.3 Rodar `npm run db:generate`, editar migration para incluir RLS policies, FK constraint para patients(id) com ON DELETE CASCADE, UNIQUE constraint em patient_id
+- [x] 1.4 Testar migration com `npm run db:migrate` local
+- [x] 1.5 **Teste de integração:** Criar `src/__tests__/integration/patients/anamnesis-schema.int.test.ts` — verificar tabela existe, RLS habilitado, UNIQUE em patient_id, policies existem
 
 ## 2. Dependencies — Tiptap
 

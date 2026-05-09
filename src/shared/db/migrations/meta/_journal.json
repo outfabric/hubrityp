@@ -43,6 +43,13 @@
       "when": 1778210279007,
       "tag": "0005_nostalgic_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778287552915,
+      "tag": "0006_calm_salo",
+      "breakpoints": true
     }
   ]
 }
