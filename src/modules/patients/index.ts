@@ -163,6 +163,9 @@ export { PatientGuardiansSection } from './components/patient-guardians-section'
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
 export { ConsentSignForm } from './components/consent-sign-form';
+export { CsvUpload, type CsvParseResult } from './components/csv-upload';
+export { CsvColumnMapper, type ColumnMapping } from './components/csv-column-mapper';
+export { CsvPreviewTable, type PreviewRow, type RowStatus } from './components/csv-preview-table';
 
 // ---- Hooks ------------------------------------------------------------------
 export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';
