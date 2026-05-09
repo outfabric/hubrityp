@@ -7,17 +7,23 @@ import type { DateClickArg } from '@fullcalendar/interaction';
 import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import { format } from 'date-fns';
+import { Lock, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SessionWithDetails } from '@/modules/agenda';
 import { calculateEndTime } from '@/modules/agenda';
+import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 
 import { AgendaNavBar } from './agenda-nav-bar';
+import { BlockFormModal } from './block-form-modal';
 import type { RescheduleInfo } from './reschedule-confirm-dialog';
 import { RescheduleConfirmDialog } from './reschedule-confirm-dialog';
 import { SessionDetailDrawer } from './session-detail-drawer';
 import { SessionEventChip } from './session-event-chip';
+import type { SessionEditData } from './session-form-modal';
+import { SessionFormModal } from './session-form-modal';
 import './session-event-chip.css';
 
 // ---------------------------------------------------------------------------
@@ -36,11 +42,19 @@ interface AgendaSettingsData {
   intervalMinutes: number;
 }
 
+interface LocationOption {
+  id: string;
+  name: string;
+  type: string;
+  isDefault: boolean;
+}
+
 export interface AgendaCalendarProps {
   initialSessions: SessionWithDetails[];
   agendaSettings: AgendaSettingsData | null;
   initialStart: string;
   initialEnd: string;
+  locations: LocationOption[];
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +144,11 @@ function sessionsToEvents(sessions: SessionWithDetails[]) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalendarProps) {
+export function AgendaCalendar({
+  initialSessions,
+  agendaSettings,
+  locations,
+}: AgendaCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
   const [currentView, setCurrentView] = useState<CalendarViewName>(getInitialView);
@@ -140,6 +158,15 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
   // Session detail drawer state
   const [selectedSession, setSelectedSession] = useState<SessionWithDetails | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Session form modal state
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<SessionEditData | null>(null);
+  const [preselectedDate, setPreselectedDate] = useState<Date | undefined>(undefined);
+  const [preselectedTime, setPreselectedTime] = useState<string | undefined>(undefined);
+
+  // Block form modal state
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
 
   // Reschedule confirmation dialog state
   const [rescheduleInfo, setRescheduleInfo] = useState<RescheduleInfo | null>(null);
@@ -227,9 +254,22 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
     handleDrawerClose();
   }, [refreshSessions, handleDrawerClose]);
 
-  const handleDateClick = useCallback((_: DateClickArg) => {
-    // Future: opens session creation modal pre-filled with date/time
-    void _;
+  const handleDateClick = useCallback((arg: DateClickArg) => {
+    setEditingSession(null);
+    setPreselectedDate(arg.date);
+    setPreselectedTime(format(arg.date, 'HH:mm'));
+    setSessionModalOpen(true);
+  }, []);
+
+  const handleOpenScheduleModal = useCallback(() => {
+    setEditingSession(null);
+    setPreselectedDate(undefined);
+    setPreselectedTime(undefined);
+    setSessionModalOpen(true);
+  }, []);
+
+  const handleOpenBlockModal = useCallback(() => {
+    setBlockModalOpen(true);
   }, []);
 
   const handleEventDrop = useCallback(
@@ -277,6 +317,18 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="secondary" data-testid="block-time-button" onClick={handleOpenBlockModal}>
+          <Lock className="h-4 w-4" />
+          Bloquear horario
+        </Button>
+        <Button data-testid="schedule-button" onClick={handleOpenScheduleModal}>
+          <Plus className="h-4 w-4" />
+          Agendar
+        </Button>
+      </div>
+
       <AgendaNavBar
         currentDate={currentDate}
         currentView={currentView}
@@ -335,6 +387,46 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
         onConfirm={async (sessionId, input) => {
           const { updateSession } = await import('@/app/(app)/agenda/actions');
           return updateSession(sessionId, input);
+        }}
+        onSuccess={refreshSessions}
+      />
+
+      <SessionFormModal
+        open={sessionModalOpen}
+        onOpenChange={setSessionModalOpen}
+        session={editingSession}
+        locations={locations}
+        defaultDurationMinutes={agendaSettings?.defaultDurationMinutes ?? 50}
+        preselectedDate={preselectedDate}
+        preselectedTime={preselectedTime}
+        onCreate={async (input) => {
+          const { createSession } = await import('@/app/(app)/agenda/actions');
+          return createSession(input);
+        }}
+        onUpdate={async (id, input) => {
+          const { updateSession } = await import('@/app/(app)/agenda/actions');
+          return updateSession(id, input);
+        }}
+        onSearchPatients={async (query) => {
+          const { searchPatients } = await import('@/app/(app)/agenda/actions');
+          return searchPatients(query);
+        }}
+        onSuccess={refreshSessions}
+      />
+
+      <BlockFormModal
+        open={blockModalOpen}
+        onOpenChange={setBlockModalOpen}
+        block={null}
+        preselectedDate={preselectedDate}
+        preselectedTime={preselectedTime}
+        onCreate={async (input) => {
+          const { createSession } = await import('@/app/(app)/agenda/actions');
+          return createSession(input);
+        }}
+        onUpdate={async (id, input) => {
+          const { updateSession } = await import('@/app/(app)/agenda/actions');
+          return updateSession(id, input);
         }}
         onSuccess={refreshSessions}
       />

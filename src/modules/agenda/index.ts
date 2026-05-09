@@ -15,6 +15,10 @@ export { listLocationsImpl, type ListLocationsResult } from './server/list-locat
 export { createLocationImpl, type CreateLocationResult } from './server/create-location';
 export { updateLocationImpl, type UpdateLocationResult } from './server/update-location';
 export { deleteLocationImpl, type DeleteLocationResult } from './server/delete-location';
+export {
+  setLocationDefaultImpl,
+  type SetLocationDefaultResult,
+} from './server/set-location-default';
 
 // ---- Server Actions (agenda settings) ----------------------------------------
 export { getAgendaSettingsImpl, type GetAgendaSettingsResult } from './server/get-agenda-settings';

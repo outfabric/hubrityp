@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -73,7 +73,7 @@ export async function markSessionDoneImpl(
     await db.transaction(async (tx) => {
       await tx
         .update(sessions)
-        .set({ status: 'done', updatedAt: new Date() })
+        .set({ status: 'done', updatedAt: sql`now()` })
         .where(eq(sessions.id, sessionId));
 
       await tx.insert(sessionHistory).values({

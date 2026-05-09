@@ -1,10 +1,8 @@
 import { endOfWeek, startOfWeek } from 'date-fns';
-import { Lock, Plus } from 'lucide-react';
 import { Suspense } from 'react';
 
-import { getAgendaSettingsImpl, listSessionsImpl } from '@/modules/agenda';
+import { getAgendaSettingsImpl, listLocationsImpl, listSessionsImpl } from '@/modules/agenda';
 import { createServerClient } from '@/shared/supabase/server';
-import { Button } from '@/shared/ui/button';
 
 import { AgendaCalendarLoader } from './agenda-calendar-loader';
 
@@ -19,14 +17,23 @@ async function AgendaDataServer() {
   const weekStart = startOfWeek(now, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
 
-  const [sessionsResult, settingsResult] = await Promise.all([
+  const [sessionsResult, settingsResult, locationsResult] = await Promise.all([
     listSessionsImpl(supabase, weekStart, weekEnd),
     getAgendaSettingsImpl(supabase),
+    listLocationsImpl(supabase),
   ]);
 
   // Gracefully degrade — show empty calendar on error
   const initialSessions = sessionsResult.ok ? sessionsResult.sessions : [];
   const agendaSettings = settingsResult.ok ? settingsResult.settings : null;
+  const locations = locationsResult.ok
+    ? locationsResult.locations.map((l) => ({
+        id: l.id,
+        name: l.name,
+        type: l.type,
+        isDefault: l.isDefault,
+      }))
+    : [];
 
   return (
     <AgendaCalendarLoader
@@ -34,6 +41,7 @@ async function AgendaDataServer() {
       agendaSettings={agendaSettings}
       initialStart={weekStart.toISOString()}
       initialEnd={weekEnd.toISOString()}
+      locations={locations}
     />
   );
 }
@@ -45,24 +53,13 @@ async function AgendaDataServer() {
 export default function AgendaPage() {
   return (
     <div className="mx-auto max-w-[1200px]">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6">
         <h1
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="agenda-page-title"
         >
           Agenda
         </h1>
-
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" data-testid="block-time-button">
-            <Lock className="h-4 w-4" />
-            Bloquear horario
-          </Button>
-          <Button data-testid="schedule-button">
-            <Plus className="h-4 w-4" />
-            Agendar
-          </Button>
-        </div>
       </div>
 
       <Suspense

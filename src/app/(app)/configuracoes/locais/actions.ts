@@ -12,12 +12,14 @@ import type {
   CreateLocationResult,
   DeleteLocationResult,
   ListLocationsResult,
+  SetLocationDefaultResult,
   UpdateLocationResult,
 } from '@/modules/agenda';
 import {
   createLocationImpl,
   deleteLocationImpl,
   listLocationsImpl,
+  setLocationDefaultImpl,
   updateLocationImpl,
 } from '@/modules/agenda';
 import { createServerClient } from '@/shared/supabase/server';
@@ -43,4 +45,9 @@ export async function updateLocation(
 export async function deleteLocation(locationId: string): Promise<DeleteLocationResult> {
   const supabase = await createServerClient();
   return deleteLocationImpl(supabase, locationId);
+}
+
+export async function setLocationDefault(locationId: string): Promise<SetLocationDefaultResult> {
+  const supabase = await createServerClient();
+  return setLocationDefaultImpl(supabase, locationId);
 }

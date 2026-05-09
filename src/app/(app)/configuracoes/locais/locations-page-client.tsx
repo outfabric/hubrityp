@@ -11,7 +11,7 @@ import { LocationFormModal } from '@/modules/agenda/components/location-form-mod
 import { LocationsEmptyState } from '@/modules/agenda/components/locations-empty-state';
 import { Button } from '@/shared/ui/button';
 
-import { createLocation, deleteLocation, updateLocation } from './actions';
+import { createLocation, deleteLocation, setLocationDefault, updateLocation } from './actions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -62,7 +62,7 @@ export function LocationsPageClient({ locations }: LocationsPageClientProps) {
   const handleSetDefault = useCallback(
     (locationId: string) => {
       startTransition(async () => {
-        const result = await updateLocation(locationId, { is_default: true });
+        const result = await setLocationDefault(locationId);
         if (result.ok) {
           toast.success('Local marcado como padrao.');
           router.refresh();

@@ -1,13 +1,18 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, gte, lte, ne } from 'drizzle-orm';
+import { and, eq, gte, lte, ne, sql } from 'drizzle-orm';
 
 import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { db } from '@/shared/db/client';
-import { sessions, sessionHistory, type Session } from '@/shared/db/schema/agenda/tables';
+import {
+  sessions,
+  sessionHistory,
+  locations,
+  type Session,
+} from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
@@ -110,8 +115,9 @@ function determineAction(
  *   1. Authenticate via Supabase session.
  *   2. Validate input against `sessionInputSchema`.
  *   3. Verify ownership — session must belong to authenticated user.
- *   4. Detect conflicts (excluding the session being updated).
- *   5. Update session + create history entry in a transaction.
+ *   4. Verify ownership of referenced `patient_id` and `location_id`.
+ *   5. Detect conflicts (excluding the session being updated).
+ *   6. Update session + create history entry in a transaction.
  *      History action is "rescheduled" if start_at/end_at changed,
  *      "updated" otherwise. The diff JSONB records old→new values.
  */
@@ -155,7 +161,38 @@ export async function updateSessionImpl(
       return { ok: false, error: 'not_found' };
     }
 
-    // 4. Detect conflicts (excluding the session being updated)
+    // 4. Verify ownership of referenced patient_id and location_id
+    if (data.patient_id) {
+      const [ownedPatient] = await db
+        .select({ id: patients.id })
+        .from(patients)
+        .where(and(eq(patients.id, data.patient_id), eq(patients.userId, userId)))
+        .limit(1);
+      if (!ownedPatient) {
+        return {
+          ok: false,
+          error: 'invalid_input',
+          fieldErrors: { patient_id: ['Paciente nao encontrado.'] },
+        };
+      }
+    }
+
+    if (data.location_id) {
+      const [ownedLocation] = await db
+        .select({ id: locations.id })
+        .from(locations)
+        .where(and(eq(locations.id, data.location_id), eq(locations.userId, userId)))
+        .limit(1);
+      if (!ownedLocation) {
+        return {
+          ok: false,
+          error: 'invalid_input',
+          fieldErrors: { location_id: ['Local nao encontrado.'] },
+        };
+      }
+    }
+
+    // 5. Detect conflicts (excluding the session being updated)
     const windowStart = new Date(startAt.getTime() - 24 * 60 * 60 * 1000);
     const windowEnd = new Date(endAt.getTime() + 24 * 60 * 60 * 1000);
 
@@ -196,7 +233,7 @@ export async function updateSessionImpl(
       };
     }
 
-    // 5. Update session + history in a transaction
+    // 6. Update session + history in a transaction
     const updatedValues = {
       patientId: data.patient_id ?? null,
       isBlocking: data.is_blocking,
@@ -217,7 +254,7 @@ export async function updateSessionImpl(
     await db.transaction(async (tx) => {
       await tx
         .update(sessions)
-        .set({ ...updatedValues, updatedAt: new Date() })
+        .set({ ...updatedValues, updatedAt: sql`now()` })
         .where(eq(sessions.id, sessionId));
 
       await tx.insert(sessionHistory).values({

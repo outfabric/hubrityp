@@ -61,11 +61,11 @@ export async function deleteLocationImpl(
     return { ok: false, error: 'not_found' };
   }
 
-  // 3. Check for linked sessions
+  // 3. Check for linked sessions (scoped to user for defense-in-depth)
   const linkedSessions = await db
     .select({ id: sessions.id })
     .from(sessions)
-    .where(eq(sessions.locationId, locationId))
+    .where(and(eq(sessions.locationId, locationId), eq(sessions.userId, userId)))
     .limit(1);
 
   if (linkedSessions.length > 0) {

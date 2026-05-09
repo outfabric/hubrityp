@@ -7,7 +7,7 @@ import { calculateEndTime, isInPast } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { db } from '@/shared/db/client';
-import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
+import { sessions, sessionHistory, locations } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
@@ -34,10 +34,11 @@ export type CreateSessionResult =
  *   1. Authenticate via Supabase session.
  *   2. Validate input against `sessionInputSchema`.
  *   3. Reject if `start_at` is in the past (RN-03.02).
- *   4. Fetch existing sessions in a +-24h window for conflict detection.
- *   5. Run `detectConflicts`. If conflicts exist and `force_conflict` is false,
+ *   4. Verify ownership of referenced `patient_id` and `location_id`.
+ *   5. Fetch existing sessions in a +-24h window for conflict detection.
+ *   6. Run `detectConflicts`. If conflicts exist and `force_conflict` is false,
  *      return a warning with the conflicting sessions.
- *   6. Insert session + history entry "created" in a transaction.
+ *   7. Insert session + history entry "created" in a transaction.
  */
 export async function createSessionImpl(
   supabase: SupabaseClient,
@@ -76,8 +77,39 @@ export async function createSessionImpl(
     };
   }
 
-  // 4. Fetch existing sessions in a +-24h window for conflict detection
+  // 4. Verify ownership of referenced patient_id and location_id
   try {
+    if (data.patient_id) {
+      const [ownedPatient] = await db
+        .select({ id: patients.id })
+        .from(patients)
+        .where(and(eq(patients.id, data.patient_id), eq(patients.userId, userId)))
+        .limit(1);
+      if (!ownedPatient) {
+        return {
+          ok: false,
+          error: 'invalid_input',
+          fieldErrors: { patient_id: ['Paciente nao encontrado.'] },
+        };
+      }
+    }
+
+    if (data.location_id) {
+      const [ownedLocation] = await db
+        .select({ id: locations.id })
+        .from(locations)
+        .where(and(eq(locations.id, data.location_id), eq(locations.userId, userId)))
+        .limit(1);
+      if (!ownedLocation) {
+        return {
+          ok: false,
+          error: 'invalid_input',
+          fieldErrors: { location_id: ['Local nao encontrado.'] },
+        };
+      }
+    }
+
+    // 5. Fetch existing sessions in a +-24h window for conflict detection
     const windowStart = new Date(startAt.getTime() - 24 * 60 * 60 * 1000);
     const windowEnd = new Date(endAt.getTime() + 24 * 60 * 60 * 1000);
 
@@ -107,7 +139,7 @@ export async function createSessionImpl(
       blockingTitle: row.blockingTitle,
     }));
 
-    // 5. Detect conflicts
+    // 6. Detect conflicts
     const conflicts = detectConflicts({ startAt, endAt }, existingSessions);
 
     if (conflicts.length > 0 && !data.force_conflict) {
@@ -118,7 +150,7 @@ export async function createSessionImpl(
       };
     }
 
-    // 6. Insert session + history in a transaction
+    // 7. Insert session + history in a transaction
     const [inserted] = await db.transaction(async (tx) => {
       const [sessionRow] = await tx
         .insert(sessions)
