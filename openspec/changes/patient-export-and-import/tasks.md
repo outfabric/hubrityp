@@ -18,9 +18,9 @@
 
 ## 4. CSV Import — Server Action
 
-- [ ] 4.1 Criar `src/modules/patients/server/check-csv-duplicates.ts` — recebe array de {phone, email}, retorna quais já existem para o psicólogo (batch query)
-- [ ] 4.2 Criar `src/modules/patients/server/import-patients-csv.ts` — recebe array de pacientes validados (do frontend), verifica limite (200), insere em transação batch via Drizzle `db.insert(patients).values([...])`. Rollback total se falhar
-- [ ] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-import.int.test.ts` — testar import batch (sucesso com 10 rows, rollback em caso de erro, rejeita >200 rows, detecta duplicatas corretamente)
+- [x] 4.1 Criar `src/modules/patients/server/check-csv-duplicates.ts` — recebe array de {phone, email}, retorna quais já existem para o psicólogo (batch query)
+- [x] 4.2 Criar `src/modules/patients/server/import-patients-csv.ts` — recebe array de pacientes validados (do frontend), verifica limite (200), insere em transação batch via Drizzle `db.insert(patients).values([...])`. Rollback total se falhar
+- [x] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/patient-import.int.test.ts` — testar import batch (sucesso com 10 rows, rollback em caso de erro, rejeita >200 rows, detecta duplicatas corretamente)
 
 ## 5. Module Barrel Update
 
