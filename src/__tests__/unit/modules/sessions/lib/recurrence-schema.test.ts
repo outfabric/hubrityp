@@ -179,11 +179,28 @@ describe('coupleSessionSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('single patient_id passes (partial couple, one selected so far)', () => {
+  it('rejects 0 patient_ids (couple requires exactly 2)', () => {
+    const result = coupleSessionSchema.safeParse({
+      patient_ids: [],
+    });
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      const messages = result.error.issues.map((i) => i.message);
+      expect(messages).toContain('Um atendimento de casal exige 2 pacientes.');
+    }
+  });
+
+  it('rejects 1 patient_id (couple requires exactly 2)', () => {
     const result = coupleSessionSchema.safeParse({
       patient_ids: [VALID_UUID_1],
     });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      const messages = result.error.issues.map((i) => i.message);
+      expect(messages).toContain('Um atendimento de casal exige 2 pacientes.');
+    }
   });
 
   it('rejects >2 patient_ids', () => {

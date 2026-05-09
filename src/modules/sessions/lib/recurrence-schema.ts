@@ -93,6 +93,7 @@ export const coupleSessionSchema = z
   .object({
     patient_ids: z
       .array(z.string().regex(UUID_REGEX, { message: 'ID de paciente invalido.' }))
+      .min(2, { message: 'Um atendimento de casal exige 2 pacientes.' })
       .max(2, { message: 'Um atendimento de casal aceita no maximo 2 pacientes.' }),
   })
   .superRefine((data, ctx) => {

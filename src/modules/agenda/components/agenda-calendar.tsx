@@ -14,8 +14,7 @@ import { toast } from 'sonner';
 
 import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
 import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
-import { EditScopeDialog } from '@/modules/sessions/components/edit-scope-dialog';
-import type { EditScope } from '@/modules/sessions/lib/compute-edit-scope';
+import { EditScopeDialog, type EditScope } from '@/modules/sessions';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 
@@ -536,6 +535,10 @@ export function AgendaCalendar({
         onCreateCouple={async (input) => {
           const { createCoupleSession } = await import('@/app/(app)/agenda/actions');
           return createCoupleSession(input);
+        }}
+        onCreateLateRecord={async (input) => {
+          const { createLateRecord } = await import('@/app/(app)/agenda/actions');
+          return createLateRecord(input);
         }}
         onUpdate={async (id, input) => {
           const scope = pendingEditScopeRef.current;

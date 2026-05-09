@@ -106,8 +106,9 @@ export async function cancelRecurringSessionImpl(
       status: s.status,
     }));
 
-    // 5. Compute scope
+    // 5. Compute scope — called once and reused in the transaction
     let sessionsToCancelIds: string[];
+    let newRecurrenceEndDate: Date | undefined;
 
     switch (scope) {
       case 'this': {
@@ -116,14 +117,12 @@ export async function cancelRecurringSessionImpl(
         break;
       }
       case 'this_and_future': {
-        // Use computeEditScope to get sessions from target onward
         const scopeResult = computeEditScope(scope, sessionId, seriesForScope);
-        // toUpdate contains target + all future sessions
         sessionsToCancelIds = scopeResult.toUpdate;
+        newRecurrenceEndDate = scopeResult.newRecurrenceEndDate;
         break;
       }
       case 'all': {
-        // Cancel all future non-completed sessions
         const scopeResult = computeEditScope(scope, sessionId, seriesForScope);
         sessionsToCancelIds = scopeResult.toUpdate;
         break;
@@ -134,6 +133,12 @@ export async function cancelRecurringSessionImpl(
       return { ok: true, cancelledCount: 0 };
     }
 
+    // Build a lookup of actual current statuses for accurate history entries
+    const statusLookup = new Map<string, string>();
+    for (const s of allSeriesSessions) {
+      statusLookup.set(s.id, s.status);
+    }
+
     // 6. Execute cancellation in a transaction
     await db.transaction(async (tx) => {
       // Set status to 'cancelled' for all targeted sessions
@@ -142,29 +147,26 @@ export async function cancelRecurringSessionImpl(
         .set({ status: 'cancelled', updatedAt: sql`now()` })
         .where(inArray(sessions.id, sessionsToCancelIds));
 
-      // Create history entries
+      // Create history entries with actual current statuses
       const historyValues = sessionsToCancelIds.map((sid) => ({
         sessionId: sid,
         userId,
         action: 'status_changed' as const,
         changes: {
-          status: { old: 'scheduled', new: 'cancelled' },
+          status: { old: statusLookup.get(sid) ?? 'scheduled', new: 'cancelled' },
           scope,
         },
       }));
       await tx.insert(sessionHistory).values(historyValues);
 
-      // For 'this_and_future': update recurrence end_date
-      if (scope === 'this_and_future') {
-        const scopeResult = computeEditScope(scope, sessionId, seriesForScope);
-        if (scopeResult.newRecurrenceEndDate) {
-          await tx
-            .update(sessionRecurrences)
-            .set({
-              endDate: scopeResult.newRecurrenceEndDate.toISOString().split('T')[0]!,
-            })
-            .where(eq(sessionRecurrences.id, recurrenceId));
-        }
+      // For 'this_and_future': update recurrence end_date (reuses pre-computed value)
+      if (scope === 'this_and_future' && newRecurrenceEndDate) {
+        await tx
+          .update(sessionRecurrences)
+          .set({
+            endDate: newRecurrenceEndDate.toISOString().split('T')[0]!,
+          })
+          .where(eq(sessionRecurrences.id, recurrenceId));
       }
     });
 

@@ -24,9 +24,9 @@ import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import {
   CoupleSessionFields,
   type PatientOption as CouplePatientOption,
-} from '@/modules/sessions/components/couple-session-fields';
-import { LateRecordToggle } from '@/modules/sessions/components/late-record-toggle';
-import { RecurrenceFormSection } from '@/modules/sessions/components/recurrence-form-section';
+  LateRecordToggle,
+  RecurrenceFormSection,
+} from '@/modules/sessions';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -174,6 +174,8 @@ interface SessionFormModalProps {
   onCreateCouple?: (input: unknown) => Promise<MutationResult>;
   /** Server Action: update session. */
   onUpdate: (id: string, input: unknown) => Promise<MutationResult>;
+  /** Server Action: create late record (retroactive session). */
+  onCreateLateRecord?: (input: unknown) => Promise<MutationResult>;
   /** Server Action: search patients by name. */
   onSearchPatients: (
     query: string,
@@ -346,6 +348,7 @@ export function SessionFormModal({
   onCreate,
   onCreateRecurring,
   onCreateCouple,
+  onCreateLateRecord,
   onUpdate,
   onSearchPatients,
   onSuccess,
@@ -547,8 +550,18 @@ export function SessionFormModal({
               : coupleRef;
         const hasRecurrence = recurrence.frequency != null;
         const hasCouple = couple.enabled && couple.secondPatientId != null;
+        const isLateRecord = allFormValues['lateRecord'] === true;
 
-        if (hasRecurrence && onCreateRecurring) {
+        if (isLateRecord && onCreateLateRecord) {
+          // Route to late record creation — session already happened (retroactive)
+          result = await onCreateLateRecord({
+            session: data,
+            lateRecord: {
+              is_late_record: true,
+              date: data.start_at,
+            },
+          });
+        } else if (hasRecurrence && onCreateRecurring) {
           // Route to recurring session creation — pass session template + recurrence rule
           result = await onCreateRecurring({
             session: data,

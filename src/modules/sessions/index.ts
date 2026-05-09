@@ -71,3 +71,6 @@ export {
 
 // ---- Components — late record toggle ----------------------------------------
 export { LateRecordToggle, type LateRecordToggleProps } from './components/late-record-toggle';
+
+// ---- Components — recurrence form section -----------------------------------
+export { RecurrenceFormSection } from './components/recurrence-form-section';
