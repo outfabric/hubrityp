@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 // `patients` is the core domain table for the patient module. It stores all
 // demographic and administrative data for patients belonging to a given
@@ -122,3 +132,54 @@ export const patientGuardians = pgTable(
 
 export type PatientGuardian = typeof patientGuardians.$inferSelect;
 export type NewPatientGuardian = typeof patientGuardians.$inferInsert;
+
+// `anamnesis` stores the clinical intake record for a patient. It has a 1:1
+// relationship with `patients` enforced by a UNIQUE constraint on `patient_id`.
+// Standard clinical sections (chief complaint, history of present illness, etc.)
+// are modeled as individual TEXT columns for query-ability and type safety.
+// The `custom_sections` JSONB column allows psychologists to add free-form
+// sections beyond the predefined ones.
+//
+// The table has no `user_id` column — RLS policies use a subquery to check
+// that the anamnesis's patient belongs to the authenticated psychologist:
+//   `patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())`
+//
+// This table stores sensitive clinical data protected under LGPD art. 11.
+export const anamnesis = pgTable(
+  'anamnesis',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `patients.id`, set manually in migration with ON DELETE CASCADE.
+    // UNIQUE constraint enforces the 1:1 relationship.
+    patientId: uuid('patient_id').notNull(),
+
+    // --- Standard clinical sections (all optional, filled progressively) ---
+    chiefComplaint: text('chief_complaint'),
+    historyPresentIllness: text('history_present_illness'),
+    familyHistory: text('family_history'),
+    educationalProfessional: text('educational_professional'),
+    physicalHealth: text('physical_health'),
+    priorTherapy: text('prior_therapy'),
+    initialHypothesis: text('initial_hypothesis'),
+    treatmentPlan: text('treatment_plan'),
+
+    // --- Custom sections (free-form JSONB for psychologist-defined sections) ---
+    customSections: jsonb('custom_sections'),
+
+    // --- Timestamps ---
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // UNIQUE constraint on patient_id enforces 1:1 relationship.
+    unique('anamnesis_patient_id_unique').on(table.patientId),
+  ],
+);
+
+export type Anamnesis = typeof anamnesis.$inferSelect;
+export type NewAnamnesis = typeof anamnesis.$inferInsert;

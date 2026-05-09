@@ -46,3 +46,26 @@ export const patientGuardiansPolicies = [
      FOR DELETE TO authenticated
      USING (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
 ] as const;
+
+// Owner-scoped RLS policies for `anamnesis`. The table has no `user_id` column
+// — ownership is derived via the parent `patients` row:
+//   patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid())
+//
+// Same subquery pattern as `patient_guardians`. Protects sensitive clinical
+// data (LGPD art. 11) from cross-psychologist access.
+export const anamnesisPolicies = [
+  `ALTER TABLE anamnesis ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select anamnesis" ON anamnesis
+     FOR SELECT TO authenticated
+     USING (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
+  `CREATE POLICY "owner can insert anamnesis" ON anamnesis
+     FOR INSERT TO authenticated
+     WITH CHECK (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
+  `CREATE POLICY "owner can update anamnesis" ON anamnesis
+     FOR UPDATE TO authenticated
+     USING (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()))
+     WITH CHECK (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
+  `CREATE POLICY "owner can delete anamnesis" ON anamnesis
+     FOR DELETE TO authenticated
+     USING (patient_id IN (SELECT id FROM patients WHERE user_id = auth.uid()));`,
+] as const;

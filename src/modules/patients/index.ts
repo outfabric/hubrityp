@@ -45,6 +45,8 @@ export { addGuardianImpl, type AddGuardianResult } from './server/add-guardian';
 export { updateGuardianImpl, type UpdateGuardianResult } from './server/update-guardian';
 export { removeGuardianImpl, type RemoveGuardianResult } from './server/remove-guardian';
 export { listGuardiansImpl, type ListGuardiansResult } from './server/list-guardians';
+export { getAnamnesisImpl, type GetAnamnesisResult } from './server/get-anamnesis';
+export { upsertAnamnesisImpl, type UpsertAnamnesisResult } from './server/upsert-anamnesis';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
@@ -60,6 +62,11 @@ export {
   type CreateGuardianInput,
   type UpdateGuardianInput,
 } from './lib/guardian-input-schema';
+export {
+  upsertAnamnesisSchema,
+  customSectionSchema,
+  type UpsertAnamnesisInput,
+} from './lib/anamnesis-input-schema';
 
 // ---- Types -------------------------------------------------------------------
 export type {
@@ -107,3 +114,8 @@ export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
 export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
+export { TiptapEditor } from './components/tiptap-editor';
+export { AnamnesisTab } from './components/anamnesis-tab';
+
+// ---- Hooks ------------------------------------------------------------------
+export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';
