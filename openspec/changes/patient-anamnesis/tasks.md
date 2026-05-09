@@ -29,8 +29,8 @@
 
 ## 6. Frontend — Auto-Save Hook
 
-- [ ] 6.1 Criar hook `src/modules/patients/lib/use-auto-save.ts` — `useAutoSave(content: T, saveFn: (content: T) => Promise<void>, options: { interval: number })`. Retorna `{ status: 'idle' | 'saving' | 'saved' | 'error', lastSavedAt: Date | null }`. Compara content com lastSaved via JSON.stringify, debounce no interval
-- [ ] 6.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/use-auto-save.test.ts` — testar que auto-save dispara após interval, não dispara se content unchanged, reseta timer em mudanças rápidas, retorna status corretos
+- [x] 6.1 Criar hook `src/modules/patients/lib/use-auto-save.ts` — `useAutoSave(content: T, saveFn: (content: T) => Promise<void>, options: { interval: number })`. Retorna `{ status: 'idle' | 'saving' | 'saved' | 'error', lastSavedAt: Date | null }`. Compara content com lastSaved via JSON.stringify, debounce no interval
+- [x] 6.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/use-auto-save.test.ts` — testar que auto-save dispara após interval, não dispara se content unchanged, reseta timer em mudanças rápidas, retorna status corretos
 
 ## 7. Frontend — Anamnesis Tab
 
