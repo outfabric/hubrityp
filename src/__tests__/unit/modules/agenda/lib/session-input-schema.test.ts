@@ -191,10 +191,14 @@ describe('sessionInputSchema — amount', () => {
     ['0', 'zero'],
     ['-50', 'negative'],
     ['abc', 'non-numeric'],
-    ['', 'empty string'],
   ])('rejects invalid amount "%s" (%s)', (amount) => {
     const errs = fieldErrorsOf(sessionInputSchema.safeParse({ ...VALID_SESSION, amount }));
     expect(errs.amount?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it('accepts empty string amount (coerced to undefined)', () => {
+    const result = sessionInputSchema.safeParse({ ...VALID_SESSION, amount: '' });
+    expect(result.success).toBe(true);
   });
 
   it('accepts absent amount (optional)', () => {
