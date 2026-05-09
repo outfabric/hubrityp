@@ -32,8 +32,8 @@
 
 ## 5. Date/Timezone Helpers
 
-- [ ] 5.1 Criar `src/modules/agenda/lib/date-helpers.ts` — funcoes: `toSaoPauloTime(utcDate: Date): Date` (converte UTC para America/Sao_Paulo), `formatSessionTime(date: Date): string` (formata como "14:00"), `formatSessionDate(date: Date): string` (formata como "15 de mai. 2026"), `formatSessionDateFull(date: Date): string` (formata como "quinta-feira, 15 de maio de 2026"), `calculateEndTime(startAt: Date, durationMinutes: number): Date`, `isInPast(date: Date): boolean`. Todas usam date-fns com locale pt-BR e date-fns-tz para timezone
-- [ ] 5.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/agenda/lib/date-helpers.test.ts` — testar: conversao UTC->SP correta (UTC-3), formatacao de hora/data em pt-BR, calculo de end time, isInPast com datas passadas/futuras/agora
+- [x] 5.1 Criar `src/modules/agenda/lib/date-helpers.ts` — funcoes: `toSaoPauloTime(utcDate: Date): Date` (converte UTC para America/Sao_Paulo), `formatSessionTime(date: Date): string` (formata como "14:00"), `formatSessionDate(date: Date): string` (formata como "15 de mai. 2026"), `formatSessionDateFull(date: Date): string` (formata como "quinta-feira, 15 de maio de 2026"), `calculateEndTime(startAt: Date, durationMinutes: number): Date`, `isInPast(date: Date): boolean`. Todas usam date-fns com locale pt-BR e date-fns-tz para timezone
+- [x] 5.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/agenda/lib/date-helpers.test.ts` — testar: conversao UTC->SP correta (UTC-3), formatacao de hora/data em pt-BR, calculo de end time, isInPast com datas passadas/futuras/agora
 
 ## 6. Server Actions — Locations
 
