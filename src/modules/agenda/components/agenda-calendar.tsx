@@ -200,21 +200,32 @@ export function AgendaCalendar({
     }
   }, [currentDate, currentView]);
 
-  // Fetch sessions when navigation changes the visible range
-  const handleDatesSet = useCallback((arg: { start: Date; end: Date; view: { type: string } }) => {
-    setCurrentDate(arg.start);
-    setCurrentView(arg.view.type as CalendarViewName);
+  // Fetch sessions when navigation changes the visible range.
+  // We use `arg.view.currentStart` (the logical period start, e.g. May 1 for
+  // month view) instead of `arg.start` (the grid start, which can fall in the
+  // previous month for dayGridMonth). Using `arg.start` caused a feedback loop
+  // with the useEffect sync that calls `api.gotoDate(currentDate)`, making
+  // month view navigate to an earlier month on every datesSet fire.
+  const handleDatesSet = useCallback(
+    (arg: { start: Date; end: Date; view: { type: string; currentStart: Date } }) => {
+      setCurrentDate(arg.view.currentStart);
+      setCurrentView(arg.view.type as CalendarViewName);
 
-    // Lazy-import the server action to fetch sessions for the new range.
-    // Fire-and-forget — FullCalendar expects a void callback.
-    void import('@/app/(app)/agenda/actions').then(({ listSessions }) =>
-      listSessions(arg.start, arg.end).then((result) => {
-        if (result.ok) {
-          setSessions(result.sessions);
-        }
-      }),
-    );
-  }, []);
+      // Lazy-import the server action to fetch sessions for the new range.
+      // Fire-and-forget — FullCalendar expects a void callback.
+      // Note: arg.start/end covers the full visible range (including overflow
+      // days from adjacent months in dayGridMonth), which is what we want for
+      // data fetching.
+      void import('@/app/(app)/agenda/actions').then(({ listSessions }) =>
+        listSessions(arg.start, arg.end).then((result) => {
+          if (result.ok) {
+            setSessions(result.sessions);
+          }
+        }),
+      );
+    },
+    [],
+  );
 
   // Refreshes sessions for the current visible range after a mutation
   const refreshSessions = useCallback(() => {
