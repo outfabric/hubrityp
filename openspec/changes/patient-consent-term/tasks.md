@@ -50,7 +50,7 @@
 
 > **Design System Sálvia**: Badge semântico (success/warning/danger), Button ghost com ícones do mapa fixo, AlertDialog para revogação.
 
-- [ ] 9.1 Adicionar badge de status de consentimento no patient-detail-header — **Design system:** `Badge success` (bg `success-50`, text `success-700`) "Consentimento assinado", `Badge warning` (bg `warning-50`, text `warning-700`) "Consentimento pendente", `Badge danger` (bg `danger-50`, text `danger-700`) "Consentimento revogado"
-- [ ] 9.2 Adicionar botões no detalhe: "Enviar termo por WhatsApp" `Button ghost` + ícone `MessageCircle`, "Copiar link" `Button ghost` + ícone (toast success "Link do termo copiado", Sonner, auto-dismiss 4s). Se menor, usar telefone do guardian primary para wa.me
-- [ ] 9.3 Adicionar "Revogar consentimento" no `DropdownMenu` de ações (text `danger-700`). Confirmação via shadcn `AlertDialog` (max-width 480px, título h3 "Revogar consentimento?", texto explicando consequências, botão "Revogar" `Button danger`, "Cancelar" `Button secondary`)
-- [ ] 9.4 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/consent-management.spec.ts` — verificar que badge mostra status correto, botão "Copiar link" funciona, botão WhatsApp tem href correto
+- [x] 9.1 Adicionar badge de status de consentimento no patient-detail-header — **Design system:** `Badge success` (bg `success-50`, text `success-700`) "Consentimento assinado", `Badge warning` (bg `warning-50`, text `warning-700`) "Consentimento pendente", `Badge danger` (bg `danger-50`, text `danger-700`) "Consentimento revogado"
+- [x] 9.2 Adicionar botões no detalhe: "Enviar termo por WhatsApp" `Button ghost` + ícone `MessageCircle`, "Copiar link" `Button ghost` + ícone (toast success "Link do termo copiado", Sonner, auto-dismiss 4s). Se menor, usar telefone do guardian primary para wa.me
+- [x] 9.3 Adicionar "Revogar consentimento" no `DropdownMenu` de ações (text `danger-700`). Confirmação via shadcn `AlertDialog` (max-width 480px, título h3 "Revogar consentimento?", texto explicando consequências, botão "Revogar" `Button danger`, "Cancelar" `Button secondary`)
+- [x] 9.4 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/consent-management.spec.ts` — verificar que badge mostra status correto, botão "Copiar link" funciona, botão WhatsApp tem href correto

@@ -1,11 +1,32 @@
 'use client';
 
-import { Archive, Check, Copy, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  Check,
+  Copy,
+  Link as LinkIcon,
+  MessageCircle,
+  MoreHorizontal,
+  Pencil,
+  ShieldOff,
+  Trash2,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import type { Patient } from '@/shared/db/schema/patients/tables';
+import type { ConsentStatus, GenerateConsentResult, RevokeConsentResult } from '@/modules/patients';
+import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -61,6 +82,35 @@ function statusLabel(status: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Consent helpers
+// ---------------------------------------------------------------------------
+
+/** Badge variant and label for each consent status. */
+function consentBadgeConfig(status: ConsentStatus) {
+  switch (status) {
+    case 'signed':
+      return { variant: 'success' as const, label: 'Consentimento assinado' };
+    case 'revoked':
+      return { variant: 'danger' as const, label: 'Consentimento revogado' };
+    case 'pending':
+    default:
+      return { variant: 'warning' as const, label: 'Consentimento pendente' };
+  }
+}
+
+/**
+ * Builds a `wa.me` consent link with pre-filled message.
+ * For minors, uses the primary guardian's phone.
+ */
+function buildConsentWhatsAppHref(phone: string, consentUrl: string): string {
+  const digits = extractPhoneDigits(phone);
+  const message = encodeURIComponent(
+    `Olá! Segue o link para assinatura do termo de consentimento: ${consentUrl}`,
+  );
+  return `https://wa.me/${digits}?text=${message}`;
+}
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -68,12 +118,22 @@ interface PatientDetailHeaderProps {
   patient: Patient;
   /** Signed URL for the patient photo (if available). */
   photoUrl?: string;
+  /** Current consent status for badge display. */
+  consentStatus: ConsentStatus;
+  /** Existing pending consent token (if any). */
+  consentToken: string | null;
+  /** Primary guardian for minors (used for WhatsApp consent link). */
+  primaryGuardian?: PatientGuardian;
   /** Server Action to archive the patient. */
   archiveAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
   /** Server Action to unarchive the patient. */
   unarchiveAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
   /** Server Action to delete the patient. */
   deleteAction: (patientId: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Server Action to generate a new consent term (returns token). */
+  generateConsentAction: (patientId: string) => Promise<GenerateConsentResult>;
+  /** Server Action to revoke the active consent. */
+  revokeConsentAction: (patientId: string) => Promise<RevokeConsentResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,15 +143,21 @@ interface PatientDetailHeaderProps {
 export function PatientDetailHeader({
   patient,
   photoUrl,
+  consentStatus,
+  consentToken,
+  primaryGuardian,
   archiveAction,
   unarchiveAction,
   deleteAction,
+  generateConsentAction,
+  revokeConsentAction,
 }: PatientDetailHeaderProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
 
   const age = calculateAge(patient.birthDate);
   const ageDisplay =
@@ -105,11 +171,68 @@ export function PatientDetailHeader({
     ? `https://wa.me/${extractPhoneDigits(patient.phone)}`
     : undefined;
 
+  const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
+
+  // Phone for consent WhatsApp: use guardian phone for minors, patient phone otherwise
+  const consentWhatsAppPhone = isMinor ? (primaryGuardian?.phone ?? null) : (patient.phone ?? null);
+
   const handleCopyEmail = () => {
     if (!patient.email) return;
     void navigator.clipboard.writeText(patient.email).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  /**
+   * Resolves a consent token — reuses an existing pending one or generates a
+   * new term via the server action when none exists.
+   */
+  const resolveConsentToken = async (): Promise<string | null> => {
+    if (consentToken) return consentToken;
+    const result = await generateConsentAction(patient.id);
+    if (result.ok) return result.token;
+    toast.error('Erro ao gerar o termo de consentimento');
+    return null;
+  };
+
+  const buildConsentUrl = (token: string) => {
+    return `${window.location.origin}/termo/${token}`;
+  };
+
+  const handleCopyConsentLink = () => {
+    startTransition(async () => {
+      const token = await resolveConsentToken();
+      if (!token) return;
+      const url = buildConsentUrl(token);
+      await navigator.clipboard.writeText(url);
+      toast.success('Link do termo copiado', { duration: 4000 });
+    });
+  };
+
+  const handleSendConsentWhatsApp = () => {
+    if (!consentWhatsAppPhone) return;
+    startTransition(async () => {
+      const token = await resolveConsentToken();
+      if (!token) return;
+      const url = buildConsentUrl(token);
+      const href = buildConsentWhatsAppHref(consentWhatsAppPhone, url);
+      window.open(href, '_blank', 'noopener,noreferrer');
+    });
+  };
+
+  const handleRevokeConfirm = () => {
+    startTransition(async () => {
+      const result = await revokeConsentAction(patient.id);
+      if (result.ok) {
+        toast.success('Consentimento revogado');
+      } else if ('message' in result) {
+        toast.error(result.message);
+      } else {
+        toast.error('Erro ao revogar o consentimento');
+      }
+      setRevokeModalOpen(false);
+      router.refresh();
     });
   };
 
@@ -142,6 +265,8 @@ export function PatientDetailHeader({
     });
   };
 
+  const consentBadge = consentBadgeConfig(consentStatus);
+
   return (
     <div
       className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
@@ -164,6 +289,9 @@ export function PatientDetailHeader({
             </h1>
             <Badge variant={statusBadgeVariant(patient.status)} data-testid="patient-status-badge">
               {statusLabel(patient.status)}
+            </Badge>
+            <Badge variant={consentBadge.variant} data-testid="consent-status-badge">
+              {consentBadge.label}
             </Badge>
           </div>
 
@@ -221,6 +349,33 @@ export function PatientDetailHeader({
               </TooltipProvider>
             )}
           </div>
+
+          {/* Consent actions */}
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {consentWhatsAppPhone && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSendConsentWhatsApp}
+                disabled={isPending}
+                data-testid="consent-whatsapp-button"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                Enviar termo por WhatsApp
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyConsentLink}
+              disabled={isPending}
+              data-testid="consent-copy-link-button"
+            >
+              <LinkIcon className="h-4 w-4" aria-hidden="true" />
+              Copiar link
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -252,6 +407,19 @@ export function PatientDetailHeader({
             <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
             {patient.status === 'active' ? 'Arquivar' : 'Desarquivar'}
           </DropdownMenuItem>
+          {consentStatus === 'signed' && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setRevokeModalOpen(true)}
+                className="text-danger-700 focus:text-danger-700"
+                data-testid="patient-action-revoke-consent"
+              >
+                <ShieldOff className="mr-2 h-4 w-4" aria-hidden="true" />
+                Revogar consentimento
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setDeleteModalOpen(true)}
@@ -279,6 +447,35 @@ export function PatientDetailHeader({
         onConfirm={handleDeleteConfirm}
         isPending={isPending}
       />
+
+      {/* Revoke consent confirmation dialog */}
+      <AlertDialog open={revokeModalOpen} onOpenChange={setRevokeModalOpen}>
+        <AlertDialogContent data-testid="revoke-consent-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle asChild>
+              <h3>Revogar consentimento?</h3>
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao revogar o consentimento, o termo assinado sera invalidado e o paciente precisara
+              assinar um novo termo antes de continuar o tratamento. Esta acao nao pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending} data-testid="revoke-consent-cancel">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevokeConfirm}
+              disabled={isPending}
+              className="bg-danger-500 text-text-inverse hover:bg-danger-700"
+              data-testid="revoke-consent-confirm"
+            >
+              Revogar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

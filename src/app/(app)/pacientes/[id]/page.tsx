@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import {
   getAnamnesisImpl,
+  getConsentStatusImpl,
   getCouplePartnerImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
@@ -20,8 +21,10 @@ import {
   addGuardian,
   archivePatient,
   deletePatient,
+  generateConsent,
   listGuardians,
   removeGuardian,
+  revokeConsent,
   unarchivePatient,
   unlinkCouple,
   updateGuardian,
@@ -44,11 +47,12 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { id } = await params;
   const supabase = await createServerClient();
 
-  // Fetch patient, photo URL, and anamnesis in parallel (no dependencies between them)
-  const [patientResult, photoResult, anamnesisResult] = await Promise.all([
+  // Fetch patient, photo URL, anamnesis, and consent status in parallel
+  const [patientResult, photoResult, anamnesisResult, consentResult] = await Promise.all([
     getPatientImpl(supabase, id),
     getPatientPhotoUrlImpl(supabase, id),
     getAnamnesisImpl(supabase, id),
+    getConsentStatusImpl(supabase, id),
   ]);
 
   if (!patientResult.ok) {
@@ -58,6 +62,8 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { patient } = patientResult;
   const photoUrl = photoResult.ok ? photoResult.signedUrl : undefined;
   const initialAnamnesis = anamnesisResult.ok ? anamnesisResult.anamnesis : null;
+  const consentStatus = consentResult.ok ? consentResult.consent.status : 'pending';
+  const consentToken = consentResult.ok ? consentResult.consent.token : null;
 
   // Fetch conditional data in parallel: guardians for minors, couple partner for couples
   const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
@@ -70,6 +76,9 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
 
   const initialGuardians = guardiansResult?.ok ? guardiansResult.guardians : [];
   const couplePartner = couplePartnerResult?.ok ? couplePartnerResult.partner : undefined;
+
+  // Find the primary guardian (for consent WhatsApp on minor patients)
+  const primaryGuardian = initialGuardians.find((g) => g.isPrimary) ?? initialGuardians[0];
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -87,9 +96,14 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
       <PatientDetailHeader
         patient={patient}
         photoUrl={photoUrl}
+        consentStatus={consentStatus}
+        consentToken={consentToken}
+        primaryGuardian={primaryGuardian}
         archiveAction={archivePatient}
         unarchiveAction={unarchivePatient}
         deleteAction={deletePatient}
+        generateConsentAction={generateConsent}
+        revokeConsentAction={revokeConsent}
       />
 
       {/* Tabs */}

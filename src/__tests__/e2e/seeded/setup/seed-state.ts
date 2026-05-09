@@ -51,6 +51,13 @@ export const SEED_CONSENT_TERMS = {
     signatureToken: 'b'.repeat(64),
     termText: 'Termo de consentimento ja assinado.',
   },
+  /** Revoked consent term — used to test the "revoked" badge state. */
+  revoked: {
+    id: '00000000-0000-4000-8000-000000000022',
+    patientId: SEED_PATIENTS.archived.id,
+    signatureToken: 'c'.repeat(64),
+    termText: 'Termo de consentimento revogado.',
+  },
 } as const;
 
 export type SeedState = {
