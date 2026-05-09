@@ -52,7 +52,7 @@ export function CoupleSessionFields({ patients }: CoupleSessionFieldsProps) {
   const { setValue, watch } = useFormContext();
 
   const isCouple = (watch('couple.enabled') as boolean | undefined) ?? false;
-  const primaryPatientId = watch('patientId') as string | undefined;
+  const primaryPatientId = watch('patient_id') as string | undefined;
   const secondPatientId = watch('couple.secondPatientId') as string | undefined;
 
   // Derive whether the duplicate-patient error should be shown

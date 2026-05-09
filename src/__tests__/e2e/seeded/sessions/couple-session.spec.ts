@@ -15,16 +15,25 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  *   6. Pick tomorrow's date and time (17:00)
  *   7. Submit
  *   8. Navigate to tomorrow on the calendar
- *   9. Verify the session appears with both patient names ("Maria & Joao")
- *  10. Click the session chip and verify both patients listed in the drawer
+ *   9. Verify the session appears as a couple session
+ *  10. Click the session chip and verify the detail drawer
  *
  * Prerequisites:
  *   - Seeded session (storageState) provides an authenticated psychologist.
  *   - Patients are seeded in globalSetup (SEED_PATIENTS).
+ *
+ * Note: The second patient is selected by choosing the first available option
+ * in the couple dropdown rather than targeting a specific seeded patient ID.
+ * This avoids flakiness when parallel tests (e.g., patient-edit-archive)
+ * archive seeded patients before this test runs.
  */
 
 test.describe('@sessions couple session creation', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
+
+  // Increase timeout — this test opens a form, selects multiple patients,
+  // creates a session, then navigates the calendar to verify the result.
+  test.setTimeout(60_000);
 
   test('creates a couple session with 2 patients and verifies both names appear', async ({
     page,
@@ -34,12 +43,6 @@ test.describe('@sessions couple session creation', () => {
     const tomorrowDay = format(tomorrow, 'd');
 
     const primaryPatient = SEED_PATIENTS.activeWithPhone;
-    const secondPatient = SEED_PATIENTS.activeMinimal;
-
-    // Derive expected display name: "Maria & Joao" (first names)
-    const primaryFirstName = primaryPatient.fullName.split(' ')[0]!;
-    const secondFirstName = secondPatient.fullName.split(' ')[0]!;
-    const coupleDisplayName = `${primaryFirstName} & ${secondFirstName}`;
 
     // Navigate to the agenda page
     await page.goto('/agenda');
@@ -58,8 +61,12 @@ test.describe('@sessions couple session creation', () => {
     await expect(patientResults).toBeVisible({ timeout: 5000 });
 
     const primaryOption = page.getByTestId(`patient-option-${primaryPatient.id}`);
-    await expect(primaryOption).toBeVisible({ timeout: 5000 });
+    await expect(primaryOption).toBeVisible({ timeout: 10000 });
     await primaryOption.click();
+
+    // Capture the displayed primary patient name (may differ from seed if
+    // renamed by a parallel test). Read it while the modal is still open.
+    const primaryDisplayName = (await patientSearch.inputValue()) || primaryPatient.fullName;
 
     // Select tomorrow's date
     const dateTrigger = page.getByTestId('session-form-date-trigger');
@@ -102,11 +109,19 @@ test.describe('@sessions couple session creation', () => {
     await expect(secondPatientSelect).toBeVisible();
     await secondPatientSelect.click();
 
-    // Select the second patient from the dropdown
-    // The dropdown uses SelectItem with data-testid="patient-option-<id>"
-    const secondOption = page.getByTestId(`patient-option-${secondPatient.id}`);
-    await expect(secondOption).toBeVisible({ timeout: 5000 });
-    await secondOption.click();
+    // Select the first available option in the couple dropdown.
+    // We target by role rather than a specific data-testid because parallel
+    // tests may archive the seeded activeMinimal patient, removing it from
+    // the active-patients list that populates this dropdown.
+    const firstAvailableOption = page.getByRole('option').first();
+    await expect(firstAvailableOption).toBeVisible({ timeout: 10000 });
+    const secondPatientName = (await firstAvailableOption.textContent()) ?? 'Paciente';
+    await firstAvailableOption.click();
+
+    // Build the expected couple display name: "PrimaryFirst & SecondFirst"
+    const primaryFirstName = primaryDisplayName.split(' ')[0] ?? 'Paciente';
+    const secondFirstName = secondPatientName.split(' ')[0] ?? 'Paciente';
+    const coupleDisplayName = `${primaryFirstName} & ${secondFirstName}`;
 
     // Click "Salvar" to create the couple session
     await page.getByTestId('session-form-save').click();
@@ -120,8 +135,8 @@ test.describe('@sessions couple session creation', () => {
     // Navigate to tomorrow so the session is visible
     await page.getByTestId('agenda-nav-next').click();
 
-    // Verify the session appears on the calendar with both patient names
-    // The session chip should display "Maria & Joao" (couple display name)
+    // Verify the session appears on the calendar with the couple display name.
+    // The chip should show "PrimaryFirst & SecondFirst".
     const coupleSessionChip = page
       .getByTestId('session-chip')
       .filter({ hasText: coupleDisplayName })

@@ -49,7 +49,7 @@ function Wrapper({
 }) {
   const form = useForm({
     defaultValues: {
-      patientId: defaultPatientId ?? (undefined as string | undefined),
+      patient_id: defaultPatientId ?? (undefined as string | undefined),
       couple: {
         enabled: false,
         secondPatientId: undefined as string | undefined,
@@ -174,7 +174,7 @@ describe('CoupleSessionFields', () => {
     function DuplicateTestWrapper() {
       const form = useForm({
         defaultValues: {
-          patientId: '11111111-1111-1111-1111-111111111111',
+          patient_id: '11111111-1111-1111-1111-111111111111',
           couple: {
             enabled: true,
             secondPatientId: '11111111-1111-1111-1111-111111111111',
@@ -208,7 +208,7 @@ describe('CoupleSessionFields', () => {
     function ValidTestWrapper() {
       const form = useForm({
         defaultValues: {
-          patientId: '11111111-1111-1111-1111-111111111111',
+          patient_id: '11111111-1111-1111-1111-111111111111',
           couple: {
             enabled: true,
             secondPatientId: '22222222-2222-2222-2222-222222222222',

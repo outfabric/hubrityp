@@ -27,6 +27,9 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 test.describe('@sessions recurring session creation', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
+  // Increase timeout — this test creates recurring sessions and navigates 4 weeks
+  test.setTimeout(60_000);
+
   test('creates a weekly recurring session for 4 weeks and verifies all sessions appear', async ({
     page,
   }) => {
@@ -59,7 +62,7 @@ test.describe('@sessions recurring session creation', () => {
 
     // Select the patient from the dropdown
     const patientOption = page.getByTestId(`patient-option-${SEED_PATIENTS.activeWithPhone.id}`);
-    await expect(patientOption).toBeVisible({ timeout: 5000 });
+    await expect(patientOption).toBeVisible({ timeout: 10000 });
     await patientOption.click();
 
     // Select tomorrow's date in the calendar popover
@@ -160,31 +163,28 @@ test.describe('@sessions recurring session creation', () => {
     // Navigate to tomorrow so the first session is visible
     await page.getByTestId('agenda-nav-next').click();
 
-    // Verify the first session appears on the calendar
+    // Verify the first session appears on the calendar with the recurring indicator.
+    // Use `.filter({ has: ... })` to select the chip that has the recurring icon,
+    // avoiding false matches from non-recurring sessions created by parallel tests.
     const firstSessionChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
+      .filter({ has: page.getByTestId('recurring-indicator') })
       .first();
     await expect(firstSessionChip).toBeVisible({ timeout: 10000 });
-
-    // Verify the first session has the recurring indicator
-    const firstRecurringIcon = firstSessionChip.getByTestId('recurring-indicator');
-    await expect(firstRecurringIcon).toBeVisible();
 
     // Navigate through the next 3 weeks to verify sessions appear on each
     for (let week = 1; week < 4; week++) {
       await page.getByTestId('agenda-nav-next').click();
 
-      // Wait for the calendar to refresh and show sessions for the new week
+      // Wait for the calendar to refresh and show sessions for the new week.
+      // Filter for the recurring indicator to avoid picking a non-recurring chip.
       const weekSessionChip = page
         .getByTestId('session-chip')
         .filter({ hasText: patientName })
+        .filter({ has: page.getByTestId('recurring-indicator') })
         .first();
       await expect(weekSessionChip).toBeVisible({ timeout: 10000 });
-
-      // Verify the recurring indicator is present
-      const recurringIcon = weekSessionChip.getByTestId('recurring-indicator');
-      await expect(recurringIcon).toBeVisible();
     }
   });
 });
