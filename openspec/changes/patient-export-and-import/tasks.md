@@ -30,9 +30,9 @@
 
 > **Design System Sálvia** (`docs/design-system/rules.md`): AlertDialog para confirmação, Alert warning para sigilo, Button primary com loading + ícone Download.
 
-- [ ] 6.1 Adicionar opção "Exportar PDF" no `DropdownMenu` de ações do patient-detail-header (ícone `Download`)
-- [ ] 6.2 Criar componente `src/modules/patients/components/export-confirm-modal.tsx` (Client Component) — **Design system:** shadcn `AlertDialog` (max-width 480px, radius `2xl`, padding `space-8`). Título h3 "Exportar dados do paciente". shadcn `Checkbox` "Incluir dados clínicos (anamnese)". Aviso de sigilo: shadcn `Alert` variante `warning` (bg `warning-50`, text `warning-700`, ícone `AlertTriangle`, texto "Os dados clínicos são sigilosos. Compartilhe apenas quando estritamente necessário."). Botão "Exportar" `Button primary` + ícone `Download` + loading state obrigatório. "Cancelar" `Button secondary`
-- [ ] 6.3 Criar route action em `src/app/(app)/pacientes/[id]/actions.ts` — adicionar exportPatientPdf delegada
+- [x] 6.1 Adicionar opção "Exportar PDF" no `DropdownMenu` de ações do patient-detail-header (ícone `Download`)
+- [x] 6.2 Criar componente `src/modules/patients/components/export-confirm-modal.tsx` (Client Component) — **Design system:** shadcn `AlertDialog` (max-width 480px, radius `2xl`, padding `space-8`). Título h3 "Exportar dados do paciente". shadcn `Checkbox` "Incluir dados clínicos (anamnese)". Aviso de sigilo: shadcn `Alert` variante `warning` (bg `warning-50`, text `warning-700`, ícone `AlertTriangle`, texto "Os dados clínicos são sigilosos. Compartilhe apenas quando estritamente necessário."). Botão "Exportar" `Button primary` + ícone `Download` + loading state obrigatório. "Cancelar" `Button secondary`
+- [x] 6.3 Criar route action em `src/app/(app)/pacientes/[id]/actions.ts` — adicionar exportPatientPdf delegada
 
 ## 7. Frontend — CSV Import Page
 

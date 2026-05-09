@@ -12,6 +12,7 @@ import type {
   AddGuardianResult,
   ArchivePatientResult,
   DeletePatientResult,
+  ExportPatientPdfResult,
   GenerateConsentResult,
   GetPatientPhotoUrlResult,
   GetPatientResult,
@@ -28,6 +29,7 @@ import {
   addGuardianImpl,
   archivePatientImpl,
   deletePatientImpl,
+  exportPatientPdfImpl,
   generateConsentImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
@@ -116,4 +118,12 @@ export async function generateConsent(patientId: string): Promise<GenerateConsen
 export async function revokeConsent(patientId: string): Promise<RevokeConsentResult> {
   const supabase = await createServerClient();
   return revokeConsentImpl(supabase, patientId);
+}
+
+export async function exportPatientPdf(
+  patientId: string,
+  includeClinicalData: boolean,
+): Promise<ExportPatientPdfResult> {
+  const supabase = await createServerClient();
+  return exportPatientPdfImpl(supabase, patientId, includeClinicalData);
 }

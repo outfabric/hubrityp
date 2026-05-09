@@ -4,6 +4,7 @@ import {
   Archive,
   Check,
   Copy,
+  Download,
   Link as LinkIcon,
   MessageCircle,
   MoreHorizontal,
@@ -15,7 +16,12 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import type { ConsentStatus, GenerateConsentResult, RevokeConsentResult } from '@/modules/patients';
+import type {
+  ConsentStatus,
+  ExportPatientPdfResult,
+  GenerateConsentResult,
+  RevokeConsentResult,
+} from '@/modules/patients';
 import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
 import {
   AlertDialog,
@@ -41,6 +47,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 
 import { ArchiveConfirmModal } from './archive-confirm-modal';
 import { DeleteConfirmModal } from './delete-confirm-modal';
+import { ExportConfirmModal } from './export-confirm-modal';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -134,6 +141,11 @@ interface PatientDetailHeaderProps {
   generateConsentAction: (patientId: string) => Promise<GenerateConsentResult>;
   /** Server Action to revoke the active consent. */
   revokeConsentAction: (patientId: string) => Promise<RevokeConsentResult>;
+  /** Server Action to export patient data as PDF. */
+  exportPdfAction: (
+    patientId: string,
+    includeClinicalData: boolean,
+  ) => Promise<ExportPatientPdfResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -151,6 +163,7 @@ export function PatientDetailHeader({
   deleteAction,
   generateConsentAction,
   revokeConsentAction,
+  exportPdfAction,
 }: PatientDetailHeaderProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -158,6 +171,7 @@ export function PatientDetailHeader({
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   // Cache the consent token locally so subsequent clicks reuse it instead of
   // generating duplicate rows in consent_terms.
   const [cachedToken, setCachedToken] = useState<string | null>(consentToken);
@@ -246,6 +260,38 @@ export function PatientDetailHeader({
       }
       setRevokeModalOpen(false);
       router.refresh();
+    });
+  };
+
+  const handleExportConfirm = (includeClinicalData: boolean) => {
+    startTransition(async () => {
+      const result = await exportPdfAction(patient.id, includeClinicalData);
+      if (result.ok) {
+        // Convert base64 to blob and trigger download
+        const byteCharacters = atob(result.pdfBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = result.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success('PDF exportado com sucesso');
+      } else if ('message' in result) {
+        toast.error(result.message);
+      } else {
+        toast.error('Erro ao exportar o PDF. Tente novamente.');
+      }
+      setExportModalOpen(false);
     });
   };
 
@@ -414,6 +460,13 @@ export function PatientDetailHeader({
             Editar
           </DropdownMenuItem>
           <DropdownMenuItem
+            onClick={() => setExportModalOpen(true)}
+            data-testid="patient-action-export-pdf"
+          >
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+            Exportar PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() => setArchiveModalOpen(true)}
             data-testid="patient-action-archive"
           >
@@ -444,6 +497,14 @@ export function PatientDetailHeader({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Export PDF confirmation modal */}
+      <ExportConfirmModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        onConfirm={handleExportConfirm}
+        isPending={isPending}
+      />
 
       {/* Archive confirmation modal */}
       <ArchiveConfirmModal

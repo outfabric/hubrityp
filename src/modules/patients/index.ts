@@ -155,6 +155,7 @@ export { PatientEditForm } from './components/patient-edit-form';
 export { PatientDetailHeader } from './components/patient-detail-header';
 export { ArchiveConfirmModal } from './components/archive-confirm-modal';
 export { DeleteConfirmModal } from './components/delete-confirm-modal';
+export { ExportConfirmModal } from './components/export-confirm-modal';
 export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
 export { PatientCoupleSection } from './components/patient-couple-section';
