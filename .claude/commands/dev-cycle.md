@@ -80,6 +80,7 @@ Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt
 - **`section`** field: the literal section text from `tasks.md` — header `## N. <title>` plus every subtask line (`- [ ] N.M ...`) and any prose paragraphs between them. Plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by the section's subtasks.
 - **Section-as-unit instruction**: "Implement every subtask in this section as a single unit of work. Do not pause between subtasks. Run scoped re-validation ONCE at the end of the section, not after each subtask. The orchestrator will atomically flip every `- [ ]` in this section to `- [x]` only on `VERDICT: PASS` — partial completion produces nothing."
 - **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (defined in `.claude/agents/fullstack-developer.md`). It decides which layers to run based on the nature of the files changed — from skip-total (non-code sections) through lint+typecheck+unit+integration+e2e (UI flows). Integration and e2e are **always scoped, never full** — full suites run exclusively in the regression sweep (step 3c).
+- **E2E seeded tests are self-contained**: `npm run test:e2e:seeded` boots its own Postgres via Testcontainers and uses mock GoTrue — it does NOT need `supabase start`, `docker compose up`, or any external infrastructure. When a section creates or modifies files under `src/__tests__/e2e/seeded/`, the agent MUST run those specs as part of scoped re-validation. NEVER instruct the agent to "just create test files without running them" — that instruction caused 3 broken specs to ship to CI unexecuted.
 - **Reporting contract**: end the response with one of:
   - `VERDICT: PASS — implementation complete, tests pass, npm run check green.`
   - `VERDICT: FAIL — <one-line reason, including which subtask broke if applicable>. Logs: <path under .dev-cycle/>.` (Save full logs to `<worktree>/.dev-cycle/section-<N>-fail.log`.)
@@ -136,6 +137,8 @@ Then invoke `fullstack-developer` (Agent tool) in **sweep mode** with:
   - `VERDICT: FAIL — <one-line cause>. Logs: <sweep_log_path>`
 
 Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-section invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-section.
+
+**CRITICAL — both suites are self-contained**: `test:integration` and `test:e2e:seeded` both use Testcontainers (Postgres in Docker) and mock GoTrue. They do NOT require `supabase start`, `docker compose up`, or any external infrastructure. The orchestrator MUST run both — NEVER skip either suite. Any justification to skip (e.g., "requires Supabase", "infrastructure not available") is incorrect and has historically caused broken tests to ship to CI.
 
 **Branch on the agent's verdict:**
 
