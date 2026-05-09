@@ -29,7 +29,7 @@
 
 ## 4. Module Barrel Update
 
-- [ ] 4.1 Update `src/modules/sessions/index.ts` to re-export: createRecurringSession, editRecurringSession, cancelRecurringSession, createCoupleSession, createLateRecord, generateRecurrenceInstances, computeEditScope, recurrenceFormSchema, coupleSessionSchema, lateRecordSchema, and relevant types (RecurrenceRule, EditScope, etc.)
+- [x] 4.1 Update `src/modules/sessions/index.ts` to re-export: createRecurringSession, editRecurringSession, cancelRecurringSession, createCoupleSession, createLateRecord, generateRecurrenceInstances, computeEditScope, recurrenceFormSchema, coupleSessionSchema, lateRecordSchema, and relevant types (RecurrenceRule, EditScope, etc.)
 
 ## 5. Frontend — Recurrence Section in Session Form
 
