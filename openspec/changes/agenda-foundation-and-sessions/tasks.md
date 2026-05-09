@@ -143,7 +143,7 @@
 
 ## 17. Frontend — Route Actions
 
-- [ ] 17.1 Criar `src/app/(app)/agenda/actions.ts` com `'use server'` — delega listSessions, createSession, updateSession, deleteSession, markSessionDone, getSessionHistory, getAgendaSettings, listLocations
+- [x] 17.1 Criar `src/app/(app)/agenda/actions.ts` com `'use server'` — delega listSessions, createSession, updateSession, deleteSession, markSessionDone, getSessionHistory, getAgendaSettings, listLocations
 
 ## 18. Frontend — E2E Tests
 
