@@ -1,10 +1,10 @@
 ## 1. Database Schema — Consent Terms
 
-- [ ] 1.1 Adicionar tabela `consent_terms` em `src/shared/db/schema/patients/tables.ts` (colunas: id, patient_id FK, user_id, term_text TEXT, signature_token VARCHAR(64) UNIQUE, signed_at, signed_ip INET, signed_user_agent TEXT, signed_pdf_path TEXT, revoked_at, created_at)
-- [ ] 1.2 Adicionar RLS policies para `consent_terms` em `src/shared/db/schema/patients/policies.ts` — policy via `user_id = auth.uid()` (SELECT, INSERT, UPDATE, DELETE)
-- [ ] 1.3 Rodar `npm run db:generate`, editar migration para incluir RLS policies, UNIQUE em signature_token, índice em patient_id
-- [ ] 1.4 Testar migration com `npm run db:migrate` local
-- [ ] 1.5 **Teste de integração:** Criar `src/__tests__/integration/patients/consent-schema.int.test.ts` — verificar tabela existe, RLS habilitado, token unique constraint funciona
+- [x] 1.1 Adicionar tabela `consent_terms` em `src/shared/db/schema/patients/tables.ts` (colunas: id, patient_id FK, user_id, term_text TEXT, signature_token VARCHAR(64) UNIQUE, signed_at, signed_ip INET, signed_user_agent TEXT, signed_pdf_path TEXT, revoked_at, created_at)
+- [x] 1.2 Adicionar RLS policies para `consent_terms` em `src/shared/db/schema/patients/policies.ts` — policy via `user_id = auth.uid()` (SELECT, INSERT, UPDATE, DELETE)
+- [x] 1.3 Rodar `npm run db:generate`, editar migration para incluir RLS policies, UNIQUE em signature_token, índice em patient_id
+- [x] 1.4 Testar migration com `npm run db:migrate` local
+- [x] 1.5 **Teste de integração:** Criar `src/__tests__/integration/patients/consent-schema.int.test.ts` — verificar tabela existe, RLS habilitado, token unique constraint funciona
 
 ## 2. Dependencies
 
