@@ -24,8 +24,8 @@
 
 > **Design System Sálvia** (`docs/design-system/rules.md`): editor com tokens do tema, ícones Lucide, acessibilidade.
 
-- [ ] 5.1 Criar componente `src/modules/patients/components/tiptap-editor.tsx` (Client Component) — **Design system:** toolbar com `Button ghost` (size sm 32px) para cada ação, ícones Lucide 16px (`Bold`, `Italic`, `Underline`, `Heading3`, `Heading4`, `List`, `ListOrdered`). Toolbar com `role="toolbar"`, navegação por setas. Editor area: bg `surface-sunken`, border `border`, focus border `brand-500` + `shadow-focus`, radius `md`. Conteúdo em body-lg (17px/400, line-height 1.65). Placeholder em `text-disabled`. Max-width 720px (leitura longa). `aria-label` no editor. Respeitar `prefers-reduced-motion`
-- [ ] 5.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/components/tiptap-editor.test.tsx` — testar que renderiza, aceita content inicial, emite onChange ao digitar
+- [x] 5.1 Criar componente `src/modules/patients/components/tiptap-editor.tsx` (Client Component) — **Design system:** toolbar com `Button ghost` (size sm 32px) para cada ação, ícones Lucide 16px (`Bold`, `Italic`, `Underline`, `Heading3`, `Heading4`, `List`, `ListOrdered`). Toolbar com `role="toolbar"`, navegação por setas. Editor area: bg `surface-sunken`, border `border`, focus border `brand-500` + `shadow-focus`, radius `md`. Conteúdo em body-lg (17px/400, line-height 1.65). Placeholder em `text-disabled`. Max-width 720px (leitura longa). `aria-label` no editor. Respeitar `prefers-reduced-motion`
+- [x] 5.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/components/tiptap-editor.test.tsx` — testar que renderiza, aceita content inicial, emite onChange ao digitar
 
 ## 6. Frontend — Auto-Save Hook
 
