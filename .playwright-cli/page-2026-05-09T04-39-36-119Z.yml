@@ -1,0 +1,64 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e2]:
+        - banner [ref=e3]:
+            - generic [ref=e4]: HubrityP
+            - button "Sair" [ref=e6]
+        - main [ref=e7]:
+            - generic [ref=e8]:
+                - heading "Pacientes" [level=1] [ref=e10]
+                - generic [ref=e11]:
+                    - generic [ref=e12]:
+                        - generic [ref=e14]:
+                            - img [ref=e15]
+                            - searchbox "Buscar paciente" [ref=e18]
+                        - generic [ref=e19]:
+                            - group "Filtro de status" [ref=e20]:
+                                - button "Ativos" [pressed] [ref=e21]
+                                - button "Arquivados" [ref=e22]
+                                - button "Todos" [ref=e23]
+                            - link "Novo Paciente" [ref=e24] [cursor=pointer]:
+                                - /url: /pacientes/novo
+                                - button "Novo Paciente" [ref=e25]:
+                                    - img
+                                    - generic [ref=e26]: Novo Paciente
+                    - table [ref=e30]:
+                        - rowgroup [ref=e31]:
+                            - row "Paciente Contato Status Tags Cadastrado em" [ref=e32]:
+                                - columnheader "Paciente" [ref=e33]:
+                                    - button "Paciente" [ref=e34]:
+                                        - text: Paciente
+                                        - img [ref=e35]
+                                - columnheader "Contato" [ref=e37]
+                                - columnheader "Status" [ref=e38]
+                                - columnheader "Tags" [ref=e39]
+                                - columnheader "Cadastrado em" [ref=e40]:
+                                    - button "Cadastrado em" [ref=e41]
+                        - rowgroup [ref=e42]:
+                            - row "JS Joao da Silva +55 11 91234-5678 joao.silva@example.com Ativo - 09/05/2026" [ref=e43]:
+                                - cell "JS Joao da Silva" [ref=e44]:
+                                    - link "JS Joao da Silva" [ref=e45] [cursor=pointer]:
+                                        - /url: /pacientes/6241b4ca-4b5c-4d25-924c-a0ca07b8b17b
+                                        - generic [ref=e47]: JS
+                                        - generic [ref=e48]: Joao da Silva
+                                - cell "+55 11 91234-5678 joao.silva@example.com" [ref=e49]:
+                                    - generic [ref=e50]:
+                                        - generic [ref=e51]: +55 11 91234-5678
+                                        - generic [ref=e52]: joao.silva@example.com
+                                - cell "Ativo" [ref=e53]:
+                                    - generic [ref=e54]: Ativo
+                                - cell "-" [ref=e55]:
+                                    - generic [ref=e57]: '-'
+                                - cell "09/05/2026" [ref=e58]
+    - region "Notifications alt+T"
+    - generic [ref=e63] [cursor=pointer]:
+        - button "Open Next.js Dev Tools" [ref=e64]:
+            - img [ref=e65]
+        - generic [ref=e68]:
+            - button "Open issues overlay" [ref=e69]:
+                - generic [ref=e70]:
+                    - generic [ref=e71]: '0'
+                    - generic [ref=e72]: '1'
+                - generic [ref=e73]: Issue
+            - button "Collapse issues badge" [ref=e74]:
+                - img [ref=e75]
+    - alert [ref=e77]

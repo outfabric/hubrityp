@@ -1,0 +1,124 @@
+- generic:
+    - generic:
+        - banner:
+            - generic: HubrityP
+            - generic:
+                - button: Sair
+        - main:
+            - generic:
+                - generic:
+                    - link:
+                        - /url: /pacientes
+                        - button:
+                            - img
+                            - text: Voltar
+                - generic:
+                    - generic:
+                        - generic:
+                            - generic: JS
+                        - generic:
+                            - generic:
+                                - heading [level=1]: Joao da Silva
+                                - generic: Ativo
+                                - generic: Consentimento assinado
+                            - generic:
+                                - link:
+                                    - /url: https://wa.me/5511912345678
+                                    - img
+                                    - text: Abrir no WhatsApp
+                                - button:
+                                    - img
+                                    - text: joao.silva@example.com
+                            - generic:
+                                - button:
+                                    - img
+                                    - text: Enviar termo por WhatsApp
+                                - button:
+                                    - img
+                                    - text: Copiar link
+                    - button [expanded]:
+                        - img
+                - generic:
+                    - generic:
+                        - tablist:
+                            - tab [selected]: Visao geral
+                            - tab:
+                                - img
+                                - text: Historico de sessoes
+                            - tab:
+                                - img
+                                - text: Prontuario
+                            - tab:
+                                - img
+                                - text: Anamnese
+                            - tab:
+                                - img
+                                - text: Documentos
+                            - tab:
+                                - img
+                                - text: Financeiro
+                        - tabpanel:
+                            - generic:
+                                - generic:
+                                    - generic:
+                                        - generic:
+                                            - term: Tipo de paciente
+                                            - definition: Adulto
+                                        - generic:
+                                            - term: Data de nascimento
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Genero
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Profissao
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Estado civil
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Como chegou
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Telefone
+                                            - definition: +55 11 91234-5678
+                                        - generic:
+                                            - term: E-mail
+                                            - definition: joao.silva@example.com
+                                        - generic:
+                                            - term: CPF
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Endereco
+                                            - definition: '-'
+                                        - generic:
+                                            - term: Cadastrado em
+                                            - definition: 09/05/2026
+    - region "Notifications alt+T"
+    - generic [ref=e92] [cursor=pointer]:
+        - button "Open Next.js Dev Tools" [ref=e93]:
+            - img [ref=e94]
+        - generic [ref=e97]:
+            - button "Open issues overlay" [ref=e98]:
+                - generic [ref=e99]:
+                    - generic [ref=e100]: '0'
+                    - generic [ref=e101]: '1'
+                - generic [ref=e102]: Issue
+            - button "Collapse issues badge" [ref=e103]:
+                - img [ref=e104]
+    - alert
+    - menu "Mais opções" [active] [ref=e107]:
+        - menuitem "Editar" [ref=e108]:
+            - img
+            - text: Editar
+        - menuitem "Arquivar" [ref=e109]:
+            - img
+            - text: Arquivar
+        - separator [ref=e110]
+        - menuitem "Revogar consentimento" [ref=e111]:
+            - img
+            - text: Revogar consentimento
+        - separator [ref=e112]
+        - menuitem "Excluir" [ref=e113]:
+            - img
+            - text: Excluir
