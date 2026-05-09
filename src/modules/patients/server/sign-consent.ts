@@ -76,21 +76,26 @@ export async function signConsentImpl(
   }
 
   // 4. Fetch patient name and psychologist info for PDF generation
-  const [patient] = await db
-    .select({ fullName: patients.fullName })
-    .from(patients)
-    .where(eq(patients.id, term.patientId))
-    .limit(1);
+  // Parallelized: these two queries are independent reads.
+  const [patientRows, psychologistRows] = await Promise.all([
+    db
+      .select({ fullName: patients.fullName })
+      .from(patients)
+      .where(eq(patients.id, term.patientId))
+      .limit(1),
+    db
+      .select({
+        fullName: profiles.fullName,
+        crpNumber: profiles.crpNumber,
+        crpUf: profiles.crpUf,
+      })
+      .from(profiles)
+      .where(eq(profiles.userId, term.userId))
+      .limit(1),
+  ]);
 
-  const [psychologist] = await db
-    .select({
-      fullName: profiles.fullName,
-      crpNumber: profiles.crpNumber,
-      crpUf: profiles.crpUf,
-    })
-    .from(profiles)
-    .where(eq(profiles.userId, term.userId))
-    .limit(1);
+  const patient = patientRows[0];
+  const psychologist = psychologistRows[0];
 
   if (!patient || !psychologist) {
     logger.error(
@@ -104,11 +109,11 @@ export async function signConsentImpl(
     };
   }
 
-  // 5. Record signing metadata on the consent term
+  // 5. Record signing metadata on the consent term (optimistic concurrency)
   const now = new Date();
 
   try {
-    await db
+    const updated = await db
       .update(consentTerms)
       .set({
         signedAt: now,
@@ -118,11 +123,17 @@ export async function signConsentImpl(
       .where(
         and(
           eq(consentTerms.id, term.id),
-          // Optimistic concurrency: only update if still unsigned
+          // Optimistic concurrency: only update if still unsigned and not revoked
           isNull(consentTerms.signedAt),
           isNull(consentTerms.revokedAt),
         ),
-      );
+      )
+      .returning({ id: consentTerms.id });
+
+    // If no rows were updated, another request signed or revoked concurrently
+    if (updated.length === 0) {
+      return { ok: false, error: 'already_signed' };
+    }
 
     // 6. Generate PDF
     const pdfBuffer = await generateConsentPdf({
@@ -135,6 +146,12 @@ export async function signConsentImpl(
     });
 
     // 7. Upload PDF to Supabase Storage
+    // TODO: The `consent-pdfs` bucket must be created in Supabase Storage
+    // before the first upload. For local dev, run:
+    //   supabase storage create consent-pdfs --public=false
+    // For production, create it via the Supabase dashboard or deploy script.
+    // The code degrades gracefully if the bucket does not exist (signing
+    // succeeds, PDF path is set to null for later retry).
     const storagePath = `${term.userId}/${term.patientId}/${term.id}.pdf`;
 
     const supabaseAdmin = createSupabaseClient(
@@ -168,23 +185,24 @@ export async function signConsentImpl(
       // The PDF can be regenerated later.
     }
 
-    // 8. Set signed_pdf_path on the consent term (even if upload failed,
-    // store the intended path so retry logic can find it)
+    // 8 & 9. Set signed_pdf_path + update patient.consent_signed_at atomically
+    // Wrapped in a transaction to prevent inconsistent state if one write fails.
     const pdfPath = uploadError ? null : storagePath;
 
-    await db
-      .update(consentTerms)
-      .set({ signedPdfPath: pdfPath })
-      .where(eq(consentTerms.id, term.id));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(consentTerms)
+        .set({ signedPdfPath: pdfPath })
+        .where(eq(consentTerms.id, term.id));
 
-    // 9. Update patient.consent_signed_at
-    await db
-      .update(patients)
-      .set({
-        consentSignedAt: now,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(patients.id, term.patientId));
+      await tx
+        .update(patients)
+        .set({
+          consentSignedAt: now,
+          updatedAt: sql`now()`,
+        })
+        .where(eq(patients.id, term.patientId));
+    });
 
     return { ok: true };
   } catch (err: unknown) {

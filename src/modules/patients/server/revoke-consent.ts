@@ -80,20 +80,23 @@ export async function revokeConsentImpl(
   }
 
   // 4 & 5. Revoke consent term and clear patient's consent_signed_at
+  // Wrapped in a transaction to prevent inconsistent state between the two tables.
   try {
-    await db
-      .update(consentTerms)
-      .set({ revokedAt: sql`now()` })
-      .where(eq(consentTerms.id, activeTerm.id));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(consentTerms)
+        .set({ revokedAt: sql`now()` })
+        .where(eq(consentTerms.id, activeTerm.id));
 
-    await db
-      .update(patients)
-      .set({
-        consentSignedAt: null,
-        consentRevokedAt: sql`now()`,
-        updatedAt: sql`now()`,
-      })
-      .where(and(eq(patients.id, patientId), eq(patients.userId, userId)));
+      await tx
+        .update(patients)
+        .set({
+          consentSignedAt: null,
+          consentRevokedAt: sql`now()`,
+          updatedAt: sql`now()`,
+        })
+        .where(and(eq(patients.id, patientId), eq(patients.userId, userId)));
+    });
 
     return { ok: true };
   } catch (err: unknown) {
