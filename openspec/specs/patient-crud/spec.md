@@ -2,7 +2,7 @@
 
 ### Requirement: Psychologist can create a patient
 
-The system SHALL allow an authenticated psychologist to create a new patient record with required fields (full_name, patient_type, phone) and optional fields (birth_date, approximate_age, gender, email, cpf, address, profession, marital_status, source, tags, photo, notes). The patient is always owned by the creating psychologist (`user_id`). **When patient_type is "child" or "adolescent", the creation form SHALL additionally collect guardian information. When patient_type is "couple", the form SHALL collect data for both partners.**
+The system SHALL allow an authenticated psychologist to create a new patient record with required fields (full_name, patient_type, phone) and optional fields (birth_date, approximate_age, gender, email, cpf, address, profession, marital_status, source, tags, photo, notes). The patient is always owned by the creating psychologist (`user_id`). **When patient_type is "child" or "adolescent", the creation form SHALL additionally collect guardian information. When patient_type is "couple", the form SHALL collect data for both partners.** The patient's `consent_signed_at` and `consent_revoked_at` fields are managed exclusively by the consent term workflow (not editable via patient CRUD).
 
 #### Scenario: Successful creation of adult patient with minimal fields
 
@@ -38,6 +38,11 @@ The system SHALL allow an authenticated psychologist to create a new patient rec
 
 - **WHEN** psychologist submits a patient with email="not-an-email"
 - **THEN** system rejects with validation error for email field
+
+#### Scenario: consent_signed_at is not settable via create/update
+
+- **WHEN** psychologist submits a patient form including consent_signed_at in the payload
+- **THEN** system ignores the field (it is not part of the create/update input schema)
 
 ### Requirement: Duplicate patients are prevented per psychologist
 
