@@ -23,9 +23,25 @@ export {
   type SaveAgendaSettingsResult,
 } from './server/save-agenda-settings';
 
+// ---- Server Actions (sessions) -----------------------------------------------
+export {
+  listSessionsImpl,
+  type ListSessionsResult,
+  type SessionWithDetails,
+} from './server/list-sessions';
+export { createSessionImpl, type CreateSessionResult } from './server/create-session';
+export { updateSessionImpl, type UpdateSessionResult } from './server/update-session';
+export { deleteSessionImpl, type DeleteSessionResult } from './server/delete-session';
+export { markSessionDoneImpl, type MarkSessionDoneResult } from './server/mark-session-done';
+export {
+  getSessionHistoryImpl,
+  type GetSessionHistoryResult,
+} from './server/get-session-history';
+
 // ---- Zod Schemas ------------------------------------------------------------
 export { locationInputSchema, type LocationInput } from './lib/location-input-schema';
 export {
   agendaSettingsInputSchema,
   type AgendaSettingsInput,
 } from './lib/agenda-settings-input-schema';
+export { sessionInputSchema, type SessionInput } from './lib/session-input-schema';
