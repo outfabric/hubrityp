@@ -25,8 +25,8 @@
 
 ## 5. PDF Generation
 
-- [ ] 5.1 Criar `src/modules/patients/lib/generate-consent-pdf.ts` — função que recebe dados (psychologist name/CRP, patient name, term text, signed_at, signed_ip) e retorna Buffer do PDF. Incluir header com identificação, texto do termo, bloco de assinatura, nota de validade legal
-- [ ] 5.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/generate-consent-pdf.test.ts` — testar que retorna Buffer válido, inclui dados esperados (mock pdfkit se necessário)
+- [x] 5.1 Criar `src/modules/patients/lib/generate-consent-pdf.ts` — função que recebe dados (psychologist name/CRP, patient name, term text, signed_at, signed_ip) e retorna Buffer do PDF. Incluir header com identificação, texto do termo, bloco de assinatura, nota de validade legal
+- [x] 5.2 **Teste unitário:** Criar `src/__tests__/unit/modules/patients/lib/generate-consent-pdf.test.ts` — testar que retorna Buffer válido, inclui dados esperados (mock pdfkit se necessário)
 
 ## 6. Default Consent Template
 

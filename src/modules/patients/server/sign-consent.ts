@@ -9,7 +9,7 @@ import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
 import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
-import { generateConsentPdf } from './generate-consent-pdf';
+import { generateConsentPdf } from '../lib/generate-consent-pdf';
 
 // ---------------------------------------------------------------------------
 // Result types

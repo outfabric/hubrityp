@@ -1,5 +1,3 @@
-import 'server-only';
-
 import PDFDocument from 'pdfkit';
 
 // ---------------------------------------------------------------------------
@@ -16,16 +14,29 @@ export type ConsentPdfInput = {
 };
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const LEGAL_NOTE = 'Documento assinado eletronicamente conforme MP 2.200-2/2001 art. 10, §2º';
+
+// ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
 /**
  * Generates a PDF document for a signed consent term.
  *
- * This is a minimal implementation — section 5 will replace it with a
- * properly branded version using the Salvia design system. For now it
- * produces a simple, readable PDF that satisfies the legal requirement of
- * having a signed document on file.
+ * Pure utility — no database or Supabase dependencies. Receives all data
+ * needed to render the PDF and returns a Buffer.
+ *
+ * Layout:
+ *   1. Header with title
+ *   2. Psychologist identification (name + CRP)
+ *   3. Patient name
+ *   4. Full term text (justified)
+ *   5. Signing block (timestamp + IP)
+ *   6. Signature line with patient name
+ *   7. Legal validity note (MP 2.200-2/2001)
  *
  * @returns A Buffer containing the PDF data.
  */
@@ -84,7 +95,11 @@ export async function generateConsentPdf(input: ConsentPdfInput): Promise<Buffer
       .fontSize(10)
       .text('_________________________________', { align: 'center' })
       .text(input.patientName, { align: 'center' })
-      .text('(aceite eletrônico)', { align: 'center' });
+      .text('(aceite eletrônico)', { align: 'center' })
+      .moveDown(2);
+
+    // --- Legal validity note ---
+    doc.fontSize(8).text(LEGAL_NOTE, { align: 'center' });
 
     doc.end();
   });

@@ -61,7 +61,7 @@ export {
   type ConsentByTokenData,
 } from './server/get-consent-by-token';
 export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
-export { generateConsentPdf, type ConsentPdfInput } from './server/generate-consent-pdf';
+export { generateConsentPdf, type ConsentPdfInput } from './lib/generate-consent-pdf';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
