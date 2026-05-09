@@ -47,10 +47,10 @@ export default async function ConsentPage({ params }: ConsentPageProps) {
       >
         <AlertCircle className="text-danger-500 h-12 w-12" aria-hidden="true" />
         <h3 className="text-text-primary text-lg leading-tight font-semibold">
-          Termo nao encontrado
+          Termo não encontrado
         </h3>
         <p className="text-text-secondary text-[15px]">
-          O link pode ter expirado ou ser invalido. Entre em contato com seu psicologo.
+          O link pode ter expirado ou ser inválido. Entre em contato com seu psicólogo.
         </p>
       </div>
     );
@@ -67,10 +67,10 @@ export default async function ConsentPage({ params }: ConsentPageProps) {
       >
         <Info className="text-info-500 h-12 w-12" aria-hidden="true" />
         <h3 className="text-text-primary text-lg leading-tight font-semibold">
-          Este termo ja foi assinado
+          Este termo já foi assinado
         </h3>
         <p className="text-text-secondary text-[15px]">
-          Se precisar de uma copia, entre em contato com seu psicologo.
+          Se precisar de uma cópia, entre em contato com seu psicólogo.
         </p>
       </div>
     );
@@ -84,7 +84,7 @@ export default async function ConsentPage({ params }: ConsentPageProps) {
           Termo de Consentimento Informado
         </h1>
         <p className="text-text-secondary mt-2 text-[15px]">
-          Psicologo(a): {data.psychologistName} — CRP {data.psychologistCrp}
+          Psicólogo(a): {data.psychologistName} — CRP {data.psychologistCrp}
         </p>
       </div>
 

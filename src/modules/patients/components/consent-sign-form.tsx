@@ -76,7 +76,7 @@ export function ConsentSignForm({ token, signAction }: ConsentSignFormProps) {
         <h3 className="text-text-primary text-lg leading-tight font-semibold">
           Termo assinado com sucesso
         </h3>
-        <p className="text-text-secondary text-[13px]">Uma copia sera enviada por email.</p>
+        <p className="text-text-secondary text-[13px]">Uma cópia será enviada por e-mail.</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function ConsentSignForm({ token, signAction }: ConsentSignFormProps) {
         data-testid="consent-refused"
       >
         <p className="text-text-secondary text-[15px]">
-          Termo recusado. Caso tenha duvidas, entre em contato com seu psicologo.
+          Termo recusado. Caso tenha dúvidas, entre em contato com seu psicólogo.
         </p>
       </div>
     );

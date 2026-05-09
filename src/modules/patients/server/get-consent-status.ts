@@ -115,7 +115,8 @@ export async function getConsentStatusImpl(
     };
   }
 
-  // If the latest term was revoked, status is "revoked"
+  // If the latest term was revoked, status is "revoked".
+  // Token is intentionally null — a revoked token must not be shared.
   if (latestTerm.revokedAt) {
     return {
       ok: true,
@@ -125,7 +126,7 @@ export async function getConsentStatusImpl(
         revokedAt: latestTerm.revokedAt,
         signedPdfPath: latestTerm.signedPdfPath,
         consentId: latestTerm.id,
-        token: latestTerm.signatureToken,
+        token: null,
       },
     };
   }

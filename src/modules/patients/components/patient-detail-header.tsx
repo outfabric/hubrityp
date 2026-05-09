@@ -158,6 +158,11 @@ export function PatientDetailHeader({
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  // Cache the consent token locally so subsequent clicks reuse it instead of
+  // generating duplicate rows in consent_terms.
+  const [cachedToken, setCachedToken] = useState<string | null>(consentToken);
+  // Track consent status locally so revocation immediately hides share buttons.
+  const [localConsentStatus, setLocalConsentStatus] = useState<ConsentStatus>(consentStatus);
 
   const age = calculateAge(patient.birthDate);
   const ageDisplay =
@@ -185,13 +190,18 @@ export function PatientDetailHeader({
   };
 
   /**
-   * Resolves a consent token — reuses an existing pending one or generates a
-   * new term via the server action when none exists.
+   * Resolves a consent token — reuses the cached/prop token or generates a
+   * new term via the server action when none exists. The result is stored in
+   * local state so subsequent clicks never create duplicate rows.
    */
   const resolveConsentToken = async (): Promise<string | null> => {
-    if (consentToken) return consentToken;
+    if (cachedToken) return cachedToken;
     const result = await generateConsentAction(patient.id);
-    if (result.ok) return result.token;
+    if (result.ok) {
+      setCachedToken(result.token);
+      setLocalConsentStatus('pending');
+      return result.token;
+    }
     toast.error('Erro ao gerar o termo de consentimento');
     return null;
   };
@@ -225,6 +235,9 @@ export function PatientDetailHeader({
     startTransition(async () => {
       const result = await revokeConsentAction(patient.id);
       if (result.ok) {
+        // Clear the cached token so share buttons won't distribute a revoked link.
+        setCachedToken(null);
+        setLocalConsentStatus('revoked');
         toast.success('Consentimento revogado');
       } else if ('message' in result) {
         toast.error(result.message);
@@ -258,14 +271,14 @@ export function PatientDetailHeader({
     startTransition(async () => {
       const result = await deleteAction(patient.id);
       if (result.ok) {
-        toast.success('Paciente excluido');
+        toast.success('Paciente excluído');
         router.push('/pacientes');
       }
       setDeleteModalOpen(false);
     });
   };
 
-  const consentBadge = consentBadgeConfig(consentStatus);
+  const consentBadge = consentBadgeConfig(localConsentStatus);
 
   return (
     <div
@@ -386,7 +399,7 @@ export function PatientDetailHeader({
             variant="ghost"
             size="sm"
             disabled={isPending}
-            aria-label="Mais opcoes"
+            aria-label="Mais opções"
             data-testid="patient-actions-menu"
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -407,7 +420,7 @@ export function PatientDetailHeader({
             <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
             {patient.status === 'active' ? 'Arquivar' : 'Desarquivar'}
           </DropdownMenuItem>
-          {consentStatus === 'signed' && (
+          {localConsentStatus === 'signed' && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -456,8 +469,8 @@ export function PatientDetailHeader({
               <h3>Revogar consentimento?</h3>
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Ao revogar o consentimento, o termo assinado sera invalidado e o paciente precisara
-              assinar um novo termo antes de continuar o tratamento. Esta acao nao pode ser
+              Ao revogar o consentimento, o termo assinado será invalidado e o paciente precisará
+              assinar um novo termo antes de continuar o tratamento. Esta ação não pode ser
               desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
