@@ -21,6 +21,10 @@ import type { z } from 'zod';
 import { formatSessionTime, toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
 import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
+import {
+  CoupleSessionFields,
+  type PatientOption as CouplePatientOption,
+} from '@/modules/sessions/components/couple-session-fields';
 import { LateRecordToggle } from '@/modules/sessions/components/late-record-toggle';
 import { RecurrenceFormSection } from '@/modules/sessions/components/recurrence-form-section';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
@@ -135,6 +139,18 @@ export interface SessionEditData {
   color: string | null;
 }
 
+/** Shared result shape for create/update callbacks. */
+interface MutationResult {
+  ok: boolean;
+  sessionId?: string;
+  recurrenceId?: string;
+  sessionCount?: number;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  message?: string;
+  conflicts?: ConflictResult[];
+}
+
 interface SessionFormModalProps {
   /** Whether the dialog is open. */
   open: boolean;
@@ -151,25 +167,13 @@ interface SessionFormModalProps {
   /** Pre-selected time (from calendar dateClick, e.g. "14:00"). */
   preselectedTime?: string;
   /** Server Action: create session. */
-  onCreate: (input: unknown) => Promise<{
-    ok: boolean;
-    sessionId?: string;
-    error?: string;
-    fieldErrors?: Record<string, string[]>;
-    message?: string;
-    conflicts?: ConflictResult[];
-  }>;
+  onCreate: (input: unknown) => Promise<MutationResult>;
+  /** Server Action: create recurring session series. */
+  onCreateRecurring?: (input: unknown) => Promise<MutationResult>;
+  /** Server Action: create couple session. */
+  onCreateCouple?: (input: unknown) => Promise<MutationResult>;
   /** Server Action: update session. */
-  onUpdate: (
-    id: string,
-    input: unknown,
-  ) => Promise<{
-    ok: boolean;
-    error?: string;
-    fieldErrors?: Record<string, string[]>;
-    message?: string;
-    conflicts?: ConflictResult[];
-  }>;
+  onUpdate: (id: string, input: unknown) => Promise<MutationResult>;
   /** Server Action: search patients by name. */
   onSearchPatients: (
     query: string,
@@ -340,6 +344,8 @@ export function SessionFormModal({
   preselectedDate,
   preselectedTime,
   onCreate,
+  onCreateRecurring,
+  onCreateCouple,
   onUpdate,
   onSearchPatients,
   onSuccess,
@@ -348,6 +354,14 @@ export function SessionFormModal({
   const [isPending, startTransition] = useTransition();
   const [conflicts, setConflicts] = useState<ConflictResult[]>([]);
   const [selectedPatientName, setSelectedPatientName] = useState<string | null>(null);
+  // Resolved patients for the couple session fields dropdown
+  const [resolvedPatients, setResolvedPatients] = useState<CouplePatientOption[]>([]);
+  // Couple/recurrence state captured directly via form.watch() for submit routing.
+  // We snapshot on every render cycle to ensure handleSubmit has fresh values.
+  const coupleStateRef = useRef<{ enabled: boolean; secondPatientId?: string }>({
+    enabled: false,
+  });
+  const recurrenceStateRef = useRef<Record<string, unknown>>({});
 
   // Derive initial values
   const defaultLocationId = locations.find((l) => l.isDefault)?.id ?? locations[0]?.id ?? undefined;
@@ -389,11 +403,41 @@ export function SessionFormModal({
     return dt;
   }, [selectedDate, selectedTime]);
 
+  // Sync couple/recurrence refs from form state so handleSubmit can read them.
+  // We subscribe via watch() callback to avoid stale refs.
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      const v = values as Record<string, unknown>;
+      const couple = v['couple'] as Record<string, unknown> | undefined;
+      const recurrence = v['recurrence'] as Record<string, unknown> | undefined;
+      coupleStateRef.current = {
+        enabled: couple?.enabled === true,
+        secondPatientId: couple?.secondPatientId as string | undefined,
+      };
+      recurrenceStateRef.current = recurrence ?? {};
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
+
+  // Fetch patients for the couple session dropdown when the modal opens
+  useEffect(() => {
+    if (!open || isEdit) return;
+    // Fetch a broad list of active patients for the couple "second patient" select
+    void onSearchPatients('').then((result) => {
+      if (result.ok) {
+        setResolvedPatients(result.patients.map((p) => ({ id: p.id, name: p.fullName })));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on open/edit change
+  }, [open, isEdit]);
+
   // Reset form when dialog opens
   useEffect(() => {
     if (!open) return;
 
     setConflicts([]);
+    coupleStateRef.current = { enabled: false };
+    recurrenceStateRef.current = {};
 
     if (session) {
       // Edit mode: populate from session data
@@ -461,6 +505,12 @@ export function SessionFormModal({
   function handlePatientSelect(patient: PatientOption) {
     setSelectedPatientName(patient.fullName);
     form.setValue('patient_id', patient.id, { shouldValidate: true });
+    // Track resolved patients for the couple session dropdown
+    setResolvedPatients((prev) => {
+      const exists = prev.some((p) => p.id === patient.id);
+      if (exists) return prev;
+      return [...prev, { id: patient.id, name: patient.fullName }];
+    });
   }
 
   function handleForceConflict() {
@@ -470,10 +520,66 @@ export function SessionFormModal({
 
   function handleSubmit(data: SessionFormValues) {
     startTransition(async () => {
-      const result = session ? await onUpdate(session.id, data) : await onCreate(data);
+      let result: MutationResult;
+
+      if (session) {
+        result = await onUpdate(session.id, data);
+      } else {
+        // Read extra form state from refs (couple, recurrence) — these fields
+        // are not part of sessionInputSchema so the zodResolver strips them
+        // from `data`. The refs are synced via form.watch() subscription.
+        // Also read getValues() as fallback.
+        const allFormValues = form.getValues() as Record<string, unknown>;
+        const recurrence =
+          recurrenceStateRef.current.frequency != null
+            ? recurrenceStateRef.current
+            : ((allFormValues['recurrence'] as Record<string, unknown>) ?? {});
+        const coupleRef = coupleStateRef.current;
+        const coupleForm = allFormValues['couple'] as Record<string, unknown> | undefined;
+        const couple =
+          coupleRef.enabled && coupleRef.secondPatientId
+            ? coupleRef
+            : coupleForm
+              ? {
+                  enabled: coupleForm.enabled === true,
+                  secondPatientId: coupleForm.secondPatientId as string | undefined,
+                }
+              : coupleRef;
+        const hasRecurrence = recurrence.frequency != null;
+        const hasCouple = couple.enabled && couple.secondPatientId != null;
+
+        if (hasRecurrence && onCreateRecurring) {
+          // Route to recurring session creation — pass session template + recurrence rule
+          result = await onCreateRecurring({
+            session: data,
+            recurrence: {
+              ...recurrence,
+              startDate: data.start_at, // use the session date as recurrence start
+            },
+            force_conflict: data.force_conflict,
+          });
+        } else if (hasCouple && onCreateCouple) {
+          // Route to couple session creation — pass session template + patient_ids
+          const primaryPatientId = data.patient_id;
+          const secondPatientId = couple.secondPatientId!;
+          result = await onCreateCouple({
+            session: data,
+            couple: {
+              patient_ids: [primaryPatientId, secondPatientId],
+            },
+          });
+        } else {
+          result = await onCreate(data);
+        }
+      }
 
       if (result.ok) {
-        toast.success(isEdit ? 'Sessao atualizada com sucesso.' : 'Sessao agendada com sucesso.');
+        const successMsg = isEdit
+          ? 'Sessao atualizada com sucesso.'
+          : result.sessionCount && result.sessionCount > 1
+            ? `${result.sessionCount} sessoes agendadas com sucesso.`
+            : 'Sessao agendada com sucesso.';
+        toast.success(successMsg);
         onOpenChange(false);
         onSuccess();
       } else if (result.error === 'conflict_warning' && result.conflicts) {
@@ -492,7 +598,10 @@ export function SessionFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[640px]" data-testid="session-form-modal">
+      <DialogContent
+        className="flex max-h-[90vh] max-w-[640px] flex-col"
+        data-testid="session-form-modal"
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar sessao' : 'Agendar sessao'}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -509,7 +618,7 @@ export function SessionFormModal({
               setConflicts([]);
               void form.handleSubmit(handleSubmit)();
             }}
-            className="space-y-4"
+            className="space-y-4 overflow-y-auto pr-1"
             noValidate
             data-testid="session-form"
           >
@@ -773,6 +882,9 @@ export function SessionFormModal({
                 ))}
               </div>
             </div>
+
+            {/* Couple session fields (create mode only) */}
+            {!isEdit && <CoupleSessionFields patients={resolvedPatients} />}
 
             {/* Recurrence (create mode only — recurring edits use EditScopeDialog) */}
             {!isEdit && <RecurrenceFormSection />}

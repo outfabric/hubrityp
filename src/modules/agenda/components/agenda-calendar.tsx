@@ -529,6 +529,14 @@ export function AgendaCalendar({
           const { createSession } = await import('@/app/(app)/agenda/actions');
           return createSession(input);
         }}
+        onCreateRecurring={async (input) => {
+          const { createRecurringSession } = await import('@/app/(app)/agenda/actions');
+          return createRecurringSession(input);
+        }}
+        onCreateCouple={async (input) => {
+          const { createCoupleSession } = await import('@/app/(app)/agenda/actions');
+          return createCoupleSession(input);
+        }}
         onUpdate={async (id, input) => {
           const scope = pendingEditScopeRef.current;
           if (scope) {

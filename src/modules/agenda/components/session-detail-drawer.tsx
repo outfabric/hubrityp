@@ -246,9 +246,8 @@ export function SessionDetailDrawer({
     calculateEndTime(new Date(session.startAt), session.durationMinutes),
   );
 
-  const title = isBlocking
-    ? (session.blockingTitle ?? 'Bloqueio')
-    : (session.patientName ?? 'Paciente');
+  const displayName = session.coupleDisplayName ?? session.patientName;
+  const title = isBlocking ? (session.blockingTitle ?? 'Bloqueio') : (displayName ?? 'Paciente');
 
   return (
     <>
