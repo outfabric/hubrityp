@@ -108,7 +108,7 @@
 
 > **Design System Salvia**: Dialog (640px md), React Hook Form + Zod, Combobox para paciente, Alert warning para conflito, loading state obrigatorio.
 
-- [ ] 14.1 Criar componente `src/modules/agenda/components/session-form-modal.tsx` (Client Component) — **Design system:** shadcn `Dialog` (max-width 640px, radius `2xl`, padding `space-8`). Titulo h3 "Agendar sessao" (create) ou "Editar sessao" (edit), 18px/600. React Hook Form + Zod (sessionInputSchema). Campos:
+- [x] 14.1 Criar componente `src/modules/agenda/components/session-form-modal.tsx` (Client Component) — **Design system:** shadcn `Dialog` (max-width 640px, radius `2xl`, padding `space-8`). Titulo h3 "Agendar sessao" (create) ou "Editar sessao" (edit), 18px/600. React Hook Form + Zod (sessionInputSchema). Campos:
   - "Paciente" — shadcn `Combobox` (Command + Popover) com busca, obrigatorio. Oculto quando is_blocking. Icone `User` 16px
   - "Data" — shadcn `Popover` + shadcn `Calendar`, icone `Calendar` 16px
   - "Hora inicio" — shadcn `Select` com slots de 30min a partir do business hours
@@ -120,7 +120,7 @@
   - "Observacao" — shadcn `Textarea` (3 rows, opcional)
   - "Cor" — 6 swatches preset
   Validacao inline em blur. Gap label->input `space-2`, gap entre campos `space-4`. Conflito: shadcn `Alert` variante warning (bg `warning-50`, text `warning-700`, icone `AlertTriangle`) com mensagem "Voce ja tem [Nome] das [hora] as [hora] nesse horario" e botao "Agendar mesmo assim" `Button secondary`. Footer: "Salvar" `Button primary` (loading state), "Cancelar" `Button secondary`. Mobile: full-screen Sheet slide-up
-- [ ] 14.2 Criar componente `src/modules/agenda/components/block-form-modal.tsx` (Client Component) — **Design system:** shadcn `Dialog` (max-width 480px, radius `2xl`, padding `space-8`). Titulo h3 "Bloquear horario", 18px/600. Campos: Titulo `Input` (obrigatorio, placeholder "Ex.: Almoco, Supervisao"), Data (Popover + Calendar), Hora inicio (Select), Duracao (Select), Hora fim (auto-calc caption). Footer: "Bloquear" `Button primary` com icone `Lock`, "Cancelar" `Button secondary`
+- [x] 14.2 Criar componente `src/modules/agenda/components/block-form-modal.tsx` (Client Component) — **Design system:** shadcn `Dialog` (max-width 480px, radius `2xl`, padding `space-8`). Titulo h3 "Bloquear horario", 18px/600. Campos: Titulo `Input` (obrigatorio, placeholder "Ex.: Almoco, Supervisao"), Data (Popover + Calendar), Hora inicio (Select), Duracao (Select), Hora fim (auto-calc caption). Footer: "Bloquear" `Button primary` com icone `Lock`, "Cancelar" `Button secondary`
 
 ## 15. Frontend — Session Detail Drawer
 
