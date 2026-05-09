@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { generateConsentImpl } from '@/modules/patients/server/generate-consent';
 import { getConsentStatusImpl } from '@/modules/patients/server/get-consent-status';
 import { revokeConsentImpl } from '@/modules/patients/server/revoke-consent';
+import { profiles } from '@/shared/db/schema/auth/tables';
 import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
 
 import { runAsService } from '../setup/run-as-service';
@@ -25,6 +26,25 @@ async function seedAuthUser(userId: string): Promise<void> {
            VALUES (${userId}, ${`test-${userId}@example.com`}, '{"provider":"google"}'::jsonb)
            ON CONFLICT (id) DO NOTHING`,
     );
+  });
+}
+
+/**
+ * Create a row in `public.profiles` so the `generateConsentImpl` profile
+ * lookup (for psychologist name/CRP template interpolation) succeeds.
+ */
+async function seedProfile(userId: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(profiles).values({
+      userId,
+      email: `test-${userId}@example.com`,
+      fullName: 'Dra. Maria Silva',
+      crpNumber: '06/12345',
+      crpUf: 'SP',
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
+      sensitiveDataConsentAt: new Date(),
+    });
   });
 }
 
@@ -84,6 +104,7 @@ afterEach(async () => {
   await runAsService(async (db) => {
     await db.delete(consentTerms);
     await db.delete(patients);
+    await db.delete(profiles);
     await db.execute(dsql`DELETE FROM auth.users WHERE email LIKE 'test-%@example.com'`);
   });
 });
@@ -97,6 +118,7 @@ describe('generateConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -116,6 +138,7 @@ describe('generateConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -144,6 +167,7 @@ describe('generateConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -163,6 +187,7 @@ describe('generateConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -226,6 +251,7 @@ describe('generateConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -252,6 +278,7 @@ describe('revokeConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -291,6 +318,7 @@ describe('revokeConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -308,6 +336,7 @@ describe('revokeConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -333,6 +362,7 @@ describe('revokeConsentImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -361,6 +391,7 @@ describe('revokeConsentImpl', () => {
     const patientId = randomUUID();
     await seedAuthUser(userA);
     await seedAuthUser(userB);
+    await seedProfile(userA);
     await seedPatient(userA, patientId);
 
     const clientA = fakeSupabaseClient(userA);
@@ -397,6 +428,7 @@ describe('getConsentStatusImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -416,6 +448,7 @@ describe('getConsentStatusImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -436,6 +469,7 @@ describe('getConsentStatusImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -459,6 +493,7 @@ describe('getConsentStatusImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -520,6 +555,7 @@ describe('getConsentStatusImpl', () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId);
     await seedPatient(userId, patientId);
 
     const client = fakeSupabaseClient(userId);
