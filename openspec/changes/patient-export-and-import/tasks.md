@@ -1,7 +1,7 @@
 ## 1. Dependencies
 
-- [ ] 1.1 Instalar `papaparse` e `@types/papaparse`: `npm install papaparse @types/papaparse`
-- [ ] 1.2 Se `pdfkit` não foi instalado pela change patient-consent-term, instalar: `npm install pdfkit @types/pdfkit`
+- [x] 1.1 Instalar `papaparse` e `@types/papaparse`: `npm install papaparse @types/papaparse`
+- [x] 1.2 Se `pdfkit` não foi instalado pela change patient-consent-term, instalar: `npm install pdfkit @types/pdfkit`
 
 ## 2. PDF Export — Server Action
 
