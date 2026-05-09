@@ -61,7 +61,19 @@ export {
   type ConsentByTokenData,
 } from './server/get-consent-by-token';
 export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { exportPatientPdfImpl, type ExportPatientPdfResult } from './server/export-patient-pdf';
+export {
+  checkCsvDuplicatesImpl,
+  type CheckCsvDuplicatesResult,
+  type DuplicateCandidate,
+} from './server/check-csv-duplicates';
+export {
+  importPatientsCsvImpl,
+  type ImportPatientsCsvResult,
+  type CsvPatientRow,
+} from './server/import-patients-csv';
 export { generateConsentPdf, type ConsentPdfInput } from './lib/generate-consent-pdf';
+export { generatePatientPdf, type PatientPdfInput } from './lib/generate-patient-pdf';
 export {
   getDefaultConsentTemplate,
   type DefaultConsentTemplateData,
@@ -122,6 +134,20 @@ export {
   maskPhone,
 } from './lib/patient-validators';
 
+// ---- CSV Import --------------------------------------------------------------
+export {
+  detectColumnMapping,
+  normalizeHeader,
+  PATIENT_FIELDS,
+  type PatientField,
+  type ColumnMappingResult,
+} from './lib/csv-column-mapping';
+export {
+  validateCsvRow,
+  type MappedCsvRow,
+  type CsvRowValidationResult,
+} from './lib/validate-csv-row';
+
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
 export { PatientForm } from './components/patient-form';
@@ -129,6 +155,7 @@ export { PatientEditForm } from './components/patient-edit-form';
 export { PatientDetailHeader } from './components/patient-detail-header';
 export { ArchiveConfirmModal } from './components/archive-confirm-modal';
 export { DeleteConfirmModal } from './components/delete-confirm-modal';
+export { ExportConfirmModal } from './components/export-confirm-modal';
 export { PatientTabs } from './components/patient-tabs';
 export { PatientOverviewTab } from './components/patient-overview-tab';
 export { PatientCoupleSection } from './components/patient-couple-section';
@@ -136,6 +163,9 @@ export { PatientGuardiansSection } from './components/patient-guardians-section'
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
 export { ConsentSignForm } from './components/consent-sign-form';
+export { CsvUpload, type CsvParseResult } from './components/csv-upload';
+export { CsvColumnMapper, type ColumnMapping } from './components/csv-column-mapper';
+export { CsvPreviewTable, type PreviewRow, type RowStatus } from './components/csv-preview-table';
 
 // ---- Hooks ------------------------------------------------------------------
 export { useAutoSave, type AutoSaveStatus, type AutoSaveResult } from './lib/use-auto-save';

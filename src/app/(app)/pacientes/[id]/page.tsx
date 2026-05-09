@@ -21,6 +21,7 @@ import {
   addGuardian,
   archivePatient,
   deletePatient,
+  exportPatientPdf,
   generateConsent,
   listGuardians,
   removeGuardian,
@@ -104,6 +105,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         deleteAction={deletePatient}
         generateConsentAction={generateConsent}
         revokeConsentAction={revokeConsent}
+        exportPdfAction={exportPatientPdf}
       />
 
       {/* Tabs */}

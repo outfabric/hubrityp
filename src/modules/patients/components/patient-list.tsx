@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Upload,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -367,6 +368,14 @@ export function PatientList({
               </button>
             ))}
           </div>
+
+          {/* Import CSV button */}
+          <Link href="/pacientes/importar">
+            <Button variant="secondary" data-testid="patient-import-csv-button">
+              <Upload className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Importar CSV</span>
+            </Button>
+          </Link>
 
           {/* Add patient button */}
           <Link href="/pacientes/novo">

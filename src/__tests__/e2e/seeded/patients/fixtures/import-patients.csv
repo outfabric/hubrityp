@@ -1,0 +1,7 @@
+Nome,Telefone,Email,Data de Nascimento,Tags,Observacoes
+Ana Costa,11987654321,ana.costa@email.com,15/03/1990,presencial,Paciente indicada
+Bruno Ferreira,21912345678,bruno.ferreira@email.com,1985-07-22,"online,adulto",
+Carla Mendes,31998765432,,10/12/1978,,Atendimento urgente
+Daniela Souza,,daniela.souza@email.com,,,
+Eduardo Lima,41911112222,eduardo.lima@email.com,25/06/2000,presencial,Primeira consulta
+,99888776655,invalido@email.com,01/01/1990,,Linha sem nome
