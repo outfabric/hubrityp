@@ -4,8 +4,13 @@ import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import type { ConflictResult, UpdateSessionResult } from '@/modules/agenda';
-import { formatSessionDate, formatSessionTime, toSaoPauloTime } from '@/modules/agenda';
+import {
+  formatSessionDate,
+  formatSessionTime,
+  toSaoPauloTime,
+} from '@/modules/agenda/lib/date-helpers';
+import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
+import type { UpdateSessionResult } from '@/modules/agenda/server/update-session';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import {
   AlertDialog,

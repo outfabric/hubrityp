@@ -18,8 +18,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import type { ConflictResult } from '@/modules/agenda';
-import { formatSessionTime, sessionInputSchema, toSaoPauloTime } from '@/modules/agenda';
+import { formatSessionTime, toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
+import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';

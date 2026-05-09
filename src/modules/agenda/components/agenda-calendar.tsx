@@ -11,8 +11,8 @@ import { format } from 'date-fns';
 import { Lock, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { SessionWithDetails } from '@/modules/agenda';
-import { calculateEndTime } from '@/modules/agenda';
+import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
+import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 

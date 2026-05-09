@@ -6,8 +6,10 @@ import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import type { LocationInput } from '@/modules/agenda';
-import { locationInputSchema } from '@/modules/agenda';
+import {
+  locationInputSchema,
+  type LocationInput,
+} from '@/modules/agenda/lib/location-input-schema';
 import type { LocationCardData } from '@/modules/agenda/components/location-card';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';

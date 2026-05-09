@@ -7,8 +7,10 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { saveAgendaSettings } from '@/app/(app)/configuracoes/agenda/actions';
-import type { AgendaSettingsInput } from '@/modules/agenda';
-import { agendaSettingsInputSchema } from '@/modules/agenda';
+import {
+  agendaSettingsInputSchema,
+  type AgendaSettingsInput,
+} from '@/modules/agenda/lib/agenda-settings-input-schema';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Checkbox } from '@/shared/ui/checkbox';

@@ -6,13 +6,13 @@ import { Building2, Calendar, CheckCircle2, Clock, Pencil, Trash2, Video } from 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import type { SessionWithDetails } from '@/modules/agenda';
 import {
   calculateEndTime,
   formatSessionDateFull,
   formatSessionTime,
   toSaoPauloTime,
-} from '@/modules/agenda';
+} from '@/modules/agenda/lib/date-helpers';
+import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
 import type { SessionHistory } from '@/shared/db/schema/agenda/tables';
 import {
   AlertDialog,

@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { sessionInputSchema, toSaoPauloTime } from '@/modules/agenda';
+import { toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
 import {

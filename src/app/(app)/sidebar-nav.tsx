@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Calendar, LayoutDashboard, Users } from 'lucide-react';
+import { Calendar, LayoutDashboard, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -17,6 +17,7 @@ const navItems: readonly NavItem[] = [
   { label: 'Painel', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Pacientes', href: '/pacientes', icon: Users },
   { label: 'Agenda', href: '/agenda', icon: Calendar },
+  { label: 'Configuracoes', href: '/configuracoes/locais', icon: Settings },
 ];
 
 /**
