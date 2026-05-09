@@ -12,10 +12,10 @@
 
 ## 3. Server Actions — Generate & Manage Consent
 
-- [ ] 3.1 Criar `src/modules/patients/server/generate-consent.ts` — gera token via `crypto.randomBytes(32).toString('hex')`, busca template (default ou custom), cria registro consent_terms, retorna token e link
-- [ ] 3.2 Criar `src/modules/patients/server/revoke-consent.ts` — set consent_terms.revoked_at=now, limpa patient.consent_signed_at
-- [ ] 3.3 Criar `src/modules/patients/server/get-consent-status.ts` — retorna status do consentimento do paciente (pending/signed/revoked) com data e link do PDF se assinado
-- [ ] 3.4 **Testes de integração:** Criar `src/__tests__/integration/patients/consent-generate.int.test.ts` — testar geração de token (unicidade, formato), revogação (limpa patient.consent_signed_at), get status
+- [x] 3.1 Criar `src/modules/patients/server/generate-consent.ts` — gera token via `crypto.randomBytes(32).toString('hex')`, busca template (default ou custom), cria registro consent_terms, retorna token e link
+- [x] 3.2 Criar `src/modules/patients/server/revoke-consent.ts` — set consent_terms.revoked_at=now, limpa patient.consent_signed_at
+- [x] 3.3 Criar `src/modules/patients/server/get-consent-status.ts` — retorna status do consentimento do paciente (pending/signed/revoked) com data e link do PDF se assinado
+- [x] 3.4 **Testes de integração:** Criar `src/__tests__/integration/patients/consent-generate.int.test.ts` — testar geração de token (unicidade, formato), revogação (limpa patient.consent_signed_at), get status
 
 ## 4. Server Actions — Public Signing Flow
 

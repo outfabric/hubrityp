@@ -47,6 +47,14 @@ export { removeGuardianImpl, type RemoveGuardianResult } from './server/remove-g
 export { listGuardiansImpl, type ListGuardiansResult } from './server/list-guardians';
 export { getAnamnesisImpl, type GetAnamnesisResult } from './server/get-anamnesis';
 export { upsertAnamnesisImpl, type UpsertAnamnesisResult } from './server/upsert-anamnesis';
+export { generateConsentImpl, type GenerateConsentResult } from './server/generate-consent';
+export { revokeConsentImpl, type RevokeConsentResult } from './server/revoke-consent';
+export {
+  getConsentStatusImpl,
+  type GetConsentStatusResult,
+  type ConsentStatus,
+  type ConsentStatusInfo,
+} from './server/get-consent-status';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
