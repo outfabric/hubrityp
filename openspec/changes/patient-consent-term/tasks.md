@@ -19,9 +19,9 @@
 
 ## 4. Server Actions — Public Signing Flow
 
-- [ ] 4.1 Criar `src/modules/patients/server/get-consent-by-token.ts` — busca consent_terms por token via service-role (bypass RLS). Retorna term_text, patient name, psychologist name/CRP. Retorna null se token inválido
-- [ ] 4.2 Criar `src/modules/patients/server/sign-consent.ts` — recebe token, IP, user-agent. Valida que não está já assinado. Set signed_at, signed_ip, signed_user_agent. Gera PDF via pdfkit. Upload PDF para `consent-pdfs/{user_id}/{patient_id}/{consent_id}.pdf`. Set signed_pdf_path. Atualiza patient.consent_signed_at
-- [ ] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/consent-signing.int.test.ts` — testar signing (sucesso, token inválido, já assinado), PDF path é salvo, patient.consent_signed_at é atualizado
+- [x] 4.1 Criar `src/modules/patients/server/get-consent-by-token.ts` — busca consent_terms por token via service-role (bypass RLS). Retorna term_text, patient name, psychologist name/CRP. Retorna null se token inválido
+- [x] 4.2 Criar `src/modules/patients/server/sign-consent.ts` — recebe token, IP, user-agent. Valida que não está já assinado. Set signed_at, signed_ip, signed_user_agent. Gera PDF via pdfkit. Upload PDF para `consent-pdfs/{user_id}/{patient_id}/{consent_id}.pdf`. Set signed_pdf_path. Atualiza patient.consent_signed_at
+- [x] 4.3 **Testes de integração:** Criar `src/__tests__/integration/patients/consent-signing.int.test.ts` — testar signing (sucesso, token inválido, já assinado), PDF path é salvo, patient.consent_signed_at é atualizado
 
 ## 5. PDF Generation
 

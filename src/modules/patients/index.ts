@@ -55,6 +55,13 @@ export {
   type ConsentStatus,
   type ConsentStatusInfo,
 } from './server/get-consent-status';
+export {
+  getConsentByTokenImpl,
+  type GetConsentByTokenResult,
+  type ConsentByTokenData,
+} from './server/get-consent-by-token';
+export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { generateConsentPdf, type ConsentPdfInput } from './server/generate-consent-pdf';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
