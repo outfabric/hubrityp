@@ -47,21 +47,19 @@ describe('toSaoPauloTime', () => {
 // ---------------------------------------------------------------------------
 
 describe('formatSessionTime', () => {
-  it('formats time as HH:mm', () => {
-    const sp = toSaoPauloTime(new Date('2026-06-15T17:00:00Z'));
-    expect(formatSessionTime(sp)).toBe('14:00');
+  it('formats UTC date as HH:mm in São Paulo timezone', () => {
+    // 17:00 UTC → 14:00 BRT (June = no DST, UTC-3)
+    expect(formatSessionTime(new Date('2026-06-15T17:00:00Z'))).toBe('14:00');
   });
 
   it('includes leading zeros for single-digit hours', () => {
-    const sp = toSaoPauloTime(new Date('2026-06-15T12:05:00Z'));
     // 12:05 UTC → 09:05 BRT
-    expect(formatSessionTime(sp)).toBe('09:05');
+    expect(formatSessionTime(new Date('2026-06-15T12:05:00Z'))).toBe('09:05');
   });
 
   it('handles midnight in São Paulo', () => {
     // 03:00 UTC → 00:00 BRT
-    const sp = toSaoPauloTime(new Date('2026-06-15T03:00:00Z'));
-    expect(formatSessionTime(sp)).toBe('00:00');
+    expect(formatSessionTime(new Date('2026-06-15T03:00:00Z'))).toBe('00:00');
   });
 });
 
@@ -70,19 +68,16 @@ describe('formatSessionTime', () => {
 // ---------------------------------------------------------------------------
 
 describe('formatSessionDate', () => {
-  it('formats date as "d de MMM. yyyy" in pt-BR', () => {
-    const sp = toSaoPauloTime(new Date('2026-05-15T17:00:00Z'));
-    expect(formatSessionDate(sp)).toBe('15 de mai. 2026');
+  it('formats UTC date as "d de MMM. yyyy" in pt-BR São Paulo timezone', () => {
+    expect(formatSessionDate(new Date('2026-05-15T17:00:00Z'))).toBe('15 de mai. 2026');
   });
 
   it('formats January correctly', () => {
-    const sp = toSaoPauloTime(new Date('2026-01-10T15:00:00Z'));
-    expect(formatSessionDate(sp)).toBe('10 de jan. 2026');
+    expect(formatSessionDate(new Date('2026-01-10T15:00:00Z'))).toBe('10 de jan. 2026');
   });
 
   it('formats December correctly', () => {
-    const sp = toSaoPauloTime(new Date('2026-12-25T15:00:00Z'));
-    expect(formatSessionDate(sp)).toBe('25 de dez. 2026');
+    expect(formatSessionDate(new Date('2026-12-25T15:00:00Z'))).toBe('25 de dez. 2026');
   });
 });
 
@@ -91,22 +86,25 @@ describe('formatSessionDate', () => {
 // ---------------------------------------------------------------------------
 
 describe('formatSessionDateFull', () => {
-  it('formats full date with weekday in pt-BR', () => {
+  it('formats UTC date as full weekday date in pt-BR São Paulo timezone', () => {
     // 2026-05-15 is a Friday
-    const sp = toSaoPauloTime(new Date('2026-05-15T17:00:00Z'));
-    expect(formatSessionDateFull(sp)).toBe('sexta-feira, 15 de maio de 2026');
+    expect(formatSessionDateFull(new Date('2026-05-15T17:00:00Z'))).toBe(
+      'sexta-feira, 15 de maio de 2026',
+    );
   });
 
   it('formats a Monday correctly', () => {
     // 2026-06-15 is a Monday
-    const sp = toSaoPauloTime(new Date('2026-06-15T17:00:00Z'));
-    expect(formatSessionDateFull(sp)).toBe('segunda-feira, 15 de junho de 2026');
+    expect(formatSessionDateFull(new Date('2026-06-15T17:00:00Z'))).toBe(
+      'segunda-feira, 15 de junho de 2026',
+    );
   });
 
   it('formats a Sunday correctly', () => {
     // 2026-06-14 is a Sunday
-    const sp = toSaoPauloTime(new Date('2026-06-14T17:00:00Z'));
-    expect(formatSessionDateFull(sp)).toBe('domingo, 14 de junho de 2026');
+    expect(formatSessionDateFull(new Date('2026-06-14T17:00:00Z'))).toBe(
+      'domingo, 14 de junho de 2026',
+    );
   });
 });
 

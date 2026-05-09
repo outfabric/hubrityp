@@ -20,7 +20,6 @@ import {
   calculateEndTime,
   formatSessionDateFull,
   formatSessionTime,
-  toSaoPauloTime,
 } from '@/modules/agenda/lib/date-helpers';
 import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
 import type { SessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -241,10 +240,10 @@ export function SessionDetailDrawer({
   const isBlocking = session.isBlocking;
   const isDone = session.status === 'done';
 
-  const startLocal = toSaoPauloTime(new Date(session.startAt));
-  const endLocal = toSaoPauloTime(
-    calculateEndTime(new Date(session.startAt), session.durationMinutes),
-  );
+  // Pass UTC dates directly to formatSessionTime/formatSessionDateFull which
+  // use formatInTimeZone internally — no manual toSaoPauloTime shift needed.
+  const startUtc = new Date(session.startAt);
+  const endUtc = calculateEndTime(startUtc, session.durationMinutes);
 
   const displayName = session.coupleDisplayName ?? session.patientName;
   const title = isBlocking ? (session.blockingTitle ?? 'Bloqueio') : (displayName ?? 'Paciente');
@@ -294,10 +293,10 @@ export function SessionDetailDrawer({
               <Calendar className="text-text-tertiary mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <div>
                 <p className="text-text-primary text-[15px] capitalize">
-                  {formatSessionDateFull(startLocal)}
+                  {formatSessionDateFull(startUtc)}
                 </p>
                 <p className="text-text-secondary text-[13px]">
-                  {formatSessionTime(startLocal)} - {formatSessionTime(endLocal)}
+                  {formatSessionTime(startUtc)} - {formatSessionTime(endUtc)}
                 </p>
               </div>
             </div>

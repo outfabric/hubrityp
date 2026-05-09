@@ -18,7 +18,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { formatSessionTime, toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import { formatSessionTime } from '@/modules/agenda/lib/date-helpers';
 import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import {
@@ -444,8 +444,7 @@ export function SessionFormModal({
 
     if (session) {
       // Edit mode: populate from session data
-      const spDate = toSaoPauloTime(session.startAt);
-      const timeStr = format(spDate, 'HH:mm');
+      const timeStr = formatSessionTime(session.startAt);
 
       setSelectedDate(session.startAt);
       setSelectedTime(timeStr);
@@ -913,9 +912,8 @@ export function SessionFormModal({
                   <div className="space-y-2">
                     {conflicts.map((c) => (
                       <p key={c.sessionId}>
-                        Voce ja tem {c.label} das{' '}
-                        {formatSessionTime(toSaoPauloTime(new Date(c.conflictStart)))} as{' '}
-                        {formatSessionTime(toSaoPauloTime(new Date(c.conflictEnd)))} nesse horario.
+                        Voce ja tem {c.label} das {formatSessionTime(new Date(c.conflictStart))} as{' '}
+                        {formatSessionTime(new Date(c.conflictEnd))} nesse horario.
                       </p>
                     ))}
                     <Button

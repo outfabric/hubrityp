@@ -4,11 +4,7 @@ import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import {
-  formatSessionDate,
-  formatSessionTime,
-  toSaoPauloTime,
-} from '@/modules/agenda/lib/date-helpers';
+import { formatSessionDate, formatSessionTime } from '@/modules/agenda/lib/date-helpers';
 import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
 import type { UpdateSessionResult } from '@/modules/agenda/server/update-session';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
@@ -119,9 +115,8 @@ export function RescheduleConfirmDialog({
       const result = await onConfirm(rescheduleInfo.sessionId, payload);
 
       if (result.ok) {
-        const localStart = toSaoPauloTime(rescheduleInfo.newStart);
         toast.success('Sessao remarcada', {
-          description: `Sessao remarcada para ${formatSessionDate(localStart)} as ${formatSessionTime(localStart)}`,
+          description: `Sessao remarcada para ${formatSessionDate(rescheduleInfo.newStart)} as ${formatSessionTime(rescheduleInfo.newStart)}`,
           icon: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
         });
         setConflicts([]);
@@ -157,9 +152,8 @@ export function RescheduleConfirmDialog({
 
   if (!rescheduleInfo) return null;
 
-  const localStart = toSaoPauloTime(rescheduleInfo.newStart);
-  const formattedDate = formatSessionDate(localStart);
-  const formattedTime = formatSessionTime(localStart);
+  const formattedDate = formatSessionDate(rescheduleInfo.newStart);
+  const formattedTime = formatSessionTime(rescheduleInfo.newStart);
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>

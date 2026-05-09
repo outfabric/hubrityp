@@ -167,25 +167,29 @@ export async function editRecurringSessionImpl(
         }
 
         case 'this_and_future': {
-          // Split the recurrence
-          if (scopeResult.newRecurrenceEndDate) {
-            // Update old recurrence end_date
-            await tx
-              .update(sessionRecurrences)
-              .set({
-                endDate: scopeResult.newRecurrenceEndDate.toISOString().split('T')[0]!,
-              })
-              .where(eq(sessionRecurrences.id, recurrenceId));
-          }
-
-          // Fetch the old recurrence to copy its fields
+          // Fetch the old recurrence BEFORE updating it so we preserve the
+          // original end_date for the new (split) recurrence.
           const [oldRecurrence] = await tx
             .select()
             .from(sessionRecurrences)
             .where(eq(sessionRecurrences.id, recurrenceId));
 
           if (oldRecurrence) {
-            // Create new recurrence from the target date onward
+            // Preserve the original end_date before truncating the old series
+            const originalEndDate = oldRecurrence.endDate;
+
+            // Truncate the old recurrence to end the day before the target
+            if (scopeResult.newRecurrenceEndDate) {
+              await tx
+                .update(sessionRecurrences)
+                .set({
+                  endDate: scopeResult.newRecurrenceEndDate.toISOString().split('T')[0]!,
+                })
+                .where(eq(sessionRecurrences.id, recurrenceId));
+            }
+
+            // Create new recurrence from the target date onward, using the
+            // ORIGINAL end_date so the new series spans the remaining window.
             const [newRecurrence] = await tx
               .insert(sessionRecurrences)
               .values({
@@ -194,13 +198,14 @@ export async function editRecurringSessionImpl(
                 frequency: oldRecurrence.frequency,
                 daysOfWeek: oldRecurrence.daysOfWeek,
                 startDate: target.startAt.toISOString().split('T')[0]!,
-                endDate: oldRecurrence.endDate,
+                endDate: originalEndDate,
                 occurrenceCount: null,
                 isIndefinite: oldRecurrence.isIndefinite,
               })
               .returning({ id: sessionRecurrences.id });
 
-            // Reassign sessions from target onward to new recurrence
+            // Reassign (UPDATE, not DELETE+INSERT) sessions from target onward
+            // to the new recurrence and apply field edits.
             if (scopeResult.toUpdate.length > 0 && newRecurrence) {
               await tx
                 .update(sessions)

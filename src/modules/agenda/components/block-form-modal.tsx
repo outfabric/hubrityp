@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import { formatSessionTime } from '@/modules/agenda/lib/date-helpers';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -177,8 +177,7 @@ export function BlockFormModal({
 
     if (block) {
       // Edit mode
-      const spDate = toSaoPauloTime(block.startAt);
-      const timeStr = format(spDate, 'HH:mm');
+      const timeStr = formatSessionTime(block.startAt);
 
       setSelectedDate(block.startAt);
       setSelectedTime(timeStr);
