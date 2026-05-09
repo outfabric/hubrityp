@@ -3,7 +3,7 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Anamnesis } from '@/shared/db/schema/patients/tables';
 import { cn } from '@/shared/lib/utils';
@@ -145,6 +145,14 @@ export function AnamnesisTab({ patientId, initialAnamnesis, upsertAction }: Anam
 
   const isDirty = JSON.stringify(content) !== cleanSnapshot;
 
+  // Refs for save-on-unmount (avoids stale closures in the cleanup function).
+  const isDirtyRef = useRef(isDirty);
+  const contentRef = useRef(content);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+    contentRef.current = content;
+  }, [isDirty, content]);
+
   // Manual save state — tracked separately from auto-save so the indicator
   // can reflect whichever save (manual or auto) happened most recently.
   const [isManualSaving, setIsManualSaving] = useState(false);
@@ -171,6 +179,12 @@ export function AnamnesisTab({ patientId, initialAnamnesis, upsertAction }: Anam
     },
     [patientId, upsertAction],
   );
+
+  // Keep a ref to the latest saveFn for use in the unmount effect.
+  const saveFnRef = useRef(saveFn);
+  useEffect(() => {
+    saveFnRef.current = saveFn;
+  }, [saveFn]);
 
   // ---- Auto-save integration (10s debounce per design system rules) ----
 
@@ -237,6 +251,18 @@ export function AnamnesisTab({ patientId, initialAnamnesis, upsertAction }: Anam
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
+
+  // ---- Save-on-unmount guard ----
+  // Best-effort save when the component unmounts (covers SPA navigation,
+  // browser back button, tab switching, etc.). Uses refs to avoid stale
+  // closures — the cleanup function always reads the latest values.
+  useEffect(() => {
+    return () => {
+      if (isDirtyRef.current) {
+        void saveFnRef.current(contentRef.current);
+      }
+    };
+  }, []);
 
   // ---- Discard handler for the dialog ----
 

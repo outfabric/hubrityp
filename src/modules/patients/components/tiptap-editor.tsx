@@ -123,6 +123,14 @@ export function TiptapEditor({
     ],
     content,
     immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        // Forward the aria-label to the ProseMirror contenteditable element
+        // (which already has role="textbox") so screen readers can announce
+        // which section is being edited.
+        ...(ariaLabel ? { 'aria-label': ariaLabel } : {}),
+      },
+    },
     onUpdate: ({ editor: e }) => {
       onChange(e.getHTML());
     },

@@ -57,7 +57,14 @@ export function useAutoSave<T>(
     saveFnRef.current = saveFn;
   }, [saveFn]);
 
+  // Guard against concurrent save invocations — if a save is already
+  // in-flight, skip the new invocation to avoid race conditions and status
+  // flickering.
+  const isSavingRef = useRef(false);
+
   const executeSave = useCallback(async (contentToSave: T) => {
+    if (isSavingRef.current) return;
+
     const serialized = JSON.stringify(contentToSave);
 
     // No-op if content hasn't changed since the last save.
@@ -65,6 +72,7 @@ export function useAutoSave<T>(
       return;
     }
 
+    isSavingRef.current = true;
     setStatus('saving');
 
     try {
@@ -74,6 +82,8 @@ export function useAutoSave<T>(
       setStatus('saved');
     } catch {
       setStatus('error');
+    } finally {
+      isSavingRef.current = false;
     }
   }, []);
 

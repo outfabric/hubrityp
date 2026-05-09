@@ -22,7 +22,6 @@ import type {
   UpdatePatientResult,
   UpsertAnamnesisResult,
 } from '@/modules/patients';
-import type { UpsertAnamnesisInput } from '@/modules/patients';
 import {
   addGuardianImpl,
   archivePatientImpl,
@@ -100,7 +99,7 @@ export async function unlinkCouple(patientId: string): Promise<UnlinkCoupleResul
   return unlinkCoupleImpl(supabase, patientId);
 }
 
-export async function upsertAnamnesis(input: UpsertAnamnesisInput): Promise<UpsertAnamnesisResult> {
+export async function upsertAnamnesis(input: unknown): Promise<UpsertAnamnesisResult> {
   const supabase = await createServerClient();
   return upsertAnamnesisImpl(supabase, input);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Clock, FileText, Receipt, Wallet } from 'lucide-react';
+import { Calendar, ClipboardList, FileText, Receipt, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
@@ -39,7 +39,7 @@ const TABS: TabDefinition[] = [
   {
     value: 'anamnesis',
     label: 'Anamnese',
-    icon: <Clock className="h-4 w-4" aria-hidden="true" />,
+    icon: <ClipboardList className="h-4 w-4" aria-hidden="true" />,
     placeholder: false,
   },
   {

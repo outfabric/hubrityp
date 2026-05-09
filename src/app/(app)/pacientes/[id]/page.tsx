@@ -44,10 +44,11 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { id } = await params;
   const supabase = await createServerClient();
 
-  // Fetch patient and photo URL in parallel
-  const [patientResult, photoResult] = await Promise.all([
+  // Fetch patient, photo URL, and anamnesis in parallel (no dependencies between them)
+  const [patientResult, photoResult, anamnesisResult] = await Promise.all([
     getPatientImpl(supabase, id),
     getPatientPhotoUrlImpl(supabase, id),
+    getAnamnesisImpl(supabase, id),
   ]);
 
   if (!patientResult.ok) {
@@ -56,20 +57,19 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
 
   const { patient } = patientResult;
   const photoUrl = photoResult.ok ? photoResult.signedUrl : undefined;
+  const initialAnamnesis = anamnesisResult.ok ? anamnesisResult.anamnesis : null;
 
-  // Fetch conditional data in parallel: guardians for minors, couple partner for couples, anamnesis
+  // Fetch conditional data in parallel: guardians for minors, couple partner for couples
   const isMinor = patient.patientType === 'child' || patient.patientType === 'adolescent';
   const isCouple = patient.patientType === 'couple' && patient.coupleId !== null;
 
-  const [guardiansResult, couplePartnerResult, anamnesisResult] = await Promise.all([
+  const [guardiansResult, couplePartnerResult] = await Promise.all([
     isMinor ? listGuardiansImpl(supabase, id) : null,
     isCouple ? getCouplePartnerImpl(supabase, id) : null,
-    getAnamnesisImpl(supabase, id),
   ]);
 
   const initialGuardians = guardiansResult?.ok ? guardiansResult.guardians : [];
   const couplePartner = couplePartnerResult?.ok ? couplePartnerResult.partner : undefined;
-  const initialAnamnesis = anamnesisResult.ok ? anamnesisResult.anamnesis : null;
 
   return (
     <div className="mx-auto max-w-[1200px]">
