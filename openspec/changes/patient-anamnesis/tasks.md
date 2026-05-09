@@ -8,7 +8,7 @@
 
 ## 2. Dependencies — Tiptap
 
-- [ ] 2.1 Instalar dependências: `npm install @tiptap/react @tiptap/starter-kit @tiptap/pm @tiptap/extension-placeholder`
+- [x] 2.1 Instalar dependências: `npm install @tiptap/react @tiptap/starter-kit @tiptap/pm @tiptap/extension-placeholder`
 
 ## 3. Server Actions — Anamnesis
 
