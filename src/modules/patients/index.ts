@@ -124,6 +124,20 @@ export {
   maskPhone,
 } from './lib/patient-validators';
 
+// ---- CSV Import --------------------------------------------------------------
+export {
+  detectColumnMapping,
+  normalizeHeader,
+  PATIENT_FIELDS,
+  type PatientField,
+  type ColumnMappingResult,
+} from './lib/csv-column-mapping';
+export {
+  validateCsvRow,
+  type MappedCsvRow,
+  type CsvRowValidationResult,
+} from './lib/validate-csv-row';
+
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
 export { PatientForm } from './components/patient-form';

@@ -11,10 +11,10 @@
 
 ## 3. CSV Import — Parsing & Validation
 
-- [ ] 3.1 Criar `src/modules/patients/lib/csv-column-mapping.ts` — mapeamento esperado de colunas CSV (nome→full_name, telefone→phone, email→email, data_nascimento→birth_date, tags→tags, observacao→notes). Função para detectar e sugerir mapeamento automático por nome de coluna
-- [ ] 3.2 Criar `src/modules/patients/lib/validate-csv-row.ts` — função que recebe uma row mapeada e retorna `{ valid: boolean, errors: string[], warnings: string[] }`. Valida: phone format, email format, date format
-- [ ] 3.3 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/csv-column-mapping.test.ts` — testar mapeamento automático (headers comuns em PT-BR), headers desconhecidos
-- [ ] 3.4 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/validate-csv-row.test.ts` — testar validação de cada campo (phone válido/inválido, email válido/inválido, date formats)
+- [x] 3.1 Criar `src/modules/patients/lib/csv-column-mapping.ts` — mapeamento esperado de colunas CSV (nome→full_name, telefone→phone, email→email, data_nascimento→birth_date, tags→tags, observacao→notes). Função para detectar e sugerir mapeamento automático por nome de coluna
+- [x] 3.2 Criar `src/modules/patients/lib/validate-csv-row.ts` — função que recebe uma row mapeada e retorna `{ valid: boolean, errors: string[], warnings: string[] }`. Valida: phone format, email format, date format
+- [x] 3.3 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/csv-column-mapping.test.ts` — testar mapeamento automático (headers comuns em PT-BR), headers desconhecidos
+- [x] 3.4 **Testes unitários:** Criar `src/__tests__/unit/modules/patients/lib/validate-csv-row.test.ts` — testar validação de cada campo (phone válido/inválido, email válido/inválido, date formats)
 
 ## 4. CSV Import — Server Action
 
