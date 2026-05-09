@@ -74,12 +74,13 @@ test.describe('@patients patient detail page', () => {
     const hasWhatsapp = await whatsappButton.isVisible().catch(() => false);
 
     if (hasWhatsapp) {
-      const link = whatsappButton.locator('a');
-      const href = await link.getAttribute('href');
+      // The Button uses `asChild`, so the <a> IS the element with the
+      // data-testid — no nested <a> to locate.
+      const href = await whatsappButton.getAttribute('href');
       expect(href).toMatch(/^https:\/\/wa\.me\/\d+$/);
       expect(href).toContain('https://wa.me/');
 
-      const target = await link.getAttribute('target');
+      const target = await whatsappButton.getAttribute('target');
       expect(target).toBe('_blank');
     }
   });

@@ -85,6 +85,32 @@ export default async function globalSetup() {
       .values({ ownerId: seed.userId, note: 'e2e-seed ping' })
       .onConflictDoNothing();
 
+    // Clean up stale data from previous test runs so all e2e tests start
+    // with a deterministic blank slate. With Testcontainers `.withReuse()`
+    // the DB persists across runs, and leftovers cause spurious failures
+    // (duplicate detection, non-empty states, wrong consent badges, etc.).
+    await sql`DELETE FROM public.session_history WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.locations WHERE user_id = ${seed.userId}`;
+
+    // Delete non-seeded patients (e.g. those created by the CSV import test)
+    // while keeping the three deterministic seed patients intact.
+    const seededPatientIds = [
+      SEED_PATIENTS.activeWithPhone.id,
+      SEED_PATIENTS.activeMinimal.id,
+      SEED_PATIENTS.archived.id,
+    ];
+    await sql`
+      DELETE FROM public.consent_terms
+      WHERE user_id = ${seed.userId}
+        AND patient_id NOT IN ${sql(seededPatientIds)};
+    `;
+    await sql`
+      DELETE FROM public.patients
+      WHERE user_id = ${seed.userId}
+        AND id NOT IN ${sql(seededPatientIds)};
+    `;
+
     const p = SEED_PATIENTS;
     for (const [patient, status, phone] of [
       [p.activeWithPhone, 'active', p.activeWithPhone.phone] as const,
@@ -92,18 +118,21 @@ export default async function globalSetup() {
       [p.archived, 'archived', null] as const,
     ]) {
       await sql`
-        INSERT INTO public.patients (id, user_id, full_name, patient_type, phone, tags, status, archived_at)
+        INSERT INTO public.patients (id, user_id, full_name, patient_type, phone, tags, status, archived_at, consent_signed_at, consent_revoked_at)
         VALUES (
           ${patient.id}, ${seed.userId}, ${patient.fullName}, 'individual',
           ${phone}, ${'tags' in patient ? [...patient.tags] : sql`'{}'::text[]`},
-          ${status}, ${status === 'archived' ? sql`now()` : null}
+          ${status}, ${status === 'archived' ? sql`now()` : null},
+          NULL, NULL
         )
         ON CONFLICT (id) DO UPDATE SET
-          full_name  = EXCLUDED.full_name,
-          phone      = EXCLUDED.phone,
-          tags       = EXCLUDED.tags,
-          status     = EXCLUDED.status,
-          archived_at = EXCLUDED.archived_at;
+          full_name          = EXCLUDED.full_name,
+          phone              = EXCLUDED.phone,
+          tags               = EXCLUDED.tags,
+          status             = EXCLUDED.status,
+          archived_at        = EXCLUDED.archived_at,
+          consent_signed_at  = NULL,
+          consent_revoked_at = NULL;
       `;
     }
 
