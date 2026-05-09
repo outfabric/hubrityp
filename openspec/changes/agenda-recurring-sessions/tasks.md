@@ -56,8 +56,8 @@
 
 > **Design System Salvia**: Checkbox with helper text caption `text-tertiary`. Conditionally visible.
 
-- [ ] 8.1 Create component `src/modules/sessions/components/late-record-toggle.tsx` (Client Component) — **Design system:** shadcn `Checkbox` + `Label` "Lancamento retroativo", `aria-label="Marcar como lancamento retroativo"`. Helper text caption `text-tertiary` "Esta sessao ja foi realizada e sera registrada como concluida". Only rendered when selected date/time is in the past. When checked, sets status to `done` (read-only). Integrates with React Hook Form via `useFormContext`
-- [ ] 8.2 **Unit test:** Create `src/__tests__/unit/modules/sessions/components/late-record-toggle.test.tsx` — test: toggle not visible when date is in future; toggle visible when date is in past; checking toggle sets status to done
+- [x] 8.1 Create component `src/modules/sessions/components/late-record-toggle.tsx` (Client Component) — **Design system:** shadcn `Checkbox` + `Label` "Lancamento retroativo", `aria-label="Marcar como lancamento retroativo"`. Helper text caption `text-tertiary` "Esta sessao ja foi realizada e sera registrada como concluida". Only rendered when selected date/time is in the past. When checked, sets status to `done` (read-only). Integrates with React Hook Form via `useFormContext`
+- [x] 8.2 **Unit test:** Create `src/__tests__/unit/modules/sessions/components/late-record-toggle.test.tsx` — test: toggle not visible when date is in future; toggle visible when date is in past; checking toggle sets status to done
 
 ## 9. Frontend — Integration with Session Form & Calendar Views
 

@@ -68,3 +68,6 @@ export {
   type CoupleSessionFieldsProps,
   type PatientOption,
 } from './components/couple-session-fields';
+
+// ---- Components — late record toggle ----------------------------------------
+export { LateRecordToggle, type LateRecordToggleProps } from './components/late-record-toggle';
