@@ -67,7 +67,7 @@
 
 > **Design System Salvia**: sidebar nav item com Calendar icon, seguindo pattern ativo (brand-700 text, brand-50 bg, border-left 3px brand-500).
 
-- [ ] 10.1 Atualizar sidebar/nav component para adicionar item "Agenda" com icone `Calendar` (Lucide 20px), link para `/app/agenda`, posicionado apos "Pacientes". Seguir pattern existente dos outros items. Active state: text `brand-700`, bg `brand-50`, border-left 3px `brand-500`
+- [x] 10.1 Atualizar sidebar/nav component para adicionar item "Agenda" com icone `Calendar` (Lucide 20px), link para `/app/agenda`, posicionado apos "Pacientes". Seguir pattern existente dos outros items. Active state: text `brand-700`, bg `brand-50`, border-left 3px `brand-500`
 
 ## 11. Frontend — Configuracoes > Locais de Atendimento
 
