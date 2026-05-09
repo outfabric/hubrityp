@@ -84,15 +84,15 @@
 
 > **Design System Salvia**: Card default para form, Select para duracoes, Checkbox + Select para business hours, Textarea para politica, swatches para cor.
 
-- [ ] 12.1 Criar Server Component `src/app/(app)/configuracoes/agenda/page.tsx` — titulo h1 "Configuracoes da Agenda" (28px/600). Carrega settings via Server Action. Renderiza form component
-- [ ] 12.2 Criar componente `src/modules/agenda/components/agenda-settings-form.tsx` (Client Component) — **Design system:** `Card default` (border, radius `xl`, padding `space-6`, shadow `xs`). React Hook Form + Zod (agendaSettingsInputSchema). Secoes separadas por shadcn `Separator`:
+- [x] 12.1 Criar Server Component `src/app/(app)/configuracoes/agenda/page.tsx` — titulo h1 "Configuracoes da Agenda" (28px/600). Carrega settings via Server Action. Renderiza form component
+- [x] 12.2 Criar componente `src/modules/agenda/components/agenda-settings-form.tsx` (Client Component) — **Design system:** `Card default` (border, radius `xl`, padding `space-6`, shadow `xs`). React Hook Form + Zod (agendaSettingsInputSchema). Secoes separadas por shadcn `Separator`:
   - "Duracao padrao da sessao" — shadcn `Select` com opcoes 30/40/45/50/60/90/120 min, label em body (15px)
   - "Intervalo entre sessoes" — shadcn `Select` com opcoes 0/5/10/15/20/30 min
   - "Horario de funcionamento" — 7 rows (Dom-Sab), cada com: shadcn `Checkbox` (habilitado/desabilitado), label do dia em body (15px/400), dois shadcn `Select` para hora inicio/fim (06:00 a 22:00, step 30min). Rows desabilitadas em opacity 50%. Validacao: pelo menos 1 dia ativo
   - "Politica de cancelamento" — shadcn `Textarea` (5 rows), helper text "Este texto sera incluido no termo de consentimento" em caption `text-tertiary`
   - "Cor padrao das sessoes" — 6 color swatches (circles 32px, border `border`, selected: ring `shadow-focus`), nenhuma selecionada = sem cor padrao
   Footer: "Salvar" `Button primary` (loading state). Toast success "Configuracoes salvas" (Sonner, border-left `success-500`). Mobile: padding `space-4`
-- [ ] 12.3 Criar route actions `src/app/(app)/configuracoes/agenda/actions.ts` com `'use server'` — delega getAgendaSettings, saveAgendaSettings
+- [x] 12.3 Criar route actions `src/app/(app)/configuracoes/agenda/actions.ts` com `'use server'` — delega getAgendaSettings, saveAgendaSettings
 
 ## 13. Frontend — Agenda Views (Calendar)
 
