@@ -12,9 +12,9 @@
 
 ## 3. Server Actions — Anamnesis
 
-- [ ] 3.1 Criar `src/modules/patients/server/get-anamnesis.ts` — busca anamnesis por patient_id (RLS via subquery garante ownership)
-- [ ] 3.2 Criar `src/modules/patients/server/upsert-anamnesis.ts` — INSERT ... ON CONFLICT (patient_id) DO UPDATE SET para todas as seções. Usado tanto pelo save manual quanto pelo auto-save
-- [ ] 3.3 **Testes de integração:** Criar `src/__tests__/integration/patients/anamnesis-crud.int.test.ts` — testar get (existente, inexistente), upsert (create, update), RLS (cross-user bloqueado), dados persistidos corretamente
+- [x] 3.1 Criar `src/modules/patients/server/get-anamnesis.ts` — busca anamnesis por patient_id (RLS via subquery garante ownership)
+- [x] 3.2 Criar `src/modules/patients/server/upsert-anamnesis.ts` — INSERT ... ON CONFLICT (patient_id) DO UPDATE SET para todas as seções. Usado tanto pelo save manual quanto pelo auto-save
+- [x] 3.3 **Testes de integração:** Criar `src/__tests__/integration/patients/anamnesis-crud.int.test.ts` — testar get (existente, inexistente), upsert (create, update), RLS (cross-user bloqueado), dados persistidos corretamente
 
 ## 4. Module Barrel Update
 
