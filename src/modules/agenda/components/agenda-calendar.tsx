@@ -10,9 +10,12 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SessionWithDetails } from '@/modules/agenda';
+import { calculateEndTime } from '@/modules/agenda';
 import { Card } from '@/shared/ui/card';
 
 import { AgendaNavBar } from './agenda-nav-bar';
+import type { RescheduleInfo } from './reschedule-confirm-dialog';
+import { RescheduleConfirmDialog } from './reschedule-confirm-dialog';
 import { SessionDetailDrawer } from './session-detail-drawer';
 import { SessionEventChip } from './session-event-chip';
 import './session-event-chip.css';
@@ -138,6 +141,10 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
   const [selectedSession, setSelectedSession] = useState<SessionWithDetails | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Reschedule confirmation dialog state
+  const [rescheduleInfo, setRescheduleInfo] = useState<RescheduleInfo | null>(null);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+
   // Derive business hours config
   const businessHours = useMemo(
     () => toFcBusinessHours(agendaSettings?.businessHours),
@@ -225,10 +232,44 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
     void _;
   }, []);
 
-  const handleEventDrop = useCallback((_: EventDropArg) => {
-    // Future: triggers reschedule confirmation dialog
-    void _;
-  }, []);
+  const handleEventDrop = useCallback(
+    (info: EventDropArg) => {
+      // Revert the visual change immediately so the calendar shows the
+      // original position while the user confirms.
+      info.revert();
+
+      const sessionId = info.event.id;
+      const match = sessions.find((s) => s.id === sessionId);
+      if (!match || !info.event.start) return;
+
+      const newStart = info.event.start;
+      const newEnd = calculateEndTime(newStart, match.durationMinutes);
+      const label = match.isBlocking
+        ? (match.blockingTitle ?? 'Bloqueio')
+        : (match.patientName ?? 'Paciente');
+
+      setRescheduleInfo({
+        sessionId,
+        label,
+        isBlocking: match.isBlocking,
+        originalSession: {
+          patientId: match.patientId,
+          isBlocking: match.isBlocking,
+          blockingTitle: match.blockingTitle,
+          durationMinutes: match.durationMinutes,
+          locationId: match.locationId,
+          modality: match.modality,
+          amount: match.amount,
+          notes: match.notes,
+          color: match.color,
+        },
+        newStart,
+        newEnd,
+      });
+      setRescheduleDialogOpen(true);
+    },
+    [sessions],
+  );
 
   const renderEventContent = useCallback((eventInfo: EventContentArg) => {
     return <SessionEventChip eventInfo={eventInfo} />;
@@ -279,6 +320,23 @@ export function AgendaCalendar({ initialSessions, agendaSettings }: AgendaCalend
           if (!open) handleDrawerClose();
         }}
         onSessionMutated={handleSessionMutated}
+      />
+
+      <RescheduleConfirmDialog
+        rescheduleInfo={rescheduleInfo}
+        open={rescheduleDialogOpen}
+        onOpenChange={(open) => {
+          setRescheduleDialogOpen(open);
+          if (!open) {
+            // Clear info after animation completes
+            setTimeout(() => setRescheduleInfo(null), 300);
+          }
+        }}
+        onConfirm={async (sessionId, input) => {
+          const { updateSession } = await import('@/app/(app)/agenda/actions');
+          return updateSession(sessionId, input);
+        }}
+        onSuccess={refreshSessions}
       />
     </div>
   );

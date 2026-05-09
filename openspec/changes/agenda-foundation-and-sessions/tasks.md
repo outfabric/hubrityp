@@ -139,7 +139,7 @@
 
 > **Design System Salvia**: AlertDialog para confirmacao, Alert warning para conflito no drop, toast Sonner para sucesso.
 
-- [ ] 16.1 Criar componente `src/modules/agenda/components/reschedule-confirm-dialog.tsx` (Client Component) — **Design system:** shadcn `AlertDialog` (max-width 480px). Titulo "Remarcar sessao?". Descricao "Remarcar sessao de [paciente] para [nova data] as [nova hora]?". Se conflito no destino: shadcn `Alert` warning inline "Voce ja tem [Nome] nesse horario. Remarcar mesmo assim?". Botao "Confirmar" `Button primary`, "Cancelar" `Button ghost`. Toast success apos confirmar: Sonner "Sessao remarcada para [data] as [hora]" com `CheckCircle2`, border-left `success-500`
+- [x] 16.1 Criar componente `src/modules/agenda/components/reschedule-confirm-dialog.tsx` (Client Component) — **Design system:** shadcn `AlertDialog` (max-width 480px). Titulo "Remarcar sessao?". Descricao "Remarcar sessao de [paciente] para [nova data] as [nova hora]?". Se conflito no destino: shadcn `Alert` warning inline "Voce ja tem [Nome] nesse horario. Remarcar mesmo assim?". Botao "Confirmar" `Button primary`, "Cancelar" `Button ghost`. Toast success apos confirmar: Sonner "Sessao remarcada para [data] as [hora]" com `CheckCircle2`, border-left `success-500`
 
 ## 17. Frontend — Route Actions
 
