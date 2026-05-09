@@ -1,11 +1,11 @@
 ## 1. Database Schema — Session Recurrences & Sessions Columns
 
-- [ ] 1.1 Add `session_recurrences` table to `src/shared/db/schema/sessions/tables.ts` (columns: id UUID PK, user_id UUID FK NOT NULL, patient_id UUID FK, frequency VARCHAR(20) NOT NULL enum('weekly','biweekly','monthly','custom'), days_of_week INT[], start_date DATE NOT NULL, end_date DATE nullable, occurrence_count INT nullable, is_indefinite BOOLEAN DEFAULT FALSE, created_at TIMESTAMPTZ DEFAULT NOW()). Add CHECK constraint: `patient_ids` max 2 entries on sessions table
-- [ ] 1.2 Add columns to `sessions` table if not present from foundation: `recurrence_id UUID REFERENCES session_recurrences(id)`, `patient_ids UUID[]`, `is_late_record BOOLEAN DEFAULT FALSE`. Add index `idx_sessions_recurrence` on `(recurrence_id)`
-- [ ] 1.3 Add RLS policies for `session_recurrences` in `src/shared/db/schema/sessions/policies.ts` — SELECT/INSERT/UPDATE/DELETE policies: `user_id = auth.uid()`. Add RLS policy for `sessions` access to `patient_ids` column (existing RLS on sessions covers it via `user_id = auth.uid()`)
-- [ ] 1.4 Run `npm run db:generate`, edit migration to include RLS policies, FK constraints, CHECK constraint on `patient_ids` (array length <= 2), indexes
-- [ ] 1.5 Test migration locally with `npm run db:migrate`
-- [ ] 1.6 **Integration test:** Create `src/__tests__/integration/sessions/recurrence-schema.int.test.ts` — verify `session_recurrences` table exists, RLS enabled, policies exist, `sessions.recurrence_id` FK exists, `sessions.patient_ids` column exists, `sessions.is_late_record` column exists, CHECK constraint on `patient_ids` rejects arrays with >2 entries
+- [x] 1.1 Add `session_recurrences` table to `src/shared/db/schema/sessions/tables.ts` (columns: id UUID PK, user_id UUID FK NOT NULL, patient_id UUID FK, frequency VARCHAR(20) NOT NULL enum('weekly','biweekly','monthly','custom'), days_of_week INT[], start_date DATE NOT NULL, end_date DATE nullable, occurrence_count INT nullable, is_indefinite BOOLEAN DEFAULT FALSE, created_at TIMESTAMPTZ DEFAULT NOW()). Add CHECK constraint: `patient_ids` max 2 entries on sessions table
+- [x] 1.2 Add columns to `sessions` table if not present from foundation: `recurrence_id UUID REFERENCES session_recurrences(id)`, `patient_ids UUID[]`, `is_late_record BOOLEAN DEFAULT FALSE`. Add index `idx_sessions_recurrence` on `(recurrence_id)`
+- [x] 1.3 Add RLS policies for `session_recurrences` in `src/shared/db/schema/sessions/policies.ts` — SELECT/INSERT/UPDATE/DELETE policies: `user_id = auth.uid()`. Add RLS policy for `sessions` access to `patient_ids` column (existing RLS on sessions covers it via `user_id = auth.uid()`)
+- [x] 1.4 Run `npm run db:generate`, edit migration to include RLS policies, FK constraints, CHECK constraint on `patient_ids` (array length <= 2), indexes
+- [x] 1.5 Test migration locally with `npm run db:migrate`
+- [x] 1.6 **Integration test:** Create `src/__tests__/integration/sessions/recurrence-schema.int.test.ts` — verify `session_recurrences` table exists, RLS enabled, policies exist, `sessions.recurrence_id` FK exists, `sessions.patient_ids` column exists, `sessions.is_late_record` column exists, CHECK constraint on `patient_ids` rejects arrays with >2 entries
 
 ## 2. Recurrence Generation — Pure Function & Validators
 
