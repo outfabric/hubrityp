@@ -6,27 +6,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
-import { consentTerms } from '@/shared/db/schema/patients/tables';
-import { patients } from '@/shared/db/schema/patients/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
+import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/**
- * Default consent term template used when the psychologist has not configured
- * a custom template. Section 6 will introduce a proper template management
- * system — until then this placeholder is used.
- */
-const DEFAULT_CONSENT_TEMPLATE =
-  'Eu, paciente abaixo identificado(a), autorizo o(a) psicólogo(a) a realizar ' +
-  'o tratamento psicológico proposto, incluindo a coleta e o tratamento dos meus ' +
-  'dados pessoais e dados pessoais sensíveis, nos termos da Lei Geral de Proteção ' +
-  'de Dados (Lei nº 13.709/2018). Declaro que fui informado(a) sobre a natureza ' +
-  'do atendimento, os procedimentos a serem realizados, a duração estimada, os ' +
-  'possíveis benefícios e riscos, bem como sobre o sigilo profissional e suas ' +
-  'exceções legais previstas no Código de Ética Profissional do Psicólogo.';
+import { getDefaultConsentTemplate } from '../lib/default-consent-template';
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -48,10 +32,11 @@ export type GenerateConsentResult =
  * Flow:
  *   1. Authenticate via Supabase session.
  *   2. Verify patient exists and belongs to the authenticated psychologist.
- *   3. Generate a 64-char hex token via `crypto.randomBytes(32)`.
- *   4. Fetch the consent template (default for now — custom templates in section 6).
- *   5. Insert a new `consent_terms` row with the token and template text.
- *   6. Return the consent ID and token.
+ *   3. Fetch the psychologist profile for template interpolation.
+ *   4. Generate a 64-char hex token via `crypto.randomBytes(32)`.
+ *   5. Build the term text from the default consent template.
+ *   6. Insert a new `consent_terms` row with the token and template text.
+ *   7. Return the consent ID and token.
  *
  * The caller (UI) constructs the public signing link from the token
  * (e.g., `/termo/{token}`). This keeps the server action independent of
@@ -83,13 +68,41 @@ export async function generateConsentImpl(
     return { ok: false, error: 'patient_not_found' };
   }
 
-  // 3. Generate token (256 bits of entropy -> 64-char hex string)
+  // 3. Fetch psychologist profile for template interpolation
+  const [profile] = await db
+    .select({
+      fullName: profiles.fullName,
+      crpNumber: profiles.crpNumber,
+      crpUf: profiles.crpUf,
+    })
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
+
+  // This should never happen — a valid session always has a profile row.
+  // Defensive guard for data integrity.
+  if (!profile) {
+    logger.error(
+      { event: 'generate_consent_missing_profile', userId },
+      'authenticated user has no profile row',
+    );
+    return {
+      ok: false,
+      error: 'unknown',
+      message: 'Erro ao gerar o termo. Perfil profissional não encontrado.',
+    };
+  }
+
+  // 4. Generate token (256 bits of entropy -> 64-char hex string)
   const token = randomBytes(32).toString('hex');
 
-  // 4. Use default template (custom templates will be added in section 6)
-  const termText = DEFAULT_CONSENT_TEMPLATE;
+  // 5. Build term text from the default template (custom templates in a future iteration)
+  const termText = getDefaultConsentTemplate({
+    psychologistName: profile.fullName,
+    psychologistCrp: `${profile.crpNumber}/${profile.crpUf}`,
+  });
 
-  // 5. Insert consent_terms row
+  // 6. Insert consent_terms row
   try {
     const [inserted] = await db
       .insert(consentTerms)

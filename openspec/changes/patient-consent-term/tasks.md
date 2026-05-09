@@ -30,7 +30,7 @@
 
 ## 6. Default Consent Template
 
-- [ ] 6.1 Criar `src/modules/patients/lib/default-consent-template.ts` — constante com texto padrão incluindo: identificação do psicólogo (placeholders), descrição do serviço, cláusula LGPD (base legal: execução de contrato + tutela da saúde), direitos do titular, prazo de retenção, política de gravação (opcional), valor e política de cancelamento
+- [x] 6.1 Criar `src/modules/patients/lib/default-consent-template.ts` — constante com texto padrão incluindo: identificação do psicólogo (placeholders), descrição do serviço, cláusula LGPD (base legal: execução de contrato + tutela da saúde), direitos do titular, prazo de retenção, política de gravação (opcional), valor e política de cancelamento
 
 ## 7. Module Barrel Update
 
