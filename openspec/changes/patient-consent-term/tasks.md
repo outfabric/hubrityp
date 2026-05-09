@@ -8,7 +8,7 @@
 
 ## 2. Dependencies
 
-- [ ] 2.1 Instalar `pdfkit` e `@types/pdfkit`: `npm install pdfkit @types/pdfkit`
+- [x] 2.1 Instalar `pdfkit` e `@types/pdfkit`: `npm install pdfkit @types/pdfkit`
 
 ## 3. Server Actions — Generate & Manage Consent
 
