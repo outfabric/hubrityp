@@ -1,37 +1,21 @@
-// Public API of the `sessions` module.
+// Public API of the `sessions` module — CLIENT-SAFE barrel.
 //
 // Per project conventions, every module exposes its surface through a single
 // `index.ts` barrel — consumers MUST import from `@/modules/sessions`, never
 // from internal paths like `@/modules/sessions/lib/...`.
 //
-// This file is intentionally NEUTRAL — no `'use server'` directive at the top
-// level. The barrel re-exports Server Action implementations, pure helpers,
-// and types; if it carried `'use server'`, every export would be transformed
-// into an RPC stub by the Next.js compiler and the schema/type re-exports
-// would break.
+// IMPORTANT: Server Action implementations (`*Impl` functions) are NOT
+// re-exported here because they `import 'server-only'`, which would cause a
+// fatal build error when a `'use client'` component transitively imports this
+// barrel.  Server-only exports live in `@/modules/sessions/server` — see
+// `./server.ts`.
 
-// ---- Server Actions (recurring sessions) ------------------------------------
-export {
-  createRecurringSessionImpl,
-  type CreateRecurringSessionResult,
-} from './server/create-recurring-session';
-export {
-  editRecurringSessionImpl,
-  type EditRecurringSessionResult,
-} from './server/edit-recurring-session';
-export {
-  cancelRecurringSessionImpl,
-  type CancelRecurringSessionResult,
-} from './server/cancel-recurring-session';
-
-// ---- Server Actions (couple sessions) ---------------------------------------
-export {
-  createCoupleSessionImpl,
-  type CreateCoupleSessionResult,
-} from './server/create-couple-session';
-
-// ---- Server Actions (late records) ------------------------------------------
-export { createLateRecordImpl, type CreateLateRecordResult } from './server/create-late-record';
+// ---- Result types (re-exported for convenience — type-only, zero runtime) ---
+export type { CreateRecurringSessionResult } from './server/create-recurring-session';
+export type { EditRecurringSessionResult } from './server/edit-recurring-session';
+export type { CancelRecurringSessionResult } from './server/cancel-recurring-session';
+export type { CreateCoupleSessionResult } from './server/create-couple-session';
+export type { CreateLateRecordResult } from './server/create-late-record';
 
 // ---- Zod Schemas ------------------------------------------------------------
 export {

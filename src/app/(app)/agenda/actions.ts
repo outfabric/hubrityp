@@ -43,7 +43,7 @@ import {
   createLateRecordImpl,
   createRecurringSessionImpl,
   editRecurringSessionImpl,
-} from '@/modules/sessions';
+} from '@/modules/sessions/server';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function listSessions(startDate: Date, endDate: Date): Promise<ListSessionsResult> {
