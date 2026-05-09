@@ -24,7 +24,7 @@
 
 ## 5. Module Barrel Update
 
-- [ ] 5.1 Atualizar `src/modules/patients/index.ts` para reexportar: exportPatientPdf, checkCsvDuplicates, importPatientsCsv, csv helpers, pdf helpers
+- [x] 5.1 Atualizar `src/modules/patients/index.ts` para reexportar: exportPatientPdf, checkCsvDuplicates, importPatientsCsv, csv helpers, pdf helpers
 
 ## 6. Frontend — Export PDF
 
