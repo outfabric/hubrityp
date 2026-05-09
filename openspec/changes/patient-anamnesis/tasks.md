@@ -18,7 +18,7 @@
 
 ## 4. Module Barrel Update
 
-- [ ] 4.1 Atualizar `src/modules/patients/index.ts` para reexportar: getAnamnesis, upsertAnamnesis, tipos de anamnesis
+- [x] 4.1 Atualizar `src/modules/patients/index.ts` para reexportar: getAnamnesis, upsertAnamnesis, tipos de anamnesis
 
 ## 5. Frontend — Tiptap Editor Component
 
