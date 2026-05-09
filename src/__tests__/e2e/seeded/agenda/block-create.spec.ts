@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { addDays, format } from 'date-fns';
 
 import { STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -9,11 +10,12 @@ import { STORAGE_STATE_PATH } from '../setup/seed-state';
  *   1. Navigate to /agenda
  *   2. Click "Bloquear horario" button
  *   3. Fill the title "Almoco"
- *   4. Pick a date and time (12:00)
+ *   4. Pick tomorrow's date and time (12:00)
  *   5. Select duration (60 min)
  *   6. Click "Bloquear"
- *   7. Verify the block appears on the calendar grid with Lock icon
- *     and dashed border styling
+ *   7. Navigate to tomorrow's date on the calendar
+ *   8. Verify the block appears on the calendar grid with Lock icon
+ *      and dashed border styling
  *
  * Prerequisites:
  *   - Seeded session (storageState) provides an authenticated psychologist.
@@ -23,6 +25,11 @@ test.describe('@agenda block creation', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
   test('creates a blocking slot via modal and verifies it on the calendar', async ({ page }) => {
+    // Use tomorrow to guarantee the date is always in the future, avoiding
+    // "past date" rejections regardless of what time CI runs.
+    const tomorrow = addDays(new Date(), 1);
+    const tomorrowDay = format(tomorrow, 'd');
+
     // Navigate to the agenda page
     await page.goto('/agenda');
 
@@ -40,20 +47,32 @@ test.describe('@agenda block creation', () => {
     await expect(titleInput).toBeVisible();
     await titleInput.fill('Almoco');
 
-    // The date should be pre-selected to today. Click the trigger to verify
-    // and ensure today is selected.
+    // Select tomorrow's date in the calendar popover.
+    // The modal defaults to today; we open the popover and pick tomorrow
+    // to ensure the block is always in the future.
     const dateTrigger = page.getByTestId('block-form-date-trigger');
     await expect(dateTrigger).toBeVisible();
-    // The date trigger should already show today's date. We click it to open
-    // the calendar and select today explicitly.
     await dateTrigger.click();
-    const calendar = page.getByTestId('block-form-calendar');
-    if (await calendar.isVisible().catch(() => false)) {
-      const todayButton = page.locator('.rdp-today button, button[aria-selected="true"]').first();
-      if (await todayButton.isVisible().catch(() => false)) {
-        await todayButton.click();
-      }
+
+    // The Calendar component passes data-testid to DayPicker's root.
+    // We scope the day button search to the popover content to avoid
+    // matching the nav bar calendar or tab buttons.
+    const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
+    await expect(calendarPopover).toBeVisible();
+
+    // If tomorrow is in the next month, navigate forward.
+    if (tomorrow.getMonth() !== new Date().getMonth()) {
+      await calendarPopover.locator('button[name="next-month"]').click();
     }
+
+    // Click the day button for tomorrow. In react-day-picker v9, each day
+    // cell renders a <button> inside a <td>. We match by the text content
+    // (the day number) scoped within the calendar grid.
+    const dayButton = calendarPopover
+      .locator('table button')
+      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
+      .first();
+    await dayButton.click();
 
     // Select start time: 12:00
     const startTimeSelect = page.getByTestId('block-form-start-time');
@@ -77,6 +96,9 @@ test.describe('@agenda block creation', () => {
 
     // Verify a success toast appeared
     await expect(page.getByText('Horario bloqueado com sucesso.')).toBeVisible({ timeout: 5000 });
+
+    // Navigate to tomorrow so the newly created block is visible.
+    await page.getByTestId('agenda-nav-next').click();
 
     // Verify the block appears on the calendar.
     // Blocking slots use data-testid="session-chip-blocking" in day/week view.

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { addDays, format } from 'date-fns';
 
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -6,13 +7,14 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  * @agenda -- Session drag-and-drop reschedule E2E tests.
  *
  * Tests the drag-and-drop reschedule flow:
- *   1. Create a session via the modal at 14:00
- *   2. Drag the session event from 14:00 to 16:00
- *   3. Verify the reschedule confirmation dialog appears
- *   4. Verify it shows the patient name and new time
- *   5. Click "Confirmar"
- *   6. Verify success toast
- *   7. Verify the session is now at 16:00
+ *   1. Create a session via the modal at 14:00 tomorrow
+ *   2. Navigate to tomorrow on the calendar
+ *   3. Drag the session event from 14:00 to 16:00
+ *   4. Verify the reschedule confirmation dialog appears
+ *   5. Verify it shows the patient name and new time
+ *   6. Click "Confirmar"
+ *   7. Verify success toast
+ *   8. Verify the session is now at 16:00
  *
  * Prerequisites:
  *   - Seeded session (storageState) provides an authenticated psychologist.
@@ -23,11 +25,16 @@ test.describe('@agenda session drag and drop', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
   test('drags a session to a new time slot and confirms the reschedule', async ({ page }) => {
+    // Use tomorrow to guarantee the date is always in the future, avoiding
+    // "past date" rejections regardless of what time CI runs.
+    const tomorrow = addDays(new Date(), 1);
+    const tomorrowDay = format(tomorrow, 'd');
+
     // Navigate to the agenda page
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // First, create a session at 14:00 so we have something to drag
+    // First, create a session at 14:00 tomorrow so we have something to drag
     await page.getByTestId('schedule-button').click();
     await expect(page.getByTestId('session-form-modal')).toBeVisible();
 
@@ -43,6 +50,25 @@ test.describe('@agenda session drag and drop', () => {
     await expect(patientOption).toBeVisible({ timeout: 5000 });
     await patientOption.click();
 
+    // Select tomorrow's date in the calendar popover.
+    const dateTrigger = page.getByTestId('session-form-date-trigger');
+    await expect(dateTrigger).toBeVisible();
+    await dateTrigger.click();
+
+    const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
+    await expect(calendarPopover).toBeVisible();
+
+    // If tomorrow is in the next month, navigate forward.
+    if (tomorrow.getMonth() !== new Date().getMonth()) {
+      await calendarPopover.locator('button[name="next-month"]').click();
+    }
+
+    const dayButton = calendarPopover
+      .locator('table button')
+      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
+      .first();
+    await dayButton.click();
+
     // Set start time to 14:00
     const startTimeSelect = page.getByTestId('session-form-start-time');
     await startTimeSelect.click();
@@ -51,6 +77,9 @@ test.describe('@agenda session drag and drop', () => {
     // Use default duration (50 min) — just click save
     await page.getByTestId('session-form-save').click();
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 10000 });
+
+    // Navigate to tomorrow so the session is visible on the calendar
+    await page.getByTestId('agenda-nav-next').click();
 
     // Wait for the session to appear on the calendar
     const sessionChip = page.getByTestId('session-chip').filter({ hasText: patientName }).first();

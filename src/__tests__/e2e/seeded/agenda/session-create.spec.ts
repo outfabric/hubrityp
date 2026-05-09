@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { addDays, format } from 'date-fns';
 
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -9,12 +10,13 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  *   1. Navigate to /agenda
  *   2. Click "+ Agendar" button
  *   3. Search and select a patient by name
- *   4. Pick a date and time
+ *   4. Pick tomorrow's date and a time
  *   5. Select a location (if available)
  *   6. Click "Salvar"
- *   7. Verify the session appears on the calendar grid
- *   8. Click the session to open the detail drawer
- *   9. Verify the drawer shows the correct fields
+ *   7. Navigate to tomorrow on the calendar
+ *   8. Verify the session appears on the calendar grid
+ *   9. Click the session to open the detail drawer
+ *  10. Verify the drawer shows the correct fields
  *
  * Prerequisites:
  *   - Seeded session (storageState) provides an authenticated psychologist.
@@ -27,6 +29,11 @@ test.describe('@agenda session creation', () => {
   test('creates a session via modal, verifies it on the calendar, and opens the detail drawer', async ({
     page,
   }) => {
+    // Use tomorrow to guarantee the date is always in the future, avoiding
+    // "past date" rejections regardless of what time CI runs.
+    const tomorrow = addDays(new Date(), 1);
+    const tomorrowDay = format(tomorrow, 'd');
+
     // Navigate to the agenda page
     await page.goto('/agenda');
 
@@ -57,21 +64,30 @@ test.describe('@agenda session creation', () => {
     await expect(patientOption).toBeVisible({ timeout: 5000 });
     await patientOption.click();
 
-    // The date trigger should already have today's date pre-selected
+    // Select tomorrow's date in the calendar popover.
+    // The modal defaults to today; we open the popover and pick tomorrow
+    // to ensure the session is always in the future.
     const dateTrigger = page.getByTestId('session-form-date-trigger');
     await expect(dateTrigger).toBeVisible();
-    // Click to open the calendar popover and select today (already selected by default)
     await dateTrigger.click();
-    // Click today's date in the calendar (it should be the highlighted one)
-    // Close the popover by clicking the trigger again or selecting the date
-    const calendar = page.getByTestId('session-form-calendar');
-    // If calendar is visible, click today's button (aria-selected or .rdp-today)
-    if (await calendar.isVisible().catch(() => false)) {
-      const todayButton = page.locator('.rdp-today button, button[aria-selected="true"]').first();
-      if (await todayButton.isVisible().catch(() => false)) {
-        await todayButton.click();
-      }
+
+    // Scope the day button search to the popover content to avoid matching
+    // the nav bar calendar or tab buttons (which also have aria-selected).
+    const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
+    await expect(calendarPopover).toBeVisible();
+
+    // If tomorrow is in the next month, navigate forward.
+    if (tomorrow.getMonth() !== new Date().getMonth()) {
+      await calendarPopover.locator('button[name="next-month"]').click();
     }
+
+    // Click the day button for tomorrow. In react-day-picker v9, each day
+    // cell renders a <button> inside a <td>.
+    const dayButton = calendarPopover
+      .locator('table button')
+      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
+      .first();
+    await dayButton.click();
 
     // Select start time: 14:00
     const startTimeSelect = page.getByTestId('session-form-start-time');
@@ -101,12 +117,13 @@ test.describe('@agenda session creation', () => {
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 10000 });
 
     // Verify a success toast appeared
-    // Sonner toasts render as [data-sonner-toast] or similar; check for text
     await expect(page.getByText('Sessao agendada com sucesso.')).toBeVisible({ timeout: 5000 });
+
+    // Navigate to tomorrow so the newly created session is visible.
+    await page.getByTestId('agenda-nav-next').click();
 
     // Verify the session now appears on the calendar grid.
     // FullCalendar renders session chips with data-testid="session-chip".
-    // Look for one that contains the patient name.
     const sessionChip = page.getByTestId('session-chip').filter({ hasText: patientName }).first();
     await expect(sessionChip).toBeVisible({ timeout: 10000 });
 
