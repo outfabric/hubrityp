@@ -47,5 +47,5 @@
 
 ## 8. Frontend — E2E Tests
 
-- [ ] 8.1 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-export.spec.ts` — fluxo: navegar para detalhe do paciente, abrir menu de ações, clicar "Exportar PDF", confirmar no modal (sem dados clínicos), verificar que download inicia
-- [ ] 8.2 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-import.spec.ts` — fluxo: navegar para /app/pacientes/importar, fazer upload de CSV fixture com 5 rows válidas e 1 inválida, verificar preview (5 verdes, 1 vermelha), confirmar importação, verificar redirect para listagem com toast de sucesso, verificar que 5 novos pacientes aparecem
+- [x] 8.1 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-export.spec.ts` — fluxo: navegar para detalhe do paciente, abrir menu de ações, clicar "Exportar PDF", confirmar no modal (sem dados clínicos), verificar que download inicia
+- [x] 8.2 **Teste E2E:** Criar `src/__tests__/e2e/seeded/patients/patient-import.spec.ts` — fluxo: navegar para /app/pacientes/importar, fazer upload de CSV fixture com 5 rows válidas e 1 inválida, verificar preview (5 verdes, 1 vermelha), confirmar importação, verificar redirect para listagem com toast de sucesso, verificar que 5 novos pacientes aparecem
