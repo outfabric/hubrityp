@@ -156,3 +156,4 @@ src/__tests__/e2e/real/setup/.auth/
 playwright-report*/
 test-results*/
 playwright/.cache/
+.playwright-cli/
