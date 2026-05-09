@@ -86,7 +86,7 @@ export function SidebarNav() {
       {/* Mobile overlay backdrop */}
       {mobileOpen && (
         <div
-          className="bg-overlay/50 fixed inset-0 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={closeMobile}
           aria-hidden="true"
         />
