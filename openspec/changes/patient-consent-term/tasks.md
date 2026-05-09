@@ -34,7 +34,7 @@
 
 ## 7. Module Barrel Update
 
-- [ ] 7.1 Atualizar `src/modules/patients/index.ts` para reexportar: generateConsent, revokeConsent, getConsentStatus, getConsentByToken, signConsent, tipos
+- [x] 7.1 Atualizar `src/modules/patients/index.ts` para reexportar: generateConsent, revokeConsent, getConsentStatus, getConsentByToken, signConsent, tipos
 
 ## 8. Frontend — Public Consent Page
 
