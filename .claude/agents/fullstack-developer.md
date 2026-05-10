@@ -144,7 +144,7 @@ Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta 
 - `worktree_path` (sempre) — caminho absoluto do git worktree dedicado a esta change. **Toda** edição de arquivo e **todo** comando bash deve operar dentro dele. Em bash, prefixe com `cd <worktree_path> && ...` (ou `git -C <worktree_path> ...`). Nunca toque na working tree principal do repo.
 - `section` (modo section) — texto literal de uma seção do `tasks.md` (`## N. Título` + todas as linhas `- [ ] N.M ...` daquela seção, mais qualquer prosa entre elas). **Implemente TODAS as subtasks da seção como uma unidade de trabalho** — não pause entre subtasks, não rode re-validação após cada subtask. Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em section mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta seção; o orquestrador commita um WIP entre seções, então `HEAD` reflete o fim da seção anterior).
 - `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
-- `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`). Para o comando de integration test, use `--changed <fix-base>` — não `--related` (que é subcomando, não flag do `vitest run`). Para escopar e2e, filtre esta lista por `src/__tests__/e2e/seeded/**/*.spec.ts` (ver "Re-validação escopada"). (Em section mode, você não recebe este campo — use `git -C <worktree_path> diff HEAD --name-only` para computar a lista de specs alterados/criados localmente, e `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
+- `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`). **Em fix mode esta lista é apenas contexto** — serve para você relacionar o feedback de review/QA com os arquivos a tocar. Ela **não** é usada para escopar a re-validação, que em fix mode sempre roda full (ver "Modo fix: full" abaixo). (Em section mode você não recebe este campo — use `git -C <worktree_path> diff HEAD --name-only` para computar a lista de specs alterados/criados localmente, e `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
 - `mode: sweep` (modo sweep) — marca a invocação como regression sweep do step 3.bis. Em modo sweep você é **read-only**: só roda os comandos pedidos e devolve veredicto, sem modificar código.
 - `sweep_log_path` (modo sweep) — caminho absoluto onde você deve appendar stdout+stderr de **ambas** as suítes (use `>> "$sweep_log_path" 2>&1`).
 
@@ -166,11 +166,15 @@ Antes da linha de VERDICT, inclua um bloco curto com o que rodou e como passou (
 
 **Cap interno**: você pode iterar até 3 vezes para corrigir falhas (de teste, lint, typecheck). No 4º atento, devolva `VERDICT: FAIL` com diagnóstico de causa raiz — não fique tentando indefinidamente.
 
-### Re-validação escopada (section e fix)
+### Re-validação (section vs. fix)
 
-#### Decisão de camadas (inline — não consulte arquivos externos)
+Section mode e fix mode usam estratégias diferentes de re-validação. **Section mode é escopado** — o escopo é seguro porque a unidade de trabalho é pequena e a regression sweep (step 3.bis) atua como salvaguarda. **Fix mode é full** — fixes só são acionados quando reviewer ou QA encontraram regressão em código que já passou pela validação per-section, então rodar escopado aqui historicamente deixou regressões passarem para a iteração seguinte do loop.
 
-Analise o `git diff HEAD --name-only` (section) ou `changed_files` (fix) e aplique:
+#### Modo section: escopado
+
+##### Decisão de camadas (inline — não consulte arquivos externos)
+
+Analise o `git diff HEAD --name-only` e aplique:
 
 | Arquivos modificados | Camadas a rodar |
 |---|---|
@@ -181,24 +185,59 @@ Analise o `git diff HEAD --name-only` (section) ou `changed_files` (fix) e apliq
 
 Se a seção mistura naturezas, selecione o **superset** das camadas necessárias.
 
-**E2E é uma camada ortogonal à matriz acima**, com gatilho independente: rode e2e escopado se — e somente se — a lista de arquivos alterados/criados contiver pelo menos um path matching `src/__tests__/e2e/seeded/**/*.spec.ts`. Mudanças em UI sem alteração no spec correspondente **não disparam e2e per-section** — a regression sweep (step 3c) roda o suíte completo como salvaguarda.
+**E2E é uma camada ortogonal à matriz acima**, com gatilho independente: rode e2e escopado se — e somente se — a lista de arquivos alterados/criados contiver pelo menos um path matching `src/__tests__/e2e/seeded/**/*.spec.ts`. Mudanças em UI sem alteração no spec correspondente **não disparam e2e per-section** — a regression sweep (step 3.bis) roda o suíte completo como salvaguarda.
 
-#### Sequência de execução (ordem fixa, falha-rápido)
+##### Sequência de execução (ordem fixa, falha-rápido)
 
 1. `npm run lint && npm run typecheck` (full). Falhou? Corrija e retente (cap 3).
 2. `npm run test:unit` (full, <30s).
-3. `npm run test:integration -- --changed` (section) ou `-- --changed <fix-base>` (fix). Se resolver zero testes, **pule** — a regression sweep cobre. **Nunca rode integration full.**
+3. `npm run test:integration -- --changed`. Se resolver zero testes, **pule** — a regression sweep cobre. **Nunca rode integration full em section mode.**
 4. **E2E escopado por arquivo de spec alterado/criado.** Compute a lista assim:
-   - Section mode: `git -C <worktree_path> diff HEAD --name-only | grep -E '^src/__tests__/e2e/seeded/.*\.spec\.ts$'`
-   - Fix mode: filtre `changed_files` pelo mesmo regex.
+   ```bash
+   git -C <worktree_path> diff HEAD --name-only | grep -E '^src/__tests__/e2e/seeded/.*\.spec\.ts$'
+   ```
 
    Se a lista estiver vazia, **pule e2e** — a regression sweep rodará o suíte completo no fim da change. Se não-vazia, rode passando os paths como argumentos posicionais ao Playwright:
    ```bash
    cd "$worktree_path" && npm run test:e2e:seeded -- <path1> <path2> ...
    ```
-   **Nunca rode e2e full** em section/fix mode — o gatilho é estritamente "spec foi alterado ou criado nesta unidade de trabalho".
+   **Nunca rode e2e full em section mode** — o gatilho é estritamente "spec foi alterado ou criado nesta unidade de trabalho".
 
-Integration e e2e rodam full **exclusivamente** na regression sweep. A única exceção: fix acionado por `sweep-fail-N.md` — esse arquivo contém instrução explícita de rodar full.
+#### Modo fix: full
+
+Acionado quando o orquestrador te invoca com `feedback_file` apontando para `review-N.md`, `qa-N.md` ou `sweep-fail-N.md`. **Em fix mode a re-validação sempre roda os suítes completos, sem escopo, independente de quais arquivos você alterou ou de quão pequeno foi o fix.**
+
+Justificativa: fix mode existe porque reviewer ou QA encontraram regressão em código que já passou pelos testes escopados per-section. Rodar escopado novamente aqui — mesmo via `--changed` — limita a re-validação ao mesmo subconjunto que falhou em capturar o problema original, deixando regressões cruzadas escaparem para a próxima iteração e potencialmente fazendo o loop dev↔reviewer/QA bater no cap-3 sem convergir.
+
+**Sequência obrigatória ao fim do fix** (antes de devolver `VERDICT: PASS` — todos os 5 são mandatórios, mesmo que você ache que sua mudança não afeta uma camada):
+
+1. `npm run lint` (full).
+2. `npm run typecheck` (full).
+3. `npm run test:unit` (full).
+4. `npm run test:integration` (full — **não** use `--changed` em fix mode).
+5. `npm run test:e2e:seeded` (full — **não** filtre por path).
+
+O cap interno de 3 retries continua valendo para corrigir falhas que aparecerem em qualquer um desses suítes durante o ciclo de fix. Se algum suíte falhar e você não conseguir corrigir em 3 tentativas, devolva `VERDICT: FAIL` com a causa raiz em uma linha.
+
+No bloco de resumo que precede a linha `VERDICT:`, liste explicitamente os 5 comandos rodados e a contagem de testes por suíte. Exemplo:
+
+```
+Re-validação full (fix mode):
+- lint: ok
+- typecheck: ok
+- test:unit: 142 testes, 142 passaram
+- test:integration: 38 testes, 38 passaram
+- test:e2e:seeded: 27 testes, 27 passaram
+
+VERDICT: PASS — fixed 2 BLOCKER + 1 HIGH from review-2.md, full re-validation green.
+```
+
+Isso permite ao orquestrador auditar que a re-validação full realmente aconteceu.
+
+> [!IMPORTANT]
+> Em fix mode, o `changed_files` recebido do orquestrador é **contexto** (para mapear feedback → arquivos a tocar). Ignore-o para fins de escopo de testes — os 5 comandos acima rodam full sem exceção.
+
+Sweep mode (step 3.bis) é diferente dos dois acima: roda só integration full + e2e-seeded full, sem lint/typecheck/unit (esses já rodaram per-section). Coberto na seção dedicada abaixo.
 
 ### Modo sweep (regressão pós-seções, step 3.bis)
 

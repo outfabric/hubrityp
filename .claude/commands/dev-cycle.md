@@ -147,7 +147,7 @@ Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-se
   ```
   # Regression sweep failure (iteration N)
 
-  **Forced full re-validation**: this is a cross-section regression caught by the end-of-sections sweep. At the end of your fix, run `npm run test:integration` full AND (if applicable) `npm run test:e2e:seeded` full — NOT scoped via --related/--grep. The regression by definition isn't covered by your changed-files graph.
+  **Forced full re-validation**: this is a cross-section regression caught by the end-of-sections sweep. Apply the agent's "Modo fix: full" contract at the end of your fix — lint + typecheck + `test:unit` + `test:integration` + `test:e2e:seeded`, all full, never scoped via `--changed`/`--grep`/path filters. The regression by definition isn't covered by your changed-files graph.
 
   ## Failing tests
   <parsed list of failing tests from $SWEEP_LOG>
@@ -379,10 +379,10 @@ When invoking `fullstack-developer` to address feedback:
 - **Scope**: worktree path (same as before).
 - **Feedback file**: absolute path to `review-N.md` or `qa-N.md`.
 - **Fix instruction**: "Address every BLOCKER/HIGH from the review (or every CRÍTICO/ALTO from the QA report). Do not introduce out-of-scope refactors."
-- **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (same as section mode, but using `--changed <fix-base>` and `affected_e2e_tags` from the orchestrator). Always scoped, never full.
-- **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b.
+- **Re-validation**: the agent follows its built-in "Modo fix: full" contract (defined in `.claude/agents/fullstack-developer.md`). At the end of the fix iteration — before returning `VERDICT: PASS` — the agent MUST run, in order: `npm run lint`, `npm run typecheck`, `npm run test:unit` (full), `npm run test:integration` (full — never `--changed`), and `npm run test:e2e:seeded` (full — never path-filtered). All five are mandatory regardless of which files the fix touched. Rationale: fix-mode is invoked precisely because reviewer or QA found regression in code that already passed per-section scoped validation; scoped re-runs here have historically let regressions slip into the next iteration, defeating the loop.
+- **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b. The pre-VERDICT block must list which suites ran and their test counts so the orchestrator can audit that full re-validation actually happened.
 
-The orchestrator computes `changed_files` itself before invoking the agent — the agent receives it as a plain list in the prompt. The agent extracts the subset matching `src/__tests__/e2e/seeded/**/*.spec.ts` to drive scoped e2e (see the agent's "Re-validação escopada" contract). Per-section e2e covers only the specs the section touched; the regression sweep at step 3c runs the full e2e suite as the safety net.
+The orchestrator still computes `changed_files` (`git diff <fix-base>...HEAD --name-only`) and passes it to the agent — but in fix mode it is **context only** (helps the agent map review/QA feedback to the affected files), not used to scope test runs.
 
 ### 7. Archive in-place
 
