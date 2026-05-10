@@ -17,7 +17,11 @@ if (!databaseUrl) {
 }
 
 async function main() {
-  const sql = postgres(databaseUrl!, { max: 1 });
+  // Disable prepared statements so migrations work through Supavisor
+  // (Supabase's connection pooler) in transaction mode. Supavisor routes
+  // consecutive queries to different PostgreSQL backends, which breaks
+  // prepared statements created on one backend and referenced on another.
+  const sql = postgres(databaseUrl!, { max: 1, prepare: false });
   const db = drizzle(sql);
 
   await migrate(db, { migrationsFolder: './src/shared/db/migrations' });
