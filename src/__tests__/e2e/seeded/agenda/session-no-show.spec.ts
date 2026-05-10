@@ -13,12 +13,12 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  *   5. Verify no cancellation fields are shown in the detail
  *
  * Prerequisites:
- *   - Seeded scheduled session (SEED_SESSIONS.forNoShow) at 15:00 BRT tomorrow.
+ *   - Seeded scheduled session (SEED_SESSIONS.forNoShow) at 09:00 BRT tomorrow.
  *   - storageState provides an authenticated psychologist.
  *
  * Note: The `forNoShow` session uses the same patient (Maria Silva) as
- * `cancellable`, but at a different time (15:00 vs 10:00 BRT). We filter
- * by "Agendada" badge and take the last scheduled chip (later time).
+ * `cancellable`, but at a different time (09:00 vs 10:00 BRT). We filter
+ * by "Agendada" badge and time text to pick the correct chip.
  */
 test.describe('@agenda session no-show', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
@@ -35,18 +35,15 @@ test.describe('@agenda session no-show', () => {
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
 
-    // Find scheduled session chips for Maria Silva. There may be two
-    // (cancellable at 10:00 and forNoShow at 15:00). Filter by "Agendada"
-    // badge and pick the last one (later time = forNoShow at 15:00).
-    // If the cancel test already ran (parallel), the cancellable session
-    // will have "Cancelada" badge and only forNoShow will match.
-    const scheduledChips = page
+    // Find the forNoShow session chip for Maria Silva at 09:00.
+    // Filter by patient name, "Agendada" badge, and time text to
+    // disambiguate from the cancellable session at 10:00.
+    const targetChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
+      .filter({ hasText: '9:00' })
       .filter({ has: page.getByTestId('session-status-badge-scheduled') });
-    await expect(scheduledChips.first()).toBeVisible({ timeout: 10000 });
-
-    const targetChip = (await scheduledChips.count()) > 1 ? scheduledChips.last() : scheduledChips;
+    await expect(targetChip).toBeVisible({ timeout: 10000 });
     await targetChip.click();
 
     const drawer = page.getByTestId('session-detail-drawer');

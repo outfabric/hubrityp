@@ -181,9 +181,13 @@ export default async function globalSetup() {
     // anchored at midnight UTC, then add enough hours to land within BRT
     // business hours (BRT = UTC-3, so 10:00 BRT = 13:00 UTC).
     //
-    // Time assignments (BRT): cancel=10:00, markDone=11:00, noShow=15:00, lock=16:00
+    // Time assignments (BRT): cancel=19:00, markDone=11:00, noShow=09:00, lock=20:00
+    // These times are chosen to avoid conflicts with pre-existing parallel
+    // tests that create sessions at: 08:00-10:00 (drag-drop), 12:00-13:00
+    // (block-create), 14:00 (session-create), 15:00 (recurring-session-create),
+    // 16:00 (recurring-session-edit-scope), 17:00 (couple-session).
 
-    // 17.1 — cancellable: scheduled session tomorrow at 10:00 BRT (13:00 UTC)
+    // 17.1 — cancellable: scheduled session tomorrow at 19:00 BRT (22:00 UTC)
     await sql`
       INSERT INTO public.sessions (
         id, user_id, patient_id,
@@ -194,8 +198,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.cancellable.id},
         ${seed.userId},
         ${SEED_SESSIONS.cancellable.patientId},
-        (current_date + interval '1 day' + interval '13 hours'),
-        (current_date + interval '1 day' + interval '13 hours 50 minutes'),
+        (current_date + interval '1 day' + interval '22 hours'),
+        (current_date + interval '1 day' + interval '22 hours 50 minutes'),
         50, 'scheduled', false
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -243,7 +247,7 @@ export default async function globalSetup() {
         deleted_at         = NULL;
     `;
 
-    // 18.1 — forNoShow: scheduled session tomorrow at 15:00 BRT (18:00 UTC)
+    // 18.1 — forNoShow: scheduled session tomorrow at 09:00 BRT (12:00 UTC)
     await sql`
       INSERT INTO public.sessions (
         id, user_id, patient_id,
@@ -254,8 +258,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.forNoShow.id},
         ${seed.userId},
         ${SEED_SESSIONS.forNoShow.patientId},
-        (current_date + interval '1 day' + interval '18 hours'),
-        (current_date + interval '1 day' + interval '18 hours 50 minutes'),
+        (current_date + interval '1 day' + interval '12 hours'),
+        (current_date + interval '1 day' + interval '12 hours 50 minutes'),
         50, 'scheduled', false
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -273,7 +277,7 @@ export default async function globalSetup() {
         deleted_at         = NULL;
     `;
 
-    // 18.2 — lockedDone: done session tomorrow at 16:00 BRT (19:00 UTC), updated 8 days ago
+    // 18.2 — lockedDone: done session tomorrow at 20:00 BRT (23:00 UTC), updated 8 days ago
     await sql`
       INSERT INTO public.sessions (
         id, user_id, patient_id,
@@ -284,8 +288,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.lockedDone.id},
         ${seed.userId},
         ${SEED_SESSIONS.lockedDone.patientId},
-        (current_date + interval '1 day' + interval '19 hours'),
-        (current_date + interval '1 day' + interval '19 hours 50 minutes'),
+        (current_date + interval '1 day' + interval '23 hours'),
+        (current_date + interval '1 day' + interval '23 hours 50 minutes'),
         50, 'done', false, now() - interval '8 days'
       )
       ON CONFLICT (id) DO UPDATE SET

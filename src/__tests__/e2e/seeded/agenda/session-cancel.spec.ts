@@ -33,15 +33,16 @@ test.describe('@agenda session cancellation', () => {
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
 
-    // Find a scheduled session chip for Maria Silva. There may be two
-    // (cancellable at 10:00, forNoShow at 15:00). Pick the first one
-    // (earlier time = cancellable at 10:00).
-    const scheduledChips = page
+    // Find the cancellable session chip for Maria Silva at 19:00.
+    // Filter by patient name, time text, and "Agendada" badge to
+    // disambiguate from the forNoShow session at 09:00.
+    const cancellableChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
+      .filter({ hasText: '19:00' })
       .filter({ has: page.getByTestId('session-status-badge-scheduled') });
-    await expect(scheduledChips.first()).toBeVisible({ timeout: 10000 });
-    await scheduledChips.first().click();
+    await expect(cancellableChip).toBeVisible({ timeout: 10000 });
+    await cancellableChip.click();
 
     const drawer = page.getByTestId('session-detail-drawer');
     await expect(drawer).toBeVisible({ timeout: 5000 });

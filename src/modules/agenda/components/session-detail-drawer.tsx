@@ -437,7 +437,7 @@ export function SessionDetailDrawer({
               </SheetDescription>
             </div>
             {!isBlocking && (
-              <div className="shrink-0">
+              <div className="shrink-0" data-testid="session-status-badge">
                 <SessionStatusBadge status={sessionStatus} />
               </div>
             )}
