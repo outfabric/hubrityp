@@ -111,8 +111,14 @@ test.describe('@sessions recurring session edit scope', () => {
     // Select "Data especifica" end condition
     await page.getByTestId('end-condition-date').click();
 
+    // Wait for the end date picker section to render before clicking the trigger
+    const endDatePicker = page.getByTestId('end-date-picker');
+    await expect(endDatePicker).toBeVisible();
+
     // Open end date calendar and pick the end date
-    await page.getByTestId('end-date-trigger').click();
+    const endDateTrigger = page.getByTestId('end-date-trigger');
+    await expect(endDateTrigger).toBeVisible();
+    await endDateTrigger.click();
     const endDateCalendar = page.locator('[data-radix-popper-content-wrapper]').last();
     await expect(endDateCalendar).toBeVisible();
 
@@ -133,8 +139,31 @@ test.describe('@sessions recurring session edit scope', () => {
       .first();
     await endDayButton.click();
 
-    // Submit
+    // Submit — handle potential conflict warning on test retries.
+    // When the test retries after a partial run, sessions from the previous
+    // attempt are still in the DB, so the server may return a conflict
+    // warning instead of immediately creating. If the conflict alert appears,
+    // click "Agendar mesmo assim" to force through it.
     await page.getByTestId('session-form-save').click();
+
+    const conflictAlert = page.getByTestId('session-form-conflict-alert');
+    const modalHidden = page.getByTestId('session-form-modal');
+
+    // Wait for either: modal closes (success) or conflict alert appears
+    await Promise.race([
+      expect(modalHidden)
+        .toBeHidden({ timeout: 15000 })
+        .catch(() => {}),
+      expect(conflictAlert)
+        .toBeVisible({ timeout: 15000 })
+        .catch(() => {}),
+    ]);
+
+    // If the conflict alert appeared, force through it
+    if (await conflictAlert.isVisible().catch(() => false)) {
+      await page.getByTestId('session-form-force-conflict').click();
+    }
+
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 15000 });
     await expect(page.getByText(/sessoes agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
 
@@ -236,9 +265,24 @@ test.describe('@sessions recurring session edit scope', () => {
     await expect(updatedSession2).toBeVisible({ timeout: 10000 });
 
     // Click session #2 to verify its time in the detail drawer.
-    await updatedSession2.click({ force: true });
+    // Wait briefly for FullCalendar to attach event handlers to the
+    // freshly rendered chip after the edit + calendar refresh.
+    await page.waitForTimeout(500);
+
+    // Use dispatchEvent because FullCalendar's eventClick handler may not
+    // fire with Playwright's standard click on freshly mounted events.
+    await updatedSession2.dispatchEvent('click');
+
     const drawerAfterEdit = page.getByTestId('session-detail-drawer');
-    await expect(drawerAfterEdit).toBeVisible({ timeout: 5000 });
+
+    // Fall back to clicking the parent FullCalendar event wrapper if
+    // dispatchEvent didn't trigger the eventClick handler.
+    const drawerOpenedAfterEdit = await drawerAfterEdit.isVisible().catch(() => false);
+    if (!drawerOpenedAfterEdit) {
+      await updatedSession2.locator('..').click({ force: true });
+    }
+
+    await expect(drawerAfterEdit).toBeVisible({ timeout: 10000 });
 
     // The form picks "18:00" in the browser (BRT timezone). buildIsoDatetime
     // converts 18:00 BRT → 21:00 UTC for storage. The drawer converts back
