@@ -68,28 +68,28 @@
 
 > **Design System Salvia** (`docs/design-system/rules.md`): Badge with semantic colors, Lucide icons from fixed map.
 
-- [ ] 11.1 Create `src/modules/agenda/components/session-status-badge.tsx` (Server Component) — renders shadcn `Badge` with variant mapped to session status: scheduled→neutral (surface-muted/text-secondary, icon Clock), confirmed→success (success-50/success-700, icon CheckCircle2), done→brand (brand-100/brand-700, icon Check), cancelled→danger (danger-50/danger-700, icon XCircle), no_show→warning (warning-50/warning-700, icon AlertTriangle). Badge height 22px, padding 2px 10px, radius full, font 12px weight 500. Icon 16px inline with `aria-hidden="true"`
+- [x] 11.1 Create `src/modules/agenda/components/session-status-badge.tsx` (Server Component) — renders shadcn `Badge` with variant mapped to session status: scheduled→neutral (surface-muted/text-secondary, icon Clock), confirmed→success (success-50/success-700, icon CheckCircle2), done→brand (brand-100/brand-700, icon Check), cancelled→danger (danger-50/danger-700, icon XCircle), no_show→warning (warning-50/warning-700, icon AlertTriangle). Badge height 22px, padding 2px 10px, radius full, font 12px weight 500. Icon 16px inline with `aria-hidden="true"`
 
 ## 12. Frontend — Action Buttons Component
 
 > **Design System Salvia**: Button variants (primary/secondary/danger/link), loading state, max 1 primary per context.
 
-- [ ] 12.1 Create `src/modules/agenda/components/session-action-buttons.tsx` (Client Component) — renders status-dependent action buttons using `getAvailableActions`. Button variants per design.md: "Confirmar presenca" primary + CheckCircle2, "Marcar como realizada" primary + Check, "Remarcar" secondary + Calendar, "Cancelar sessao" danger + XCircle, "Marcar como falta" secondary + AlertTriangle, "Reativar" secondary + RotateCcw, "Excluir definitivamente" danger + Trash2, link buttons for prontuario/pagamento/cobranca. For done sessions past 7 days: shows shadcn `Alert` info variant (bg info-50, text info-700, icon Lock) with text "Sessao bloqueada para edicao apos 7 dias". Loading state on all async buttons. Size md (40px, 15px font)
-- [ ] 12.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/session-action-buttons.test.tsx` — test: renders correct buttons for each status, locked done session shows lock alert instead of action buttons, loading state shown during async action
+- [x] 12.1 Create `src/modules/agenda/components/session-action-buttons.tsx` (Client Component) — renders status-dependent action buttons using `getAvailableActions`. Button variants per design.md: "Confirmar presenca" primary + CheckCircle2, "Marcar como realizada" primary + Check, "Remarcar" secondary + Calendar, "Cancelar sessao" danger + XCircle, "Marcar como falta" secondary + AlertTriangle, "Reativar" secondary + RotateCcw, "Excluir definitivamente" danger + Trash2, link buttons for prontuario/pagamento/cobranca. For done sessions past 7 days: shows shadcn `Alert` info variant (bg info-50, text info-700, icon Lock) with text "Sessao bloqueada para edicao apos 7 dias". Loading state on all async buttons. Size md (40px, 15px font)
+- [x] 12.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/session-action-buttons.test.tsx` — test: renders correct buttons for each status, locked done session shows lock alert instead of action buttons, loading state shown during async action
 
 ## 13. Frontend — Cancellation Dialog
 
 > **Design System Salvia**: Dialog (not Drawer), Select, RadioGroup, Switch, Alert with notice variant, Button danger + secondary.
 
-- [ ] 13.1 Create `src/modules/agenda/components/cancel-session-dialog.tsx` (Client Component) — shadcn `Dialog` max-width 480px, radius 2xl, padding space-8 desktop / space-6 mobile. Title h3 "Cancelar sessao" (18px/600). shadcn `Select` for reason (4 options). shadcn `RadioGroup` for "Quem cancelou" (Paciente/Psicologo). Calculated notice in shadcn `Alert` (info for 24h+, warning for less_24h and less_1h, danger for on_time). shadcn `Switch` for "Aplicar cobranca?". Footer: "Cancelar sessao" Button danger + loading state, "Voltar" Button secondary. Form validated with React Hook Form + cancelSessionInputSchema. On success: toast "Sessao cancelada" (Sonner, border-left danger-500), closes dialog. If reschedule mode: on success opens session creation modal pre-filled
-- [ ] 13.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/cancel-session-dialog.test.tsx` — test: renders all form fields, notice alert updates based on session time, form submission disabled until required fields filled, loading state on submit
+- [x] 13.1 Create `src/modules/agenda/components/cancel-session-dialog.tsx` (Client Component) — shadcn `Dialog` max-width 480px, radius 2xl, padding space-8 desktop / space-6 mobile. Title h3 "Cancelar sessao" (18px/600). shadcn `Select` for reason (4 options). shadcn `RadioGroup` for "Quem cancelou" (Paciente/Psicologo). Calculated notice in shadcn `Alert` (info for 24h+, warning for less_24h and less_1h, danger for on_time). shadcn `Switch` for "Aplicar cobranca?". Footer: "Cancelar sessao" Button danger + loading state, "Voltar" Button secondary. Form validated with React Hook Form + cancelSessionInputSchema. On success: toast "Sessao cancelada" (Sonner, border-left danger-500), closes dialog. If reschedule mode: on success opens session creation modal pre-filled
+- [x] 13.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/cancel-session-dialog.test.tsx` — test: renders all form fields, notice alert updates based on session time, form submission disabled until required fields filled, loading state on submit
 
 ## 14. Frontend — Soft-Delete Confirmation
 
 > **Design System Salvia**: AlertDialog with destructive confirmation (type "EXCLUIR" to confirm).
 
-- [ ] 14.1 Create `src/modules/agenda/components/delete-session-dialog.tsx` (Client Component) — shadcn `AlertDialog` max-width 480px. Title h3 "Excluir sessao definitivamente". Body text warning in danger-700. Input requiring user to type "EXCLUIR" to enable the confirm button. "Excluir definitivamente" Button danger (disabled until input matches), "Cancelar" Button secondary. On success: toast "Sessao excluida" (Sonner)
-- [ ] 14.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/delete-session-dialog.test.tsx` — test: confirm button disabled until "EXCLUIR" typed, submission calls softDeleteSession
+- [x] 14.1 Create `src/modules/agenda/components/delete-session-dialog.tsx` (Client Component) — shadcn `AlertDialog` max-width 480px. Title h3 "Excluir sessao definitivamente". Body text warning in danger-700. Input requiring user to type "EXCLUIR" to enable the confirm button. "Excluir definitivamente" Button danger (disabled until input matches), "Cancelar" Button secondary. On success: toast "Sessao excluida" (Sonner)
+- [x] 14.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/components/delete-session-dialog.test.tsx` — test: confirm button disabled until "EXCLUIR" typed, submission calls softDeleteSession
 
 ## 15. Frontend — Integration into Session Detail Modal
 
