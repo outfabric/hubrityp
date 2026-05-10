@@ -2,13 +2,14 @@
  * Date/timezone helpers for the agenda module.
  *
  * All dates are stored as UTC in the database. These helpers convert and
- * format them for display in the America/Sao_Paulo timezone using date-fns
- * with the pt-BR locale.
+ * format them for display in the America/Sao_Paulo timezone using
+ * `formatInTimeZone` from date-fns-tz to avoid the classic double-shift
+ * pitfall of `toZonedTime` + plain `format`.
  */
 
-import { addMinutes, format, isPast } from 'date-fns';
+import { addMinutes, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { toZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -23,8 +24,13 @@ const SAO_PAULO_TZ = 'America/Sao_Paulo';
 /**
  * Converts a UTC date to the America/Sao_Paulo timezone.
  *
- * The returned Date has its internal timestamp shifted so that calling
- * `getHours()` / `format()` etc. returns values in São Paulo local time.
+ * WARNING: The returned Date is a "fake" shifted date intended only for
+ * non-formatting use cases (e.g., comparing day-of-week). For display
+ * formatting, use the `formatSession*` helpers which call `formatInTimeZone`
+ * directly to avoid the double-shift pitfall.
+ *
+ * @deprecated Prefer `formatSessionTime` / `formatSessionDateFull` etc. for
+ * display. Only use this when you need the shifted Date object itself.
  */
 export function toSaoPauloTime(utcDate: Date): Date {
   return toZonedTime(utcDate, SAO_PAULO_TZ);
@@ -35,31 +41,29 @@ export function toSaoPauloTime(utcDate: Date): Date {
 // ---------------------------------------------------------------------------
 
 /**
- * Formats a date as a time string, e.g. "14:00".
+ * Formats a UTC date as a time string in São Paulo timezone, e.g. "14:00".
  *
- * Expects a date already in the desired timezone (call {@link toSaoPauloTime}
- * first when working with UTC dates from the database).
+ * Uses `formatInTimeZone` to convert and format in a single step, avoiding
+ * the double-shift bug when the system timezone matches the target timezone.
  */
 export function formatSessionTime(date: Date): string {
-  return format(date, 'HH:mm', { locale: ptBR });
+  return formatInTimeZone(date, SAO_PAULO_TZ, 'HH:mm', { locale: ptBR });
 }
 
 /**
- * Formats a date as a short date string, e.g. "15 de mai. 2026".
- *
- * Expects a date already in the desired timezone.
+ * Formats a UTC date as a short date string in São Paulo timezone,
+ * e.g. "15 de mai. 2026".
  */
 export function formatSessionDate(date: Date): string {
-  return format(date, "d 'de' MMM'.' yyyy", { locale: ptBR });
+  return formatInTimeZone(date, SAO_PAULO_TZ, "d 'de' MMM'.' yyyy", { locale: ptBR });
 }
 
 /**
- * Formats a date as a full date string, e.g. "quinta-feira, 15 de maio de 2026".
- *
- * Expects a date already in the desired timezone.
+ * Formats a UTC date as a full date string in São Paulo timezone,
+ * e.g. "quinta-feira, 15 de maio de 2026".
  */
 export function formatSessionDateFull(date: Date): string {
-  return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  return formatInTimeZone(date, SAO_PAULO_TZ, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
 }
 
 // ---------------------------------------------------------------------------

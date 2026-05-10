@@ -14,6 +14,12 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    // Force the browser to America/Sao_Paulo so tests produce consistent
+    // results regardless of the CI runner's system timezone (typically UTC).
+    // The application targets Brazilian psychologists, so the browser should
+    // always behave as if the user is in Brazil.
+    timezoneId: 'America/Sao_Paulo',
+    locale: 'pt-BR',
   },
   projects: [
     // Setup project: writes the simulated `storageState` JSON consumed by

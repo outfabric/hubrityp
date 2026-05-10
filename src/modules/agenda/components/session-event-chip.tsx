@@ -1,7 +1,7 @@
 'use client';
 
 import type { EventContentArg } from '@fullcalendar/core';
-import { Building2, Lock, Video } from 'lucide-react';
+import { Building2, Lock, Repeat, Video } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,16 +48,22 @@ function getModalityIcon(modality: string | null | undefined) {
  */
 export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
   const { event, view } = eventInfo;
-  const { isBlocking, blockingTitle, patientName, modality, color } = event.extendedProps as {
-    isBlocking: boolean;
-    blockingTitle: string | null;
-    patientName: string | null;
-    locationType: string | null;
-    locationName: string | null;
-    modality: string | null;
-    status: string;
-    color: string | null;
-  };
+  const { isBlocking, blockingTitle, patientName, modality, color, recurrenceId } =
+    event.extendedProps as {
+      isBlocking: boolean;
+      blockingTitle: string | null;
+      patientName: string | null;
+      locationType: string | null;
+      locationName: string | null;
+      modality: string | null;
+      status: string;
+      color: string | null;
+      recurrenceId: string | null;
+      patientIds: string[] | null;
+      coupleDisplayName: string | null;
+    };
+
+  const isRecurring = recurrenceId != null;
 
   const isMonthView = view.type === 'dayGridMonth';
 
@@ -79,7 +85,7 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
 
     return (
       <div
-        className="flex h-[22px] items-center gap-1 truncate rounded-full px-2"
+        className="relative flex h-[22px] items-center gap-1 truncate rounded-full px-2"
         style={{
           backgroundColor: color ? `${color}20` : undefined,
           color: color ?? undefined,
@@ -88,6 +94,13 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
       >
         <span className="truncate text-[12px] font-medium">{patientName ?? 'Paciente'}</span>
         {getModalityIcon(modality)}
+        {isRecurring && (
+          <Repeat
+            className="text-text-tertiary absolute right-1 bottom-0.5 h-3 w-3 shrink-0"
+            aria-label="Sessao recorrente"
+            data-testid="recurring-indicator"
+          />
+        )}
       </div>
     );
   }
@@ -112,7 +125,7 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
   // -- Regular session (day/week view) ----------------------------------------
   return (
     <div
-      className="flex flex-col gap-0.5 rounded-sm p-1 px-2"
+      className="relative flex flex-col gap-0.5 rounded-sm p-1 px-2"
       style={{
         backgroundColor: color ? `${color}20` : undefined,
         color: color ?? undefined,
@@ -124,6 +137,13 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
         {getModalityIcon(modality)}
       </div>
       <span className="text-text-secondary text-[12px] font-normal">{eventInfo.timeText}</span>
+      {isRecurring && (
+        <Repeat
+          className="text-text-tertiary absolute right-1 bottom-1 h-3 w-3 shrink-0"
+          aria-label="Sessao recorrente"
+          data-testid="recurring-indicator"
+        />
+      )}
     </div>
   );
 }

@@ -60,7 +60,7 @@ The system SHALL detect time overlaps between the new/edited session and existin
 
 ### Requirement: Psychologist cannot schedule sessions in the past
 
-The system SHALL reject session creation with a start_at in the past. The error message is "Nao e possivel agendar sessoes no passado."
+The system SHALL reject session creation with a start_at in the past. The error message is "Nao e possivel agendar sessoes no passado." Exception: when `is_late_record` is set to `true` (see `agenda-recurring-sessions` capability), past dates are accepted and the session is created with status `done`.
 
 #### Scenario: Attempt to create session in the past
 
@@ -71,6 +71,11 @@ The system SHALL reject session creation with a start_at in the past. The error 
 
 - **WHEN** psychologist creates a session starting in 30 minutes
 - **THEN** system accepts and creates the session
+
+#### Scenario: Late record bypasses past-date validation
+
+- **WHEN** psychologist creates a session with `is_late_record=true` and a past date
+- **THEN** system accepts the session and creates it with status `done` (see `agenda-recurring-sessions` capability for full late record spec)
 
 ### Requirement: Psychologist can edit a single session
 
@@ -141,6 +146,25 @@ The system SHALL record every create, update, reschedule, status change, and del
 
 - **WHEN** psychologist opens the session detail drawer
 - **THEN** the history section shows all entries for that session, most recent first, with timestamps
+
+### Requirement: Sessions table supports recurrence, couple patients, and late records
+
+The `sessions` table SHALL include the following columns added by `agenda-recurring-sessions`:
+- `recurrence_id UUID REFERENCES session_recurrences(id)` — links the session to a recurrence series (NULL for one-off sessions)
+- `patient_ids UUID[]` — array of up to 2 patient UUIDs for couple sessions (NULL for individual sessions; when set, `patient_id` holds the primary patient)
+- `is_late_record BOOLEAN DEFAULT FALSE` — when true, bypasses past-date validation (RN-03.02) and creates the session with status `done`
+
+These columns are defined and fully specified in the `agenda-recurring-sessions` capability. The session creation/edit form gains: a recurrence checkbox expanding frequency/end-condition options, a couple patient selector ("Atendimento de casal"), and a late record toggle ("Lancamento retroativo").
+
+#### Scenario: Session with recurrence_id belongs to a series
+
+- **WHEN** a session has a non-null `recurrence_id`
+- **THEN** editing or cancelling that session presents the 3-option scope modal (see `agenda-recurring-sessions` for details)
+
+#### Scenario: Couple session stores both patients
+
+- **WHEN** a couple session is created with patients "Ana" and "Carlos"
+- **THEN** `patient_id = Ana.id`, `patient_ids = [Ana.id, Carlos.id]`, and the calendar displays "Ana & Carlos"
 
 ### Requirement: RLS enforces owner-scoped access on sessions and session_history tables
 

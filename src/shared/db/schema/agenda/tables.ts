@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -82,6 +83,46 @@ export const agendaSettings = pgTable('agenda_settings', {
 export type AgendaSettings = typeof agendaSettings.$inferSelect;
 export type NewAgendaSettings = typeof agendaSettings.$inferInsert;
 
+// `session_recurrences` defines a repeating schedule template for sessions.
+// A psychologist creates a recurrence to auto-generate sessions on a regular
+// cadence (weekly, biweekly, monthly, or custom). The `patient_id` links to
+// the patient involved in the recurrence — for couple sessions, the
+// individual sessions carry a `patient_ids` array instead.
+//
+// The recurrence can be bounded by `end_date`, `occurrence_count`, or left
+// open-ended (`is_indefinite = TRUE`). `days_of_week` is an INT[] where
+// 0 = Sunday through 6 = Saturday (JS Date convention).
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+export const sessionRecurrences = pgTable('session_recurrences', {
+  id: uuid('id').primaryKey().defaultRandom(),
+
+  // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+  userId: uuid('user_id').notNull(),
+
+  // FK to `patients`. Nullable — may not be assigned at creation.
+  patientId: uuid('patient_id'),
+
+  // CHECK constraint in migration: frequency IN ('weekly', 'biweekly', 'monthly', 'custom')
+  frequency: varchar('frequency', { length: 20 }).notNull(),
+
+  // Days of the week the recurrence applies to (0=Sun … 6=Sat).
+  daysOfWeek: integer('days_of_week').array(),
+
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  endDate: date('end_date', { mode: 'string' }),
+
+  occurrenceCount: integer('occurrence_count'),
+  isIndefinite: boolean('is_indefinite').notNull().default(false),
+
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+});
+
+export type SessionRecurrence = typeof sessionRecurrences.$inferSelect;
+export type NewSessionRecurrence = typeof sessionRecurrences.$inferInsert;
+
 // `sessions` is the core scheduling table. Each row represents either a
 // patient appointment or a blocking slot (e.g., lunch break, personal time).
 // Blocking slots have `is_blocking = true` and use `blocking_title` instead
@@ -93,8 +134,10 @@ export type NewAgendaSettings = typeof agendaSettings.$inferInsert;
 // `amount` is stored as text for decimal safety — avoiding floating-point
 // representation issues with Brazilian currency values.
 //
-// `recurrence_id` is reserved for a future recurrence feature and is nullable
-// with no FK constraint yet.
+// `recurrence_id` references `session_recurrences(id)` when the session was
+// generated from a recurrence template. `patient_ids` is a UUID[] column for
+// couple sessions (max 2 entries enforced by CHECK constraint). `is_late_record`
+// flags sessions recorded after the fact for billing/audit.
 //
 // Composite indexes support the two most common query patterns:
 // - (user_id, start_at) for time-window calendar queries (<800ms target)
@@ -113,8 +156,18 @@ export const sessions = pgTable(
     // FK to `patients`. Nullable because blocking slots have no patient.
     patientId: uuid('patient_id'),
 
-    // Reserved for future recurrence support — no FK constraint yet.
+    // FK to `session_recurrences(id)`. Nullable — only set for sessions
+    // generated from a recurrence template.
     recurrenceId: uuid('recurrence_id'),
+
+    // UUID[] for couple sessions (max 2 entries, CHECK constraint in migration).
+    // For standard sessions, use `patient_id` instead. Both coexist:
+    // `patient_id` is the primary FK for single-patient sessions;
+    // `patient_ids` is populated only for couple sessions.
+    patientIds: uuid('patient_ids').array(),
+
+    // Late-recorded sessions are flagged for billing/audit purposes.
+    isLateRecord: boolean('is_late_record').notNull().default(false),
 
     isBlocking: boolean('is_blocking').notNull().default(false),
     blockingTitle: varchar('blocking_title', { length: 120 }),
@@ -152,6 +205,8 @@ export const sessions = pgTable(
     index('sessions_patient_id_start_at_idx').on(table.patientId, table.startAt),
     // Filtered views: "all scheduled/done sessions in a time range"
     index('sessions_status_start_at_idx').on(table.status, table.startAt),
+    // Recurrence lookup: "all sessions belonging to a recurrence template"
+    index('idx_sessions_recurrence').on(table.recurrenceId),
   ],
 );
 

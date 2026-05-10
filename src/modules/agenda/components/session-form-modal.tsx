@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import {
   AlertCircle,
   AlertTriangle,
@@ -13,14 +14,20 @@ import {
   User,
   Video,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { formatSessionTime, toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import { formatSessionTime } from '@/modules/agenda/lib/date-helpers';
 import type { ConflictResult } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
+import {
+  CoupleSessionFields,
+  type PatientOption as CouplePatientOption,
+  LateRecordToggle,
+  RecurrenceFormSection,
+} from '@/modules/sessions';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -93,12 +100,25 @@ function computeEndTime(date: Date | null, startTime: string, durationMinutes: n
   return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 }
 
-/** Builds an ISO 8601 datetime string from a date and a time slot (HH:mm). */
+/**
+ * Builds an ISO 8601 datetime string from a date and a time slot (HH:mm).
+ *
+ * Uses `fromZonedTime` to treat the selected date+time as America/Sao_Paulo
+ * and convert to UTC. This ensures correct storage regardless of the browser's
+ * local timezone (e.g., a developer or CI runner in UTC).
+ */
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
 function buildIsoDatetime(date: Date, time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const dt = new Date(date);
-  dt.setHours(h ?? 0, m ?? 0, 0, 0);
-  return dt.toISOString();
+  // Build a "wall clock" date in Sao Paulo: take the calendar date (year,
+  // month, day) and combine with the user-selected time.
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const wall = new Date(year, month, day, h ?? 0, m ?? 0, 0, 0);
+  // Convert from Sao Paulo wall-clock to UTC
+  return fromZonedTime(wall, SAO_PAULO_TZ).toISOString();
 }
 
 // ---------------------------------------------------------------------------
@@ -133,6 +153,18 @@ export interface SessionEditData {
   color: string | null;
 }
 
+/** Shared result shape for create/update callbacks. */
+interface MutationResult {
+  ok: boolean;
+  sessionId?: string;
+  recurrenceId?: string;
+  sessionCount?: number;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  message?: string;
+  conflicts?: ConflictResult[];
+}
+
 interface SessionFormModalProps {
   /** Whether the dialog is open. */
   open: boolean;
@@ -149,25 +181,15 @@ interface SessionFormModalProps {
   /** Pre-selected time (from calendar dateClick, e.g. "14:00"). */
   preselectedTime?: string;
   /** Server Action: create session. */
-  onCreate: (input: unknown) => Promise<{
-    ok: boolean;
-    sessionId?: string;
-    error?: string;
-    fieldErrors?: Record<string, string[]>;
-    message?: string;
-    conflicts?: ConflictResult[];
-  }>;
+  onCreate: (input: unknown) => Promise<MutationResult>;
+  /** Server Action: create recurring session series. */
+  onCreateRecurring?: (input: unknown) => Promise<MutationResult>;
+  /** Server Action: create couple session. */
+  onCreateCouple?: (input: unknown) => Promise<MutationResult>;
   /** Server Action: update session. */
-  onUpdate: (
-    id: string,
-    input: unknown,
-  ) => Promise<{
-    ok: boolean;
-    error?: string;
-    fieldErrors?: Record<string, string[]>;
-    message?: string;
-    conflicts?: ConflictResult[];
-  }>;
+  onUpdate: (id: string, input: unknown) => Promise<MutationResult>;
+  /** Server Action: create late record (retroactive session). */
+  onCreateLateRecord?: (input: unknown) => Promise<MutationResult>;
   /** Server Action: search patients by name. */
   onSearchPatients: (
     query: string,
@@ -338,6 +360,9 @@ export function SessionFormModal({
   preselectedDate,
   preselectedTime,
   onCreate,
+  onCreateRecurring,
+  onCreateCouple,
+  onCreateLateRecord,
   onUpdate,
   onSearchPatients,
   onSuccess,
@@ -346,6 +371,14 @@ export function SessionFormModal({
   const [isPending, startTransition] = useTransition();
   const [conflicts, setConflicts] = useState<ConflictResult[]>([]);
   const [selectedPatientName, setSelectedPatientName] = useState<string | null>(null);
+  // Resolved patients for the couple session fields dropdown
+  const [resolvedPatients, setResolvedPatients] = useState<CouplePatientOption[]>([]);
+  // Couple/recurrence state captured directly via form.watch() for submit routing.
+  // We snapshot on every render cycle to ensure handleSubmit has fresh values.
+  const coupleStateRef = useRef<{ enabled: boolean; secondPatientId?: string }>({
+    enabled: false,
+  });
+  const recurrenceStateRef = useRef<Record<string, unknown>>({});
 
   // Derive initial values
   const defaultLocationId = locations.find((l) => l.isDefault)?.id ?? locations[0]?.id ?? undefined;
@@ -378,18 +411,65 @@ export function SessionFormModal({
   const endTimeDisplay = computeEndTime(selectedDate, selectedTime, durationMinutes);
   const selectedColor = form.watch('color');
 
+  // Combined date+time for LateRecordToggle — produces a proper UTC Date
+  // so that isPast() comparisons work correctly.
+  const selectedDateTime = useMemo(() => {
+    if (!selectedDate || !selectedTime) return null;
+    const [h, m] = selectedTime.split(':').map(Number);
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const day = selectedDate.getDate();
+    const wall = new Date(year, month, day, h ?? 0, m ?? 0, 0, 0);
+    return fromZonedTime(wall, SAO_PAULO_TZ);
+  }, [selectedDate, selectedTime]);
+
+  // Sync couple/recurrence refs from form state so handleSubmit can read them.
+  // We subscribe via watch() callback to avoid stale refs.
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      const v = values as Record<string, unknown>;
+      const couple = v['couple'] as Record<string, unknown> | undefined;
+      const recurrence = v['recurrence'] as Record<string, unknown> | undefined;
+      coupleStateRef.current = {
+        enabled: couple?.enabled === true,
+        secondPatientId: couple?.secondPatientId as string | undefined,
+      };
+      recurrenceStateRef.current = recurrence ?? {};
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
+
+  // Fetch patients for the couple session dropdown when the modal opens
+  useEffect(() => {
+    if (!open || isEdit) return;
+    // Fetch a broad list of active patients for the couple "second patient" select
+    void onSearchPatients('').then((result) => {
+      if (result.ok) {
+        setResolvedPatients(result.patients.map((p) => ({ id: p.id, name: p.fullName })));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on open/edit change
+  }, [open, isEdit]);
+
   // Reset form when dialog opens
   useEffect(() => {
     if (!open) return;
 
     setConflicts([]);
+    coupleStateRef.current = { enabled: false };
+    recurrenceStateRef.current = {};
 
     if (session) {
-      // Edit mode: populate from session data
-      const spDate = toSaoPauloTime(session.startAt);
-      const timeStr = format(spDate, 'HH:mm');
+      // Edit mode: populate from session data.
+      // Extract time in Sao Paulo timezone for the time picker.
+      const timeStr = formatSessionTime(session.startAt);
+      // Convert to a "zoned" Date whose local components match the Sao Paulo
+      // wall-clock. This ensures buildIsoDatetime picks up the correct
+      // calendar date even when UTC and BRT dates differ (e.g., 22:00 BRT
+      // = 01:00+1 UTC → the UTC date is the next day).
+      const zonedDate = toZonedTime(session.startAt, SAO_PAULO_TZ);
 
-      setSelectedDate(session.startAt);
+      setSelectedDate(zonedDate);
       setSelectedTime(timeStr);
       setSelectedPatientName(session.patientName);
 
@@ -450,6 +530,12 @@ export function SessionFormModal({
   function handlePatientSelect(patient: PatientOption) {
     setSelectedPatientName(patient.fullName);
     form.setValue('patient_id', patient.id, { shouldValidate: true });
+    // Track resolved patients for the couple session dropdown
+    setResolvedPatients((prev) => {
+      const exists = prev.some((p) => p.id === patient.id);
+      if (exists) return prev;
+      return [...prev, { id: patient.id, name: patient.fullName }];
+    });
   }
 
   function handleForceConflict() {
@@ -459,10 +545,76 @@ export function SessionFormModal({
 
   function handleSubmit(data: SessionFormValues) {
     startTransition(async () => {
-      const result = session ? await onUpdate(session.id, data) : await onCreate(data);
+      let result: MutationResult;
+
+      if (session) {
+        result = await onUpdate(session.id, data);
+      } else {
+        // Read extra form state from refs (couple, recurrence) — these fields
+        // are not part of sessionInputSchema so the zodResolver strips them
+        // from `data`. The refs are synced via form.watch() subscription.
+        // Also read getValues() as fallback.
+        const allFormValues = form.getValues() as Record<string, unknown>;
+        const recurrence =
+          recurrenceStateRef.current.frequency != null
+            ? recurrenceStateRef.current
+            : ((allFormValues['recurrence'] as Record<string, unknown>) ?? {});
+        const coupleRef = coupleStateRef.current;
+        const coupleForm = allFormValues['couple'] as Record<string, unknown> | undefined;
+        const couple =
+          coupleRef.enabled && coupleRef.secondPatientId
+            ? coupleRef
+            : coupleForm
+              ? {
+                  enabled: coupleForm.enabled === true,
+                  secondPatientId: coupleForm.secondPatientId as string | undefined,
+                }
+              : coupleRef;
+        const hasRecurrence = recurrence.frequency != null;
+        const hasCouple = couple.enabled && couple.secondPatientId != null;
+        const isLateRecord = allFormValues['lateRecord'] === true;
+
+        if (isLateRecord && onCreateLateRecord) {
+          // Route to late record creation — session already happened (retroactive)
+          result = await onCreateLateRecord({
+            session: data,
+            lateRecord: {
+              is_late_record: true,
+              date: data.start_at,
+            },
+          });
+        } else if (hasRecurrence && onCreateRecurring) {
+          // Route to recurring session creation — pass session template + recurrence rule
+          result = await onCreateRecurring({
+            session: data,
+            recurrence: {
+              ...recurrence,
+              startDate: data.start_at, // use the session date as recurrence start
+            },
+            force_conflict: data.force_conflict,
+          });
+        } else if (hasCouple && onCreateCouple) {
+          // Route to couple session creation — pass session template + patient_ids
+          const primaryPatientId = data.patient_id;
+          const secondPatientId = couple.secondPatientId!;
+          result = await onCreateCouple({
+            session: data,
+            couple: {
+              patient_ids: [primaryPatientId, secondPatientId],
+            },
+          });
+        } else {
+          result = await onCreate(data);
+        }
+      }
 
       if (result.ok) {
-        toast.success(isEdit ? 'Sessao atualizada com sucesso.' : 'Sessao agendada com sucesso.');
+        const successMsg = isEdit
+          ? 'Sessao atualizada com sucesso.'
+          : result.sessionCount && result.sessionCount > 1
+            ? `${result.sessionCount} sessoes agendadas com sucesso.`
+            : 'Sessao agendada com sucesso.';
+        toast.success(successMsg);
         onOpenChange(false);
         onSuccess();
       } else if (result.error === 'conflict_warning' && result.conflicts) {
@@ -481,7 +633,10 @@ export function SessionFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[640px]" data-testid="session-form-modal">
+      <DialogContent
+        className="flex max-h-[90vh] max-w-[640px] flex-col"
+        data-testid="session-form-modal"
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar sessao' : 'Agendar sessao'}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -491,335 +646,345 @@ export function SessionFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setConflicts([]);
-            void form.handleSubmit(handleSubmit)();
-          }}
-          className="space-y-4"
-          noValidate
-          data-testid="session-form"
-        >
-          {/* Patient (hidden when is_blocking) */}
-          <div className="space-y-2">
-            <Label>
-              <span className="flex items-center gap-1.5">
-                <User className="h-4 w-4" aria-hidden="true" />
-                Paciente
-                <span className="text-danger-500">*</span>
-              </span>
-            </Label>
-            <PatientCombobox
-              value={form.watch('patient_id')}
-              patientName={selectedPatientName}
-              onSelect={handlePatientSelect}
-              onSearch={onSearchPatients}
-              error={form.formState.errors.patient_id?.message}
-            />
-            {form.formState.errors.patient_id && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.patient_id.message}
-              </p>
-            )}
-          </div>
-
-          {/* Date */}
-          <div className="space-y-2">
-            <Label>
-              <span className="flex items-center gap-1.5">
-                <CalendarIcon className="h-4 w-4" aria-hidden="true" />
-                Data
-                <span className="text-danger-500">*</span>
-              </span>
-            </Label>
-            <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-start text-left font-normal"
-                  data-testid="session-form-date-trigger"
-                >
-                  {selectedDate
-                    ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
-                    : 'Selecione uma data'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate ?? undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                      setDatePopoverOpen(false);
-                    }
-                  }}
-                  locale={ptBR}
-                  data-testid="session-form-calendar"
-                />
-              </PopoverContent>
-            </Popover>
-            {form.formState.errors.start_at && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.start_at.message}
-              </p>
-            )}
-          </div>
-
-          {/* Start time + Duration (side by side) */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Start time */}
+        <FormProvider {...form}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setConflicts([]);
+              void form.handleSubmit(handleSubmit)();
+            }}
+            className="space-y-4 overflow-y-auto pr-1"
+            noValidate
+            data-testid="session-form"
+          >
+            {/* Patient (hidden when is_blocking) */}
             <div className="space-y-2">
-              <Label htmlFor="session-start-time">Hora inicio</Label>
-              <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
-                <SelectTrigger id="session-start-time" data-testid="session-form-start-time">
-                  <SelectValue placeholder="Horario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label htmlFor="session-duration">Duracao</Label>
-              <Select
-                value={String(durationMinutes)}
-                onValueChange={(val) =>
-                  form.setValue('duration_minutes', Number(val), { shouldValidate: true })
-                }
-              >
-                <SelectTrigger
-                  id="session-duration"
-                  aria-invalid={Boolean(form.formState.errors.duration_minutes)}
-                  data-testid="session-form-duration"
-                >
-                  <SelectValue placeholder="Duracao" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DURATION_OPTIONS.map((mins) => (
-                    <SelectItem key={mins} value={String(mins)}>
-                      {mins} min
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.duration_minutes && (
+              <Label>
+                <span className="flex items-center gap-1.5">
+                  <User className="h-4 w-4" aria-hidden="true" />
+                  Paciente
+                  <span className="text-danger-500">*</span>
+                </span>
+              </Label>
+              <PatientCombobox
+                value={form.watch('patient_id')}
+                patientName={selectedPatientName}
+                onSelect={handlePatientSelect}
+                onSearch={onSearchPatients}
+                error={form.formState.errors.patient_id?.message}
+              />
+              {form.formState.errors.patient_id && (
                 <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {form.formState.errors.duration_minutes.message}
+                  {form.formState.errors.patient_id.message}
                 </p>
               )}
             </div>
-          </div>
 
-          {/* End time (computed, read-only) */}
-          <p className="text-text-tertiary text-xs" data-testid="session-form-end-time">
-            Hora fim: {endTimeDisplay}
-          </p>
-
-          {/* Location */}
-          {locations.length > 0 && (
+            {/* Date */}
             <div className="space-y-2">
-              <Label htmlFor="session-location">Local</Label>
-              <Select
-                value={form.watch('location_id') ?? ''}
-                onValueChange={(val) =>
-                  form.setValue('location_id', val || undefined, { shouldValidate: true })
-                }
-              >
-                <SelectTrigger id="session-location" data-testid="session-form-location">
-                  <SelectValue placeholder="Selecione um local" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Modality */}
-          <div className="space-y-2">
-            <Label>Modalidade</Label>
-            <RadioGroup
-              value={form.watch('modality') ?? 'in_person'}
-              onValueChange={(val) =>
-                form.setValue('modality', val as 'in_person' | 'online', {
-                  shouldValidate: true,
-                })
-              }
-              className="flex gap-4"
-              data-testid="session-form-modality"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="in_person" id="modality-in-person" />
-                <Label
-                  htmlFor="modality-in-person"
-                  className="flex cursor-pointer items-center gap-1.5 font-normal"
-                >
-                  <Building2 className="h-4 w-4" aria-hidden="true" />
-                  Presencial
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="online" id="modality-online" />
-                <Label
-                  htmlFor="modality-online"
-                  className="flex cursor-pointer items-center gap-1.5 font-normal"
-                >
-                  <Video className="h-4 w-4" aria-hidden="true" />
-                  Online
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="session-amount">Valor</Label>
-            <div className="relative">
-              <span className="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 text-sm">
-                R$
-              </span>
-              <Input
-                id="session-amount"
-                type="text"
-                inputMode="decimal"
-                className="pl-10"
-                placeholder="0,00"
-                aria-invalid={Boolean(form.formState.errors.amount)}
-                data-testid="session-form-amount"
-                {...form.register('amount')}
-              />
-            </div>
-            {form.formState.errors.amount && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.amount.message}
-              </p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="session-notes">Observacao</Label>
-            <Textarea
-              id="session-notes"
-              rows={3}
-              placeholder="Observacoes sobre a sessao (opcional)"
-              aria-invalid={Boolean(form.formState.errors.notes)}
-              data-testid="session-form-notes"
-              {...form.register('notes')}
-            />
-            {form.formState.errors.notes && (
-              <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {form.formState.errors.notes.message}
-              </p>
-            )}
-          </div>
-
-          {/* Color */}
-          <div className="space-y-2">
-            <Label>Cor</Label>
-            <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessao">
-              {PRESET_COLORS.map((preset) => (
-                <button
-                  key={preset.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedColor === preset.value}
-                  aria-label={preset.label}
-                  className={`duration-fast h-8 w-8 rounded-full border-2 transition-all ${
-                    selectedColor === preset.value
-                      ? 'border-brand-500 scale-110'
-                      : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: preset.value }}
-                  onClick={() => {
-                    if (selectedColor === preset.value) {
-                      form.setValue('color', undefined, { shouldValidate: true });
-                    } else {
-                      form.setValue('color', preset.value, { shouldValidate: true });
-                    }
-                  }}
-                  data-testid={`session-color-${preset.value.replace('#', '')}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Conflict Warning */}
-          {conflicts.length > 0 && (
-            <Alert variant="warning" data-testid="session-form-conflict-alert">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  {conflicts.map((c) => (
-                    <p key={c.sessionId}>
-                      Voce ja tem {c.label} das{' '}
-                      {formatSessionTime(toSaoPauloTime(new Date(c.conflictStart)))} as{' '}
-                      {formatSessionTime(toSaoPauloTime(new Date(c.conflictEnd)))} nesse horario.
-                    </p>
-                  ))}
+              <Label>
+                <span className="flex items-center gap-1.5">
+                  <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                  Data
+                  <span className="text-danger-500">*</span>
+                </span>
+              </Label>
+              <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="secondary"
-                    size="sm"
-                    onClick={handleForceConflict}
-                    disabled={isPending}
-                    data-testid="session-form-force-conflict"
+                    className="w-full justify-start text-left font-normal"
+                    data-testid="session-form-date-trigger"
                   >
-                    {isPending ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                        Agendando...
-                      </>
-                    ) : (
-                      'Agendar mesmo assim'
-                    )}
+                    {selectedDate
+                      ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      : 'Selecione uma data'}
                   </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Footer */}
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              data-testid="session-form-cancel"
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isPending} data-testid="session-form-save">
-              {isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  Salvando...
-                </>
-              ) : (
-                'Salvar'
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate ?? undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(date);
+                        setDatePopoverOpen(false);
+                      }
+                    }}
+                    locale={ptBR}
+                    data-testid="session-form-calendar"
+                  />
+                </PopoverContent>
+              </Popover>
+              {form.formState.errors.start_at && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.start_at.message}
+                </p>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            </div>
+
+            {/* Start time + Duration (side by side) */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Start time */}
+              <div className="space-y-2">
+                <Label htmlFor="session-start-time">Hora inicio</Label>
+                <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
+                  <SelectTrigger id="session-start-time" data-testid="session-form-start-time">
+                    <SelectValue placeholder="Horario" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-2">
+                <Label htmlFor="session-duration">Duracao</Label>
+                <Select
+                  value={String(durationMinutes)}
+                  onValueChange={(val) =>
+                    form.setValue('duration_minutes', Number(val), { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger
+                    id="session-duration"
+                    aria-invalid={Boolean(form.formState.errors.duration_minutes)}
+                    data-testid="session-form-duration"
+                  >
+                    <SelectValue placeholder="Duracao" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DURATION_OPTIONS.map((mins) => (
+                      <SelectItem key={mins} value={String(mins)}>
+                        {mins} min
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.duration_minutes && (
+                  <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {form.formState.errors.duration_minutes.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* End time (computed, read-only) */}
+            <p className="text-text-tertiary text-xs" data-testid="session-form-end-time">
+              Hora fim: {endTimeDisplay}
+            </p>
+
+            {/* Location */}
+            {locations.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="session-location">Local</Label>
+                <Select
+                  value={form.watch('location_id') ?? ''}
+                  onValueChange={(val) =>
+                    form.setValue('location_id', val || undefined, { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger id="session-location" data-testid="session-form-location">
+                    <SelectValue placeholder="Selecione um local" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Modality */}
+            <div className="space-y-2">
+              <Label>Modalidade</Label>
+              <RadioGroup
+                value={form.watch('modality') ?? 'in_person'}
+                onValueChange={(val) =>
+                  form.setValue('modality', val as 'in_person' | 'online', {
+                    shouldValidate: true,
+                  })
+                }
+                className="flex gap-4"
+                data-testid="session-form-modality"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="in_person" id="modality-in-person" />
+                  <Label
+                    htmlFor="modality-in-person"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal"
+                  >
+                    <Building2 className="h-4 w-4" aria-hidden="true" />
+                    Presencial
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="online" id="modality-online" />
+                  <Label
+                    htmlFor="modality-online"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal"
+                  >
+                    <Video className="h-4 w-4" aria-hidden="true" />
+                    Online
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="session-amount">Valor</Label>
+              <div className="relative">
+                <span className="text-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 text-sm">
+                  R$
+                </span>
+                <Input
+                  id="session-amount"
+                  type="text"
+                  inputMode="decimal"
+                  className="pl-10"
+                  placeholder="0,00"
+                  aria-invalid={Boolean(form.formState.errors.amount)}
+                  data-testid="session-form-amount"
+                  {...form.register('amount')}
+                />
+              </div>
+              {form.formState.errors.amount && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.amount.message}
+                </p>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="session-notes">Observacao</Label>
+              <Textarea
+                id="session-notes"
+                rows={3}
+                placeholder="Observacoes sobre a sessao (opcional)"
+                aria-invalid={Boolean(form.formState.errors.notes)}
+                data-testid="session-form-notes"
+                {...form.register('notes')}
+              />
+              {form.formState.errors.notes && (
+                <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {form.formState.errors.notes.message}
+                </p>
+              )}
+            </div>
+
+            {/* Color */}
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessao">
+                {PRESET_COLORS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedColor === preset.value}
+                    aria-label={preset.label}
+                    className={`duration-fast h-8 w-8 rounded-full border-2 transition-all ${
+                      selectedColor === preset.value
+                        ? 'border-brand-500 scale-110'
+                        : 'border-transparent hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: preset.value }}
+                    onClick={() => {
+                      if (selectedColor === preset.value) {
+                        form.setValue('color', undefined, { shouldValidate: true });
+                      } else {
+                        form.setValue('color', preset.value, { shouldValidate: true });
+                      }
+                    }}
+                    data-testid={`session-color-${preset.value.replace('#', '')}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Couple session fields (create mode only) */}
+            {!isEdit && <CoupleSessionFields patients={resolvedPatients} />}
+
+            {/* Recurrence (create mode only — recurring edits use EditScopeDialog) */}
+            {!isEdit && <RecurrenceFormSection />}
+
+            {/* Late Record (shown only when selected date/time is in the past) */}
+            {!isEdit && <LateRecordToggle selectedDateTime={selectedDateTime} />}
+
+            {/* Conflict Warning */}
+            {conflicts.length > 0 && (
+              <Alert variant="warning" data-testid="session-form-conflict-alert">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    {conflicts.map((c) => (
+                      <p key={c.sessionId}>
+                        Voce ja tem {c.label} das {formatSessionTime(new Date(c.conflictStart))} as{' '}
+                        {formatSessionTime(new Date(c.conflictEnd))} nesse horario.
+                      </p>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleForceConflict}
+                      disabled={isPending}
+                      data-testid="session-form-force-conflict"
+                    >
+                      {isPending ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                          Agendando...
+                        </>
+                      ) : (
+                        'Agendar mesmo assim'
+                      )}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Footer */}
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+                data-testid="session-form-cancel"
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending} data-testid="session-form-save">
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

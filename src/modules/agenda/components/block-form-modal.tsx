@@ -3,13 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { AlertCircle, Calendar as CalendarIcon, Loader2, Lock } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import type { z } from 'zod';
 
-import { toSaoPauloTime } from '@/modules/agenda/lib/date-helpers';
+import { formatSessionTime } from '@/modules/agenda/lib/date-helpers';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -70,12 +71,22 @@ function computeEndTime(startTime: string, durationMinutes: number): string {
   return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 }
 
-/** Builds an ISO 8601 datetime string from a date and a time slot (HH:mm). */
+/**
+ * Builds an ISO 8601 datetime string from a date and a time slot (HH:mm).
+ *
+ * Uses `fromZonedTime` to treat the selected date+time as America/Sao_Paulo
+ * and convert to UTC. This ensures correct storage regardless of the browser's
+ * local timezone.
+ */
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
 function buildIsoDatetime(date: Date, time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const dt = new Date(date);
-  dt.setHours(h ?? 0, m ?? 0, 0, 0);
-  return dt.toISOString();
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const wall = new Date(year, month, day, h ?? 0, m ?? 0, 0, 0);
+  return fromZonedTime(wall, SAO_PAULO_TZ).toISOString();
 }
 
 // ---------------------------------------------------------------------------
@@ -176,11 +187,12 @@ export function BlockFormModal({
     if (!open) return;
 
     if (block) {
-      // Edit mode
-      const spDate = toSaoPauloTime(block.startAt);
-      const timeStr = format(spDate, 'HH:mm');
+      // Edit mode — convert to zoned Date so buildIsoDatetime picks up the
+      // correct Sao Paulo calendar date (avoids date shift near midnight).
+      const timeStr = formatSessionTime(block.startAt);
+      const zonedDate = toZonedTime(block.startAt, SAO_PAULO_TZ);
 
-      setSelectedDate(block.startAt);
+      setSelectedDate(zonedDate);
       setSelectedTime(timeStr);
 
       form.reset({

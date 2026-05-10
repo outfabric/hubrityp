@@ -1,12 +1,63 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, asc, eq, gte, lte } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, lte, ne } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
 import { locations, sessions, type Session } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves patient names for couple sessions that have `patient_ids` with 2
+ * entries. Returns a map of session.id -> "Name1 & Name2" display string.
+ */
+async function resolveCoupleDisplayNames(
+  sessionRows: Array<{ id: string; patientIds: string[] | null; patientName: string | null }>,
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+
+  // Collect all unique secondary patient IDs that we need to resolve
+  const secondaryIdToSessionIds = new Map<string, string[]>();
+  for (const row of sessionRows) {
+    if (!row.patientIds || row.patientIds.length !== 2) continue;
+    // The primary patient is already resolved via the JOIN. We need the other one.
+    // patient_ids[0] is the primary (same as patient_id), patient_ids[1] is secondary.
+    const secondaryId = row.patientIds[1];
+    if (!secondaryId) continue;
+    const existing = secondaryIdToSessionIds.get(secondaryId) ?? [];
+    existing.push(row.id);
+    secondaryIdToSessionIds.set(secondaryId, existing);
+  }
+
+  if (secondaryIdToSessionIds.size === 0) return result;
+
+  // Batch-fetch all secondary patient names
+  const secondaryIds = [...secondaryIdToSessionIds.keys()];
+  const nameRows = await db
+    .select({ id: patients.id, fullName: patients.fullName })
+    .from(patients)
+    .where(inArray(patients.id, secondaryIds));
+
+  const nameMap = new Map(nameRows.map((r) => [r.id, r.fullName]));
+
+  // Build "Name1 & Name2" for each couple session
+  for (const row of sessionRows) {
+    if (!row.patientIds || row.patientIds.length !== 2) continue;
+    const secondaryId = row.patientIds[1];
+    if (!secondaryId) continue;
+    const secondaryName = nameMap.get(secondaryId);
+    const primaryFirst = row.patientName?.split(' ')[0] ?? 'Paciente';
+    const secondaryFirst = secondaryName?.split(' ')[0] ?? 'Paciente';
+    result.set(row.id, `${primaryFirst} & ${secondaryFirst}`);
+  }
+
+  return result;
+}
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -17,6 +68,8 @@ export interface SessionWithDetails extends Session {
   locationName: string | null;
   locationType: string | null;
   locationAddress: string | null;
+  /** "Ana & Carlos" format for couple sessions (patient_ids.length === 2). */
+  coupleDisplayName: string | null;
 }
 
 export type ListSessionsResult =
@@ -70,9 +123,18 @@ export async function listSessionsImpl(
           eq(sessions.userId, user.id),
           gte(sessions.startAt, startDate),
           lte(sessions.startAt, endDate),
+          ne(sessions.status, 'cancelled'),
         ),
       )
       .orderBy(asc(sessions.startAt));
+
+    // Resolve couple display names for sessions with 2 patient_ids
+    const coupleInputs = rows.map((row) => ({
+      id: row.session.id,
+      patientIds: row.session.patientIds,
+      patientName: row.patientName,
+    }));
+    const coupleNames = await resolveCoupleDisplayNames(coupleInputs);
 
     const result: SessionWithDetails[] = rows.map((row) => ({
       ...row.session,
@@ -80,6 +142,7 @@ export async function listSessionsImpl(
       locationName: row.locationName,
       locationType: row.locationType,
       locationAddress: row.locationAddress,
+      coupleDisplayName: coupleNames.get(row.session.id) ?? null,
     }));
 
     return { ok: true, sessions: result };

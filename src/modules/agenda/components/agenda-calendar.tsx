@@ -8,11 +8,14 @@ import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { format } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { Lock, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
 import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
+import { EditScopeDialog, type EditScope } from '@/modules/sessions';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 
@@ -114,30 +117,79 @@ function deriveSlotBounds(hours: unknown): {
   };
 }
 
+const SAO_PAULO_TZ = 'America/Sao_Paulo';
+
+/**
+ * Converts a UTC date to a timezone-naive ISO string in America/Sao_Paulo.
+ *
+ * FullCalendar uses the browser's local timezone by default (`timeZone:
+ * 'local'`). To ensure the calendar always displays São Paulo wall-clock
+ * times — regardless of the browser timezone — we strip the offset and
+ * provide a bare ISO string (e.g., `2026-05-18T10:00:00`). FullCalendar
+ * interprets these as "floating" local times and renders them as-is.
+ */
+function toSaoPauloIso(utcDate: Date): string {
+  return formatInTimeZone(utcDate, SAO_PAULO_TZ, "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+/**
+ * Converts a FullCalendar Date (browser-local, representing Sao Paulo
+ * wall-clock) back to a proper UTC Date.
+ *
+ * Because we feed FullCalendar timezone-naive strings (Sao Paulo wall-clock),
+ * dates returned by FullCalendar callbacks (dateClick, eventDrop) have the
+ * Sao Paulo hour values as their browser-local components. This helper reads
+ * those local components and creates the correct UTC representation.
+ */
+function fcDateToUtc(localDate: Date): Date {
+  // Read browser-local components (which represent Sao Paulo wall-clock)
+  const wall = new Date(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    localDate.getHours(),
+    localDate.getMinutes(),
+    localDate.getSeconds(),
+    0,
+  );
+  return fromZonedTime(wall, SAO_PAULO_TZ);
+}
+
 /**
  * Maps SessionWithDetails[] to FullCalendar event objects.
+ *
+ * Converts UTC start/end to São Paulo wall-clock strings so the calendar
+ * renders correct times even when the browser is not in BRT.
  */
 function sessionsToEvents(sessions: SessionWithDetails[]) {
-  return sessions.map((s) => ({
-    id: s.id,
-    title: s.isBlocking ? (s.blockingTitle ?? 'Bloqueio') : (s.patientName ?? 'Paciente'),
-    start: s.startAt,
-    end: s.endAt,
-    extendedProps: {
-      isBlocking: s.isBlocking,
-      blockingTitle: s.blockingTitle,
-      patientName: s.patientName,
-      locationName: s.locationName,
-      locationType: s.locationType,
-      locationAddress: s.locationAddress,
-      modality: s.modality,
-      status: s.status,
-      color: s.color,
-      amount: s.amount,
-      notes: s.notes,
-      durationMinutes: s.durationMinutes,
-    },
-  }));
+  return sessions.map((s) => {
+    // For couple sessions, prefer the "Ana & Carlos" display name
+    const displayName = s.coupleDisplayName ?? s.patientName;
+
+    return {
+      id: s.id,
+      title: s.isBlocking ? (s.blockingTitle ?? 'Bloqueio') : (displayName ?? 'Paciente'),
+      start: toSaoPauloIso(new Date(s.startAt)),
+      end: toSaoPauloIso(new Date(s.endAt)),
+      extendedProps: {
+        isBlocking: s.isBlocking,
+        blockingTitle: s.blockingTitle,
+        patientName: displayName,
+        locationName: s.locationName,
+        locationType: s.locationType,
+        locationAddress: s.locationAddress,
+        modality: s.modality,
+        status: s.status,
+        color: s.color,
+        amount: s.amount,
+        notes: s.notes,
+        durationMinutes: s.durationMinutes,
+        recurrenceId: s.recurrenceId,
+        patientIds: s.patientIds,
+        coupleDisplayName: s.coupleDisplayName,
+      },
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -171,6 +223,15 @@ export function AgendaCalendar({
   // Reschedule confirmation dialog state
   const [rescheduleInfo, setRescheduleInfo] = useState<RescheduleInfo | null>(null);
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+
+  // Edit scope dialog state — shown when editing or cancelling a recurring session
+  const [editScopeOpen, setEditScopeOpen] = useState(false);
+  const [editScopeMode, setEditScopeMode] = useState<'edit' | 'cancel'>('edit');
+  const [pendingRecurringSession, setPendingRecurringSession] = useState<SessionWithDetails | null>(
+    null,
+  );
+  // Stores the chosen edit scope so the update handler can pass it to editRecurringSession
+  const pendingEditScopeRef = useRef<EditScope | null>(null);
 
   // Derive business hours config
   const businessHours = useMemo(
@@ -267,6 +328,11 @@ export function AgendaCalendar({
 
   const handleDateClick = useCallback((arg: DateClickArg) => {
     setEditingSession(null);
+    // arg.date is in browser-local time but represents Sao Paulo wall-clock
+    // since we feed FullCalendar timezone-naive strings. Extract the time
+    // as HH:mm (browser-local = Sao Paulo wall-clock) for the form picker,
+    // and pass the date as-is — buildIsoDatetime in the form reads the
+    // local components and converts via fromZonedTime.
     setPreselectedDate(arg.date);
     setPreselectedTime(format(arg.date, 'HH:mm'));
     setSessionModalOpen(true);
@@ -278,6 +344,99 @@ export function AgendaCalendar({
     setPreselectedTime(undefined);
     setSessionModalOpen(true);
   }, []);
+
+  // Opens the edit form for a session. If the session is part of a recurrence,
+  // shows the EditScopeDialog first; otherwise opens the form directly.
+  const handleEditSession = useCallback(
+    (session: SessionWithDetails) => {
+      if (session.recurrenceId) {
+        // Recurring session — show scope dialog before editing
+        setPendingRecurringSession(session);
+        setEditScopeMode('edit');
+        setEditScopeOpen(true);
+      } else {
+        // Non-recurring — open edit form directly
+        setEditingSession({
+          id: session.id,
+          patientId: session.patientId,
+          patientName: session.patientName,
+          isBlocking: session.isBlocking,
+          blockingTitle: session.blockingTitle,
+          startAt: new Date(session.startAt),
+          durationMinutes: session.durationMinutes,
+          locationId: session.locationId,
+          modality: session.modality,
+          amount: session.amount,
+          notes: session.notes,
+          color: session.color,
+        });
+        setSessionModalOpen(true);
+        handleDrawerClose();
+      }
+    },
+    [handleDrawerClose],
+  );
+
+  // Opens the cancel recurring dialog (EditScopeDialog with cancel title)
+  const handleCancelRecurring = useCallback((session: SessionWithDetails) => {
+    setPendingRecurringSession(session);
+    setEditScopeMode('cancel');
+    setEditScopeOpen(true);
+  }, []);
+
+  // Handles scope selection from EditScopeDialog
+  const handleEditScopeSelect = useCallback(
+    (scope: EditScope) => {
+      if (!pendingRecurringSession) return;
+      const session = pendingRecurringSession;
+
+      setEditScopeOpen(false);
+
+      if (editScopeMode === 'cancel') {
+        // Cancel recurring session with selected scope
+        void import('@/app/(app)/agenda/actions').then(({ cancelRecurringSession }) =>
+          cancelRecurringSession({
+            sessionId: session.id,
+            scope,
+          }).then((result) => {
+            if (result.ok) {
+              toast.success(`Recorrencia cancelada (${result.cancelledCount} sessao(es)).`);
+              refreshSessions();
+              handleDrawerClose();
+            } else {
+              const msg = 'message' in result ? result.message : 'Erro ao cancelar recorrencia.';
+              toast.error(msg);
+            }
+            setPendingRecurringSession(null);
+          }),
+        );
+      } else {
+        // Edit recurring session — for "this" scope, detach and open form.
+        // For "this_and_future" / "all", open the form with scope context.
+        // The edit form will pass scope to editRecurringSession.
+        setEditingSession({
+          id: session.id,
+          patientId: session.patientId,
+          patientName: session.patientName,
+          isBlocking: session.isBlocking,
+          blockingTitle: session.blockingTitle,
+          startAt: new Date(session.startAt),
+          durationMinutes: session.durationMinutes,
+          locationId: session.locationId,
+          modality: session.modality,
+          amount: session.amount,
+          notes: session.notes,
+          color: session.color,
+        });
+        // Store the selected scope so the update handler knows to use editRecurringSession
+        pendingEditScopeRef.current = scope;
+        setSessionModalOpen(true);
+        handleDrawerClose();
+        setPendingRecurringSession(null);
+      }
+    },
+    [pendingRecurringSession, editScopeMode, refreshSessions, handleDrawerClose],
+  );
 
   const handleOpenBlockModal = useCallback(() => {
     setBlockModalOpen(true);
@@ -293,7 +452,10 @@ export function AgendaCalendar({
       const match = sessions.find((s) => s.id === sessionId);
       if (!match || !info.event.start) return;
 
-      const newStart = info.event.start;
+      // Convert FullCalendar's browser-local date (Sao Paulo wall-clock)
+      // to proper UTC so the reschedule dialog and server action work
+      // correctly.
+      const newStart = fcDateToUtc(info.event.start);
       const newEnd = calculateEndTime(newStart, match.durationMinutes);
       const label = match.isBlocking
         ? (match.blockingTitle ?? 'Bloqueio')
@@ -383,6 +545,8 @@ export function AgendaCalendar({
           if (!open) handleDrawerClose();
         }}
         onSessionMutated={handleSessionMutated}
+        onEdit={handleEditSession}
+        onCancelRecurring={handleCancelRecurring}
       />
 
       <RescheduleConfirmDialog
@@ -414,7 +578,42 @@ export function AgendaCalendar({
           const { createSession } = await import('@/app/(app)/agenda/actions');
           return createSession(input);
         }}
+        onCreateRecurring={async (input) => {
+          const { createRecurringSession } = await import('@/app/(app)/agenda/actions');
+          return createRecurringSession(input);
+        }}
+        onCreateCouple={async (input) => {
+          const { createCoupleSession } = await import('@/app/(app)/agenda/actions');
+          return createCoupleSession(input);
+        }}
+        onCreateLateRecord={async (input) => {
+          const { createLateRecord } = await import('@/app/(app)/agenda/actions');
+          return createLateRecord(input);
+        }}
         onUpdate={async (id, input) => {
+          const scope = pendingEditScopeRef.current;
+          if (scope) {
+            // Recurring session edit with scope — delegate to editRecurringSession
+            pendingEditScopeRef.current = null;
+            const { editRecurringSession } = await import('@/app/(app)/agenda/actions');
+            const result = await editRecurringSession({
+              sessionId: id,
+              scope,
+              updates: input,
+            });
+            // Map the result to match the expected shape of onUpdate
+            if (result.ok) {
+              return { ok: true };
+            }
+            if (result.error === 'invalid_input' && 'fieldErrors' in result) {
+              return { ok: false, error: 'invalid_input', fieldErrors: result.fieldErrors };
+            }
+            return {
+              ok: false,
+              error: result.error,
+              message: 'message' in result ? result.message : 'Erro ao editar sessao recorrente.',
+            };
+          }
           const { updateSession } = await import('@/app/(app)/agenda/actions');
           return updateSession(id, input);
         }}
@@ -422,7 +621,10 @@ export function AgendaCalendar({
           const { searchPatients } = await import('@/app/(app)/agenda/actions');
           return searchPatients(query);
         }}
-        onSuccess={refreshSessions}
+        onSuccess={() => {
+          pendingEditScopeRef.current = null;
+          refreshSessions();
+        }}
       />
 
       <BlockFormModal
@@ -440,6 +642,25 @@ export function AgendaCalendar({
           return updateSession(id, input);
         }}
         onSuccess={refreshSessions}
+      />
+
+      <EditScopeDialog
+        open={editScopeOpen}
+        onOpenChange={(open) => {
+          setEditScopeOpen(open);
+          if (!open) {
+            setTimeout(() => setPendingRecurringSession(null), 300);
+          }
+        }}
+        onSelect={handleEditScopeSelect}
+        title={
+          editScopeMode === 'cancel' ? 'Cancelar sessao recorrente' : 'Editar sessao recorrente'
+        }
+        description={
+          editScopeMode === 'cancel'
+            ? 'Escolha o escopo do cancelamento para esta sessao recorrente.'
+            : 'Escolha o escopo da alteracao para esta sessao recorrente.'
+        }
       />
     </div>
   );

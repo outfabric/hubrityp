@@ -176,7 +176,7 @@ describe('sessions — CHECK constraints', () => {
           startAt: new Date(),
           endAt: new Date(Date.now() + 3_000_000),
           durationMinutes: 50,
-          status: 'cancelled',
+          status: 'invalid_status',
         });
       }),
     ).rejects.toThrow();
@@ -219,7 +219,7 @@ describe('sessions — CHECK constraints', () => {
     });
   });
 
-  it.each(['scheduled', 'done'])('accepts valid status "%s"', async (validStatus) => {
+  it.each(['scheduled', 'done', 'cancelled'])('accepts valid status "%s"', async (validStatus) => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 

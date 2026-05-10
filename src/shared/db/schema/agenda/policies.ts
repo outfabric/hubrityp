@@ -60,6 +60,23 @@ export const sessionsPolicies = [
      USING (auth.uid() = user_id);`,
 ] as const;
 
+export const sessionRecurrencesPolicies = [
+  `ALTER TABLE session_recurrences ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select session_recurrences" ON session_recurrences
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert session_recurrences" ON session_recurrences
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update session_recurrences" ON session_recurrences
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can delete session_recurrences" ON session_recurrences
+     FOR DELETE TO authenticated
+     USING (auth.uid() = user_id);`,
+] as const;
+
 export const sessionHistoryPolicies = [
   `ALTER TABLE session_history ENABLE ROW LEVEL SECURITY;`,
   `CREATE POLICY "owner can select session_history" ON session_history

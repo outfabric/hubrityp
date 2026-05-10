@@ -95,6 +95,29 @@ The system SHALL render each session in the calendar grid as a chip showing: pat
 - **WHEN** a blocking event "Supervisao" at 08:00-09:30 exists
 - **THEN** the chip shows Lock icon + "Supervisao", with dashed border and muted background
 
+### Requirement: Recurring session indicator in calendar views
+
+The system SHALL display a visual indicator on calendar cells for sessions that belong to a recurrence series. This helps the psychologist distinguish one-off sessions from recurring ones. (Defined in `agenda-recurring-sessions` capability.)
+
+#### Scenario: Recurring session shows repeat icon
+
+- **WHEN** a session with non-null `recurrence_id` is displayed in the calendar
+- **THEN** the calendar cell shows a small repeat icon (Lucide `Repeat`, 12px) in the bottom-right corner
+
+#### Scenario: Non-recurring session has no indicator
+
+- **WHEN** a session with `recurrence_id = NULL` is displayed in the calendar
+- **THEN** no repeat icon is shown
+
+### Requirement: Couple session indicator in calendar views
+
+The system SHALL display both patient names for couple sessions in calendar chips. (Defined in `agenda-recurring-sessions` capability.)
+
+#### Scenario: Couple session displays both names
+
+- **WHEN** a couple session with patients "Ana" and "Carlos" appears in the calendar view
+- **THEN** the calendar cell shows "Ana & Carlos" instead of a single patient name
+
 ### Requirement: Click on session opens detail drawer
 
 The system SHALL open a detail drawer (Sheet) when the psychologist clicks on a session chip in the calendar. The drawer shows all session fields, history, and action buttons.
