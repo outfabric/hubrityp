@@ -14,7 +14,7 @@ import { serverEnv } from '@/shared/env';
 //
 // Tests inject DATABASE_URL via the integration globalSetup before importing
 // this module; production reads the validated `serverEnv.DATABASE_URL`.
-const sql = postgres(serverEnv.DATABASE_URL, { max: 1 });
+const sql = postgres(serverEnv.DATABASE_URL, { max: 1, prepare: false });
 
 export type AppDb = PostgresJsDatabase<typeof schema>;
 
