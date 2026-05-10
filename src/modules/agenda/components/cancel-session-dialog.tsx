@@ -107,12 +107,16 @@ export function CancelSessionDialog({
 }: CancelSessionDialogProps) {
   const [isPending, startTransition] = useTransition();
 
+  // Use empty strings instead of `undefined` to keep Radix Select and
+  // RadioGroup in controlled mode from mount, avoiding React warnings about
+  // switching from uncontrolled to controlled. Zod validation rejects the
+  // empty string at submit time since it's not a valid enum member.
   const form = useForm<CancelSessionInput>({
     resolver: zodResolver(cancelSessionInputSchema),
     defaultValues: {
       sessionId,
-      reason: undefined,
-      cancelledBy: undefined,
+      reason: '' as unknown as CancelSessionInput['reason'],
+      cancelledBy: '' as unknown as CancelSessionInput['cancelledBy'],
       chargeCancellation: false,
       isReschedule,
     },

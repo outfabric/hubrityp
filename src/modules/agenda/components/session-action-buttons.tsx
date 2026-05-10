@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { isSessionLocked } from '@/modules/agenda/lib/session-lock';
 import {
@@ -103,6 +104,11 @@ export function SessionActionButtons({ status, session, onAction }: SessionActio
     startTransition(async () => {
       try {
         await onAction(actionType);
+      } catch {
+        // Safety net: if the server action throws (e.g. network error, auth
+        // cookie issue, serialization failure), show a generic error toast so
+        // the user always receives feedback instead of silent failure.
+        toast.error('Erro inesperado. Atualize a pagina e tente novamente.');
       } finally {
         setLoadingAction(null);
       }

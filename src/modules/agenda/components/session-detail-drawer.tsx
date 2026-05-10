@@ -145,8 +145,15 @@ function formatHistoryEntry(entry: SessionHistory): string {
   }
 
   // Status changed — derive label from the target status
-  if (entry.action === 'status_changed' && changes.status) {
-    const statusChange = changes.status as { old: string; new: string };
+  if (entry.action === 'status_changed') {
+    const statusChange = changes.status as { old: string; new: string } | undefined;
+
+    // Graceful fallback when the changes JSONB doesn't contain the expected
+    // `status` key (e.g., data written by a prior migration or seed).
+    if (!statusChange) {
+      return `Status alterado em ${dateStr}`;
+    }
+
     const cancellation = changes.cancellation as
       | { reason?: string; cancelledBy?: string }
       | undefined;
@@ -182,8 +189,9 @@ function formatHistoryEntry(entry: SessionHistory): string {
     }
   }
 
-  // Fallback
-  return `${entry.action} em ${dateStr}`;
+  // Fallback — for any unknown action types, display a human-readable
+  // generic message instead of the raw action name.
+  return `Atualizada em ${dateStr}`;
 }
 
 // ---------------------------------------------------------------------------
