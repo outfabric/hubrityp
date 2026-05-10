@@ -64,3 +64,16 @@ export {
   calculateEndTime,
   isInPast,
 } from './lib/date-helpers';
+
+// ---- Lib — session status state machine -------------------------------------
+export {
+  SESSION_STATUSES,
+  type SessionStatus,
+  VALID_TRANSITIONS,
+  isValidTransition,
+  type Action,
+  getAvailableActions,
+} from './lib/session-status';
+
+// ---- Lib — session edit lock (RN-03.04) -------------------------------------
+export { isSessionLocked } from './lib/session-lock';
