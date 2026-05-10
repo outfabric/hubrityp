@@ -109,10 +109,10 @@
 
 ## 17. Frontend — Psychologist Cancels Session (E2E)
 
-- [ ] 17.1 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-cancel.spec.ts` — flow: seed a scheduled session, open session detail modal, click "Cancelar sessao", fill cancellation dialog (reason: Paciente cancelou, who: Paciente, cobranca: enabled), submit, verify session now shows "Cancelada" badge, verify cancellation details visible in history section
-- [ ] 17.2 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-mark-done.spec.ts` — flow: seed a confirmed session, open session detail modal, click "Marcar como realizada", verify session shows "Realizada" badge, verify history shows "Marcada como realizada em [date]"
+- [x] 17.1 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-cancel.spec.ts` — flow: seed a scheduled session, open session detail modal, click "Cancelar sessao", fill cancellation dialog (reason: Paciente cancelou, who: Paciente, cobranca: enabled), submit, verify session now shows "Cancelada" badge, verify cancellation details visible in history section
+- [x] 17.2 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-mark-done.spec.ts` — flow: seed a confirmed session, open session detail modal, click "Marcar como realizada", verify session shows "Realizada" badge, verify history shows "Marcada como realizada em [date]"
 
 ## 18. Frontend — No-Show & Edit Lock (E2E)
 
-- [ ] 18.1 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-no-show.spec.ts` — flow: seed a scheduled session, open session detail modal, click "Marcar como falta", verify session shows "Falta" badge (warning), verify no cancellation fields are shown in detail
-- [ ] 18.2 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-edit-lock.spec.ts` — flow: seed a done session with updated_at 8 days ago, open session detail modal, verify action buttons are replaced by lock alert "Sessao bloqueada para edicao apos 7 dias", verify no edit/status-change buttons visible
+- [x] 18.1 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-no-show.spec.ts` — flow: seed a scheduled session, open session detail modal, click "Marcar como falta", verify session shows "Falta" badge (warning), verify no cancellation fields are shown in detail
+- [x] 18.2 **Test E2E:** Create `src/__tests__/e2e/seeded/agenda/session-edit-lock.spec.ts` — flow: seed a done session with updated_at 8 days ago, open session detail modal, verify action buttons are replaced by lock alert "Sessao bloqueada para edicao apos 7 dias", verify no edit/status-change buttons visible

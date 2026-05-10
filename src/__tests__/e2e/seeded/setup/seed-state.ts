@@ -54,6 +54,26 @@ export const SEED_SESSIONS = {
     patientId: SEED_PATIENTS.activeMinimal.id,
     confirmationToken: 'e'.repeat(64),
   },
+  /** Scheduled session for the cancel-session E2E test (section 17.1). */
+  cancellable: {
+    id: '00000000-0000-4000-8000-000000000032',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+  },
+  /** Confirmed session for the mark-done E2E test (section 17.2). */
+  confirmedForDone: {
+    id: '00000000-0000-4000-8000-000000000033',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+  },
+  /** Scheduled session for the no-show E2E test (section 18.1). */
+  forNoShow: {
+    id: '00000000-0000-4000-8000-000000000034',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+  },
+  /** Done session with old updated_at for the edit-lock E2E test (section 18.2). */
+  lockedDone: {
+    id: '00000000-0000-4000-8000-000000000035',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+  },
 } as const;
 
 export const SEED_CONSENT_TERMS = {

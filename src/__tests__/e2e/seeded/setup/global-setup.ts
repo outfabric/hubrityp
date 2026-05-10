@@ -174,6 +174,153 @@ export default async function globalSetup() {
       `;
     }
 
+    // Seed sessions for status change E2E tests (sections 17–18).
+    // Each session is seeded at a distinct BRT hour tomorrow to avoid time
+    // collisions with other e2e tests (session-create: 14:00, drag-drop:
+    // 08:00–10:00, block-create: 12:00). We use `(current_date + 1 day)`
+    // anchored at midnight UTC, then add enough hours to land within BRT
+    // business hours (BRT = UTC-3, so 10:00 BRT = 13:00 UTC).
+    //
+    // Time assignments (BRT): cancel=10:00, markDone=11:00, noShow=15:00, lock=16:00
+
+    // 17.1 — cancellable: scheduled session tomorrow at 10:00 BRT (13:00 UTC)
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking
+      )
+      VALUES (
+        ${SEED_SESSIONS.cancellable.id},
+        ${seed.userId},
+        ${SEED_SESSIONS.cancellable.patientId},
+        (current_date + interval '1 day' + interval '13 hours'),
+        (current_date + interval '1 day' + interval '13 hours 50 minutes'),
+        50, 'scheduled', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmed_at       = NULL,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        updated_at         = now(),
+        deleted_at         = NULL;
+    `;
+
+    // 17.2 — confirmedForDone: confirmed session tomorrow at 11:00 BRT (14:00 UTC)
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking, confirmed_at
+      )
+      VALUES (
+        ${SEED_SESSIONS.confirmedForDone.id},
+        ${seed.userId},
+        ${SEED_SESSIONS.confirmedForDone.patientId},
+        (current_date + interval '1 day' + interval '14 hours'),
+        (current_date + interval '1 day' + interval '14 hours 50 minutes'),
+        50, 'confirmed', false, now()
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmed_at       = EXCLUDED.confirmed_at,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        updated_at         = now(),
+        deleted_at         = NULL;
+    `;
+
+    // 18.1 — forNoShow: scheduled session tomorrow at 15:00 BRT (18:00 UTC)
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking
+      )
+      VALUES (
+        ${SEED_SESSIONS.forNoShow.id},
+        ${seed.userId},
+        ${SEED_SESSIONS.forNoShow.patientId},
+        (current_date + interval '1 day' + interval '18 hours'),
+        (current_date + interval '1 day' + interval '18 hours 50 minutes'),
+        50, 'scheduled', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmed_at       = NULL,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        updated_at         = now(),
+        deleted_at         = NULL;
+    `;
+
+    // 18.2 — lockedDone: done session tomorrow at 16:00 BRT (19:00 UTC), updated 8 days ago
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking, updated_at
+      )
+      VALUES (
+        ${SEED_SESSIONS.lockedDone.id},
+        ${seed.userId},
+        ${SEED_SESSIONS.lockedDone.patientId},
+        (current_date + interval '1 day' + interval '19 hours'),
+        (current_date + interval '1 day' + interval '19 hours 50 minutes'),
+        50, 'done', false, now() - interval '8 days'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmed_at       = NULL,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        updated_at         = now() - interval '8 days',
+        deleted_at         = NULL;
+    `;
+
+    // Seed history entries for each status-test session so the drawer
+    // timeline is non-empty (mirrors what create-session writes).
+    for (const sessId of [
+      SEED_SESSIONS.cancellable.id,
+      SEED_SESSIONS.confirmedForDone.id,
+      SEED_SESSIONS.forNoShow.id,
+      SEED_SESSIONS.lockedDone.id,
+    ]) {
+      await sql`
+        INSERT INTO public.session_history (id, session_id, user_id, action, changes)
+        VALUES (
+          gen_random_uuid(), ${sessId}, ${seed.userId},
+          'created', '{"status":{"new":"scheduled"}}'::jsonb
+        )
+        ON CONFLICT DO NOTHING;
+      `;
+    }
+
     // Seed consent terms for the consent signing e2e tests.
     const ct = SEED_CONSENT_TERMS;
 
