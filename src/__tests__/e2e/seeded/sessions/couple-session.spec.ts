@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 
+import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -38,8 +39,9 @@ test.describe('@sessions couple session creation', () => {
   test('creates a couple session with 2 patients and verifies both names appear', async ({
     page,
   }) => {
-    // Use tomorrow to guarantee the date is always in the future
-    const tomorrow = addDays(new Date(), 1);
+    // Use tomorrow in BRT to guarantee the date is always in the future
+    // and aligned with the browser's timezone (America/Sao_Paulo).
+    const tomorrow = tomorrowInBrt();
     const tomorrowDay = format(tomorrow, 'd');
 
     const primaryPatient = SEED_PATIENTS.activeWithPhone;
@@ -75,7 +77,7 @@ test.describe('@sessions couple session creation', () => {
     const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
     await expect(calendarPopover).toBeVisible();
 
-    if (tomorrow.getMonth() !== new Date().getMonth()) {
+    if (tomorrow.getMonth() !== nowInBrt().getMonth()) {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
@@ -132,7 +134,12 @@ test.describe('@sessions couple session creation', () => {
     // Verify a success toast appeared
     await expect(page.getByText(/agendada com sucesso/i)).toBeVisible({ timeout: 5000 });
 
-    // Navigate to tomorrow so the session is visible
+    // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
+    // land on today (BRT), then click "next" once to advance one day.
+    // This avoids the week-view "next" which jumps a full week and may
+    // skip past tomorrow depending on the current day-of-week.
+    await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
+    await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
 
     // Verify the session appears on the calendar with the couple display name.

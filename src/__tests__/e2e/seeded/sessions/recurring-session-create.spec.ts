@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addDays, addWeeks, format } from 'date-fns';
+import { addWeeks, format } from 'date-fns';
 
+import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -33,8 +34,9 @@ test.describe('@sessions recurring session creation', () => {
   test('creates a weekly recurring session for 4 weeks and verifies all sessions appear', async ({
     page,
   }) => {
-    // Use tomorrow to guarantee the date is always in the future
-    const tomorrow = addDays(new Date(), 1);
+    // Use tomorrow in BRT to guarantee the date is always in the future
+    // and aligned with the browser's timezone (America/Sao_Paulo).
+    const tomorrow = tomorrowInBrt();
     const tomorrowDay = format(tomorrow, 'd');
     const tomorrowDayOfWeek = tomorrow.getDay(); // 0=Sun ... 6=Sat
 
@@ -73,8 +75,8 @@ test.describe('@sessions recurring session creation', () => {
     const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
     await expect(calendarPopover).toBeVisible();
 
-    // If tomorrow is in the next month, navigate forward
-    if (tomorrow.getMonth() !== new Date().getMonth()) {
+    // If tomorrow is in the next month (in BRT), navigate forward
+    if (tomorrow.getMonth() !== nowInBrt().getMonth()) {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
@@ -132,10 +134,10 @@ test.describe('@sessions recurring session creation', () => {
     const endDateCalendarPopover = page.locator('[data-radix-popper-content-wrapper]').last();
     await expect(endDateCalendarPopover).toBeVisible();
 
-    // Navigate forward if the end date is in a different month than the current view
-    const currentDate = new Date();
+    // Navigate forward if the end date is in a different month than the current view.
+    // Use BRT "now" so the month comparison matches the browser calendar.
     let targetMonth = endDate.getMonth();
-    let currentViewMonth = currentDate.getMonth();
+    let currentViewMonth = nowInBrt().getMonth();
 
     // Navigate forward month by month if needed
     while (targetMonth !== currentViewMonth) {
@@ -160,7 +162,10 @@ test.describe('@sessions recurring session creation', () => {
     // Verify a success toast appeared mentioning multiple sessions
     await expect(page.getByText(/sessoes agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
 
-    // Navigate to tomorrow so the first session is visible
+    // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
+    // land on today (BRT), then click "next" once to advance one day.
+    await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
+    await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
 
     // Verify the first session appears on the calendar with the recurring indicator.
@@ -172,6 +177,11 @@ test.describe('@sessions recurring session creation', () => {
       .filter({ has: page.getByTestId('recurring-indicator') })
       .first();
     await expect(firstSessionChip).toBeVisible({ timeout: 10000 });
+
+    // Switch to week view for navigating through subsequent weeks.
+    // We're currently on "tomorrow" in day view, so switching to week view
+    // shows the week containing tomorrow. Each "next" then advances by 1 week.
+    await page.getByTestId('agenda-view-toggle').getByText('Semana').click();
 
     // Navigate through the next 3 weeks to verify sessions appear on each
     for (let week = 1; week < 4; week++) {

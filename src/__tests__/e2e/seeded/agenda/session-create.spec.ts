@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 
+import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -29,9 +30,9 @@ test.describe('@agenda session creation', () => {
   test('creates a session via modal, verifies it on the calendar, and opens the detail drawer', async ({
     page,
   }) => {
-    // Use tomorrow to guarantee the date is always in the future, avoiding
-    // "past date" rejections regardless of what time CI runs.
-    const tomorrow = addDays(new Date(), 1);
+    // Use tomorrow in BRT to guarantee the date is always in the future
+    // and aligned with the browser's timezone (America/Sao_Paulo).
+    const tomorrow = tomorrowInBrt();
     const tomorrowDay = format(tomorrow, 'd');
 
     // Navigate to the agenda page
@@ -77,7 +78,7 @@ test.describe('@agenda session creation', () => {
     await expect(calendarPopover).toBeVisible();
 
     // If tomorrow is in the next month, navigate forward.
-    if (tomorrow.getMonth() !== new Date().getMonth()) {
+    if (tomorrow.getMonth() !== nowInBrt().getMonth()) {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
@@ -119,7 +120,12 @@ test.describe('@agenda session creation', () => {
     // Verify a success toast appeared
     await expect(page.getByText('Sessao agendada com sucesso.')).toBeVisible({ timeout: 5000 });
 
-    // Navigate to tomorrow so the newly created session is visible.
+    // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
+    // land on today (BRT), then click "next" once to advance one day.
+    // This avoids the week-view "next" which jumps a full week and may
+    // skip past tomorrow depending on the current day-of-week.
+    await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
+    await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
 
     // Verify the session now appears on the calendar grid.

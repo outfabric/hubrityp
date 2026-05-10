@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addDays, addWeeks, format } from 'date-fns';
+import { addWeeks, format } from 'date-fns';
 
+import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -34,8 +35,9 @@ test.describe('@sessions recurring session edit scope', () => {
   test('edits recurring session with "this_and_future" scope and verifies correct sessions updated', async ({
     page,
   }) => {
-    // Use tomorrow to guarantee the date is always in the future
-    const tomorrow = addDays(new Date(), 1);
+    // Use tomorrow in BRT to guarantee the date is always in the future
+    // and aligned with the browser's timezone (America/Sao_Paulo).
+    const tomorrow = tomorrowInBrt();
     const tomorrowDay = format(tomorrow, 'd');
     const tomorrowDayOfWeek = tomorrow.getDay();
 
@@ -77,7 +79,7 @@ test.describe('@sessions recurring session edit scope', () => {
     const calendarPopover = page.locator('[data-radix-popper-content-wrapper]').first();
     await expect(calendarPopover).toBeVisible();
 
-    if (tomorrow.getMonth() !== new Date().getMonth()) {
+    if (tomorrow.getMonth() !== nowInBrt().getMonth()) {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
@@ -114,10 +116,10 @@ test.describe('@sessions recurring session edit scope', () => {
     const endDateCalendar = page.locator('[data-radix-popper-content-wrapper]').last();
     await expect(endDateCalendar).toBeVisible();
 
-    // Navigate to the correct month if needed
-    const currentDate = new Date();
+    // Navigate to the correct month if needed.
+    // Use BRT "now" so the month comparison matches the browser calendar.
     let targetMonth = endDate.getMonth();
-    let currentViewMonth = currentDate.getMonth();
+    let currentViewMonth = nowInBrt().getMonth();
 
     while (targetMonth !== currentViewMonth) {
       await endDateCalendar.locator('button[name="next-month"]').click();
@@ -138,8 +140,13 @@ test.describe('@sessions recurring session edit scope', () => {
 
     // ---- Step 2: Navigate to the second week and click session #2 ----
 
-    // Navigate to tomorrow (week 1) first
+    // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
+    // land on today (BRT), then click "next" once to advance one day.
+    // Switch back to week view for the rest of the test.
+    await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
+    await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await page.getByTestId('agenda-view-toggle').getByText('Semana').click();
 
     // Use the displayed patient name for filtering session chips (resilient to renames)
     const patientName = displayedPatientName;
@@ -233,9 +240,10 @@ test.describe('@sessions recurring session edit scope', () => {
     const drawerAfterEdit = page.getByTestId('session-detail-drawer');
     await expect(drawerAfterEdit).toBeVisible({ timeout: 5000 });
 
-    // The form picks "18:00" which the browser (UTC timezone) stores as 18:00 UTC.
-    // The drawer converts to Sao Paulo time (UTC-3): 18:00 UTC = 15:00 BRT.
-    await expect(drawerAfterEdit).toContainText('15:00');
+    // The form picks "18:00" in the browser (BRT timezone). buildIsoDatetime
+    // converts 18:00 BRT → 21:00 UTC for storage. The drawer converts back
+    // to Sao Paulo time: 21:00 UTC = 18:00 BRT.
+    await expect(drawerAfterEdit).toContainText('18:00');
 
     // Close the drawer
     await page.keyboard.press('Escape');
@@ -287,7 +295,8 @@ test.describe('@sessions recurring session edit scope', () => {
     }
     await expect(drawer1).toBeVisible({ timeout: 10000 });
 
-    // Session #1 should still show 13:00 BRT (16:00 UTC - 3h)
-    await expect(drawer1).toContainText('13:00');
+    // Session #1 was created at 16:00 BRT (stored as 19:00 UTC). The drawer
+    // converts back to Sao Paulo time: 19:00 UTC = 16:00 BRT.
+    await expect(drawer1).toContainText('16:00');
   });
 });
