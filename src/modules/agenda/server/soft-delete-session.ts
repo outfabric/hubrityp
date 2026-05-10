@@ -2,10 +2,13 @@ import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
+
+const sessionIdSchema = z.string().uuid({ message: 'ID da sessao invalido.' });
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -14,6 +17,7 @@ import { logger } from '@/shared/lib/logger';
 export type SoftDeleteSessionResult =
   | { ok: true }
   | { ok: false; error: 'unauthenticated' }
+  | { ok: false; error: 'invalid_input'; message: string }
   | { ok: false; error: 'not_found' }
   | { ok: false; error: 'not_cancelled'; message: string }
   | { ok: false; error: 'has_done_or_no_show_history'; message: string }
@@ -40,6 +44,17 @@ export async function softDeleteSessionImpl(
   sessionId: string,
   confirmed: boolean,
 ): Promise<SoftDeleteSessionResult> {
+  // 0. Validate input
+  const parsed = sessionIdSchema.safeParse(sessionId);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'invalid_input',
+      message: parsed.error.issues[0]?.message ?? 'Input invalido.',
+    };
+  }
+  const validSessionId = parsed.data;
+
   // 1. Authenticate
   const {
     data: { user },
@@ -65,7 +80,7 @@ export async function softDeleteSessionImpl(
     const [existing] = await db
       .select()
       .from(sessions)
-      .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)));
+      .where(and(eq(sessions.id, validSessionId), eq(sessions.userId, userId)));
 
     if (!existing) {
       return { ok: false, error: 'not_found' };
@@ -84,7 +99,7 @@ export async function softDeleteSessionImpl(
     const historyRows = await db
       .select({ changes: sessionHistory.changes })
       .from(sessionHistory)
-      .where(eq(sessionHistory.sessionId, sessionId));
+      .where(eq(sessionHistory.sessionId, validSessionId));
 
     const hasDoneOrNoShowHistory = historyRows.some((row) => {
       const changes = row.changes as Record<string, unknown>;
@@ -102,11 +117,20 @@ export async function softDeleteSessionImpl(
       };
     }
 
-    // 5. Set deleted_at
-    await db
-      .update(sessions)
-      .set({ deletedAt: sql`now()`, updatedAt: sql`now()` })
-      .where(eq(sessions.id, sessionId));
+    // 5. Set deleted_at + record audit history in a transaction
+    await db.transaction(async (tx) => {
+      await tx
+        .update(sessions)
+        .set({ deletedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(sessions.id, validSessionId));
+
+      await tx.insert(sessionHistory).values({
+        sessionId: validSessionId,
+        userId,
+        action: 'deleted',
+        changes: { softDeleted: true },
+      });
+    });
 
     return { ok: true };
   } catch (err: unknown) {

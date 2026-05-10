@@ -126,7 +126,7 @@ export function CancelSessionDialog({
       const result = await onConfirm(values);
 
       if (result.ok) {
-        toast.error('Sessao cancelada', {
+        toast.success('Sessao cancelada', {
           className: 'border-l-4 border-l-danger-500',
         });
         form.reset();

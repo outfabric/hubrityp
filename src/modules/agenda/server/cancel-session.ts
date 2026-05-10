@@ -30,6 +30,7 @@ export type CancelSessionResult =
   | { ok: false; error: 'invalid_input'; fieldErrors: Record<string, string[]> }
   | { ok: false; error: 'not_found' }
   | { ok: false; error: 'invalid_transition'; message: string }
+  | { ok: false; error: 'concurrent_modification'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -103,9 +104,9 @@ export async function cancelSessionImpl(
     const cancelledAt = new Date();
     const notice = calculateCancellationNotice(existing.startAt, cancelledAt);
 
-    // 6-7. Update session + history in a transaction
-    await db.transaction(async (tx) => {
-      await tx
+    // 6-7. Update session + history in a transaction (optimistic lock on status)
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
         .update(sessions)
         .set({
           status: 'cancelled',
@@ -116,7 +117,12 @@ export async function cancelSessionImpl(
           chargeCancellation: data.chargeCancellation,
           updatedAt: sql`now()`,
         })
-        .where(eq(sessions.id, data.sessionId));
+        .where(and(eq(sessions.id, data.sessionId), eq(sessions.status, fromStatus)))
+        .returning({ id: sessions.id });
+
+      if (!row) {
+        return null;
+      }
 
       await tx.insert(sessionHistory).values({
         sessionId: data.sessionId,
@@ -133,7 +139,18 @@ export async function cancelSessionImpl(
           },
         },
       });
+
+      return row;
     });
+
+    if (!updated) {
+      return {
+        ok: false,
+        error: 'concurrent_modification',
+        message:
+          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+      };
+    }
 
     // TODO: Emit `agenda/session.cancelled` via Inngest when client is available
 

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { calculateCancellationNotice } from '@/modules/agenda/lib/cancellation-notice';
 import { isTokenExpired } from '@/modules/agenda/lib/confirmation-token';
@@ -8,6 +9,8 @@ import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/sess
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
+
+const reasonSchema = z.string().max(500).optional();
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -20,6 +23,7 @@ export type PublicDeclineSessionResult =
   | { ok: false; error: 'already_responded' }
   | { ok: false; error: 'cancelled' }
   | { ok: false; error: 'invalid_transition'; message: string }
+  | { ok: false; error: 'concurrent_modification'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -49,6 +53,10 @@ export async function publicDeclineSessionImpl(
   if (!token || token.length < 1) {
     return { ok: false, error: 'invalid_token' };
   }
+
+  // Validate reason length to prevent payload abuse
+  const parsedReason = reasonSchema.safeParse(reason);
+  const safeReason = parsedReason.success ? parsedReason.data : undefined;
 
   try {
     // Look up session by token (must not be soft-deleted)
@@ -97,9 +105,9 @@ export async function publicDeclineSessionImpl(
     const cancelledAt = new Date();
     const notice = calculateCancellationNotice(existing.startAt, cancelledAt);
 
-    // Update session + append history in a transaction
-    await db.transaction(async (tx) => {
-      await tx
+    // Update session + append history in a transaction (optimistic lock on status)
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
         .update(sessions)
         .set({
           status: 'cancelled',
@@ -110,7 +118,12 @@ export async function publicDeclineSessionImpl(
           chargeCancellation: false,
           updatedAt: sql`now()`,
         })
-        .where(eq(sessions.id, existing.id));
+        .where(and(eq(sessions.id, existing.id), eq(sessions.status, status)))
+        .returning({ id: sessions.id });
+
+      if (!row) {
+        return null;
+      }
 
       await tx.insert(sessionHistory).values({
         sessionId: existing.id,
@@ -125,11 +138,22 @@ export async function publicDeclineSessionImpl(
             cancelledBy: 'patient',
             notice,
             chargeCancellation: false,
-            patientReason: reason ?? null,
+            patientReason: safeReason ?? null,
           },
         },
       });
+
+      return row;
     });
+
+    if (!updated) {
+      return {
+        ok: false,
+        error: 'concurrent_modification',
+        message:
+          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+      };
+    }
 
     // TODO: Emit `agenda/session.cancelled` via Inngest when client is available
     // inngest.send({ name: 'agenda/session.cancelled', data: { ... } });

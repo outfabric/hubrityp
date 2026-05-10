@@ -2,11 +2,14 @@ import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
+
+const sessionIdSchema = z.string().uuid({ message: 'ID da sessao invalido.' });
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -15,8 +18,10 @@ import { logger } from '@/shared/lib/logger';
 export type ConfirmSessionResult =
   | { ok: true }
   | { ok: false; error: 'unauthenticated' }
+  | { ok: false; error: 'invalid_input'; message: string }
   | { ok: false; error: 'not_found' }
   | { ok: false; error: 'invalid_transition'; message: string }
+  | { ok: false; error: 'concurrent_modification'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -40,6 +45,17 @@ export async function confirmSessionImpl(
   supabase: SupabaseClient,
   sessionId: string,
 ): Promise<ConfirmSessionResult> {
+  // 0. Validate input
+  const parsed = sessionIdSchema.safeParse(sessionId);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'invalid_input',
+      message: parsed.error.issues[0]?.message ?? 'Input invalido.',
+    };
+  }
+  const validSessionId = parsed.data;
+
   // 1. Authenticate
   const {
     data: { user },
@@ -56,7 +72,7 @@ export async function confirmSessionImpl(
     const [existing] = await db
       .select()
       .from(sessions)
-      .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)));
+      .where(and(eq(sessions.id, validSessionId), eq(sessions.userId, userId)));
 
     if (!existing) {
       return { ok: false, error: 'not_found' };
@@ -72,26 +88,42 @@ export async function confirmSessionImpl(
       };
     }
 
-    // 4-5. Update session + history in a transaction
-    await db.transaction(async (tx) => {
-      await tx
+    // 4-5. Update session + history in a transaction (optimistic lock on status)
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
         .update(sessions)
         .set({
           status: 'confirmed',
           confirmedAt: sql`now()`,
           updatedAt: sql`now()`,
         })
-        .where(eq(sessions.id, sessionId));
+        .where(and(eq(sessions.id, validSessionId), eq(sessions.status, fromStatus)))
+        .returning({ id: sessions.id });
+
+      if (!row) {
+        return null;
+      }
 
       await tx.insert(sessionHistory).values({
-        sessionId,
+        sessionId: validSessionId,
         userId,
         action: 'status_changed',
         changes: {
           status: { old: fromStatus, new: 'confirmed' },
         },
       });
+
+      return row;
     });
+
+    if (!updated) {
+      return {
+        ok: false,
+        error: 'concurrent_modification',
+        message:
+          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+      };
+    }
 
     // TODO: Emit `agenda/session.confirmed` via Inngest when client is available
     // inngest.send({ name: 'agenda/session.confirmed', data: { ... } });

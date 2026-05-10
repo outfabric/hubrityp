@@ -19,6 +19,7 @@ export type PublicConfirmSessionResult =
   | { ok: false; error: 'already_responded' }
   | { ok: false; error: 'cancelled' }
   | { ok: false; error: 'invalid_transition'; message: string }
+  | { ok: false; error: 'concurrent_modification'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -87,18 +88,23 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
       };
     }
 
-    // Update session + append history in a transaction
+    // Update session + append history in a transaction (optimistic lock on status)
     const now = new Date();
 
-    await db.transaction(async (tx) => {
-      await tx
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
         .update(sessions)
         .set({
           status: 'confirmed',
           confirmedAt: now,
           updatedAt: sql`now()`,
         })
-        .where(eq(sessions.id, existing.id));
+        .where(and(eq(sessions.id, existing.id), eq(sessions.status, status)))
+        .returning({ id: sessions.id });
+
+      if (!row) {
+        return null;
+      }
 
       await tx.insert(sessionHistory).values({
         sessionId: existing.id,
@@ -110,7 +116,18 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
           performedBy: 'patient',
         },
       });
+
+      return row;
     });
+
+    if (!updated) {
+      return {
+        ok: false,
+        error: 'concurrent_modification',
+        message:
+          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+      };
+    }
 
     // TODO: Emit `agenda/session.confirmed` via Inngest when client is available
     // inngest.send({ name: 'agenda/session.confirmed', data: { ... } });
