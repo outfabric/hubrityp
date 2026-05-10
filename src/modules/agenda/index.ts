@@ -115,5 +115,29 @@ export {
   type SessionMissingNoteReminderEvent,
 } from './lib/session-events';
 
+// ---- Server Actions (public confirmation flow) ------------------------------
+export {
+  getSessionByTokenImpl,
+  type GetSessionByTokenResult,
+  type PublicSessionData,
+  type TokenState,
+} from './server/get-session-by-token';
+export {
+  publicConfirmSessionImpl,
+  type PublicConfirmSessionResult,
+} from './server/public-confirm-session';
+export {
+  publicDeclineSessionImpl,
+  type PublicDeclineSessionResult,
+} from './server/public-decline-session';
+
+// ---- Inngest — Missing Note Reminder ----------------------------------------
+export {
+  findSessionsMissingNotes,
+  runMissingNoteReminder,
+  type MissingNoteSession,
+  type MissingNoteReminderResult,
+} from './server/missing-note-reminder';
+
 // ---- Zod Schema — cancellation input ----------------------------------------
 export { cancelSessionInputSchema, type CancelSessionInput } from './lib/cancellation-schema';
