@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, gte, isNull, lte, notInArray } from 'drizzle-orm';
+import { and, eq, gte, lte } from 'drizzle-orm';
 
 import { calculateEndTime, isInPast } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
@@ -128,9 +128,6 @@ export async function createSessionImpl(
           eq(sessions.userId, userId),
           gte(sessions.startAt, windowStart),
           lte(sessions.startAt, windowEnd),
-          // Cancelled, no-show, and soft-deleted sessions should not block scheduling.
-          notInArray(sessions.status, ['cancelled', 'no_show']),
-          isNull(sessions.deletedAt),
         ),
       );
 
