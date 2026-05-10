@@ -41,7 +41,7 @@ test.describe('@agenda session no-show', () => {
     const targetChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
-      .filter({ hasText: '9:00' })
+      .filter({ hasText: /(?<!\d)9:00/ })
       .filter({ has: page.getByTestId('session-status-badge-scheduled') });
     await expect(targetChip).toBeVisible({ timeout: 10000 });
     await targetChip.click();
