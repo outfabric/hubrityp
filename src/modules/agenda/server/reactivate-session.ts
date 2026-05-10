@@ -3,7 +3,6 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 
-import { isSessionLocked } from '@/modules/agenda/lib/session-lock';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -13,12 +12,11 @@ import { logger } from '@/shared/lib/logger';
 // Result types
 // ---------------------------------------------------------------------------
 
-export type MarkSessionDoneResult =
+export type ReactivateSessionResult =
   | { ok: true }
   | { ok: false; error: 'unauthenticated' }
   | { ok: false; error: 'not_found' }
   | { ok: false; error: 'invalid_transition'; message: string }
-  | { ok: false; error: 'session_locked'; message: string }
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
@@ -26,22 +24,19 @@ export type MarkSessionDoneResult =
 // ---------------------------------------------------------------------------
 
 /**
- * Marks a session as done for the authenticated psychologist.
+ * Reactivates a cancelled session back to scheduled.
  *
  * Flow:
  *   1. Authenticate via Supabase session.
  *   2. Verify ownership — session must belong to authenticated user.
- *   3. Check 7-day lock (RN-03.04) — reject edits on locked done sessions.
- *   4. Validate transition via state machine (scheduled|confirmed → done).
- *   5. Update status to "done" + create history entry in a transaction.
- *
- * Inngest event `agenda/session.done` will be emitted once the
- * Inngest client is configured in the project.
+ *   3. Validate transition via state machine (cancelled → scheduled).
+ *   4. Clear all cancellation fields + reschedule links.
+ *   5. Set status='scheduled', append session_history entry.
  */
-export async function markSessionDoneImpl(
+export async function reactivateSessionImpl(
   supabase: SupabaseClient,
   sessionId: string,
-): Promise<MarkSessionDoneResult> {
+): Promise<ReactivateSessionResult> {
   // 1. Authenticate
   const {
     data: { user },
@@ -64,30 +59,31 @@ export async function markSessionDoneImpl(
       return { ok: false, error: 'not_found' };
     }
 
-    // 3. Check 7-day lock
-    if (isSessionLocked({ status: existing.status, updatedAt: existing.updatedAt })) {
-      return {
-        ok: false,
-        error: 'session_locked',
-        message: 'Esta sessao esta bloqueada para edicao apos 7 dias.',
-      };
-    }
-
-    // 4. Validate transition
+    // 3. Validate transition
     const fromStatus = existing.status as SessionStatus;
-    if (!isValidTransition(fromStatus, 'done')) {
+    if (!isValidTransition(fromStatus, 'scheduled')) {
       return {
         ok: false,
         error: 'invalid_transition',
-        message: `Transicao de "${fromStatus}" para "done" nao e permitida.`,
+        message: `Transicao de "${fromStatus}" para "scheduled" nao e permitida.`,
       };
     }
 
-    // 5. Update status + history in a transaction
+    // 4-5. Clear cancellation fields, reschedule links + update status + history
     await db.transaction(async (tx) => {
       await tx
         .update(sessions)
-        .set({ status: 'done', updatedAt: sql`now()` })
+        .set({
+          status: 'scheduled',
+          cancellationReason: null,
+          cancelledBy: null,
+          cancellationNotice: null,
+          cancelledAt: null,
+          chargeCancellation: false,
+          rescheduledToSessionId: null,
+          rescheduledFromSessionId: null,
+          updatedAt: sql`now()`,
+        })
         .where(eq(sessions.id, sessionId));
 
       await tx.insert(sessionHistory).values({
@@ -95,24 +91,23 @@ export async function markSessionDoneImpl(
         userId,
         action: 'status_changed',
         changes: {
-          status: { old: fromStatus, new: 'done' },
+          status: { old: fromStatus, new: 'scheduled' },
+          reactivated: true,
         },
       });
     });
-
-    // TODO: Emit `agenda/session.done` via Inngest when client is available
 
     return { ok: true };
   } catch (err: unknown) {
     const pgError = err as { code?: string };
     logger.error(
-      { event: 'mark_session_done_failed', errorCode: pgError.code },
-      'unexpected error marking session as done',
+      { event: 'reactivate_session_failed', errorCode: pgError.code },
+      'unexpected error reactivating session',
     );
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao marcar sessao como realizada. Tente novamente.',
+      message: 'Erro inesperado ao reativar sessao. Tente novamente.',
     };
   }
 }

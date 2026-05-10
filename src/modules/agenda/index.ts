@@ -39,6 +39,21 @@ export { deleteSessionImpl, type DeleteSessionResult } from './server/delete-ses
 export { markSessionDoneImpl, type MarkSessionDoneResult } from './server/mark-session-done';
 export { getSessionHistoryImpl, type GetSessionHistoryResult } from './server/get-session-history';
 
+// ---- Server Actions (status transitions) ------------------------------------
+export { confirmSessionImpl, type ConfirmSessionResult } from './server/confirm-session';
+export {
+  cancelSessionImpl,
+  type CancelSessionResult,
+  type RescheduleSessionData,
+} from './server/cancel-session';
+export { markSessionNoShowImpl, type MarkSessionNoShowResult } from './server/mark-session-no-show';
+export { reactivateSessionImpl, type ReactivateSessionResult } from './server/reactivate-session';
+export { softDeleteSessionImpl, type SoftDeleteSessionResult } from './server/soft-delete-session';
+export {
+  completeRescheduleImpl,
+  type CompleteRescheduleResult,
+} from './server/complete-reschedule';
+
 // ---- Zod Schemas ------------------------------------------------------------
 export { locationInputSchema, type LocationInput } from './lib/location-input-schema';
 export {
