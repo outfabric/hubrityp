@@ -34,6 +34,28 @@ export const SEED_PATIENTS = {
   },
 } as const;
 
+/**
+ * Deterministic seed sessions for public confirmation E2E tests.
+ *
+ * Each session has a unique confirmation_token so the public confirmation
+ * page can be tested without authentication. Tokens are simple repeated
+ * hex chars for test readability.
+ */
+export const SEED_SESSIONS = {
+  /** Confirmable session — future start_at, status='scheduled', has confirmation_token. */
+  confirmable: {
+    id: '00000000-0000-4000-8000-000000000030',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+    confirmationToken: 'd'.repeat(64),
+  },
+  /** Declinable session — future start_at, status='scheduled', has confirmation_token. */
+  declinable: {
+    id: '00000000-0000-4000-8000-000000000031',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    confirmationToken: 'e'.repeat(64),
+  },
+} as const;
+
 export const SEED_CONSENT_TERMS = {
   /** Unsigned consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -3,7 +3,7 @@ import postgres from 'postgres';
 
 import { healthPings } from '@/shared/db/schema/health/tables';
 
-import { readSeedState, SEED_CONSENT_TERMS, SEED_PATIENTS } from './seed-state';
+import { readSeedState, SEED_CONSENT_TERMS, SEED_PATIENTS, SEED_SESSIONS } from './seed-state';
 
 // Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
 // Playwright's `runner/tasks.ts::createGlobalSetupTasks`), so by the time
@@ -133,6 +133,44 @@ export default async function globalSetup() {
           archived_at        = EXCLUDED.archived_at,
           consent_signed_at  = NULL,
           consent_revoked_at = NULL;
+      `;
+    }
+
+    // Seed sessions for the public confirmation E2E tests.
+    // Each session needs a future start_at (so the token is not expired),
+    // a confirmation_token, and status='scheduled'.
+    const s = SEED_SESSIONS;
+    for (const session of [s.confirmable, s.declinable]) {
+      await sql`
+        INSERT INTO public.sessions (
+          id, user_id, patient_id,
+          start_at, end_at, duration_minutes,
+          status, is_blocking, confirmation_token
+        )
+        VALUES (
+          ${session.id},
+          ${seed.userId},
+          ${session.patientId},
+          now() + interval '2 days',
+          now() + interval '2 days' + interval '50 minutes',
+          50,
+          'scheduled',
+          false,
+          ${session.confirmationToken}
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          start_at           = EXCLUDED.start_at,
+          end_at             = EXCLUDED.end_at,
+          duration_minutes   = EXCLUDED.duration_minutes,
+          status             = EXCLUDED.status,
+          confirmation_token = EXCLUDED.confirmation_token,
+          confirmed_at       = NULL,
+          cancelled_at       = NULL,
+          cancellation_reason = NULL,
+          cancelled_by       = NULL,
+          cancellation_notice = NULL,
+          charge_cancellation = false,
+          deleted_at         = NULL;
       `;
     }
 

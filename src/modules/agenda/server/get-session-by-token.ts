@@ -70,6 +70,7 @@ export async function getSessionByTokenImpl(token: string): Promise<GetSessionBy
       durationMinutes: sessions.durationMinutes,
       status: sessions.status,
       confirmedAt: sessions.confirmedAt,
+      cancelledBy: sessions.cancelledBy,
       deletedAt: sessions.deletedAt,
       modality: sessions.modality,
       psychologistName: profiles.fullName,
@@ -98,12 +99,18 @@ export async function getSessionByTokenImpl(token: string): Promise<GetSessionBy
 
   const status = row.status as SessionStatus;
 
-  // Session was cancelled -- show "cancelled" state
+  // Session was cancelled — distinguish who cancelled it.
+  // If the patient cancelled via the public page, show "already responded"
+  // (the patient already acted on this link). If the psychologist cancelled,
+  // show the "cancelled" state with a different message.
   if (status === 'cancelled') {
+    if (row.cancelledBy === 'patient') {
+      return { state: 'already_responded' };
+    }
     return { state: 'cancelled' };
   }
 
-  // Patient already confirmed or declined (confirmed, done, no_show)
+  // Patient already confirmed or in a terminal state (confirmed, done, no_show)
   if (
     row.confirmedAt !== null ||
     status === 'confirmed' ||
