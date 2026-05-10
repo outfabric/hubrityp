@@ -98,11 +98,12 @@ describe('agenda tables — RLS enabled', () => {
 });
 
 // =====================================================================
-// RLS policies (4 per table)
+// RLS policies
 // =====================================================================
 
 describe('agenda tables — RLS policies', () => {
-  it.each(['locations', 'agenda_settings', 'sessions', 'session_history'])(
+  // Tables with full CRUD policies (SELECT, INSERT, UPDATE, DELETE)
+  it.each(['locations', 'agenda_settings', 'session_history'])(
     '%s has all four owner-scoped policies',
     async (tableName) => {
       const result = await runAsService(async (db) => {
@@ -125,6 +126,28 @@ describe('agenda tables — RLS policies', () => {
       expect(policies.find((p) => p.cmd === 'd')).toBeDefined(); // DELETE
     },
   );
+
+  // Sessions: RN-03.05 prohibits hard deletion — only SELECT, INSERT, UPDATE
+  it('sessions has three owner-scoped policies (no DELETE — RN-03.05)', async () => {
+    const result = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT polname, polcmd FROM pg_policy
+             WHERE polrelid = 'sessions'::regclass
+             ORDER BY polname`,
+      );
+    });
+
+    const policies = result.map((r) => ({
+      name: r.polname as string,
+      cmd: r.polcmd as string,
+    }));
+
+    expect(policies).toHaveLength(3);
+    expect(policies.find((p) => p.cmd === 'r')).toBeDefined(); // SELECT
+    expect(policies.find((p) => p.cmd === 'a')).toBeDefined(); // INSERT
+    expect(policies.find((p) => p.cmd === 'w')).toBeDefined(); // UPDATE
+    expect(policies.find((p) => p.cmd === 'd')).toBeUndefined(); // NO DELETE
+  });
 });
 
 // =====================================================================
@@ -219,21 +242,24 @@ describe('sessions — CHECK constraints', () => {
     });
   });
 
-  it.each(['scheduled', 'done', 'cancelled'])('accepts valid status "%s"', async (validStatus) => {
-    const userId = randomUUID();
-    await seedAuthUser(userId);
+  it.each(['scheduled', 'confirmed', 'done', 'cancelled', 'no_show'])(
+    'accepts valid status "%s"',
+    async (validStatus) => {
+      const userId = randomUUID();
+      await seedAuthUser(userId);
 
-    await runAsService(async (db) => {
-      await db.insert(sessions).values({
-        id: randomUUID(),
-        userId,
-        startAt: new Date(),
-        endAt: new Date(Date.now() + 3_000_000),
-        durationMinutes: 50,
-        status: validStatus,
+      await runAsService(async (db) => {
+        await db.insert(sessions).values({
+          id: randomUUID(),
+          userId,
+          startAt: new Date(),
+          endAt: new Date(Date.now() + 3_000_000),
+          durationMinutes: 50,
+          status: validStatus,
+        });
       });
-    });
-  });
+    },
+  );
 });
 
 describe('session_history — CHECK constraints', () => {

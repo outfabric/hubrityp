@@ -9,6 +9,8 @@
 // be an async function; types cannot be re-exported from here.
 
 import type {
+  CancelSessionResult,
+  ConfirmSessionResult,
   CreateSessionResult,
   DeleteSessionResult,
   GetAgendaSettingsResult,
@@ -16,9 +18,14 @@ import type {
   ListLocationsResult,
   ListSessionsResult,
   MarkSessionDoneResult,
+  MarkSessionNoShowResult,
+  ReactivateSessionResult,
+  SoftDeleteSessionResult,
   UpdateSessionResult,
 } from '@/modules/agenda';
 import {
+  cancelSessionImpl,
+  confirmSessionImpl,
   createSessionImpl,
   deleteSessionImpl,
   getAgendaSettingsImpl,
@@ -26,6 +33,9 @@ import {
   listLocationsImpl,
   listSessionsImpl,
   markSessionDoneImpl,
+  markSessionNoShowImpl,
+  reactivateSessionImpl,
+  softDeleteSessionImpl,
   updateSessionImpl,
 } from '@/modules/agenda';
 import type { ListPatientsResult } from '@/modules/patients';
@@ -114,6 +124,37 @@ export async function deleteSession(sessionId: string): Promise<DeleteSessionRes
 export async function getSessionHistory(sessionId: string): Promise<GetSessionHistoryResult> {
   const supabase = await createServerClient();
   return getSessionHistoryImpl(supabase, sessionId);
+}
+
+// ---------------------------------------------------------------------------
+// Session status transitions
+// ---------------------------------------------------------------------------
+
+export async function confirmSession(sessionId: string): Promise<ConfirmSessionResult> {
+  const supabase = await createServerClient();
+  return confirmSessionImpl(supabase, sessionId);
+}
+
+export async function cancelSession(input: unknown): Promise<CancelSessionResult> {
+  const supabase = await createServerClient();
+  return cancelSessionImpl(supabase, input);
+}
+
+export async function markSessionNoShow(sessionId: string): Promise<MarkSessionNoShowResult> {
+  const supabase = await createServerClient();
+  return markSessionNoShowImpl(supabase, sessionId);
+}
+
+export async function reactivateSession(sessionId: string): Promise<ReactivateSessionResult> {
+  const supabase = await createServerClient();
+  return reactivateSessionImpl(supabase, sessionId);
+}
+
+export async function softDeleteSession(sessionId: string): Promise<SoftDeleteSessionResult> {
+  const supabase = await createServerClient();
+  // `confirmed: true` — the UI-level DeleteSessionDialog already handles
+  // explicit user confirmation (type "EXCLUIR") before calling this action.
+  return softDeleteSessionImpl(supabase, sessionId, true);
 }
 
 // ---------------------------------------------------------------------------

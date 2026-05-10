@@ -561,11 +561,11 @@ describe('markSessionDoneImpl', () => {
     // Mark done once
     await markSessionDoneImpl(client, createResult.sessionId);
 
-    // Try again
+    // Try again — now returns 'invalid_transition' (done → done is not valid)
     const secondMark = await markSessionDoneImpl(client, createResult.sessionId);
     expect(secondMark.ok).toBe(false);
     if (secondMark.ok) return;
-    expect(secondMark.error).toBe('already_done');
+    expect(secondMark.error).toBe('invalid_transition');
   });
 
   it('returns not_found for non-existent session', async () => {

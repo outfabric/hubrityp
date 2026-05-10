@@ -30,11 +30,11 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         nav: 'flex items-center gap-1',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'absolute left-1 z-10 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'absolute right-1 z-10 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
         ),
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',
@@ -66,6 +66,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           const Icon = orientation === 'left' ? ChevronLeft : ChevronRight;
           return <Icon className="h-4 w-4" {...chevronProps} />;
         },
+        PreviousMonthButton: (props) => <button {...props} name="previous-month" />,
+        NextMonthButton: (props) => <button {...props} name="next-month" />,
       }}
       {...props}
     />

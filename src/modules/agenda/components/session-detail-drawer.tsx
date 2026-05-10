@@ -2,17 +2,7 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Pencil,
-  Repeat,
-  Trash2,
-  Video,
-  X,
-} from 'lucide-react';
+import { Building2, Calendar, Clock, Pencil, Repeat, Trash2, Video, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -21,6 +11,7 @@ import {
   formatSessionDateFull,
   formatSessionTime,
 } from '@/modules/agenda/lib/date-helpers';
+import type { Action, SessionStatus } from '@/modules/agenda/lib/session-status';
 import type { SessionWithDetails } from '@/modules/agenda/server/list-sessions';
 import type { SessionHistory } from '@/shared/db/schema/agenda/tables';
 import {
@@ -33,10 +24,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/ui/alert-dialog';
-import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Separator } from '@/shared/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet';
+
+import { CancelSessionDialog } from './cancel-session-dialog';
+import { DeleteSessionDialog } from './delete-session-dialog';
+import { SessionActionButtons } from './session-action-buttons';
+import { SessionStatusBadge } from './session-status-badge';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -98,38 +93,147 @@ function getLocationIcon(locationType: string | null | undefined) {
   return <Building2 className="text-text-tertiary h-4 w-4 shrink-0" aria-hidden="true" />;
 }
 
-function formatHistoryAction(action: string): string {
-  switch (action) {
-    case 'created':
-      return 'Criada';
-    case 'updated':
-      return 'Atualizada';
-    case 'rescheduled':
-      return 'Reagendada';
-    case 'status_changed':
-      return 'Status alterado';
-    case 'deleted':
-      return 'Excluida';
-    default:
-      return action;
-  }
-}
-
-function formatHistoryDescription(action: string, changes: Record<string, unknown>): string {
-  if (action === 'status_changed' && changes.status) {
-    const statusChange = changes.status as { old: string; new: string };
-    const oldLabel = statusChange.old === 'scheduled' ? 'agendada' : 'realizada';
-    const newLabel = statusChange.new === 'scheduled' ? 'agendada' : 'realizada';
-    return `${oldLabel} → ${newLabel}`;
-  }
-  return '';
-}
-
 function formatAmount(amount: string | null | undefined): string {
   if (!amount) return '';
   const num = parseFloat(amount);
   if (isNaN(num)) return amount;
   return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// ---------------------------------------------------------------------------
+// History formatting — rich, human-readable descriptions in pt-BR
+// ---------------------------------------------------------------------------
+
+/** Maps cancellation reason values to pt-BR labels. */
+const CANCELLATION_REASON_LABEL: Record<string, string> = {
+  patient_cancelled: 'Paciente cancelou',
+  therapist_cancelled: 'Psicologo cancelou',
+  unforeseen: 'Imprevisto',
+  other: 'Outro',
+};
+
+/**
+ * Formats a session history entry into a human-readable pt-BR description.
+ *
+ * Uses the `action` and `changes` JSONB fields to produce descriptions like:
+ * - "Criada em DD/MM/YYYY"
+ * - "Confirmada pelo psicologo em DD/MM/YYYY"
+ * - "Cancelada pelo psicologo em DD/MM/YYYY — Motivo: Paciente cancelou"
+ * - "Marcada como realizada em DD/MM/YYYY"
+ * - "Marcada como falta em DD/MM/YYYY"
+ * - "Reativada em DD/MM/YYYY"
+ * - "Remarcada em DD/MM/YYYY"
+ */
+function formatHistoryEntry(entry: SessionHistory): string {
+  const dateStr = format(new Date(entry.createdAt), 'dd/MM/yyyy', { locale: ptBR });
+  const changes = entry.changes as Record<string, unknown>;
+
+  if (entry.action === 'created') {
+    return `Criada em ${dateStr}`;
+  }
+
+  if (entry.action === 'rescheduled') {
+    return `Remarcada em ${dateStr}`;
+  }
+
+  if (entry.action === 'updated') {
+    return `Atualizada em ${dateStr}`;
+  }
+
+  if (entry.action === 'deleted') {
+    return `Excluida em ${dateStr}`;
+  }
+
+  // Status changed — derive label from the target status
+  if (entry.action === 'status_changed') {
+    const statusChange = changes.status as { old: string; new: string } | undefined;
+
+    // Graceful fallback when the changes JSONB doesn't contain the expected
+    // `status` key (e.g., data written by a prior migration or seed).
+    if (!statusChange) {
+      return `Status alterado em ${dateStr}`;
+    }
+
+    const cancellation = changes.cancellation as
+      | { reason?: string; cancelledBy?: string }
+      | undefined;
+
+    switch (statusChange.new) {
+      case 'confirmed':
+        return `Confirmada pelo psicologo em ${dateStr}`;
+
+      case 'cancelled': {
+        const cancelledByLabel = cancellation?.cancelledBy === 'patient' ? 'paciente' : 'psicologo';
+        const reasonLabel = cancellation?.reason
+          ? (CANCELLATION_REASON_LABEL[cancellation.reason] ?? cancellation.reason)
+          : '';
+        const base = `Cancelada pelo ${cancelledByLabel} em ${dateStr}`;
+        return reasonLabel ? `${base} — Motivo: ${reasonLabel}` : base;
+      }
+
+      case 'done':
+        return `Marcada como realizada em ${dateStr}`;
+
+      case 'no_show':
+        return `Marcada como falta em ${dateStr}`;
+
+      case 'scheduled': {
+        if (changes.reactivated) {
+          return `Reativada em ${dateStr}`;
+        }
+        return `Status alterado para agendada em ${dateStr}`;
+      }
+
+      default:
+        return `Status alterado em ${dateStr}`;
+    }
+  }
+
+  // Fallback — for any unknown action types, display a human-readable
+  // generic message instead of the raw action name.
+  return `Atualizada em ${dateStr}`;
+}
+
+// ---------------------------------------------------------------------------
+// Blocking slot delete dialog — extracted to keep the main component focused
+// ---------------------------------------------------------------------------
+
+function AlertDialogForBlocking({
+  open,
+  onOpenChange,
+  isPending,
+  handleDelete,
+  title,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isPending: boolean;
+  handleDelete: () => void;
+  title: string;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir bloqueio</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir o bloqueio &quot;{title}&quot;? Esta acao nao pode ser
+            desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isPending}
+            className="bg-danger-500 text-text-inverse hover:bg-danger-700"
+          >
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -140,8 +244,8 @@ function formatAmount(amount: string | null | undefined): string {
  * Slide-in drawer for viewing session details.
  *
  * Design System Salvia — Sheet (right 480px desktop, bottom-up mobile).
- * Sections separated by Separator. Badge for status. Button secondary/primary
- * for actions. AlertDialog for delete confirmation on blocking slots.
+ * Sections separated by Separator. SessionStatusBadge in header.
+ * SessionActionButtons in footer. Session history chronological list in body.
  */
 export function SessionDetailDrawer({
   session,
@@ -156,14 +260,18 @@ export function SessionDetailDrawer({
   const [isPending, startTransition] = useTransition();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  // Cancel session dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  // Soft-delete (hard_delete action) dialog state
+  const [softDeleteDialogOpen, setSoftDeleteDialogOpen] = useState(false);
+
   // Track the last session id we fetched history for so we avoid re-fetching
   // unnecessarily and can detect when we need a new fetch.
   const lastFetchedSessionId = useRef<string | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch history when the drawer opens with a (new) session.
-  // Uses a ref to track which session's history we've already fetched,
-  // avoiding direct setState calls in the effect body.
   useEffect(() => {
     if (!open || !session) {
       lastFetchedSessionId.current = null;
@@ -176,7 +284,6 @@ export function SessionDetailDrawer({
     lastFetchedSessionId.current = session.id;
     let cancelled = false;
 
-    // Use a microtask to avoid synchronous setState in effect body
     queueMicrotask(() => {
       if (cancelled) return;
       setHistoryLoading(true);
@@ -197,25 +304,7 @@ export function SessionDetailDrawer({
     };
   }, [open, session]);
 
-  const handleMarkDone = useCallback(() => {
-    if (!session) return;
-
-    startTransition(() => {
-      void import('@/app/(app)/agenda/actions').then(({ markSessionDone }) =>
-        markSessionDone(session.id).then((result) => {
-          if (result.ok) {
-            toast.success('Sessao marcada como realizada');
-            onSessionMutated();
-          } else {
-            const msg =
-              'message' in result ? result.message : 'Erro ao marcar sessao como realizada.';
-            toast.error(msg);
-          }
-        }),
-      );
-    });
-  }, [session, onSessionMutated]);
-
+  // Blocking slot delete handler
   const handleDelete = useCallback(() => {
     if (!session) return;
 
@@ -235,10 +324,99 @@ export function SessionDetailDrawer({
     });
   }, [session, onSessionMutated]);
 
+  // Handler for SessionActionButtons — dispatches each action type to the
+  // appropriate server action or opens a dialog for multi-step flows.
+  const handleAction = useCallback(
+    async (actionType: Action['type']) => {
+      if (!session) return;
+
+      switch (actionType) {
+        case 'confirm': {
+          const { confirmSession } = await import('@/app/(app)/agenda/actions');
+          const result = await confirmSession(session.id);
+          if (result.ok) {
+            toast.success('Sessao confirmada');
+            onSessionMutated();
+          } else {
+            const msg = 'message' in result ? result.message : 'Erro ao confirmar sessao.';
+            toast.error(msg);
+          }
+          break;
+        }
+
+        case 'cancel':
+          setCancelDialogOpen(true);
+          break;
+
+        case 'reschedule':
+          // Open cancel dialog — reschedule starts with cancellation
+          setCancelDialogOpen(true);
+          break;
+
+        case 'mark_done': {
+          const { markSessionDone } = await import('@/app/(app)/agenda/actions');
+          const result = await markSessionDone(session.id);
+          if (result.ok) {
+            toast.success('Sessao marcada como realizada');
+            onSessionMutated();
+          } else {
+            const msg =
+              'message' in result ? result.message : 'Erro ao marcar sessao como realizada.';
+            toast.error(msg);
+          }
+          break;
+        }
+
+        case 'mark_no_show': {
+          const { markSessionNoShow } = await import('@/app/(app)/agenda/actions');
+          const result = await markSessionNoShow(session.id);
+          if (result.ok) {
+            toast.success('Sessao marcada como falta');
+            onSessionMutated();
+          } else {
+            const msg = 'message' in result ? result.message : 'Erro ao marcar sessao como falta.';
+            toast.error(msg);
+          }
+          break;
+        }
+
+        case 'reactivate': {
+          const { reactivateSession } = await import('@/app/(app)/agenda/actions');
+          const result = await reactivateSession(session.id);
+          if (result.ok) {
+            toast.success('Sessao reativada');
+            onSessionMutated();
+          } else {
+            const msg = 'message' in result ? result.message : 'Erro ao reativar sessao.';
+            toast.error(msg);
+          }
+          break;
+        }
+
+        case 'hard_delete':
+          setSoftDeleteDialogOpen(true);
+          break;
+
+        case 'view_record':
+          toast.info('Funcionalidade de prontuario em desenvolvimento.');
+          break;
+
+        case 'add_payment':
+          toast.info('Funcionalidade de pagamento em desenvolvimento.');
+          break;
+
+        case 'charge_no_show':
+          toast.info('Funcionalidade de cobranca em desenvolvimento.');
+          break;
+      }
+    },
+    [session, onSessionMutated],
+  );
+
   if (!session) return null;
 
   const isBlocking = session.isBlocking;
-  const isDone = session.status === 'done';
+  const sessionStatus = session.status as SessionStatus;
 
   // Pass UTC dates directly to formatSessionTime/formatSessionDateFull which
   // use formatInTimeZone internally — no manual toSaoPauloTime shift needed.
@@ -262,24 +440,13 @@ export function SessionDetailDrawer({
               <SheetTitle className="text-text-primary text-[18px] leading-[1.25] font-semibold">
                 {title}
               </SheetTitle>
-              {/* Accessible description for screen readers */}
               <SheetDescription className="sr-only">
                 {isBlocking ? 'Detalhes do bloqueio' : 'Detalhes da sessao'}
               </SheetDescription>
             </div>
             {!isBlocking && (
-              <div className="shrink-0">
-                {isDone ? (
-                  <Badge variant="success" data-testid="session-status-badge">
-                    <CheckCircle2 className="mr-1 h-3 w-3" aria-hidden="true" />
-                    Realizada
-                  </Badge>
-                ) : (
-                  <Badge variant="neutral" data-testid="session-status-badge">
-                    <Clock className="mr-1 h-3 w-3" aria-hidden="true" />
-                    Agendada
-                  </Badge>
-                )}
+              <div className="shrink-0" data-testid="session-status-badge">
+                <SessionStatusBadge status={sessionStatus} />
               </div>
             )}
           </div>
@@ -364,27 +531,17 @@ export function SessionDetailDrawer({
                     <p className="text-text-tertiary text-[12px]">Nenhum registro</p>
                   ) : (
                     <ul className="flex flex-col gap-2" data-testid="session-history-list">
-                      {history.map((entry) => {
-                        const entryDate = new Date(entry.createdAt);
-                        const description = formatHistoryDescription(
-                          entry.action,
-                          entry.changes as Record<string, unknown>,
-                        );
-
-                        return (
-                          <li key={entry.id} className="flex items-start gap-2">
-                            <Clock
-                              className="text-text-tertiary mt-0.5 h-3 w-3 shrink-0"
-                              aria-hidden="true"
-                            />
-                            <span className="text-text-tertiary text-[12px]">
-                              {format(entryDate, 'dd/MM/yyyy HH:mm', { locale: ptBR })} —{' '}
-                              {formatHistoryAction(entry.action)}
-                              {description ? `: ${description}` : ''}
-                            </span>
-                          </li>
-                        );
-                      })}
+                      {history.map((entry) => (
+                        <li key={entry.id} className="flex items-start gap-2">
+                          <Clock
+                            className="text-text-tertiary mt-0.5 h-3 w-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="text-text-tertiary text-[12px]">
+                            {formatHistoryEntry(entry)}
+                          </span>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>
@@ -405,9 +562,33 @@ export function SessionDetailDrawer({
 
           {/* Footer actions */}
           <Separator />
-          <div className="flex items-center justify-end gap-3">
-            {isBlocking ? (
-              <>
+          {isBlocking ? (
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="secondary"
+                size="default"
+                disabled={isPending}
+                onClick={() => onEdit?.(session)}
+                data-testid="session-edit-button"
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+                Editar
+              </Button>
+              <Button
+                variant="destructive"
+                size="default"
+                disabled={isPending}
+                onClick={() => setDeleteDialogOpen(true)}
+                data-testid="session-delete-button"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Excluir
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {/* Edit and recurring cancel buttons */}
+              <div className="flex items-center justify-end gap-3">
                 <Button
                   variant="secondary"
                   size="default"
@@ -418,81 +599,71 @@ export function SessionDetailDrawer({
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                   Editar
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="default"
-                  disabled={isPending}
-                  onClick={() => setDeleteDialogOpen(true)}
-                  data-testid="session-delete-button"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Excluir
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="secondary"
-                  size="default"
-                  disabled={isPending}
-                  onClick={() => onEdit?.(session)}
-                  data-testid="session-edit-button"
-                >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  Editar
-                </Button>
-                {!isDone && session.recurrenceId && (
-                  <Button
-                    variant="secondary"
-                    size="default"
-                    disabled={isPending}
-                    onClick={() => onCancelRecurring?.(session)}
-                    data-testid="session-cancel-recurring-button"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                    Cancelar recorrencia
-                  </Button>
-                )}
-                {!isDone && (
-                  <Button
-                    variant="default"
-                    size="default"
-                    disabled={isPending}
-                    onClick={handleMarkDone}
-                    data-testid="session-mark-done-button"
-                  >
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                    Marcar como realizada
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
+                {sessionStatus !== 'done' &&
+                  sessionStatus !== 'cancelled' &&
+                  session.recurrenceId && (
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      disabled={isPending}
+                      onClick={() => onCancelRecurring?.(session)}
+                      data-testid="session-cancel-recurring-button"
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                      Cancelar recorrencia
+                    </Button>
+                  )}
+              </div>
+              {/* Status-dependent action buttons */}
+              <SessionActionButtons
+                status={sessionStatus}
+                session={{
+                  updatedAt: new Date(session.updatedAt),
+                  deletedAt: session.deletedAt ? new Date(session.deletedAt) : null,
+                }}
+                onAction={handleAction}
+              />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
       {/* Delete confirmation dialog for blocking slots */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir bloqueio</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o bloqueio &quot;{session.blockingTitle ?? 'Bloqueio'}
-              &quot;? Esta acao nao pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isPending}
-              className="bg-danger-500 text-text-inverse hover:bg-danger-700"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AlertDialogForBlocking
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        isPending={isPending}
+        handleDelete={handleDelete}
+        title={session.blockingTitle ?? 'Bloqueio'}
+      />
+
+      {/* Cancel session dialog */}
+      {!isBlocking && (
+        <CancelSessionDialog
+          sessionId={session.id}
+          sessionStartAt={startUtc}
+          open={cancelDialogOpen}
+          onOpenChange={setCancelDialogOpen}
+          onConfirm={async (input) => {
+            const { cancelSession } = await import('@/app/(app)/agenda/actions');
+            return cancelSession(input);
+          }}
+          onSuccess={onSessionMutated}
+        />
+      )}
+
+      {/* Soft-delete session dialog */}
+      {!isBlocking && (
+        <DeleteSessionDialog
+          open={softDeleteDialogOpen}
+          onOpenChange={setSoftDeleteDialogOpen}
+          onConfirm={async () => {
+            const { softDeleteSession } = await import('@/app/(app)/agenda/actions');
+            return softDeleteSession(session.id);
+          }}
+          onSuccess={onSessionMutated}
+        />
+      )}
     </>
   );
 }
