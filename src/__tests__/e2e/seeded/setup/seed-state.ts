@@ -34,6 +34,48 @@ export const SEED_PATIENTS = {
   },
 } as const;
 
+/**
+ * Deterministic seed sessions for public confirmation E2E tests.
+ *
+ * Each session has a unique confirmation_token so the public confirmation
+ * page can be tested without authentication. Tokens are simple repeated
+ * hex chars for test readability.
+ */
+export const SEED_SESSIONS = {
+  /** Confirmable session — future start_at, status='scheduled', has confirmation_token. */
+  confirmable: {
+    id: '00000000-0000-4000-8000-000000000030',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+    confirmationToken: 'd'.repeat(64),
+  },
+  /** Declinable session — future start_at, status='scheduled', has confirmation_token. */
+  declinable: {
+    id: '00000000-0000-4000-8000-000000000031',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    confirmationToken: 'e'.repeat(64),
+  },
+  /** Scheduled session for the cancel-session E2E test (section 17.1). */
+  cancellable: {
+    id: '00000000-0000-4000-8000-000000000032',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+  },
+  /** Confirmed session for the mark-done E2E test (section 17.2). */
+  confirmedForDone: {
+    id: '00000000-0000-4000-8000-000000000033',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+  },
+  /** Scheduled session for the no-show E2E test (section 18.1). */
+  forNoShow: {
+    id: '00000000-0000-4000-8000-000000000034',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+  },
+  /** Done session with old updated_at for the edit-lock E2E test (section 18.2). */
+  lockedDone: {
+    id: '00000000-0000-4000-8000-000000000035',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+  },
+} as const;
+
 export const SEED_CONSENT_TERMS = {
   /** Unsigned consent term — the happy-path test will sign this one. */
   unsigned: {

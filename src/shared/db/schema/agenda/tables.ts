@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -8,6 +9,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -188,8 +190,28 @@ export const sessions = pgTable(
     notes: text('notes'),
     color: varchar('color', { length: 7 }),
 
-    // CHECK constraint in migration: status IN ('scheduled', 'done')
+    // CHECK constraint enforced in Drizzle schema (see `check()` below):
+    // status IN ('scheduled', 'confirmed', 'done', 'cancelled', 'no_show')
     status: text('status').notNull().default('scheduled'),
+
+    // -- Cancellation fields --------------------------------------------------
+    cancellationReason: varchar('cancellation_reason', { length: 50 }),
+    cancelledBy: varchar('cancelled_by', { length: 20 }),
+    cancellationNotice: varchar('cancellation_notice', { length: 20 }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    chargeCancellation: boolean('charge_cancellation').default(false),
+
+    // -- Confirmation fields --------------------------------------------------
+    confirmationToken: varchar('confirmation_token', { length: 64 }),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+
+    // -- Reschedule fields ----------------------------------------------------
+    // Self-referencing FKs: emitted manually in migration.
+    rescheduledToSessionId: uuid('rescheduled_to_session_id'),
+    rescheduledFromSessionId: uuid('rescheduled_from_session_id'),
+
+    // -- Soft-delete (RN-03.05: never hard-delete sessions) -------------------
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -207,6 +229,17 @@ export const sessions = pgTable(
     index('sessions_status_start_at_idx').on(table.status, table.startAt),
     // Recurrence lookup: "all sessions belonging to a recurrence template"
     index('idx_sessions_recurrence').on(table.recurrenceId),
+
+    // Status CHECK — enforces the valid session lifecycle states at DB level.
+    check(
+      'sessions_status_check',
+      sql`${table.status} IN ('scheduled', 'confirmed', 'done', 'cancelled', 'no_show')`,
+    ),
+
+    // Partial UNIQUE on confirmation_token — only non-NULL tokens must be unique.
+    uniqueIndex('sessions_confirmation_token_unique_idx')
+      .on(table.confirmationToken)
+      .where(sql`${table.confirmationToken} IS NOT NULL`),
   ],
 );
 
