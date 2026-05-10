@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, lte, ne } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
 import { locations, sessions, type Session } from '@/shared/db/schema/agenda/tables';
@@ -123,7 +123,7 @@ export async function listSessionsImpl(
           eq(sessions.userId, user.id),
           gte(sessions.startAt, startDate),
           lte(sessions.startAt, endDate),
-          isNull(sessions.deletedAt),
+          ne(sessions.status, 'cancelled'),
         ),
       )
       .orderBy(asc(sessions.startAt));

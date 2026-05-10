@@ -130,13 +130,7 @@ test.describe('@agenda session creation', () => {
 
     // Verify the session now appears on the calendar grid.
     // FullCalendar renders session chips with data-testid="session-chip".
-    // Filter by both patient name and time (14:00) to disambiguate from
-    // seeded sessions for the same patient at other times.
-    const sessionChip = page
-      .getByTestId('session-chip')
-      .filter({ hasText: patientName })
-      .filter({ hasText: '14:00' })
-      .first();
+    const sessionChip = page.getByTestId('session-chip').filter({ hasText: patientName }).first();
     await expect(sessionChip).toBeVisible({ timeout: 10000 });
 
     // Click the session chip to open the detail drawer
@@ -156,6 +150,6 @@ test.describe('@agenda session creation', () => {
 
     // Verify the drawer has action buttons
     await expect(page.getByTestId('session-edit-button')).toBeVisible();
-    await expect(page.getByTestId('action-btn-mark_done')).toBeVisible();
+    await expect(page.getByTestId('session-mark-done-button')).toBeVisible();
   });
 });

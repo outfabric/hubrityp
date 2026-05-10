@@ -39,21 +39,6 @@ export { deleteSessionImpl, type DeleteSessionResult } from './server/delete-ses
 export { markSessionDoneImpl, type MarkSessionDoneResult } from './server/mark-session-done';
 export { getSessionHistoryImpl, type GetSessionHistoryResult } from './server/get-session-history';
 
-// ---- Server Actions (status transitions) ------------------------------------
-export { confirmSessionImpl, type ConfirmSessionResult } from './server/confirm-session';
-export {
-  cancelSessionImpl,
-  type CancelSessionResult,
-  type RescheduleSessionData,
-} from './server/cancel-session';
-export { markSessionNoShowImpl, type MarkSessionNoShowResult } from './server/mark-session-no-show';
-export { reactivateSessionImpl, type ReactivateSessionResult } from './server/reactivate-session';
-export { softDeleteSessionImpl, type SoftDeleteSessionResult } from './server/soft-delete-session';
-export {
-  completeRescheduleImpl,
-  type CompleteRescheduleResult,
-} from './server/complete-reschedule';
-
 // ---- Zod Schemas ------------------------------------------------------------
 export { locationInputSchema, type LocationInput } from './lib/location-input-schema';
 export {
@@ -79,65 +64,3 @@ export {
   calculateEndTime,
   isInPast,
 } from './lib/date-helpers';
-
-// ---- Lib — session status state machine -------------------------------------
-export {
-  SESSION_STATUSES,
-  type SessionStatus,
-  VALID_TRANSITIONS,
-  isValidTransition,
-  type Action,
-  getAvailableActions,
-} from './lib/session-status';
-
-// ---- Lib — session edit lock (RN-03.04) -------------------------------------
-export { isSessionLocked } from './lib/session-lock';
-
-// ---- Lib — cancellation notice calculator -----------------------------------
-export { calculateCancellationNotice, type CancellationNotice } from './lib/cancellation-notice';
-
-// ---- Lib — confirmation token utilities -------------------------------------
-export { generateConfirmationToken, isTokenExpired } from './lib/confirmation-token';
-
-// ---- Lib — Inngest session event schemas ------------------------------------
-export {
-  sessionConfirmedEventSchema,
-  type SessionConfirmedEvent,
-  sessionCancelledEventSchema,
-  type SessionCancelledEvent,
-  sessionDoneEventSchema,
-  type SessionDoneEvent,
-  sessionNoShowEventSchema,
-  type SessionNoShowEvent,
-  sessionRescheduledEventSchema,
-  type SessionRescheduledEvent,
-  sessionMissingNoteReminderEventSchema,
-  type SessionMissingNoteReminderEvent,
-} from './lib/session-events';
-
-// ---- Server Actions (public confirmation flow) ------------------------------
-export {
-  getSessionByTokenImpl,
-  type GetSessionByTokenResult,
-  type PublicSessionData,
-  type TokenState,
-} from './server/get-session-by-token';
-export {
-  publicConfirmSessionImpl,
-  type PublicConfirmSessionResult,
-} from './server/public-confirm-session';
-export {
-  publicDeclineSessionImpl,
-  type PublicDeclineSessionResult,
-} from './server/public-decline-session';
-
-// ---- Inngest — Missing Note Reminder ----------------------------------------
-export {
-  findSessionsMissingNotes,
-  runMissingNoteReminder,
-  type MissingNoteSession,
-  type MissingNoteReminderResult,
-} from './server/missing-note-reminder';
-
-// ---- Zod Schema — cancellation input ----------------------------------------
-export { cancelSessionInputSchema, type CancelSessionInput } from './lib/cancellation-schema';
