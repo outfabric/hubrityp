@@ -43,6 +43,10 @@ export const agendaSettingsPolicies = [
      USING (auth.uid() = user_id);`,
 ] as const;
 
+// RN-03.05: sessions must NEVER be hard-deleted. Cancelled sessions remain
+// in the database for audit integrity. The "Excluir definitivamente" action
+// uses soft-delete (deleted_at) instead. Therefore NO DELETE policy is
+// granted — any DELETE attempt will be blocked by RLS at the database level.
 export const sessionsPolicies = [
   `ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;`,
   `CREATE POLICY "owner can select sessions" ON sessions
@@ -55,9 +59,8 @@ export const sessionsPolicies = [
      FOR UPDATE TO authenticated
      USING (auth.uid() = user_id)
      WITH CHECK (auth.uid() = user_id);`,
-  `CREATE POLICY "owner can delete sessions" ON sessions
-     FOR DELETE TO authenticated
-     USING (auth.uid() = user_id);`,
+  // NO DELETE policy — RN-03.05 prohibits hard deletion of sessions.
+  // All "removal" goes through soft-delete (UPDATE deleted_at).
 ] as const;
 
 export const sessionRecurrencesPolicies = [

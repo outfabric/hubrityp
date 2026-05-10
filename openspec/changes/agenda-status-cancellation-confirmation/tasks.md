@@ -1,12 +1,12 @@
 ## 1. Database Schema — Sessions Extension & Status Constraint
 
-- [ ] 1.1 Extend `sessions` table in `src/shared/db/schema/agenda/tables.ts` with new columns: `cancellation_reason VARCHAR(50)`, `cancelled_by VARCHAR(20)`, `cancellation_notice VARCHAR(20)`, `cancelled_at TIMESTAMPTZ`, `charge_cancellation BOOLEAN DEFAULT FALSE`, `confirmation_token VARCHAR(64)`, `confirmed_at TIMESTAMPTZ`, `rescheduled_to_session_id UUID REFERENCES sessions(id)`, `rescheduled_from_session_id UUID REFERENCES sessions(id)`, `deleted_at TIMESTAMPTZ`
-- [ ] 1.2 Add CHECK constraint on `status` column: `CHECK (status IN ('scheduled', 'confirmed', 'done', 'cancelled', 'no_show'))` via Drizzle `check()` in table definition
-- [ ] 1.3 Add UNIQUE index on `confirmation_token` (partial — WHERE confirmation_token IS NOT NULL)
-- [ ] 1.4 Update RLS policies for `sessions` in `src/shared/db/schema/agenda/policies.ts` — ensure SELECT, INSERT, UPDATE only (NO DELETE policy). Add comment explaining RN-03.05 rationale
-- [ ] 1.5 Run `npm run db:generate`, edit migration to include RLS policy changes, CHECK constraint, and UNIQUE index
-- [ ] 1.6 Test migration with `npm run db:migrate` local
-- [ ] 1.7 **Test integration:** Create `src/__tests__/integration/agenda/session-schema-extension.int.test.ts` — verify new columns exist, CHECK constraint rejects invalid status values, UNIQUE constraint on confirmation_token works, DELETE is blocked by RLS, UPDATE is allowed for owner
+- [x] 1.1 Extend `sessions` table in `src/shared/db/schema/agenda/tables.ts` with new columns: `cancellation_reason VARCHAR(50)`, `cancelled_by VARCHAR(20)`, `cancellation_notice VARCHAR(20)`, `cancelled_at TIMESTAMPTZ`, `charge_cancellation BOOLEAN DEFAULT FALSE`, `confirmation_token VARCHAR(64)`, `confirmed_at TIMESTAMPTZ`, `rescheduled_to_session_id UUID REFERENCES sessions(id)`, `rescheduled_from_session_id UUID REFERENCES sessions(id)`, `deleted_at TIMESTAMPTZ`
+- [x] 1.2 Add CHECK constraint on `status` column: `CHECK (status IN ('scheduled', 'confirmed', 'done', 'cancelled', 'no_show'))` via Drizzle `check()` in table definition
+- [x] 1.3 Add UNIQUE index on `confirmation_token` (partial — WHERE confirmation_token IS NOT NULL)
+- [x] 1.4 Update RLS policies for `sessions` in `src/shared/db/schema/agenda/policies.ts` — ensure SELECT, INSERT, UPDATE only (NO DELETE policy). Add comment explaining RN-03.05 rationale
+- [x] 1.5 Run `npm run db:generate`, edit migration to include RLS policy changes, CHECK constraint, and UNIQUE index
+- [x] 1.6 Test migration with `npm run db:migrate` local
+- [x] 1.7 **Test integration:** Create `src/__tests__/integration/agenda/session-schema-extension.int.test.ts` — verify new columns exist, CHECK constraint rejects invalid status values, UNIQUE constraint on confirmation_token works, DELETE is blocked by RLS, UPDATE is allowed for owner
 
 ## 2. Lib — Status State Machine & Helpers
 

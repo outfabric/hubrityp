@@ -1,6 +1,6 @@
 {
-  "id": "2bb4076a-d5bf-4c59-b22c-0edba8767b8c",
-  "prevId": "d66aa438-c6e6-426d-bcc1-fd7c170045f7",
+  "id": "3fb67ec7-1b57-4cc9-a910-d5374f9fd80f",
+  "prevId": "2bb4076a-d5bf-4c59-b22c-0edba8767b8c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -407,6 +407,67 @@
           "notNull": true,
           "default": "'scheduled'"
         },
+        "cancellation_reason": {
+          "name": "cancellation_reason",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelled_by": {
+          "name": "cancelled_by",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancellation_notice": {
+          "name": "cancellation_notice",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelled_at": {
+          "name": "cancelled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "charge_cancellation": {
+          "name": "charge_cancellation",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "confirmation_token": {
+          "name": "confirmation_token",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rescheduled_to_session_id": {
+          "name": "rescheduled_to_session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rescheduled_from_session_id": {
+          "name": "rescheduled_from_session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -500,13 +561,34 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "sessions_confirmation_token_unique_idx": {
+          "name": "sessions_confirmation_token_unique_idx",
+          "columns": [
+            {
+              "expression": "confirmation_token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"sessions\".\"confirmation_token\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "sessions_status_check": {
+          "name": "sessions_status_check",
+          "value": "\"sessions\".\"status\" IN ('scheduled', 'confirmed', 'done', 'cancelled', 'no_show')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.auth_logs": {
