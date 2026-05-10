@@ -93,8 +93,8 @@
 
 ## 15. Frontend — Integration into Session Detail Modal
 
-- [ ] 15.1 Update session detail modal component (from agenda-foundation-and-sessions) to render `SessionStatusBadge` in header, `SessionActionButtons` in footer, session history chronological list in body. History formatted as: "Criada em DD/MM/YYYY", "Confirmada pelo paciente em DD/MM/YYYY", "Cancelada pelo psicologo em DD/MM/YYYY — Motivo: Paciente cancelou"
-- [ ] 15.2 Update calendar event rendering (from agenda-foundation-and-sessions) to include `SessionStatusBadge` on each event card. Cancelled events rendered with reduced opacity (e.g., `opacity-50`)
+- [x] 15.1 Update session detail modal component (from agenda-foundation-and-sessions) to render `SessionStatusBadge` in header, `SessionActionButtons` in footer, session history chronological list in body. History formatted as: "Criada em DD/MM/YYYY", "Confirmada pelo paciente em DD/MM/YYYY", "Cancelada pelo psicologo em DD/MM/YYYY — Motivo: Paciente cancelou"
+- [x] 15.2 Update calendar event rendering (from agenda-foundation-and-sessions) to include `SessionStatusBadge` on each event card. Cancelled events rendered with reduced opacity (e.g., `opacity-50`)
 
 ## 16. Frontend — Public Confirmation Page
 
