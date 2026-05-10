@@ -77,3 +77,28 @@ export {
 
 // ---- Lib — session edit lock (RN-03.04) -------------------------------------
 export { isSessionLocked } from './lib/session-lock';
+
+// ---- Lib — cancellation notice calculator -----------------------------------
+export { calculateCancellationNotice, type CancellationNotice } from './lib/cancellation-notice';
+
+// ---- Lib — confirmation token utilities -------------------------------------
+export { generateConfirmationToken, isTokenExpired } from './lib/confirmation-token';
+
+// ---- Lib — Inngest session event schemas ------------------------------------
+export {
+  sessionConfirmedEventSchema,
+  type SessionConfirmedEvent,
+  sessionCancelledEventSchema,
+  type SessionCancelledEvent,
+  sessionDoneEventSchema,
+  type SessionDoneEvent,
+  sessionNoShowEventSchema,
+  type SessionNoShowEvent,
+  sessionRescheduledEventSchema,
+  type SessionRescheduledEvent,
+  sessionMissingNoteReminderEventSchema,
+  type SessionMissingNoteReminderEvent,
+} from './lib/session-events';
+
+// ---- Zod Schema — cancellation input ----------------------------------------
+export { cancelSessionInputSchema, type CancelSessionInput } from './lib/cancellation-schema';

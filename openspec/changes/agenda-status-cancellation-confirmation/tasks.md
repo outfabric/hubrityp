@@ -17,23 +17,23 @@
 
 ## 3. Lib — Cancellation Notice Calculator
 
-- [ ] 3.1 Create `src/modules/agenda/lib/cancellation-notice.ts` — export type `CancellationNotice = '24h+' | 'less_24h' | 'less_1h' | 'on_time'`, pure function `calculateCancellationNotice(sessionStartAt: Date, cancelledAt: Date): CancellationNotice` with UTC comparison
-- [ ] 3.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/cancellation-notice.test.ts` — test: 30h before → '24h+', exactly 24h before → '24h+' (boundary inclusive), 23h59m before → 'less_24h', 5h before → 'less_24h', exactly 1h before → 'less_1h' (boundary), 59m before → 'less_1h', 30m before → 'less_1h', 1m before → 'less_1h', exactly at start → 'on_time', 10m after start → 'on_time', 2h after start → 'on_time'
+- [x] 3.1 Create `src/modules/agenda/lib/cancellation-notice.ts` — export type `CancellationNotice = '24h+' | 'less_24h' | 'less_1h' | 'on_time'`, pure function `calculateCancellationNotice(sessionStartAt: Date, cancelledAt: Date): CancellationNotice` with UTC comparison
+- [x] 3.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/cancellation-notice.test.ts` — test: 30h before → '24h+', exactly 24h before → '24h+' (boundary inclusive), 23h59m before → 'less_24h', 5h before → 'less_24h', exactly 1h before → 'less_1h' (boundary), 59m before → 'less_1h', 30m before → 'less_1h', 1m before → 'less_1h', exactly at start → 'on_time', 10m after start → 'on_time', 2h after start → 'on_time'
 
 ## 4. Lib — Confirmation Token Generator
 
-- [ ] 4.1 Create `src/modules/agenda/lib/confirmation-token.ts` — export `generateConfirmationToken(): string` using `crypto.randomBytes(32).toString('base64url')`, and `isTokenExpired(sessionStartAt: Date): boolean`
-- [ ] 4.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/confirmation-token.test.ts` — test: generated token is 43 chars, contains only base64url chars, two generated tokens are different (uniqueness), isTokenExpired returns false for future date, returns true for past date, returns true for current time
+- [x] 4.1 Create `src/modules/agenda/lib/confirmation-token.ts` — export `generateConfirmationToken(): string` using `crypto.randomBytes(32).toString('base64url')`, and `isTokenExpired(sessionStartAt: Date): boolean`
+- [x] 4.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/confirmation-token.test.ts` — test: generated token is 43 chars, contains only base64url chars, two generated tokens are different (uniqueness), isTokenExpired returns false for future date, returns true for past date, returns true for current time
 
 ## 5. Lib — Notification Event Schemas
 
-- [ ] 5.1 Create `src/modules/agenda/lib/session-events.ts` — export Zod schemas and TypeScript types for all Inngest event payloads: `SessionConfirmedEvent`, `SessionCancelledEvent`, `SessionDoneEvent`, `SessionNoShowEvent`, `SessionRescheduledEvent`, `SessionMissingNoteReminderEvent`. Each schema validates the fields listed in design.md decision #5
-- [ ] 5.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/session-events.test.ts` — test: each schema validates a correct payload, each schema rejects payloads with missing required fields, each schema rejects payloads with wrong types
+- [x] 5.1 Create `src/modules/agenda/lib/session-events.ts` — export Zod schemas and TypeScript types for all Inngest event payloads: `SessionConfirmedEvent`, `SessionCancelledEvent`, `SessionDoneEvent`, `SessionNoShowEvent`, `SessionRescheduledEvent`, `SessionMissingNoteReminderEvent`. Each schema validates the fields listed in design.md decision #5
+- [x] 5.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/session-events.test.ts` — test: each schema validates a correct payload, each schema rejects payloads with missing required fields, each schema rejects payloads with wrong types
 
 ## 6. Lib — Cancellation Input Schema (Zod)
 
-- [ ] 6.1 Create `src/modules/agenda/lib/cancellation-schema.ts` — export Zod schema `cancelSessionInputSchema` validating: `sessionId` (UUID), `reason` (enum: 'patient_cancelled' | 'therapist_cancelled' | 'unforeseen' | 'other'), `cancelledBy` (enum: 'patient' | 'therapist'), `chargeCancellation` (boolean), `isReschedule` (boolean optional). Derive TypeScript type via `z.infer`
-- [ ] 6.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/cancellation-schema.test.ts` — test: valid payload passes, missing sessionId fails, invalid reason fails, invalid cancelledBy fails
+- [x] 6.1 Create `src/modules/agenda/lib/cancellation-schema.ts` — export Zod schema `cancelSessionInputSchema` validating: `sessionId` (UUID), `reason` (enum: 'patient_cancelled' | 'therapist_cancelled' | 'unforeseen' | 'other'), `cancelledBy` (enum: 'patient' | 'therapist'), `chargeCancellation` (boolean), `isReschedule` (boolean optional). Derive TypeScript type via `z.infer`
+- [x] 6.2 **Test unit:** Create `src/__tests__/unit/modules/agenda/lib/cancellation-schema.test.ts` — test: valid payload passes, missing sessionId fails, invalid reason fails, invalid cancelledBy fails
 
 ## 7. Server Actions — Status Transitions
 
