@@ -33,8 +33,8 @@
 
 > **Design System Salvia**: h1 28px/600 "Integrações" (`text-text-primary`). Mesma estrutura visual do settings index: grid responsivo `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6` (mesmo com 1 card em v1, grid já preparado para escalar). Cards `interactive` idênticos aos do índice principal (bg `surface`, border `border`, radius `xl`, shadow `xs`, padding `space-6`; hover border `border-strong`). v1 com 1 card: WhatsApp (`MessageCircle` 20px `text-text-secondary`, label h3 18px/600 "WhatsApp", description body-sm 13px/400 `text-text-secondary`).
 
-- [ ] 5.1 Criar `src/app/(app)/configuracoes/integracoes/page.tsx` — Server Component que importa `INTEGRATIONS` e renderiza `<h1>Integrações</h1>` (28px/600) seguido do mesmo padrão de grid de cards usado pelo índice principal. Cada card usa o mesmo styling `Card interactive` e wrapper `<Link>`. Container `data-testid="integrations-index-page"`, cada card `data-testid="integration-card-{slug}"`. Focus ring, tap target e regras de a11y idênticas ao índice principal. NÃO adicionar `mx-auto max-w-[1200px]` — o layout pai provê
-- [ ] 5.2 **Teste unitário:** Criar `src/__tests__/unit/app/(app)/configuracoes/integracoes/page.test.tsx` — verificar h1 "Integrações" renderiza, 1 card com testid `integration-card-whatsapp` renderiza com label, description e href corretos
+- [x] 5.1 Criar `src/app/(app)/configuracoes/integracoes/page.tsx` — Server Component que importa `INTEGRATIONS` e renderiza `<h1>Integrações</h1>` (28px/600) seguido do mesmo padrão de grid de cards usado pelo índice principal. Cada card usa o mesmo styling `Card interactive` e wrapper `<Link>`. Container `data-testid="integrations-index-page"`, cada card `data-testid="integration-card-{slug}"`. Focus ring, tap target e regras de a11y idênticas ao índice principal. NÃO adicionar `mx-auto max-w-[1200px]` — o layout pai provê
+- [x] 5.2 **Teste unitário:** Criar `src/__tests__/unit/app/(app)/configuracoes/integracoes/page.test.tsx` — verificar h1 "Integrações" renderiza, 1 card com testid `integration-card-whatsapp` renderiza com label, description e href corretos
 
 ## 6. Frontend — Lembretes Tabs Nav
 
