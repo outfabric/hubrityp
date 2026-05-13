@@ -9,6 +9,8 @@
 // `'use server'` file MUST be an async function; types cannot be
 // re-exported from here.
 
+import { z } from 'zod';
+
 import type {
   GetConversationResult,
   ListConversationsInput,
@@ -28,6 +30,8 @@ import {
 } from '@/modules/whatsapp';
 import { createServerClient } from '@/shared/supabase/server';
 
+const patientIdSchema = z.string().uuid();
+
 export async function listConversations(
   input: ListConversationsInput = {},
 ): Promise<ListConversationsResult> {
@@ -36,16 +40,24 @@ export async function listConversations(
 }
 
 export async function getConversation(patientId: string): Promise<GetConversationResult> {
+  const parsed = patientIdSchema.safeParse(patientId);
+  if (!parsed.success) {
+    return { ok: false, error: 'patient_not_found' };
+  }
   const supabase = await createServerClient();
-  return getConversationImpl(supabase, patientId);
+  return getConversationImpl(supabase, parsed.data);
 }
 
 export async function sendFreeTextReply(
   patientId: string,
   input: unknown,
 ): Promise<SendFreeTextReplyResult> {
+  const parsed = patientIdSchema.safeParse(patientId);
+  if (!parsed.success) {
+    return { ok: false, error: 'patient_not_found' };
+  }
   const supabase = await createServerClient();
-  return sendFreeTextReplyImpl(supabase, patientId, input);
+  return sendFreeTextReplyImpl(supabase, parsed.data, input);
 }
 
 export async function sendTemplateReply(
@@ -53,15 +65,23 @@ export async function sendTemplateReply(
   templateKey: string,
   variables: Record<string, string>,
 ): Promise<SendTemplateReplyResult> {
+  const parsed = patientIdSchema.safeParse(patientId);
+  if (!parsed.success) {
+    return { ok: false, error: 'patient_not_found' };
+  }
   const supabase = await createServerClient();
-  return sendTemplateReplyImpl(supabase, patientId, templateKey, variables);
+  return sendTemplateReplyImpl(supabase, parsed.data, templateKey, variables);
 }
 
 export async function markConversationResolved(
   patientId: string,
 ): Promise<MarkConversationResolvedResult> {
+  const parsed = patientIdSchema.safeParse(patientId);
+  if (!parsed.success) {
+    return { ok: false, error: 'patient_not_found' };
+  }
   const supabase = await createServerClient();
-  return markConversationResolvedImpl(supabase, patientId);
+  return markConversationResolvedImpl(supabase, parsed.data);
 }
 
 export async function listTemplates(): Promise<ListTemplatesResult> {

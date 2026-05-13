@@ -4,6 +4,8 @@ import { getAnalyticsSummaryImpl, type AnalyticsSummary } from '@/modules/whatsa
 import { AnalyticsDashboard } from '@/modules/whatsapp/components/inbox/analytics-dashboard';
 import { createServerClient } from '@/shared/supabase/server';
 
+import { getAnalyticsSummary, searchMessageHistory } from './actions';
+
 // ---------------------------------------------------------------------------
 // Inner async component — loads initial analytics data on the server
 // ---------------------------------------------------------------------------
@@ -22,7 +24,13 @@ async function AnalyticsServer() {
     );
   }
 
-  return <AnalyticsDashboard initialData={initialData} />;
+  return (
+    <AnalyticsDashboard
+      initialData={initialData}
+      getAnalyticsSummary={getAnalyticsSummary}
+      searchMessageHistory={searchMessageHistory}
+    />
+  );
 }
 
 // ---------------------------------------------------------------------------

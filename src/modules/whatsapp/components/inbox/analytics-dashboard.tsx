@@ -6,11 +6,13 @@ import { CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import type { DateRange } from 'react-day-picker';
 
-import {
-  getAnalyticsSummary,
-  searchMessageHistory,
-} from '@/app/(app)/configuracoes/lembretes/historico/actions';
-import type { AnalyticsSummary, SearchResultItem } from '@/modules/whatsapp';
+import type {
+  AnalyticsSummary,
+  AnalyticsSummaryInput,
+  GetAnalyticsSummaryResult,
+  SearchMessageHistoryResult,
+  SearchResultItem,
+} from '@/modules/whatsapp';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -105,6 +107,8 @@ function statusToBadge(status: string | null): {
 
 interface AnalyticsDashboardProps {
   initialData: AnalyticsSummary;
+  getAnalyticsSummary: (input: AnalyticsSummaryInput) => Promise<GetAnalyticsSummaryResult>;
+  searchMessageHistory: (input: unknown) => Promise<SearchMessageHistoryResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +128,11 @@ interface AnalyticsDashboardProps {
  *   - Table with semantic badges; mobile stacked cards
  *   - Pagination at bottom
  */
-export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({
+  initialData,
+  getAnalyticsSummary,
+  searchMessageHistory,
+}: AnalyticsDashboardProps) {
   const [data, setData] = useState<AnalyticsSummary>(initialData);
   const [period, setPeriod] = useState<PeriodKey>('current_month');
   const [customRange, setCustomRange] = useState<DateRange | undefined>();
@@ -165,7 +173,6 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
   const loadMessages = useCallback((range: PeriodRange, page: number) => {
     startMessageTransition(async () => {
       const result = await searchMessageHistory({
-        query: '*',
         dateRange: {
           from: range.dateFrom.toISOString().split('T')[0],
           to: range.dateTo.toISOString().split('T')[0],

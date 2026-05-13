@@ -22,9 +22,9 @@ import { z } from 'zod';
 export const searchMessageSchema = z
   .object({
     query: z
-      .string({ message: 'A busca é obrigatória.' })
-      .min(1, { message: 'A busca não pode estar vazia.' })
-      .max(200, { message: 'A busca deve ter no máximo 200 caracteres.' }),
+      .string({ message: 'A busca deve ser texto.' })
+      .max(200, { message: 'A busca deve ter no máximo 200 caracteres.' })
+      .optional(),
 
     patientId: z.string().uuid({ message: 'ID do paciente inválido.' }).optional(),
 

@@ -12,7 +12,8 @@ import { whatsappMessages } from '@/shared/db/schema/whatsapp/tables';
 
 export type MarkConversationResolvedResult =
   | { ok: true; resolvedCount: number }
-  | { ok: false; error: 'unauthenticated' };
+  | { ok: false; error: 'unauthenticated' }
+  | { ok: false; error: 'patient_not_found' };
 
 // ---------------------------------------------------------------------------
 // Implementation

@@ -63,10 +63,14 @@ export async function searchMessageHistoryImpl(
   const offset = (page - 1) * pageSize;
 
   // 3. Build WHERE conditions
-  const conditions = [
-    eq(whatsappMessages.userId, user.id),
-    sql`to_tsvector('portuguese', coalesce(${whatsappMessages.body}, '')) @@ plainto_tsquery('portuguese', ${query})`,
-  ];
+  const conditions = [eq(whatsappMessages.userId, user.id)];
+
+  // Only add FTS condition when a real query string is provided
+  if (query && query.trim().length > 0) {
+    conditions.push(
+      sql`to_tsvector('portuguese', coalesce(${whatsappMessages.body}, '')) @@ plainto_tsquery('portuguese', ${query})`,
+    );
+  }
 
   if (patientId) {
     conditions.push(eq(whatsappMessages.patientId, patientId));

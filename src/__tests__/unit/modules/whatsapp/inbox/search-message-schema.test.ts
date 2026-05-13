@@ -45,13 +45,12 @@ describe('searchMessageSchema', () => {
   // Query validation
   // ------------------------------------------------------------------
 
-  it('rejects an empty query', () => {
+  it('accepts an empty query (treated as no FTS filter)', () => {
     const result = searchMessageSchema.safeParse({ query: '' });
 
-    expect(result.success).toBe(false);
-    if (result.success) return;
-    const fieldErrors = result.error.flatten().fieldErrors;
-    expect(fieldErrors.query?.length ?? 0).toBeGreaterThan(0);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.query).toBe('');
   });
 
   it('rejects a query longer than 200 characters', () => {
@@ -69,10 +68,12 @@ describe('searchMessageSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects when query is missing', () => {
+  it('accepts when query is omitted (optional — lists all messages)', () => {
     const result = searchMessageSchema.safeParse({});
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.query).toBeUndefined();
   });
 
   // ------------------------------------------------------------------
