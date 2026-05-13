@@ -1,7 +1,7 @@
 ## 1. Dependencies
 
-- [ ] 1.1 Instalar Twilio Node.js SDK: `npm install twilio`
-- [ ] 1.2 Adicionar env vars ao módulo de validação Zod (`src/shared/env/server.ts`): `TWILIO_ACCOUNT_SID` (string, required), `TWILIO_AUTH_TOKEN` (string, required). Adicionar fallback vazio em dev se necessário para não bloquear build
+- [x] 1.1 Instalar Twilio Node.js SDK: `npm install twilio`
+- [x] 1.2 Adicionar env vars ao módulo de validação Zod (`src/shared/env/server.ts`): `TWILIO_ACCOUNT_SID` (string, required), `TWILIO_AUTH_TOKEN` (string, required). Adicionar fallback vazio em dev se necessário para não bloquear build
 
 ## 2. Database Schema — WhatsApp Tables
 
