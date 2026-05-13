@@ -68,8 +68,48 @@ export {
   type TemplateVariable,
 } from './lib/template-variables';
 
+// ---- Inbox Server Actions ---------------------------------------------------
+export {
+  listConversationsImpl,
+  type ListConversationsInput,
+  type ListConversationsResult,
+  type ConversationListItem,
+} from './server/inbox/list-conversations';
+export {
+  getConversationImpl,
+  type GetConversationResult,
+  type ConversationPatientInfo,
+} from './server/inbox/get-conversation';
+export {
+  sendFreeTextReplyImpl,
+  type SendFreeTextReplyResult,
+  type SendFreeTextReplyDeps,
+} from './server/inbox/send-free-text-reply';
+export {
+  sendTemplateReplyImpl,
+  type SendTemplateReplyResult,
+  type SendTemplateReplyDeps,
+} from './server/inbox/send-template-reply';
+export {
+  markConversationResolvedImpl,
+  type MarkConversationResolvedResult,
+} from './server/inbox/mark-conversation-resolved';
+export {
+  searchMessageHistoryImpl,
+  type SearchMessageHistoryResult,
+  type SearchResultItem,
+} from './server/inbox/search-message-history';
+
+// ---- Inbox schemas ----------------------------------------------------------
+export { freeTextReplySchema, type FreeTextReplyInput } from './lib/inbox/free-text-reply-schema';
+export { searchMessageSchema, type SearchMessageInput } from './lib/inbox/search-message-schema';
+
 // ---- BSP adapter (Twilio) ---------------------------------------------------
 export {
+  sendFreeText,
+  type SendFreeTextInput,
+  type SendFreeTextResult,
+  type SendFreeTextSuccess,
   sendTemplate,
   type SendTemplateInput,
   type SendTemplateResult,
