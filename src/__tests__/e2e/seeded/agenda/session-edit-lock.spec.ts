@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { tomorrowInBrt } from '../_shared/brt-date';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Edit lock for done sessions E2E test (section 18.2).
@@ -19,6 +19,13 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 test.describe('@agenda session edit lock', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.lockedDone.id, {
+      status: 'done',
+      updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+    });
+  });
+
   test('shows lock alert for done session older than 7 days', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeMinimal.fullName;
 
@@ -26,10 +33,17 @@ test.describe('@agenda session edit lock', () => {
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // Switch to day view and navigate to tomorrow
+    // Switch to day view and navigate to tomorrow.
+    // Wait for the period title to reflect tomorrow's date before asserting
+    // on session chips — avoids a race where FullCalendar hasn't re-rendered yet.
+    const tomorrowDay = String(tomorrowInBrt().getDate());
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the seeded done session chip (patient: Joao Santos).
     // There may be two chips for Joao Santos (confirmedForDone and lockedDone).
@@ -37,8 +51,10 @@ test.describe('@agenda session edit lock', () => {
     const sessionChips = page.getByTestId('session-chip').filter({ hasText: patientName });
     await expect(sessionChips.first()).toBeVisible({ timeout: 10000 });
 
-    // Find the chip with a "Realizada" badge (done status)
-    const doneChip = sessionChips.filter({
+    // Find the chip with a "Realizada" badge (done status) at 20:00.
+    // The time filter disambiguates from other João Santos done chips
+    // that may appear when session-mark-done runs in parallel.
+    const doneChip = sessionChips.filter({ hasText: '20:00' }).filter({
       has: page.getByTestId('session-status-badge-done'),
     });
     await expect(doneChip).toBeVisible({ timeout: 5000 });

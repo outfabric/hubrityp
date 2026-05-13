@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { tomorrowInBrt } from '../_shared/brt-date';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Session cancellation E2E test (section 17.1).
@@ -21,6 +21,11 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 test.describe('@agenda session cancellation', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.cancellable.id, { status: 'scheduled' });
+    await db.resetSessionHistory(SEED_SESSIONS.cancellable.id);
+  });
+
   test('cancels a scheduled session via dialog and verifies badge + history', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeWithPhone.fullName;
 
@@ -28,10 +33,18 @@ test.describe('@agenda session cancellation', () => {
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // Switch to day view and navigate to tomorrow (where seeded sessions live)
+    // Switch to day view and navigate to tomorrow (where seeded sessions live).
+    // Wait for the period title to update after each navigation step to avoid
+    // a race where FullCalendar's datesSet callback hasn't fired yet.
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+
+    const tomorrowDay = String(tomorrowInBrt().getDate());
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the cancellable session chip for Maria Silva at 19:00.
     // Filter by patient name, time text, and "Agendada" badge to
@@ -83,6 +96,10 @@ test.describe('@agenda session cancellation', () => {
     await page.waitForTimeout(1000);
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the cancelled session chip (renders with opacity-50 but still visible).
     // Filter by the "Cancelada" badge to find the correct one.
