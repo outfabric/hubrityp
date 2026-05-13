@@ -117,11 +117,16 @@ export async function startTwilioConnectionImpl(
     const twilioUrl = `https://messaging.twilio.com/v2/Channels/Senders`;
     const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
+    // Webhook URLs are wired up by change 2 (whatsapp-reminders-engine).
+    // For now, use a placeholder URL so sender registration succeeds with
+    // valid-looking callback endpoints.
+    const webhookBaseUrl = 'https://placeholder.hubrityp.com.br';
+
     const body = new URLSearchParams({
       sender_id: `whatsapp:${phone}`,
       'profile.name': displayName,
-      'webhook.callback_url': `${serverEnv.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase', 'app') ?? 'https://app.hubrityp.com.br'}/api/webhooks/whatsapp/inbound`,
-      'webhook.status_callback_url': `${serverEnv.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase', 'app') ?? 'https://app.hubrityp.com.br'}/api/webhooks/whatsapp/status`,
+      'webhook.callback_url': `${webhookBaseUrl}/api/webhooks/whatsapp/inbound`,
+      'webhook.status_callback_url': `${webhookBaseUrl}/api/webhooks/whatsapp/status`,
     });
 
     const response = await fetch(twilioUrl, {

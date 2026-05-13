@@ -175,10 +175,14 @@ export async function updateTemplateImpl(
         { event: 'twilio_content_create_failed', status: createResponse.status, templateKey },
         'Failed to create Twilio Content resource',
       );
+      logger.debug(
+        { event: 'twilio_content_create_error_detail', statusCode: createResponse.status, hasBody: !!errorText },
+        'Twilio Content API error detail',
+      );
       return {
         ok: false,
         error: 'twilio_error',
-        message: `Erro ao submeter template ao WhatsApp (${createResponse.status}): ${errorText}`,
+        message: 'Não foi possível enviar o template para aprovação. Tente novamente.',
       };
     }
 

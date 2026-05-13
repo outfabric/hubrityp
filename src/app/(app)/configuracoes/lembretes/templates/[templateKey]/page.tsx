@@ -3,21 +3,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { TemplateEditForm } from '@/modules/whatsapp/components/template-edit-form';
+import { TEMPLATE_LABELS } from '@/modules/whatsapp/lib/template-labels';
 
 import { getTemplate } from './actions';
-
-// ---------------------------------------------------------------------------
-// Label mapping — template_key → human-readable PT-BR name
-// ---------------------------------------------------------------------------
-
-const TEMPLATE_LABELS: Record<string, string> = {
-  lembrete_24h: 'Lembrete 24h',
-  lembrete_2h: 'Lembrete 2h',
-  confirmacao_recebida: 'Confirmação recebida',
-  cancelamento_aviso: 'Aviso de cancelamento',
-  link_video: 'Link de vídeo',
-  termo_consentimento: 'Termo de consentimento',
-};
 
 // ---------------------------------------------------------------------------
 // Page component

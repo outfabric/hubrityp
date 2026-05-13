@@ -8,6 +8,8 @@
 // point for the Next.js compiler. Every export of a `'use server'` file MUST
 // be an async function; types cannot be re-exported from here.
 
+import { revalidatePath } from 'next/cache';
+
 import type {
   CompleteTwilioConnectionResult,
   DisconnectWhatsappResult,
@@ -36,10 +38,18 @@ export async function completeTwilioConnection(
   input: unknown,
 ): Promise<CompleteTwilioConnectionResult> {
   const supabase = await createServerClient();
-  return completeTwilioConnectionImpl(supabase, input);
+  const result = await completeTwilioConnectionImpl(supabase, input);
+  if (result.ok) {
+    revalidatePath('/configuracoes/integracoes/whatsapp');
+  }
+  return result;
 }
 
 export async function disconnectWhatsapp(): Promise<DisconnectWhatsappResult> {
   const supabase = await createServerClient();
-  return disconnectWhatsappImpl(supabase);
+  const result = await disconnectWhatsappImpl(supabase);
+  if (result.ok) {
+    revalidatePath('/configuracoes/integracoes/whatsapp');
+  }
+  return result;
 }

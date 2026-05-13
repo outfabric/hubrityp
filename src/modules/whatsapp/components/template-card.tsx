@@ -4,22 +4,10 @@ import { Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import type { TemplatePreview } from '@/modules/whatsapp';
+import { TEMPLATE_LABELS } from '@/modules/whatsapp/lib/template-labels';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardFooter } from '@/shared/ui/card';
-
-// ---------------------------------------------------------------------------
-// Label mapping — template_key → human-readable PT-BR name
-// ---------------------------------------------------------------------------
-
-const TEMPLATE_LABELS: Record<string, string> = {
-  lembrete_24h: 'Lembrete 24h',
-  lembrete_2h: 'Lembrete 2h',
-  confirmacao_recebida: 'Confirmação recebida',
-  cancelamento_aviso: 'Aviso de cancelamento',
-  link_video: 'Link de vídeo',
-  termo_consentimento: 'Termo de consentimento',
-};
 
 // ---------------------------------------------------------------------------
 // Badge variant mapping — meta_status → Badge variant + label

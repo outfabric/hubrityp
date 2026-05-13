@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { eq, sql as dsql } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { db } from '@/shared/db/client';
 import { messageTemplates } from '@/shared/db/schema/whatsapp/tables';
@@ -70,6 +71,8 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
 /**
  * Seeds the 6 default message templates for a psychologist.
  *
+ * @internal Only call from completeTwilioConnectionImpl after auth.
+ *
  * This is an internal function, NOT a public Server Action. It is called by
  * `completeTwilioConnectionImpl` after a successful WhatsApp connection.
  *
@@ -77,6 +80,7 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
  * inserting duplicates.
  */
 export async function seedDefaultTemplates(userId: string): Promise<void> {
+  z.string().uuid().parse(userId);
   // Check if templates already exist for this user
   const existingCount = await db
     .select({ count: dsql<number>`count(*)::int` })

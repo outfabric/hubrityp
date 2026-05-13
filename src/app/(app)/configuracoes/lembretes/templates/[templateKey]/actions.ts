@@ -6,6 +6,8 @@
 // re-exported from `@/modules/whatsapp`. This file carries `'use server'` so
 // Next.js treats every export as a Server Action entry point.
 
+import { revalidatePath } from 'next/cache';
+
 import type {
   GetTemplateMetaStatusResult,
   GetTemplateResult,
@@ -21,7 +23,11 @@ export async function getTemplate(templateKey: string): Promise<GetTemplateResul
 
 export async function updateTemplate(input: unknown): Promise<UpdateTemplateResult> {
   const supabase = await createServerClient();
-  return updateTemplateImpl(supabase, input);
+  const result = await updateTemplateImpl(supabase, input);
+  if (result.ok) {
+    revalidatePath('/configuracoes/lembretes/templates');
+  }
+  return result;
 }
 
 export async function getTemplateMetaStatus(
