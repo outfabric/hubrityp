@@ -1,3 +1,5 @@
+import { toZonedTime } from 'date-fns-tz';
+
 import { test, expect } from '../setup/db-fixture';
 import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -16,9 +18,10 @@ import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-
  * Flow:
  *   1. Seed a scheduled session (use SEED_SESSIONS.confirmable)
  *   2. Simulate webhook confirmation by setting status='confirmed', confirmed_at=now()
- *   3. Navigate to the agenda in day view on the session's date
- *   4. Click the session chip to open the detail drawer
- *   5. Verify the status badge shows "Confirmada" (success variant)
+ *   3. Read the session's start_at from the DB and compute its BRT date
+ *   4. Navigate to the agenda in day view on the session's BRT date
+ *   5. Click the session chip to open the detail drawer
+ *   6. Verify the status badge shows "Confirmada" (success variant)
  *
  * Prerequisites:
  *   - storageState provides an authenticated psychologist.
@@ -44,35 +47,54 @@ test.describe('@whatsapp confirmation flow', () => {
       WHERE id = ${SEED_SESSIONS.confirmable.id};
     `;
 
+    // Read the session's actual start_at from the DB to compute the correct
+    // BRT calendar date. The seed uses `now() + interval '2 days'` which is
+    // relative to Postgres' clock at seed time — computing this in JS from
+    // the test runner's clock is fragile near midnight BRT boundaries.
+    const rows = await db.sql`
+      SELECT start_at FROM public.sessions WHERE id = ${SEED_SESSIONS.confirmable.id};
+    `;
+    const row = rows[0];
+    expect(row, 'confirmable session must exist in DB').toBeDefined();
+    const sessionStartBrt = toZonedTime(new Date(row!.start_at as string), 'America/Sao_Paulo');
+    const sessionDay = String(sessionStartBrt.getDate());
+
     // Navigate to the agenda page
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // The confirmable session is seeded at "now() + 2 days". Navigate to
-    // find the day that contains it. Since it's 2 days from now, we need
-    // to navigate forward from today.
-    // Switch to day view
+    // Switch to day view and navigate to the session's BRT date.
+    // The session is ~2 days from now. Navigate forward from today until
+    // the period title shows the correct day number.
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
     await page.getByTestId('agenda-nav-today').click();
-    // Go forward 2 days
-    await page.getByTestId('agenda-nav-next').click();
-    await page.getByTestId('agenda-nav-next').click();
 
-    // Wait for the calendar to update and look for the confirmed session chip.
+    // Navigate forward until the period title contains the session's day.
+    // Cap at 5 clicks to avoid an infinite loop if the date is unreachable.
+    for (let i = 0; i < 5; i++) {
+      const title = await page.getByTestId('agenda-period-title').textContent();
+      if (title && new RegExp(`\\b${sessionDay}\\b`).test(title)) break;
+      await page.getByTestId('agenda-nav-next').click();
+    }
+
+    // Wait for the period title to confirm we're on the correct day
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${sessionDay}\\b`),
+      { timeout: 10000 },
+    );
+
     // The confirmable session is for SEED_PATIENTS.activeWithPhone (Maria Silva).
     const patientName = SEED_PATIENTS.activeWithPhone.fullName;
 
-    // Look for a chip with the patient name and the "Confirmada" badge
+    // Find a chip with the patient name and the "Confirmada" badge
     const confirmedChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
       .filter({ has: page.getByTestId('session-status-badge-confirmed') });
     await expect(confirmedChip).toBeVisible({ timeout: 15000 });
 
-    // Click the chip to open the detail drawer.
-    // Use force:true because FullCalendar's fc-event-main overlay intercepts
-    // pointer events on the inner chip element, causing a timeout otherwise.
-    await confirmedChip.click({ force: true });
+    // Click the chip to open the detail drawer
+    await confirmedChip.click();
 
     const drawer = page.getByTestId('session-detail-drawer');
     await expect(drawer).toBeVisible({ timeout: 5000 });
