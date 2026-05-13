@@ -176,7 +176,11 @@ export async function updateTemplateImpl(
         'Failed to create Twilio Content resource',
       );
       logger.debug(
-        { event: 'twilio_content_create_error_detail', statusCode: createResponse.status, hasBody: !!errorText },
+        {
+          event: 'twilio_content_create_error_detail',
+          statusCode: createResponse.status,
+          hasBody: !!errorText,
+        },
         'Twilio Content API error detail',
       );
       return {

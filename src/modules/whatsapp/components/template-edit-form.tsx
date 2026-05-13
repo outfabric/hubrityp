@@ -8,10 +8,10 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { updateTemplate } from '@/app/(app)/configuracoes/lembretes/templates/[templateKey]/actions';
-import type { TemplateInput } from '@/modules/whatsapp/lib/template-input-schema';
-import type { TemplateKey } from '@/modules/whatsapp/lib/template-key-schema';
 import { renderTemplate } from '@/modules/whatsapp/lib/render-template';
 import { templateInputSchema } from '@/modules/whatsapp/lib/template-input-schema';
+import type { TemplateInput } from '@/modules/whatsapp/lib/template-input-schema';
+import type { TemplateKey } from '@/modules/whatsapp/lib/template-key-schema';
 import { TEMPLATE_VARIABLES } from '@/modules/whatsapp/lib/template-variables';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Badge } from '@/shared/ui/badge';
