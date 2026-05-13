@@ -1,8 +1,8 @@
 ## 1. Dependencies
 
-- [ ] 1.1 Instalar Twilio Node.js SDK: `npm install twilio`
-- [ ] 1.2 Verificar que `inngest` ja esta instalado no projeto (change 1 deve ter adicionado); se nao, instalar: `npm install inngest`
-- [ ] 1.3 Adicionar env vars ao schema Zod de serverEnv (`src/shared/env/server.ts`): `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` (numero from do BSP), `TWILIO_WEBHOOK_URL` (URL publica do webhook para validacao HMAC). Adicionar ao `.env.example`
+- [x] 1.1 Instalar Twilio Node.js SDK: `npm install twilio`
+- [x] 1.2 Verificar que `inngest` ja esta instalado no projeto (change 1 deve ter adicionado); se nao, instalar: `npm install inngest`
+- [x] 1.3 Adicionar env vars ao schema Zod de serverEnv (`src/shared/env/server.ts`): `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` (numero from do BSP), `TWILIO_WEBHOOK_URL` (URL publica do webhook para validacao HMAC). Adicionar ao `.env.example`
 
 ## 2. Database Schema — reminder_settings + whatsapp_messages + sessions column
 
