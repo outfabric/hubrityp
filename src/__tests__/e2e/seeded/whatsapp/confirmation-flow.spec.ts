@@ -93,8 +93,21 @@ test.describe('@whatsapp confirmation flow', () => {
       .filter({ has: page.getByTestId('session-status-badge-confirmed') });
     await expect(confirmedChip).toBeVisible({ timeout: 15000 });
 
-    // Click the chip to open the detail drawer
-    await confirmedChip.click();
+    // Click the chip to open the detail drawer.
+    // Use dispatchEvent because FullCalendar's fc-event-main overlay div
+    // can intercept Playwright's standard click actionability check.
+    // This is the same pattern used in recurring-session-edit-scope.spec.ts.
+    await confirmedChip.dispatchEvent('click');
+
+    // Fall back to clicking the parent FullCalendar event wrapper with
+    // force: true if dispatchEvent didn't trigger the eventClick handler.
+    const drawerVisibleAfterDispatch = await page
+      .getByTestId('session-detail-drawer')
+      .isVisible()
+      .catch(() => false);
+    if (!drawerVisibleAfterDispatch) {
+      await confirmedChip.locator('..').click({ force: true });
+    }
 
     const drawer = page.getByTestId('session-detail-drawer');
     await expect(drawer).toBeVisible({ timeout: 5000 });
