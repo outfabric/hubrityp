@@ -31,16 +31,31 @@ test.describe('@whatsapp WhatsApp connection page', () => {
   }) => {
     // --- Phase 1: Disconnected state ---
 
-    // Ensure no whatsapp account exists for this user
+    // Ensure no whatsapp account exists for this user.
+    // Because other whatsapp e2e tests run in parallel and may INSERT
+    // rows for the same user_id between our DELETE and the page render,
+    // we delete-then-navigate in a short retry loop to guarantee a
+    // clean disconnected state.
     const seed = await readSeedState();
-    await db.sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
 
-    // Navigate to WhatsApp integration page
-    const cacheBust = Date.now();
-    await page.goto(`/configuracoes/integracoes/whatsapp?_=${cacheBust}`);
+    const MAX_DISCONNECT_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_DISCONNECT_ATTEMPTS; attempt++) {
+      await db.sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
+      const cacheBust = Date.now();
+      await page.goto(`/configuracoes/integracoes/whatsapp?_=${cacheBust}`);
+      await expect(page.getByTestId('whatsapp-integration-page-title')).toBeVisible();
+
+      const badge = page.getByTestId('whatsapp-status-badge');
+      const text = await badge.textContent();
+      if (text === 'Nao conectado') break;
+      if (attempt === MAX_DISCONNECT_ATTEMPTS) {
+        // Final attempt failed — let Playwright's assertion produce a
+        // clear error message.
+        await expect(badge).toHaveText('Nao conectado');
+      }
+    }
 
     // Verify page title
-    await expect(page.getByTestId('whatsapp-integration-page-title')).toBeVisible();
     await expect(page.getByTestId('whatsapp-integration-page-title')).toHaveText('WhatsApp');
 
     // Verify the "Nao conectado" badge
