@@ -76,6 +76,14 @@ export const patients = pgTable(
     consentSignedAt: timestamp('consent_signed_at', { withTimezone: true }),
     consentRevokedAt: timestamp('consent_revoked_at', { withTimezone: true }),
 
+    // --- WhatsApp opt-out controls ---
+    // When `true`, the patient has opted out of WhatsApp reminders (LGPD).
+    whatsappOptOut: boolean('whatsapp_opt_out').notNull().default(false),
+    // Timestamp when the patient opted out (null = never opted out).
+    whatsappOptOutAt: timestamp('whatsapp_opt_out_at', { withTimezone: true }),
+    // Override phone for WhatsApp reminders (falls back to `phone` when null).
+    reminderPhone: varchar('reminder_phone', { length: 20 }),
+
     // --- Couple linking (for future `patient-guardians-and-couples` change) ---
     coupleId: uuid('couple_id'),
 

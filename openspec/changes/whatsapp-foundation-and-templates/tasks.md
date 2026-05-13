@@ -15,10 +15,10 @@
 
 ## 3. Database Schema — Patient Opt-out Columns
 
-- [ ] 3.1 Adicionar colunas em `src/shared/db/schema/patients/tables.ts` na tabela `patients`: whatsapp_opt_out (boolean DEFAULT false), whatsapp_opt_out_at (timestamptz nullable), reminder_phone (varchar 20 nullable)
-- [ ] 3.2 Rodar `npm run db:generate`, verificar que a migration gerada apenas adiciona as 3 colunas com defaults corretos. Nenhuma alteração de RLS necessária (policies existentes já cobrem todas as colunas da tabela)
-- [ ] 3.3 Testar migration com `npm run db:migrate` local
-- [ ] 3.4 **Teste de integração:** Criar `src/__tests__/integration/whatsapp/whatsapp-schema.int.test.ts` — verificar: tabelas whatsapp_accounts e message_templates existem, RLS habilitado em ambas, CHECK constraints funcionam (rejeita provider='z_api', rejeita meta_status='expired', rejeita template_key='invalido', rejeita status='suspended'), UNIQUE(user_id) em whatsapp_accounts funciona, UNIQUE(user_id, template_key) em message_templates funciona, FK constraints com auth.users funcionam, colunas opt-out em patients existem com defaults corretos (whatsapp_opt_out=false, whatsapp_opt_out_at=null, reminder_phone=null)
+- [x] 3.1 Adicionar colunas em `src/shared/db/schema/patients/tables.ts` na tabela `patients`: whatsapp_opt_out (boolean DEFAULT false), whatsapp_opt_out_at (timestamptz nullable), reminder_phone (varchar 20 nullable)
+- [x] 3.2 Rodar `npm run db:generate`, verificar que a migration gerada apenas adiciona as 3 colunas com defaults corretos. Nenhuma alteração de RLS necessária (policies existentes já cobrem todas as colunas da tabela)
+- [x] 3.3 Testar migration com `npm run db:migrate` local
+- [x] 3.4 **Teste de integração:** Criar `src/__tests__/integration/whatsapp/whatsapp-schema.int.test.ts` — verificar: tabelas whatsapp_accounts e message_templates existem, RLS habilitado em ambas, CHECK constraints funcionam (rejeita provider='z_api', rejeita meta_status='expired', rejeita template_key='invalido', rejeita status='suspended'), UNIQUE(user_id) em whatsapp_accounts funciona, UNIQUE(user_id, template_key) em message_templates funciona, FK constraints com auth.users funcionam, colunas opt-out em patients existem com defaults corretos (whatsapp_opt_out=false, whatsapp_opt_out_at=null, reminder_phone=null)
 
 ## 4. Validators — Zod Schemas
 
