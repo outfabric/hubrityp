@@ -178,6 +178,16 @@ export {
 export { WhatsAppHealthBanner } from './components/whatsapp-health-banner';
 export { ReminderSettingsForm } from './components/reminder-settings-form';
 
+// ---- Inbox Components -------------------------------------------------------
+export { ConversationList } from './components/inbox/conversation-list';
+export { ConversationListItem as ConversationListItemComponent } from './components/inbox/conversation-list-item';
+export { ConversationsFilters, type InboxFilter } from './components/inbox/conversations-filters';
+export { ConversationThread } from './components/inbox/conversation-thread';
+export { RiskAlertBanner } from './components/inbox/risk-alert-banner';
+export { MessageComposer } from './components/inbox/message-composer';
+export { TemplateReplyDialog } from './components/inbox/template-reply-dialog';
+export { MarkResolvedButton } from './components/inbox/mark-resolved-button';
+
 // ---- Reminder Server Actions ------------------------------------------------
 export {
   getReminderSettingsImpl,
