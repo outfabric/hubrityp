@@ -48,7 +48,7 @@
 
 > **Design System Salvia**: o breadcrumb compartilhado do layout `configuracoes/layout.tsx` substitui o breadcrumb manual da página de edição de template. h1 da página permanece com label legível do template (microcopy do template).
 
-- [ ] 7.1 Atualizar `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/page.tsx` — remover o bloco manual `<nav aria-label="Breadcrumb">` (linhas com o `<ol>` breadcrumb). Manter o `<h1>` com label do template. Remover imports não utilizados (`ChevronRight`, `Link`) se ficarem órfãos. Não tocar em lógica de fetch/Server Actions
+- [x] 7.1 Atualizar `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/page.tsx` — remover o bloco manual `<nav aria-label="Breadcrumb">` (linhas com o `<ol>` breadcrumb). Manter o `<h1>` com label do template. Remover imports não utilizados (`ChevronRight`, `Link`) se ficarem órfãos. Não tocar em lógica de fetch/Server Actions
 
 ## 8. Frontend — Existing Page Adjustments
 
