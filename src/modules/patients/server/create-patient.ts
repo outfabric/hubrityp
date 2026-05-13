@@ -112,6 +112,8 @@ export async function createPatientImpl(
 
   // 6. Insert via Drizzle
   try {
+    const whatsappOptOut = data.whatsapp_opt_out ?? false;
+
     const [inserted] = await db
       .insert(patients)
       .values({
@@ -131,6 +133,9 @@ export async function createPatientImpl(
         tags: data.tags ?? [],
         notes: data.notes ?? null,
         status: 'active',
+        whatsappOptOut,
+        whatsappOptOutAt: whatsappOptOut ? new Date() : null,
+        reminderPhone: data.reminder_phone ?? null,
       })
       .returning({ id: patients.id });
 

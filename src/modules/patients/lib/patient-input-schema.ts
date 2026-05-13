@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { phoneNumberSchema } from '@/modules/whatsapp/lib/phone-number-schema';
+
 import { createGuardianSchema } from './guardian-input-schema';
 import {
   GENDERS,
@@ -151,6 +153,10 @@ export const createPatientBaseSchema = z.object({
     .string()
     .max(5000, { message: 'Anotações devem ter no máximo 5000 caracteres.' })
     .optional(),
+
+  // WhatsApp opt-out controls
+  whatsapp_opt_out: z.boolean().optional().default(false),
+  reminder_phone: phoneNumberSchema.optional().nullable(),
 
   // Guardians — required for child/adolescent (at least 1, max 2)
   guardians: z.array(createGuardianSchema).max(2).optional(),

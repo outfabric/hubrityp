@@ -68,9 +68,9 @@ export async function updatePatientImpl(
   const data: UpdatePatientInput = parsed.data;
   const userId = user.id;
 
-  // 3. Verify patient exists and belongs to user
+  // 3. Verify patient exists and belongs to user (fetch whatsappOptOut for transition detection)
   const [existing] = await db
-    .select({ id: patients.id })
+    .select({ id: patients.id, whatsappOptOut: patients.whatsappOptOut })
     .from(patients)
     .where(and(eq(patients.id, patientId), eq(patients.userId, userId)))
     .limit(1);
@@ -156,6 +156,24 @@ export async function updatePatientImpl(
   if (data.tags !== undefined) updatePayload.tags = data.tags ?? [];
   if (data.notes !== undefined) updatePayload.notes = data.notes ?? null;
   if (data.status !== undefined) updatePayload.status = data.status;
+
+  // WhatsApp opt-out controls
+  if (data.whatsapp_opt_out !== undefined) {
+    updatePayload.whatsappOptOut = data.whatsapp_opt_out;
+
+    // Handle opt-out timestamp transitions
+    const wasOptedOut = existing.whatsappOptOut;
+    const isNowOptedOut = data.whatsapp_opt_out;
+
+    if (!wasOptedOut && isNowOptedOut) {
+      // Transitioning false -> true: set timestamp
+      updatePayload.whatsappOptOutAt = new Date();
+    } else if (wasOptedOut && !isNowOptedOut) {
+      // Transitioning true -> false: clear timestamp
+      updatePayload.whatsappOptOutAt = null;
+    }
+  }
+  if (data.reminder_phone !== undefined) updatePayload.reminderPhone = data.reminder_phone ?? null;
 
   try {
     await db
