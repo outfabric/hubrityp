@@ -56,8 +56,8 @@
 
 ## 8. Server Action — Patient Opt-out
 
-- [ ] 8.1 Criar `src/modules/whatsapp/server/update-patient-whatsapp-opt-out.ts` — Server Action que: valida input (patient_id uuid, whatsapp_opt_out boolean, opt_out_reason string opcional), autentica via session, atualiza paciente: se opt_out=true seta whatsapp_opt_out=true + whatsapp_opt_out_at=now; se opt_out=false seta whatsapp_opt_out=false + whatsapp_opt_out_at=null. Revalida path do paciente. Retorna success
-- [ ] 8.2 **Teste de integração:** Criar `src/__tests__/integration/whatsapp/patient-opt-out.int.test.ts` — testar contra Postgres real: toggle opt-out para true grava timestamp, toggle de volta para false limpa timestamp, RLS cross-user (psicólogo A não pode alterar opt-out de paciente de B), reminder_phone com formato válido E.164 aceito, reminder_phone com formato inválido rejeitado via schema, defaults corretos para paciente novo (opt_out=false, opt_out_at=null, reminder_phone=null)
+- [x] 8.1 Criar `src/modules/whatsapp/server/update-patient-whatsapp-opt-out.ts` — Server Action que: valida input (patient_id uuid, whatsapp_opt_out boolean, opt_out_reason string opcional), autentica via session, atualiza paciente: se opt_out=true seta whatsapp_opt_out=true + whatsapp_opt_out_at=now; se opt_out=false seta whatsapp_opt_out=false + whatsapp_opt_out_at=null. Revalida path do paciente. Retorna success
+- [x] 8.2 **Teste de integração:** Criar `src/__tests__/integration/whatsapp/patient-opt-out.int.test.ts` — testar contra Postgres real: toggle opt-out para true grava timestamp, toggle de volta para false limpa timestamp, RLS cross-user (psicólogo A não pode alterar opt-out de paciente de B), reminder_phone com formato válido E.164 aceito, reminder_phone com formato inválido rejeitado via schema, defaults corretos para paciente novo (opt_out=false, opt_out_at=null, reminder_phone=null)
 
 ## 9. Module Barrel
 

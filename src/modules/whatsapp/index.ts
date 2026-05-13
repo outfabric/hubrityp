@@ -53,6 +53,13 @@ export {
   type GetTemplateMetaStatusResult,
 } from './server/get-template-meta-status';
 
+export {
+  updatePatientWhatsappOptOutImpl,
+  updatePatientOptOutInputSchema,
+  type UpdatePatientOptOutResult,
+  type UpdatePatientOptOutInput,
+} from './server/update-patient-whatsapp-opt-out';
+
 // ---- Internal helpers (not Server Actions) -----------------------------------
 export { seedDefaultTemplates } from './server/seed-default-templates';
 
