@@ -11,8 +11,8 @@
 
 > **Design System Salvia**: sidebar nav item "Configurações" com ícone `Settings` 20px (Lucide, stroke 1.5px), padding `space-2 space-3`, radius `md`, label cedilha-correto seguindo glossário fixo. Active state (em qualquer rota `/configuracoes/*`): text `brand-700`, bg `brand-50`, border-left 3px `brand-500`. Idle: text `text-secondary`. Hover: text `text-primary`, bg `surface`.
 
-- [ ] 2.1 Atualizar `src/app/(app)/sidebar-nav.tsx` — alterar item de configurações de `{ label: 'Configuracoes', href: '/configuracoes/locais' }` para `{ label: 'Configurações', href: '/configuracoes' }`. Manter ícone `Settings`, manter posição última. A lógica `pathname.startsWith(item.href)` continua marcando ativo em todas as sub-rotas
-- [ ] 2.2 **Teste unitário:** Criar `src/__tests__/unit/app/(app)/sidebar-nav.test.tsx` — verificar que o item renderiza com label "Configurações" (com diacríticos), linka para `/configuracoes` (não `/configuracoes/locais`), usa ícone `Settings`, e fica ativo (text-brand-700, bg-brand-50) em pathname `/configuracoes` e em sub-rotas como `/configuracoes/lembretes/templates`
+- [x] 2.1 Atualizar `src/app/(app)/sidebar-nav.tsx` — alterar item de configurações de `{ label: 'Configuracoes', href: '/configuracoes/locais' }` para `{ label: 'Configurações', href: '/configuracoes' }`. Manter ícone `Settings`, manter posição última. A lógica `pathname.startsWith(item.href)` continua marcando ativo em todas as sub-rotas
+- [x] 2.2 **Teste unitário:** Criar `src/__tests__/unit/app/(app)/sidebar-nav.test.tsx` — verificar que o item renderiza com label "Configurações" (com diacríticos), linka para `/configuracoes` (não `/configuracoes/locais`), usa ícone `Settings`, e fica ativo (text-brand-700, bg-brand-50) em pathname `/configuracoes` e em sub-rotas como `/configuracoes/lembretes/templates`
 
 ## 3. Frontend — Settings Index Page
 
