@@ -212,6 +212,18 @@ export const whatsappMessages = pgTable(
     deliveredAt: timestamp('delivered_at', { withTimezone: true }),
     readAt: timestamp('read_at', { withTimezone: true }),
 
+    // Inbox: when the psychologist marked this message as read in the inbox UI
+    readAtByPsychologist: timestamp('read_at_by_psychologist', { withTimezone: true }),
+
+    // Inbox: when the psychologist resolved/closed this conversation thread item
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+
+    // Risk detection: whether this message contains risk-related keywords
+    riskFlag: boolean('risk_flag').notNull().default(false),
+
+    // Risk detection: array of risk keywords detected in the message body
+    riskKeywords: jsonb('risk_keywords').$type<string[]>(),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
@@ -223,8 +235,72 @@ export const whatsappMessages = pgTable(
     index('whatsapp_messages_session_id_idx').on(table.sessionId),
     // Patient conversation history: "all messages for this patient, newest first"
     index('whatsapp_messages_patient_id_created_at_idx').on(table.patientId, table.createdAt),
+    // Thread queries: "all messages for this user+patient, newest first"
+    index('whatsapp_messages_user_patient_created_at_idx').on(
+      table.userId,
+      table.patientId,
+      table.createdAt,
+    ),
   ],
 );
 
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 export type NewWhatsappMessage = typeof whatsappMessages.$inferInsert;
+
+// `whatsapp_conversations` is a materialized aggregate table that stores
+// one row per (psychologist, patient) pair. It is maintained by the Inngest
+// `inbox-message-ingest` function via upsert on every inbound message.
+//
+// This table powers the inbox list UI — showing the latest message preview,
+// unread count, and risk flag for each patient conversation.
+//
+// UNIQUE(user_id, patient_id) ensures one conversation per psychologist-patient
+// pair.
+//
+// Indexes:
+// - (user_id, last_message_at DESC) for the inbox list sorted by recency
+// - (user_id, has_risk) for filtering conversations with risk flags
+//
+// FK constraints to auth.users, patients, and whatsapp_messages are added
+// manually in the migration (cross-schema / cross-table references).
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+export const whatsappConversations = pgTable(
+  'whatsapp_conversations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    // FK to `whatsapp_messages`. Emitted manually in migration.
+    lastMessageId: uuid('last_message_id').notNull(),
+
+    lastMessageAt: timestamp('last_message_at', { withTimezone: true }).notNull(),
+
+    lastMessagePreview: varchar('last_message_preview', { length: 80 }).notNull(),
+
+    unreadCount: integer('unread_count').notNull().default(0),
+
+    hasRisk: boolean('has_risk').notNull().default(false),
+
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
+  },
+  (table) => [
+    // One conversation per psychologist-patient pair
+    unique('whatsapp_conversations_user_id_patient_id_unique').on(table.userId, table.patientId),
+    // Inbox list: "all conversations for this user, newest first"
+    index('whatsapp_conversations_user_id_last_message_at_idx').on(
+      table.userId,
+      table.lastMessageAt,
+    ),
+    // Risk filter: "all conversations with risk flags for this user"
+    index('whatsapp_conversations_user_id_has_risk_idx').on(table.userId, table.hasRisk),
+  ],
+);
+
+export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
+export type NewWhatsappConversation = typeof whatsappConversations.$inferInsert;
