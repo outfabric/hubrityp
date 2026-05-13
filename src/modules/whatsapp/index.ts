@@ -99,6 +99,12 @@ export {
   type SearchMessageHistoryResult,
   type SearchResultItem,
 } from './server/inbox/search-message-history';
+export {
+  getAnalyticsSummaryImpl,
+  type GetAnalyticsSummaryResult,
+  type AnalyticsSummary,
+  type AnalyticsSummaryInput,
+} from './server/inbox/get-analytics-summary';
 
 // ---- Inbox schemas ----------------------------------------------------------
 export { freeTextReplySchema, type FreeTextReplyInput } from './lib/inbox/free-text-reply-schema';

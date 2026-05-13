@@ -54,8 +54,8 @@
 
 ## 8. Server Actions — Analytics
 
-- [ ] 8.1 Criar `src/modules/whatsapp/server/inbox/get-analytics-summary.ts` — Server Action: recebe periodo (dateFrom, dateTo, defaults mes corrente). Queries agregadas em whatsapp_messages WHERE user_id AND created_at BETWEEN: total_sent (direction='outbound'), total_delivered (status IN ('delivered','read')), total_read (status='read'), total_confirmed (COUNT sessions com confirmed_at no periodo via JOIN whatsapp_messages.session_id), total_failed (status='failed'). Custo estimado: COUNT(direction='outbound' AND template_key IS NOT NULL) * TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL. Retorna objeto com todas as metricas
-- [ ] 8.2 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/inbox/analytics-summary.int.test.ts` — testar: contagens corretas por periodo (seed mensagens com diversos status), custo calculado com preco default, filtros de periodo funcionam, RLS cross-user isolado
+- [x] 8.1 Criar `src/modules/whatsapp/server/inbox/get-analytics-summary.ts` — Server Action: recebe periodo (dateFrom, dateTo, defaults mes corrente). Queries agregadas em whatsapp_messages WHERE user_id AND created_at BETWEEN: total_sent (direction='outbound'), total_delivered (status IN ('delivered','read')), total_read (status='read'), total_confirmed (COUNT sessions com confirmed_at no periodo via JOIN whatsapp_messages.session_id), total_failed (status='failed'). Custo estimado: COUNT(direction='outbound' AND template_key IS NOT NULL) * TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL. Retorna objeto com todas as metricas
+- [x] 8.2 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/inbox/analytics-summary.int.test.ts` — testar: contagens corretas por periodo (seed mensagens com diversos status), custo calculado com preco default, filtros de periodo funcionam, RLS cross-user isolado
 
 ## 9. Module Barrel
 
