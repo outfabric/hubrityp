@@ -18,8 +18,8 @@
 
 ## 3. Validators — Zod Schemas
 
-- [ ] 3.1 Criar `src/modules/whatsapp/lib/reminders/reminder-settings-schema.ts` — Zod schema: early_reminder_hours (z.number().nullable(), refinement: se nao null, deve ser um de [12, 24, 48]), final_reminder_hours (z.number().nullable(), refinement: se nao null, deve ser um de [0.5, 1, 2]), video_link_minutes (z.number(), um de [15, 30, 60]), send_during_night (z.boolean()). Exportar tipo via z.infer
-- [ ] 3.2 **Teste unitario:** Criar `src/__tests__/unit/modules/whatsapp/lib/reminders/reminder-settings-schema.test.ts` — testar: input valido com todos os campos, early_reminder_hours null aceito, valor invalido (6) rejeitado, final_reminder_hours null aceito, video_link_minutes invalido (45) rejeitado, campos obrigatorios ausentes rejeitados
+- [x] 3.1 Criar `src/modules/whatsapp/lib/reminders/reminder-settings-schema.ts` — Zod schema: early_reminder_hours (z.number().nullable(), refinement: se nao null, deve ser um de [12, 24, 48]), final_reminder_hours (z.number().nullable(), refinement: se nao null, deve ser um de [0.5, 1, 2]), video_link_minutes (z.number(), um de [15, 30, 60]), send_during_night (z.boolean()). Exportar tipo via z.infer
+- [x] 3.2 **Teste unitario:** Criar `src/__tests__/unit/modules/whatsapp/lib/reminders/reminder-settings-schema.test.ts` — testar: input valido com todos os campos, early_reminder_hours null aceito, valor invalido (6) rejeitado, final_reminder_hours null aceito, video_link_minutes invalido (45) rejeitado, campos obrigatorios ausentes rejeitados
 
 ## 4. Pure Functions — compute-reminder-window, select-template-variables, idempotency-key
 
