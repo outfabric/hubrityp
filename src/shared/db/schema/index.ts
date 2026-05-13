@@ -5,3 +5,4 @@ export * from './agenda/tables';
 export * from './auth/tables';
 export * from './health/tables';
 export * from './patients/tables';
+export * from './whatsapp/tables';
