@@ -72,8 +72,8 @@
 
 ## 11. Notifications In-App (minimal)
 
-- [ ] 11.1 Verificar se existe helper `notify(userId, payload)` ou tabela `notifications`. Se nao existir, criar tabela `notifications` em `src/shared/db/schema/notifications/tables.ts`: id (uuid PK), user_id (uuid NOT NULL, FK auth.users), type (varchar 50 NOT NULL), title (varchar 200 NOT NULL), body (text), action_url (text), read_at (timestamptz), created_at (timestamptz DEFAULT now()). RLS por user_id. Criar helper `src/modules/notifications/server/notify.ts` que insere na tabela
-- [ ] 11.2 Criar `src/modules/notifications/index.ts` — barrel exportando `notify`
+- [x] 11.1 Verificar se existe helper `notify(userId, payload)` ou tabela `notifications`. Se nao existir, criar tabela `notifications` em `src/shared/db/schema/notifications/tables.ts`: id (uuid PK), user_id (uuid NOT NULL, FK auth.users), type (varchar 50 NOT NULL), title (varchar 200 NOT NULL), body (text), action_url (text), read_at (timestamptz), created_at (timestamptz DEFAULT now()). RLS por user_id. Criar helper `src/modules/notifications/server/notify.ts` que insere na tabela
+- [x] 11.2 Criar `src/modules/notifications/index.ts` — barrel exportando `notify`
 
 ## 12. Frontend — Configuracoes > Lembretes
 
