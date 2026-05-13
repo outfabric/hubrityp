@@ -20,10 +20,10 @@
 
 ## 5. Fix Patient Listing Tests — Deterministic Assertions
 
-- [ ] 5.1 Rewrite test L39 ("empty state renders when no patients exist") — since seed always has 2 active patients, change to verify `patient-list` is visible with at least 2 patient rows/cards. Remove the impossible empty-state branch.
-- [ ] 5.2 Rewrite test L56 ("+ Novo Paciente button") — replace `.isVisible().catch(() => false)` with direct `await expect(page.getByTestId('patient-add-button')).toBeVisible()`
-- [ ] 5.3 Rewrite test L68 ("search input") — remove conditional `if (hasList)` guard, replace with direct assertions since Suspense wait in beforeEach guarantees the list is rendered
-- [ ] 5.4 Review remaining tests in the file (L83 status filter, L116 seeded data, L143 search filters, L166 pagination) — apply same pattern: remove `.isVisible().catch(() => false)` and conditional guards where state is deterministic
+- [x] 5.1 Rewrite test L39 ("empty state renders when no patients exist") — since seed always has 2 active patients, change to verify `patient-list` is visible with at least 2 patient rows/cards. Remove the impossible empty-state branch.
+- [x] 5.2 Rewrite test L56 ("+ Novo Paciente button") — replace `.isVisible().catch(() => false)` with direct `await expect(page.getByTestId('patient-add-button')).toBeVisible()`
+- [x] 5.3 Rewrite test L68 ("search input") — remove conditional `if (hasList)` guard, replace with direct assertions since Suspense wait in beforeEach guarantees the list is rendered
+- [x] 5.4 Review remaining tests in the file (L83 status filter, L116 seeded data, L143 search filters, L166 pagination) — apply same pattern: remove `.isVisible().catch(() => false)` and conditional guards where state is deterministic
 
 ## 6. Validation
 
