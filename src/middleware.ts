@@ -83,6 +83,16 @@ const ONBOARDING_PATH = '/onboarding/pending';
 const DASHBOARD_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 
+// Every path prefix that belongs to the `(app)` layout group and requires
+// an active session. `/onboarding/*` and `/auth/*` have their own path
+// classes and are NOT listed here.
+const APP_PREFIXES: readonly string[] = [
+  '/dashboard',
+  '/agenda',
+  '/pacientes',
+  '/configuracoes',
+];
+
 // Each distinct row in the decision table maps to one PathClass value.
 type PathClass =
   | 'auth'
@@ -120,10 +130,11 @@ function classifyPath(pathname: string): PathClass {
   if (pathname === ONBOARDING_PATH || pathname.startsWith(`${ONBOARDING_PATH}/`)) {
     return 'onboarding';
   }
-  // `(app)` shell: today only `/dashboard*`. The strict prefix check (with
-  // a separator or exact match) keeps `/some/dashboard-news` out of the
-  // gated set -- see the matcher-boundary regression test.
-  if (pathname === DASHBOARD_PATH || pathname.startsWith(`${DASHBOARD_PATH}/`)) {
+  // `(app)` shell: every route inside the `(app)` layout group requires an
+  // authenticated session. The strict prefix check (exact match OR
+  // `prefix/…`) keeps unrelated paths like `/some/dashboard-news` out of
+  // the gated set -- see the matcher-boundary regression test.
+  if (APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return 'app';
   }
   return 'public';
