@@ -59,7 +59,7 @@
 
 ## 9. Module Barrel
 
-- [ ] 9.1 Atualizar `src/modules/whatsapp/index.ts` — adicionar reexports de: Server Actions inbox (listConversations, getConversation, sendFreeTextReply, sendTemplateReply, markConversationResolved, searchMessageHistory, getAnalyticsSummary), lib (detectRiskKeywords, checkClinicalContent, formatConversationTime), validators (freeTextReplySchema, searchMessageSchema), tipos inferidos
+- [x] 9.1 Atualizar `src/modules/whatsapp/index.ts` — adicionar reexports de: Server Actions inbox (listConversations, getConversation, sendFreeTextReply, sendTemplateReply, markConversationResolved, searchMessageHistory, getAnalyticsSummary), lib (detectRiskKeywords, checkClinicalContent, formatConversationTime), validators (freeTextReplySchema, searchMessageSchema), tipos inferidos
 
 ## 10. Frontend — Sidebar Update (Modify app-shell)
 

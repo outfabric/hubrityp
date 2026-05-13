@@ -110,6 +110,14 @@ export {
 export { freeTextReplySchema, type FreeTextReplyInput } from './lib/inbox/free-text-reply-schema';
 export { searchMessageSchema, type SearchMessageInput } from './lib/inbox/search-message-schema';
 
+// ---- Inbox lib helpers ------------------------------------------------------
+export { detectRiskKeywords, type RiskDetectionResult } from './lib/inbox/detect-risk-keywords';
+export {
+  checkClinicalContent,
+  type ClinicalContentResult,
+} from './lib/inbox/clinical-content-blocker';
+export { formatConversationTime } from './lib/inbox/format-conversation-time';
+
 // ---- BSP adapter (Twilio) ---------------------------------------------------
 export {
   sendFreeText,
