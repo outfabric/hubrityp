@@ -72,8 +72,10 @@ test.describe('@whatsapp confirmation flow', () => {
       .filter({ has: page.getByTestId('session-status-badge-confirmed') });
     await expect(confirmedChip).toBeVisible({ timeout: 15000 });
 
-    // Click the chip to open the detail drawer
-    await confirmedChip.click();
+    // Click the chip to open the detail drawer.
+    // Use force:true because FullCalendar's fc-event-main overlay intercepts
+    // pointer events on the inner chip element, causing a timeout otherwise.
+    await confirmedChip.click({ force: true });
 
     const drawer = page.getByTestId('session-detail-drawer');
     await expect(drawer).toBeVisible({ timeout: 5000 });
