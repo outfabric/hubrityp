@@ -61,7 +61,7 @@
 
 ## 9. Module Barrel
 
-- [ ] 9.1 Criar `src/modules/whatsapp/index.ts` — barrel reexportando: Server Actions (startTwilioConnection, completeTwilioConnection, getWhatsappAccount, disconnectWhatsapp, healthCheckWhatsapp, listTemplates, getTemplate, updateTemplate, getTemplateMetaStatus, updatePatientWhatsappOptOut), validators (templateInputSchema, templateKeySchema, phoneNumberSchema), lib (renderTemplate, TEMPLATE_VARIABLES, getVariableByKey), tipos inferidos dos schemas
+- [x] 9.1 Criar `src/modules/whatsapp/index.ts` — barrel reexportando: Server Actions (startTwilioConnection, completeTwilioConnection, getWhatsappAccount, disconnectWhatsapp, healthCheckWhatsapp, listTemplates, getTemplate, updateTemplate, getTemplateMetaStatus, updatePatientWhatsappOptOut), validators (templateInputSchema, templateKeySchema, phoneNumberSchema), lib (renderTemplate, TEMPLATE_VARIABLES, getVariableByKey), tipos inferidos dos schemas
 
 ## 10. Frontend — Página Integrações WhatsApp
 

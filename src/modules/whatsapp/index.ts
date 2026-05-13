@@ -60,9 +60,6 @@ export {
   type UpdatePatientOptOutInput,
 } from './server/update-patient-whatsapp-opt-out';
 
-// ---- Internal helpers (not Server Actions) -----------------------------------
-export { seedDefaultTemplates } from './server/seed-default-templates';
-
 // ---- Zod Schemas -------------------------------------------------------------
 export { phoneNumberSchema, type PhoneNumber } from './lib/phone-number-schema';
 export { templateKeySchema, type TemplateKey } from './lib/template-key-schema';
