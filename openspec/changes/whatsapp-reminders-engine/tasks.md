@@ -77,9 +77,9 @@
 
 ## 12. Frontend — Configuracoes > Lembretes
 
-- [ ] 12.1 Criar Server Component `src/app/(app)/configuracoes/lembretes/page.tsx` — titulo h1 "Configuracoes de Lembretes" (28px/600). Carrega settings via Server Action getReminderSettings. Renderiza form component
-- [ ] 12.2 Criar componente `src/modules/whatsapp/components/reminder-settings-form.tsx` (Client Component) — Card default (border, radius xl, padding space-6, shadow xs). React Hook Form + Zod (reminderSettingsSchema). Secoes separadas por Separator: "Lembrete antecipado" RadioGroup (Nao enviar/24h/12h/48h), "Lembrete final" RadioGroup (Nao enviar/2h/1h/30min), "Aviso de link de video" Select (15/30/60 min), "Enviar de madrugada" Switch (OFF default) com helper text body-sm text-tertiary. Footer: "Salvar" Button primary (loading state). Toast Sonner success "Configuracoes de lembretes salvas" border-left success-500
-- [ ] 12.3 Criar route actions `src/app/(app)/configuracoes/lembretes/actions.ts` com `'use server'` — delega getReminderSettings, saveReminderSettings
+- [x] 12.1 Criar Server Component `src/app/(app)/configuracoes/lembretes/page.tsx` — titulo h1 "Configuracoes de Lembretes" (28px/600). Carrega settings via Server Action getReminderSettings. Renderiza form component
+- [x] 12.2 Criar componente `src/modules/whatsapp/components/reminder-settings-form.tsx` (Client Component) — Card default (border, radius xl, padding space-6, shadow xs). React Hook Form + Zod (reminderSettingsSchema). Secoes separadas por Separator: "Lembrete antecipado" RadioGroup (Nao enviar/24h/12h/48h), "Lembrete final" RadioGroup (Nao enviar/2h/1h/30min), "Aviso de link de video" Select (15/30/60 min), "Enviar de madrugada" Switch (OFF default) com helper text body-sm text-tertiary. Footer: "Salvar" Button primary (loading state). Toast Sonner success "Configuracoes de lembretes salvas" border-left success-500
+- [x] 12.3 Criar route actions `src/app/(app)/configuracoes/lembretes/actions.ts` com `'use server'` — delega getReminderSettings, saveReminderSettings
 
 ## 13. Frontend — Checkbox em session-form (modify agenda-sessions)
 
