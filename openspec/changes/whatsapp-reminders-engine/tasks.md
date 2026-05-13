@@ -65,10 +65,10 @@
 
 ## 10. Server Actions — Settings + Toggle
 
-- [ ] 10.1 Criar `src/modules/whatsapp/server/reminders/get-reminder-settings.ts` — Server Action que busca reminder_settings por user_id. Se nao existe, retorna defaults (early=24, final=2, video=30, night=false)
-- [ ] 10.2 Criar `src/modules/whatsapp/server/reminders/save-reminder-settings.ts` — Server Action que valida input com reminderSettingsSchema, faz upsert (INSERT ON CONFLICT user_id DO UPDATE). Revalida path '/app/configuracoes/lembretes'
-- [ ] 10.3 Criar `src/modules/whatsapp/server/reminders/toggle-session-reminders.ts` — Server Action que recebe sessionId e remindersDisabled (boolean), verifica ownership, atualiza sessions.reminders_disabled
-- [ ] 10.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/reminder-settings-crud.int.test.ts` — testar contra Postgres real: get sem registro (retorna defaults), save cria registro, save atualiza existente, RLS cross-user bloqueado, toggle-session-reminders funciona e verifica ownership
+- [x] 10.1 Criar `src/modules/whatsapp/server/reminders/get-reminder-settings.ts` — Server Action que busca reminder_settings por user_id. Se nao existe, retorna defaults (early=24, final=2, video=30, night=false)
+- [x] 10.2 Criar `src/modules/whatsapp/server/reminders/save-reminder-settings.ts` — Server Action que valida input com reminderSettingsSchema, faz upsert (INSERT ON CONFLICT user_id DO UPDATE). Revalida path '/app/configuracoes/lembretes'
+- [x] 10.3 Criar `src/modules/whatsapp/server/reminders/toggle-session-reminders.ts` — Server Action que recebe sessionId e remindersDisabled (boolean), verifica ownership, atualiza sessions.reminders_disabled
+- [x] 10.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/reminder-settings-crud.int.test.ts` — testar contra Postgres real: get sem registro (retorna defaults), save cria registro, save atualiza existente, RLS cross-user bloqueado, toggle-session-reminders funciona e verifica ownership
 
 ## 11. Notifications In-App (minimal)
 

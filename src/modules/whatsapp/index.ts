@@ -110,3 +110,18 @@ export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
 export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
 export { selectTemplateVariables } from './lib/reminders/select-template-variables';
 export { reminderSettingsSchema } from './lib/reminders/reminder-settings-schema';
+
+// ---- Reminder Server Actions ------------------------------------------------
+export {
+  getReminderSettingsImpl,
+  type GetReminderSettingsResult,
+  type ReminderSettingsData,
+} from './server/reminders/get-reminder-settings';
+export {
+  saveReminderSettingsImpl,
+  type SaveReminderSettingsResult,
+} from './server/reminders/save-reminder-settings';
+export {
+  toggleSessionRemindersImpl,
+  type ToggleSessionRemindersResult,
+} from './server/reminders/toggle-session-reminders';
