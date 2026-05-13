@@ -109,10 +109,14 @@ export { webhookStopHandler } from './inngest/webhook-stop-handler';
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
 export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
 export { selectTemplateVariables } from './lib/reminders/select-template-variables';
-export { reminderSettingsSchema } from './lib/reminders/reminder-settings-schema';
+export {
+  reminderSettingsSchema,
+  type ReminderSettingsInput,
+} from './lib/reminders/reminder-settings-schema';
 
-// ---- Components (Server) ----------------------------------------------------
+// ---- Components -------------------------------------------------------------
 export { WhatsAppHealthBanner } from './components/whatsapp-health-banner';
+export { ReminderSettingsForm } from './components/reminder-settings-form';
 
 // ---- Reminder Server Actions ------------------------------------------------
 export {

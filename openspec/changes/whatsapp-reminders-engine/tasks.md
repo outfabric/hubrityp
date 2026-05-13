@@ -94,11 +94,11 @@
 
 ## 15. Frontend — Route Actions (Inngest registration)
 
-- [ ] 15.1 Registrar todas as Inngest functions no serve handler: reminders-dispatcher, reminder-sender, confirmation-ack-sender, cancellation-notice-sender, reconciliation-poller. Atualizar `src/app/api/inngest/route.ts` (ou criar se nao existir)
+- [x] 15.1 Registrar todas as Inngest functions no serve handler: reminders-dispatcher, reminder-sender, confirmation-ack-sender, cancellation-notice-sender, reconciliation-poller. Atualizar `src/app/api/inngest/route.ts` (ou criar se nao existir)
 
 ## 16. Module Barrel
 
-- [ ] 16.1 Atualizar `src/modules/whatsapp/index.ts` — adicionar reexports de: Server Actions (getReminderSettings, saveReminderSettings, toggleSessionReminders), lib/reminders (computeReminderWindow, selectTemplateVariables, generateIdempotencyKey, reminderSettingsSchema), adapters (sendTemplate), components (ReminderSettingsForm, WhatsAppHealthBanner)
+- [x] 16.1 Atualizar `src/modules/whatsapp/index.ts` — adicionar reexports de: Server Actions (getReminderSettings, saveReminderSettings, toggleSessionReminders), lib/reminders (computeReminderWindow, selectTemplateVariables, generateIdempotencyKey, reminderSettingsSchema), adapters (sendTemplate), components (ReminderSettingsForm, WhatsAppHealthBanner)
 
 ## 17. E2E Tests
 
