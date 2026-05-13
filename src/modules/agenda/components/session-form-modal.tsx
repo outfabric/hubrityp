@@ -31,6 +31,7 @@ import {
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
+import { Checkbox } from '@/shared/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -128,6 +129,8 @@ function buildIsoDatetime(date: Date, time: string): string {
 interface PatientOption {
   id: string;
   fullName: string;
+  phone: string | null;
+  whatsappOptOut: boolean;
 }
 
 interface LocationOption {
@@ -151,6 +154,11 @@ export interface SessionEditData {
   amount: string | null;
   notes: string | null;
   color: string | null;
+  remindersDisabled: boolean;
+  /** Patient phone — used to determine if the WhatsApp reminder checkbox is visible. */
+  patientPhone: string | null;
+  /** Whether the patient opted out of WhatsApp. When true, reminder checkbox is hidden. */
+  patientWhatsappOptOut: boolean;
 }
 
 /** Shared result shape for create/update callbacks. */
@@ -371,6 +379,9 @@ export function SessionFormModal({
   const [isPending, startTransition] = useTransition();
   const [conflicts, setConflicts] = useState<ConflictResult[]>([]);
   const [selectedPatientName, setSelectedPatientName] = useState<string | null>(null);
+  // Patient WhatsApp eligibility — used to conditionally show the "disable reminders" checkbox.
+  const [selectedPatientPhone, setSelectedPatientPhone] = useState<string | null>(null);
+  const [selectedPatientOptOut, setSelectedPatientOptOut] = useState(false);
   // Resolved patients for the couple session fields dropdown
   const [resolvedPatients, setResolvedPatients] = useState<CouplePatientOption[]>([]);
   // Couple/recurrence state captured directly via form.watch() for submit routing.
@@ -403,6 +414,7 @@ export function SessionFormModal({
       amount: undefined,
       notes: '',
       color: undefined,
+      reminders_disabled: false,
       force_conflict: false,
     },
   });
@@ -472,6 +484,8 @@ export function SessionFormModal({
       setSelectedDate(zonedDate);
       setSelectedTime(timeStr);
       setSelectedPatientName(session.patientName);
+      setSelectedPatientPhone(session.patientPhone);
+      setSelectedPatientOptOut(session.patientWhatsappOptOut);
 
       form.reset({
         patient_id: session.patientId ?? undefined,
@@ -484,6 +498,7 @@ export function SessionFormModal({
         amount: session.amount ?? undefined,
         notes: session.notes ?? '',
         color: session.color ?? undefined,
+        reminders_disabled: session.remindersDisabled,
         force_conflict: false,
       });
     } else {
@@ -494,6 +509,8 @@ export function SessionFormModal({
       setSelectedDate(initialDate);
       setSelectedTime(initialTime);
       setSelectedPatientName(null);
+      setSelectedPatientPhone(null);
+      setSelectedPatientOptOut(false);
 
       form.reset({
         patient_id: undefined,
@@ -505,6 +522,7 @@ export function SessionFormModal({
         amount: undefined,
         notes: '',
         color: undefined,
+        reminders_disabled: false,
         force_conflict: false,
       });
     }
@@ -529,7 +547,12 @@ export function SessionFormModal({
 
   function handlePatientSelect(patient: PatientOption) {
     setSelectedPatientName(patient.fullName);
+    setSelectedPatientPhone(patient.phone);
+    setSelectedPatientOptOut(patient.whatsappOptOut);
     form.setValue('patient_id', patient.id, { shouldValidate: true });
+    // Reset reminders_disabled when switching patients (the new patient may
+    // not be eligible for WhatsApp reminders).
+    form.setValue('reminders_disabled', false);
     // Track resolved patients for the couple session dropdown
     setResolvedPatients((prev) => {
       const exists = prev.some((p) => p.id === patient.id);
@@ -887,6 +910,31 @@ export function SessionFormModal({
                 </p>
               )}
             </div>
+
+            {/* WhatsApp reminder suppression — visible only when the selected
+                patient has a phone number and has NOT opted out of WhatsApp. */}
+            {selectedPatientPhone && !selectedPatientOptOut && !form.watch('is_blocking') && (
+              <div className="flex items-start gap-2" data-testid="session-form-reminders-disabled">
+                <Checkbox
+                  id="session-reminders-disabled"
+                  checked={form.watch('reminders_disabled') ?? false}
+                  onCheckedChange={(checked) =>
+                    form.setValue('reminders_disabled', checked === true)
+                  }
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="session-reminders-disabled"
+                    className="cursor-pointer leading-none font-normal"
+                  >
+                    Nao enviar lembretes WhatsApp para esta sessao
+                  </Label>
+                  <p className="text-text-tertiary text-sm">
+                    Util quando o paciente avisou que nao pode receber
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Color */}
             <div className="space-y-2">

@@ -86,11 +86,21 @@ export async function listLocations(): Promise<ListLocationsResult> {
 
 /**
  * Searches patients by name for the session form combobox.
- * Returns a lightweight list: only id and full_name.
+ * Returns id, full_name, phone, and whatsapp_opt_out so the form can
+ * conditionally show the "disable WhatsApp reminders" checkbox.
  */
-export async function searchPatients(
-  query: string,
-): Promise<{ ok: true; patients: Array<{ id: string; fullName: string }> } | { ok: false }> {
+export async function searchPatients(query: string): Promise<
+  | {
+      ok: true;
+      patients: Array<{
+        id: string;
+        fullName: string;
+        phone: string | null;
+        whatsappOptOut: boolean;
+      }>;
+    }
+  | { ok: false }
+> {
   const supabase = await createServerClient();
   const result: ListPatientsResult = await listPatientsImpl(supabase, {
     search: query,
@@ -107,7 +117,12 @@ export async function searchPatients(
 
   return {
     ok: true,
-    patients: result.patients.map((p) => ({ id: p.id, fullName: p.fullName })),
+    patients: result.patients.map((p) => ({
+      id: p.id,
+      fullName: p.fullName,
+      phone: p.phone ?? null,
+      whatsappOptOut: p.whatsappOptOut,
+    })),
   };
 }
 

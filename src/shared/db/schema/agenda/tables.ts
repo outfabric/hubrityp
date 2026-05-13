@@ -210,6 +210,10 @@ export const sessions = pgTable(
     rescheduledToSessionId: uuid('rescheduled_to_session_id'),
     rescheduledFromSessionId: uuid('rescheduled_from_session_id'),
 
+    // -- Reminders opt-out per session ----------------------------------------
+    // When TRUE, no WhatsApp reminders are sent for this specific session.
+    remindersDisabled: boolean('reminders_disabled').default(false),
+
     // -- Soft-delete (RN-03.05: never hard-delete sessions) -------------------
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
 

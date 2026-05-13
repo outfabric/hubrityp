@@ -257,6 +257,7 @@ export async function createRecurringSessionImpl(
         amount: sessionData.amount ?? null,
         notes: sessionData.notes ?? null,
         color: sessionData.color ?? null,
+        remindersDisabled: sessionData.reminders_disabled ?? false,
         status: 'scheduled',
       }));
 

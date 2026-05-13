@@ -29,6 +29,8 @@ export const serverEnvSchema = clientEnvSchema.extend({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_WHATSAPP_FROM: z.string().optional(),
+  TWILIO_WEBHOOK_URL: z.string().url().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
