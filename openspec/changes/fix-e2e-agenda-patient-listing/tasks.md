@@ -5,10 +5,10 @@
 
 ## 2. Fix Agenda Tests — Session Reset
 
-- [ ] 2.1 `session-cancel.spec.ts` — import `{ test, expect }` from `db-fixture`, add `beforeEach` that calls `db.resetSession(SEED_SESSIONS.cancellable.id, { status: 'scheduled' })` and `db.resetSessionHistory(SEED_SESSIONS.cancellable.id)`
-- [ ] 2.2 `session-mark-done.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.confirmedForDone` to `{ status: 'confirmed', confirmed_at: now() }`
-- [ ] 2.3 `session-no-show.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.forNoShow` to `{ status: 'scheduled' }`
-- [ ] 2.4 `session-edit-lock.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.lockedDone` to `{ status: 'done', updated_at: now() - 8 days }`
+- [x] 2.1 `session-cancel.spec.ts` — import `{ test, expect }` from `db-fixture`, add `beforeEach` that calls `db.resetSession(SEED_SESSIONS.cancellable.id, { status: 'scheduled' })` and `db.resetSessionHistory(SEED_SESSIONS.cancellable.id)`
+- [x] 2.2 `session-mark-done.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.confirmedForDone` to `{ status: 'confirmed', confirmed_at: now() }`
+- [x] 2.3 `session-no-show.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.forNoShow` to `{ status: 'scheduled' }`
+- [x] 2.4 `session-edit-lock.spec.ts` — import from `db-fixture`, add `beforeEach` that resets `SEED_SESSIONS.lockedDone` to `{ status: 'done', updated_at: now() - 8 days }`
 
 ## 3. Fix Agenda Tests — Locator Disambiguation
 

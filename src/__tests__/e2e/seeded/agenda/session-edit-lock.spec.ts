@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Edit lock for done sessions E2E test (section 18.2).
@@ -18,6 +17,13 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  */
 test.describe('@agenda session edit lock', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
+
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.lockedDone.id, {
+      status: 'done',
+      updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+    });
+  });
 
   test('shows lock alert for done session older than 7 days', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeMinimal.fullName;

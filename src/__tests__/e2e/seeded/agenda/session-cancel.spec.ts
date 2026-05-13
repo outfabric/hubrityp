@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Session cancellation E2E test (section 17.1).
@@ -20,6 +19,11 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  */
 test.describe('@agenda session cancellation', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
+
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.cancellable.id, { status: 'scheduled' });
+    await db.resetSessionHistory(SEED_SESSIONS.cancellable.id);
+  });
 
   test('cancels a scheduled session via dialog and verifies badge + history', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeWithPhone.fullName;

@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Mark session as no-show E2E test (section 18.1).
@@ -22,6 +21,10 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  */
 test.describe('@agenda session no-show', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
+
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.forNoShow.id, { status: 'scheduled' });
+  });
 
   test('marks a scheduled session as no-show and verifies badge', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeWithPhone.fullName;

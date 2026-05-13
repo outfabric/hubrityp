@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test';
-
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { expect, test } from '../setup/db-fixture';
+import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @agenda -- Mark session as done E2E test (section 17.2).
@@ -18,6 +17,13 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  */
 test.describe('@agenda mark session as done', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
+
+  test.beforeEach(async ({ db }) => {
+    await db.resetSession(SEED_SESSIONS.confirmedForDone.id, {
+      status: 'confirmed',
+      confirmedAt: new Date(),
+    });
+  });
 
   test('marks a confirmed session as done and verifies badge + history', async ({ page }) => {
     const patientName = SEED_PATIENTS.activeMinimal.fullName;
