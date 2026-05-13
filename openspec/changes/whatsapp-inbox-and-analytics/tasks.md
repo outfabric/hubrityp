@@ -22,8 +22,8 @@
 
 ## 4. Pure Functions — Timestamp Formatting
 
-- [ ] 4.1 Criar `src/modules/whatsapp/lib/inbox/format-conversation-time.ts` — funcao pura `formatConversationTime(date: Date, now?: Date): string`. Regras: <1 min = "agora", hoje = "h HH:mm" (ex: "h 14:30"), ontem = "ontem", <1 ano = "DD/MM", >=1 ano = "DD/MM/YYYY". Usa date-fns com locale pt-BR e timezone America/Sao_Paulo
-- [ ] 4.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/format-conversation-time.test.ts` — testar: "agora" (<1min), "h 14:30" (hoje), "ontem" (dia anterior), "15/05" (mesmo ano), "15/05/2025" (ano diferente), boundary cases (exatamente 1 min, meia-noite)
+- [x] 4.1 Criar `src/modules/whatsapp/lib/inbox/format-conversation-time.ts` — funcao pura `formatConversationTime(date: Date, now?: Date): string`. Regras: <1 min = "agora", hoje = "h HH:mm" (ex: "h 14:30"), ontem = "ontem", <1 ano = "DD/MM", >=1 ano = "DD/MM/YYYY". Usa date-fns com locale pt-BR e timezone America/Sao_Paulo
+- [x] 4.2 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/format-conversation-time.test.ts` — testar: "agora" (<1min), "h 14:30" (hoje), "ontem" (dia anterior), "15/05" (mesmo ano), "15/05/2025" (ano diferente), boundary cases (exatamente 1 min, meia-noite)
 
 ## 5. Validators — Zod Schemas
 
