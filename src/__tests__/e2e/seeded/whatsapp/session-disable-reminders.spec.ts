@@ -45,9 +45,7 @@ test.describe('@whatsapp session disable reminders', () => {
     const patientResults = page.getByTestId('session-form-patient-results');
     await expect(patientResults).toBeVisible({ timeout: 5000 });
 
-    const patientOption = page.getByTestId(
-      `patient-option-${SEED_PATIENTS.activeWithPhone.id}`,
-    );
+    const patientOption = page.getByTestId(`patient-option-${SEED_PATIENTS.activeWithPhone.id}`);
     await expect(patientOption).toBeVisible({ timeout: 5000 });
     await patientOption.click();
 

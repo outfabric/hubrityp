@@ -65,9 +65,7 @@ export async function WhatsAppHealthBanner() {
     <Alert variant="danger" role="alert" aria-live="assertive" data-testid="whatsapp-health-banner">
       <AlertTriangle className="h-5 w-5" aria-hidden="true" />
       <AlertDescription className="flex items-center justify-between gap-4">
-        <span>
-          Sua conexao com WhatsApp expirou. Lembretes nao estao sendo enviados.
-        </span>
+        <span>Sua conexao com WhatsApp expirou. Lembretes nao estao sendo enviados.</span>
         <Button variant="link" size="sm" asChild className="text-danger-700 shrink-0">
           <Link href="/configuracoes/integracoes/whatsapp">Reconectar</Link>
         </Button>

@@ -33,10 +33,7 @@ test.describe('@whatsapp confirmation flow', () => {
     await db.resetSession(SEED_SESSIONS.confirmable.id, { status: 'scheduled' });
   });
 
-  test('session shows as Confirmada after simulated webhook confirmation', async ({
-    page,
-    db,
-  }) => {
+  test('session shows as Confirmada after simulated webhook confirmation', async ({ page, db }) => {
     // Simulate the confirmation that the Inngest webhook-confirmation-handler
     // would perform: set status to 'confirmed' and confirmed_at to now()
     await db.sql`
