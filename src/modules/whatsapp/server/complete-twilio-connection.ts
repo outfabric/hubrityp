@@ -102,7 +102,7 @@ export async function completeTwilioConnectionImpl(
     const response = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: body.toString(),
@@ -164,7 +164,10 @@ export async function completeTwilioConnectionImpl(
     }
 
     logger.error(
-      { event: 'complete_connection_error', errorName: err instanceof Error ? err.name : 'UnknownError' },
+      {
+        event: 'complete_connection_error',
+        errorName: err instanceof Error ? err.name : 'UnknownError',
+      },
       'unexpected error completing Twilio connection',
     );
     return {

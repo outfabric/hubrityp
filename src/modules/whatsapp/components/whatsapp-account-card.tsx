@@ -29,10 +29,7 @@ import { ConnectWhatsappDialog } from './connect-whatsapp-dialog';
 
 interface WhatsappAccountCardProps {
   account: WhatsappAccount | null;
-  onDisconnect: () => Promise<
-    | { ok: true }
-    | { ok: false; error: string; message?: string }
-  >;
+  onDisconnect: () => Promise<{ ok: true } | { ok: false; error: string; message?: string }>;
   onStartConnection: (
     input: unknown,
   ) => Promise<
@@ -72,7 +69,7 @@ function formatPhoneDisplay(phone: string): string {
 function formatConnectedDate(date: Date | string | null): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return `Conectado em ${format(d, "d MMM. yyyy", { locale: ptBR })}`;
+  return `Conectado em ${format(d, 'd MMM. yyyy', { locale: ptBR })}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -116,10 +113,7 @@ export function WhatsappAccountCard({
       <Card data-testid="whatsapp-account-card">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <MessageCircle
-              className="text-text-tertiary h-6 w-6 shrink-0"
-              aria-hidden="true"
-            />
+            <MessageCircle className="text-text-tertiary h-6 w-6 shrink-0" aria-hidden="true" />
             <h3 className="text-text-primary text-[18px] leading-[1.25] font-semibold">
               Integracao WhatsApp
             </h3>
@@ -138,9 +132,7 @@ export function WhatsappAccountCard({
                   {formatPhoneDisplay(account.phoneNumber)}
                 </p>
                 {account.displayName && (
-                  <p className="text-text-secondary text-[13px]">
-                    {account.displayName}
-                  </p>
+                  <p className="text-text-secondary text-[13px]">{account.displayName}</p>
                 )}
                 {account.connectedAt && (
                   <p className="text-text-tertiary text-[12px] font-medium">
@@ -149,32 +141,21 @@ export function WhatsappAccountCard({
                 )}
               </div>
 
-              <AlertDialog
-                open={disconnectDialogOpen}
-                onOpenChange={setDisconnectDialogOpen}
-              >
+              <AlertDialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    data-testid="whatsapp-disconnect-button"
-                  >
+                  <Button variant="destructive" data-testid="whatsapp-disconnect-button">
                     Desconectar
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Desconectar WhatsApp?
-                    </AlertDialogTitle>
+                    <AlertDialogTitle>Desconectar WhatsApp?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Templates serao preservados, mas lembretes deixarao de
-                      ser enviados.
+                      Templates serao preservados, mas lembretes deixarao de ser enviados.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDisconnecting}>
-                      Cancelar
-                    </AlertDialogCancel>
+                    <AlertDialogCancel disabled={isDisconnecting}>Cancelar</AlertDialogCancel>
                     <Button
                       variant="destructive"
                       onClick={handleDisconnect}
@@ -182,10 +163,7 @@ export function WhatsappAccountCard({
                       data-testid="whatsapp-disconnect-confirm-button"
                     >
                       {isDisconnecting && (
-                        <Loader2
-                          className="h-4 w-4 animate-spin"
-                          aria-hidden="true"
-                        />
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                       )}
                       Desconectar
                     </Button>
@@ -203,8 +181,8 @@ export function WhatsappAccountCard({
                   Erro de conexao
                 </Badge>
                 <p className="text-text-secondary text-[15px]">
-                  Houve um problema com a conexao do WhatsApp. Reconecte para
-                  voltar a enviar lembretes.
+                  Houve um problema com a conexao do WhatsApp. Reconecte para voltar a enviar
+                  lembretes.
                 </p>
               </div>
               <Button
@@ -225,8 +203,8 @@ export function WhatsappAccountCard({
                   Nao conectado
                 </Badge>
                 <p className="text-text-secondary text-[15px]">
-                  Conecte seu WhatsApp para enviar lembretes automaticos de
-                  sessao aos seus pacientes.
+                  Conecte seu WhatsApp para enviar lembretes automaticos de sessao aos seus
+                  pacientes.
                 </p>
               </div>
               <Button

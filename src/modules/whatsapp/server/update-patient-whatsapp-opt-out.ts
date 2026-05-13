@@ -67,8 +67,11 @@ export async function updatePatientWhatsappOptOutImpl(
     };
   }
 
-  const { patient_id: patientId, whatsapp_opt_out: optOut, opt_out_reason: optOutReason } =
-    parsed.data;
+  const {
+    patient_id: patientId,
+    whatsapp_opt_out: optOut,
+    opt_out_reason: optOutReason,
+  } = parsed.data;
   const userId = user.id;
 
   // 3. Verify patient exists and belongs to user
@@ -100,7 +103,9 @@ export async function updatePatientWhatsappOptOutImpl(
         patientId,
         hasReason: !!optOutReason,
       },
-      optOut ? 'Patient opted out of WhatsApp reminders' : 'Patient opted back in to WhatsApp reminders',
+      optOut
+        ? 'Patient opted out of WhatsApp reminders'
+        : 'Patient opted back in to WhatsApp reminders',
     );
 
     return { ok: true };

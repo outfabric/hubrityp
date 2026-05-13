@@ -54,12 +54,7 @@ export async function getTemplateImpl(
   const [row] = await db
     .select()
     .from(messageTemplates)
-    .where(
-      and(
-        eq(messageTemplates.userId, user.id),
-        eq(messageTemplates.templateKey, parsed.data),
-      ),
-    )
+    .where(and(eq(messageTemplates.userId, user.id), eq(messageTemplates.templateKey, parsed.data)))
     .limit(1);
 
   if (!row) {

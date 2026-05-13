@@ -20,11 +20,9 @@ import { z } from 'zod';
  * The minimum of 7 digits ensures that a bare country code (e.g. "+55")
  * is rejected — a valid phone number requires country code + subscriber number.
  */
-export const phoneNumberSchema = z
-  .string()
-  .regex(/^\+[1-9]\d{6,14}$/, {
-    message: 'Telefone inválido. Use o formato +55 (DD) NNNNN-NNNN.',
-  });
+export const phoneNumberSchema = z.string().regex(/^\+[1-9]\d{6,14}$/, {
+  message: 'Telefone inválido. Use o formato +55 (DD) NNNNN-NNNN.',
+});
 
 // ---------------------------------------------------------------------------
 // Derived type

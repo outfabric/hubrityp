@@ -35,9 +35,7 @@ const BODY_PREVIEW_LENGTH = 200;
  * by `template_key ASC`. Template bodies are truncated to 200 characters
  * for the list/card preview.
  */
-export async function listTemplatesImpl(
-  supabase: SupabaseClient,
-): Promise<ListTemplatesResult> {
+export async function listTemplatesImpl(supabase: SupabaseClient): Promise<ListTemplatesResult> {
   // 1. Authenticate
   const {
     data: { user },

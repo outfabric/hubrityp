@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  getVariableByKey,
-  TEMPLATE_VARIABLES,
-} from '@/modules/whatsapp/lib/template-variables';
+import { getVariableByKey, TEMPLATE_VARIABLES } from '@/modules/whatsapp/lib/template-variables';
 
 // ---------------------------------------------------------------------------
 // Dictionary completeness

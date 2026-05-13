@@ -93,8 +93,7 @@ export async function startTwilioConnectionImpl(
     return {
       ok: false,
       error: 'already_connected',
-      message:
-        'Voce ja tem um numero conectado. Desconecte o atual antes de conectar outro.',
+      message: 'Voce ja tem um numero conectado. Desconecte o atual antes de conectar outro.',
     };
   }
 
@@ -119,7 +118,7 @@ export async function startTwilioConnectionImpl(
     const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
     const body = new URLSearchParams({
-      'sender_id': `whatsapp:${phone}`,
+      sender_id: `whatsapp:${phone}`,
       'profile.name': displayName,
       'webhook.callback_url': `${serverEnv.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase', 'app') ?? 'https://app.hubrityp.com.br'}/api/webhooks/whatsapp/inbound`,
       'webhook.status_callback_url': `${serverEnv.NEXT_PUBLIC_SUPABASE_URL?.replace('supabase', 'app') ?? 'https://app.hubrityp.com.br'}/api/webhooks/whatsapp/status`,
@@ -128,7 +127,7 @@ export async function startTwilioConnectionImpl(
     const response = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: body.toString(),
@@ -142,7 +141,11 @@ export async function startTwilioConnectionImpl(
       );
       // Log sanitized error (no PII)
       logger.debug(
-        { event: 'twilio_sender_creation_error_detail', statusCode: response.status, hasBody: !!errorText },
+        {
+          event: 'twilio_sender_creation_error_detail',
+          statusCode: response.status,
+          hasBody: !!errorText,
+        },
         'Twilio error detail',
       );
       return {
@@ -164,7 +167,10 @@ export async function startTwilioConnectionImpl(
     };
   } catch (err: unknown) {
     logger.error(
-      { event: 'twilio_connection_error', errorName: err instanceof Error ? err.name : 'UnknownError' },
+      {
+        event: 'twilio_connection_error',
+        errorName: err instanceof Error ? err.name : 'UnknownError',
+      },
       'unexpected error during Twilio sender creation',
     );
     return {

@@ -40,14 +40,8 @@ export {
   type ListTemplatesResult,
   type TemplatePreview,
 } from './server/list-templates';
-export {
-  getTemplateImpl,
-  type GetTemplateResult,
-} from './server/get-template';
-export {
-  updateTemplateImpl,
-  type UpdateTemplateResult,
-} from './server/update-template';
+export { getTemplateImpl, type GetTemplateResult } from './server/get-template';
+export { updateTemplateImpl, type UpdateTemplateResult } from './server/update-template';
 export {
   getTemplateMetaStatusImpl,
   type GetTemplateMetaStatusResult,
@@ -66,10 +60,7 @@ export { templateKeySchema, type TemplateKey } from './lib/template-key-schema';
 export { templateInputSchema, type TemplateInput } from './lib/template-input-schema';
 
 // ---- Template helpers --------------------------------------------------------
-export {
-  renderTemplate,
-  MissingTemplateVariableError,
-} from './lib/render-template';
+export { renderTemplate, MissingTemplateVariableError } from './lib/render-template';
 export {
   TEMPLATE_VARIABLES,
   VALID_VARIABLE_KEYS,

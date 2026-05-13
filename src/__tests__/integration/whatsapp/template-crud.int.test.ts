@@ -32,7 +32,18 @@ async function seedTemplatesViaInsert(userId: string): Promise<void> {
     {
       templateKey: 'lembrete_24h',
       body: 'Olá, {nome_paciente}! Lembrando da sua sessão com {nome_psicologo} amanhã, {data} ({dia_semana}), às {hora}. Duração: {duracao_min} min. Local: {endereco}. {instrucao_chegada}. Confirme: {link_confirmacao}. Valor: {valor}',
-      variables: ['nome_paciente', 'nome_psicologo', 'data', 'dia_semana', 'hora', 'duracao_min', 'endereco', 'instrucao_chegada', 'link_confirmacao', 'valor'],
+      variables: [
+        'nome_paciente',
+        'nome_psicologo',
+        'data',
+        'dia_semana',
+        'hora',
+        'duracao_min',
+        'endereco',
+        'instrucao_chegada',
+        'link_confirmacao',
+        'valor',
+      ],
     },
     {
       templateKey: 'lembrete_2h',
@@ -97,9 +108,8 @@ describe('seedDefaultTemplates — data correctness', () => {
     await seedAuthUser(userId);
 
     // Use the actual function under test
-    const { seedDefaultTemplates } = await import(
-      '@/modules/whatsapp/server/seed-default-templates'
-    );
+    const { seedDefaultTemplates } =
+      await import('@/modules/whatsapp/server/seed-default-templates');
     await seedDefaultTemplates(userId);
 
     const rows = await runAsService(async (db) => {
@@ -135,16 +145,12 @@ describe('seedDefaultTemplates — data correctness', () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
-    const { seedDefaultTemplates } = await import(
-      '@/modules/whatsapp/server/seed-default-templates'
-    );
+    const { seedDefaultTemplates } =
+      await import('@/modules/whatsapp/server/seed-default-templates');
     await seedDefaultTemplates(userId);
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(messageTemplates)
-        .where(eq(messageTemplates.userId, userId));
+      return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
 
     const byKey = Object.fromEntries(rows.map((r) => [r.templateKey, r]));
@@ -179,17 +185,13 @@ describe('seedDefaultTemplates — data correctness', () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
-    const { seedDefaultTemplates } = await import(
-      '@/modules/whatsapp/server/seed-default-templates'
-    );
+    const { seedDefaultTemplates } =
+      await import('@/modules/whatsapp/server/seed-default-templates');
     await seedDefaultTemplates(userId);
     await seedDefaultTemplates(userId);
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(messageTemplates)
-        .where(eq(messageTemplates.userId, userId));
+      return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
 
     expect(rows).toHaveLength(6);
@@ -486,10 +488,7 @@ describe('message_templates — RLS', () => {
       return db
         .delete(messageTemplates)
         .where(
-          and(
-            eq(messageTemplates.userId, userIdB),
-            eq(messageTemplates.templateKey, 'link_video'),
-          ),
+          and(eq(messageTemplates.userId, userIdB), eq(messageTemplates.templateKey, 'link_video')),
         )
         .returning();
     });
@@ -498,10 +497,7 @@ describe('message_templates — RLS', () => {
 
     // Verify B's template still exists
     const rowsB = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(messageTemplates)
-        .where(eq(messageTemplates.userId, userIdB));
+      return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userIdB));
     });
 
     expect(rowsB).toHaveLength(1);

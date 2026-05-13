@@ -28,10 +28,7 @@ async function TemplatesListServer() {
         className="flex flex-col items-center justify-center gap-3 py-12"
         data-testid="templates-empty-state"
       >
-        <MessageCircle
-          className="text-text-tertiary h-6 w-6"
-          aria-hidden="true"
-        />
+        <MessageCircle className="text-text-tertiary h-6 w-6" aria-hidden="true" />
         <h4 className="text-text-primary text-[16px] leading-[1.25] font-medium">
           Nenhum template encontrado
         </h4>
@@ -39,9 +36,7 @@ async function TemplatesListServer() {
           Conecte seu WhatsApp para criar os templates de mensagem.
         </p>
         <Button asChild>
-          <Link href="/configuracoes/integracoes/whatsapp">
-            Conectar WhatsApp
-          </Link>
+          <Link href="/configuracoes/integracoes/whatsapp">Conectar WhatsApp</Link>
         </Button>
       </div>
     );
@@ -71,8 +66,8 @@ export default function TemplatesPage() {
           Templates de Mensagem
         </h1>
         <p className="text-text-secondary mt-2 text-[15px]">
-          Edite os modelos de mensagem enviados aos pacientes. Alterações
-          precisam ser aprovadas pelo WhatsApp.
+          Edite os modelos de mensagem enviados aos pacientes. Alterações precisam ser aprovadas
+          pelo WhatsApp.
         </p>
       </div>
 

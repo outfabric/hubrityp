@@ -48,9 +48,7 @@ export function TemplateCard({ template }: TemplateCardProps) {
   const router = useRouter();
 
   const label = TEMPLATE_LABELS[template.templateKey] ?? template.templateKey;
-  const badgeConfig = template.metaStatus
-    ? STATUS_BADGE[template.metaStatus]
-    : null;
+  const badgeConfig = template.metaStatus ? STATUS_BADGE[template.metaStatus] : null;
 
   const href = `/configuracoes/lembretes/templates/${template.templateKey}`;
 
@@ -67,7 +65,7 @@ export function TemplateCard({ template }: TemplateCardProps) {
 
   return (
     <Card
-      className="hover:border-border-strong flex cursor-pointer flex-col transition-colors duration-fast"
+      className="hover:border-border-strong duration-fast flex cursor-pointer flex-col transition-colors"
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role="link"
@@ -76,13 +74,9 @@ export function TemplateCard({ template }: TemplateCardProps) {
       data-testid={`template-card-${template.templateKey}`}
     >
       <CardContent className="flex flex-col gap-3 pt-6">
-        <h4 className="text-text-primary text-[16px] leading-[1.25] font-medium">
-          {label}
-        </h4>
+        <h4 className="text-text-primary text-[16px] leading-[1.25] font-medium">{label}</h4>
 
-        <p className="text-text-secondary line-clamp-2 text-[13px]">
-          {template.body}
-        </p>
+        <p className="text-text-secondary line-clamp-2 text-[13px]">{template.body}</p>
 
         {badgeConfig && (
           <Badge variant={badgeConfig.variant} data-testid="template-meta-status-badge">

@@ -102,12 +102,7 @@ export async function getTemplateMetaStatusImpl(
       metaStatus: messageTemplates.metaStatus,
     })
     .from(messageTemplates)
-    .where(
-      and(
-        eq(messageTemplates.userId, user.id),
-        eq(messageTemplates.templateKey, parsed.data),
-      ),
-    )
+    .where(and(eq(messageTemplates.userId, user.id), eq(messageTemplates.templateKey, parsed.data)))
     .limit(1);
 
   if (!existing) {

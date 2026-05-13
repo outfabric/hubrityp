@@ -80,9 +80,9 @@ describe('whatsapp_accounts — insert and query', () => {
 
     await expect(
       runAsService(async (db) => {
-        await db.insert(whatsappAccounts).values(
-          makeAccountValues(userId, { accountId: 'MG_second_account' }),
-        );
+        await db
+          .insert(whatsappAccounts)
+          .values(makeAccountValues(userId, { accountId: 'MG_second_account' }));
       }),
     ).rejects.toThrow();
   });
@@ -93,17 +93,11 @@ describe('whatsapp_accounts — insert and query', () => {
     const accountId = `MG${randomUUID().replace(/-/g, '')}`;
 
     await runAsService(async (db) => {
-      await db.insert(whatsappAccounts).values(
-        makeAccountValues(userId, { accountId }),
-      );
+      await db.insert(whatsappAccounts).values(makeAccountValues(userId, { accountId }));
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappAccounts)
-        .where(eq(whatsappAccounts.userId, userId))
-        .limit(1);
+      return db.select().from(whatsappAccounts).where(eq(whatsappAccounts.userId, userId)).limit(1);
     });
 
     expect(rows).toHaveLength(1);
@@ -135,10 +129,7 @@ describe('whatsapp_accounts — disconnect', () => {
 
     // Verify row still exists with updated status
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappAccounts)
-        .where(eq(whatsappAccounts.userId, userId));
+      return db.select().from(whatsappAccounts).where(eq(whatsappAccounts.userId, userId));
     });
 
     expect(rows).toHaveLength(1);
@@ -160,9 +151,9 @@ describe('whatsapp_accounts — RLS', () => {
     // Insert accounts as service role (bypass RLS)
     await runAsService(async (db) => {
       await db.insert(whatsappAccounts).values(makeAccountValues(userIdA));
-      await db.insert(whatsappAccounts).values(
-        makeAccountValues(userIdB, { phoneNumber: '+5511888888888' }),
-      );
+      await db
+        .insert(whatsappAccounts)
+        .values(makeAccountValues(userIdB, { phoneNumber: '+5511888888888' }));
     });
 
     // User A queries — should only see their own account

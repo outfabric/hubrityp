@@ -27,9 +27,7 @@ export async function getWhatsappAccount(): Promise<GetWhatsappAccountResult> {
   return getWhatsappAccountImpl(supabase);
 }
 
-export async function startTwilioConnection(
-  input: unknown,
-): Promise<StartTwilioConnectionResult> {
+export async function startTwilioConnection(input: unknown): Promise<StartTwilioConnectionResult> {
   const supabase = await createServerClient();
   return startTwilioConnectionImpl(supabase, input);
 }

@@ -106,10 +106,7 @@ export const messageTemplates = pgTable(
   },
   (table) => [
     // Each psychologist can have at most one template per key.
-    unique('message_templates_user_id_template_key_unique').on(
-      table.userId,
-      table.templateKey,
-    ),
+    unique('message_templates_user_id_template_key_unique').on(table.userId, table.templateKey),
   ],
 );
 

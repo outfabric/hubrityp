@@ -83,11 +83,7 @@ export const TEMPLATE_VARIABLES = [
     key: 'hora',
     label: 'Hora',
     example: '14:00',
-    applicableTemplates: [
-      'lembrete_24h',
-      'lembrete_2h',
-      'cancelamento_aviso',
-    ],
+    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'cancelamento_aviso'],
   },
   {
     key: 'duracao_min',
@@ -137,8 +133,6 @@ export const VALID_VARIABLE_KEYS: ReadonlySet<string> = new Set(
 );
 
 /** Lookup a variable by key. Returns undefined if key is unknown. */
-export function getVariableByKey(
-  key: string,
-): TemplateVariable | undefined {
+export function getVariableByKey(key: string): TemplateVariable | undefined {
   return TEMPLATE_VARIABLES.find((v) => v.key === key);
 }

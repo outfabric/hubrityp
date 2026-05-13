@@ -68,15 +68,15 @@ export async function disconnectWhatsappImpl(
       })
       .where(and(eq(whatsappAccounts.id, existing.id), eq(whatsappAccounts.userId, userId)));
 
-    logger.info(
-      { event: 'whatsapp_disconnected', userId },
-      'WhatsApp account disconnected',
-    );
+    logger.info({ event: 'whatsapp_disconnected', userId }, 'WhatsApp account disconnected');
 
     return { ok: true };
   } catch (err: unknown) {
     logger.error(
-      { event: 'disconnect_whatsapp_failed', errorName: err instanceof Error ? err.name : 'UnknownError' },
+      {
+        event: 'disconnect_whatsapp_failed',
+        errorName: err instanceof Error ? err.name : 'UnknownError',
+      },
       'unexpected error disconnecting WhatsApp',
     );
     return {

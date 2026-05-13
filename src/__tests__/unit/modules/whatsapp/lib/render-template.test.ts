@@ -81,9 +81,7 @@ describe('renderTemplate — edge cases', () => {
       vars: { instrucao_chegada: 'Digite {nome_paciente} no interfone' },
     });
     // The literal {nome_paciente} inside the value must NOT be replaced
-    expect(result).toBe(
-      'Instrução: Digite {nome_paciente} no interfone',
-    );
+    expect(result).toBe('Instrução: Digite {nome_paciente} no interfone');
   });
 
   it('handles adjacent variables without separator', () => {
@@ -119,9 +117,7 @@ describe('renderTemplate — missing variables', () => {
       expect.fail('Expected MissingTemplateVariableError');
     } catch (error) {
       expect(error).toBeInstanceOf(MissingTemplateVariableError);
-      expect((error as MissingTemplateVariableError).variableName).toBe(
-        'hora',
-      );
+      expect((error as MissingTemplateVariableError).variableName).toBe('hora');
       expect((error as MissingTemplateVariableError).message).toBe(
         'Missing template variable: {hora}',
       );

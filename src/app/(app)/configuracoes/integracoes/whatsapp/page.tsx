@@ -4,11 +4,7 @@ import { getWhatsappAccountImpl } from '@/modules/whatsapp';
 import { WhatsappAccountCard } from '@/modules/whatsapp/components/whatsapp-account-card';
 import { createServerClient } from '@/shared/supabase/server';
 
-import {
-  completeTwilioConnection,
-  disconnectWhatsapp,
-  startTwilioConnection,
-} from './actions';
+import { completeTwilioConnection, disconnectWhatsapp, startTwilioConnection } from './actions';
 
 // ---------------------------------------------------------------------------
 // Inner async component that fetches data

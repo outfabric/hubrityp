@@ -113,12 +113,7 @@ export async function updateTemplateImpl(
       metaTemplateId: messageTemplates.metaTemplateId,
     })
     .from(messageTemplates)
-    .where(
-      and(
-        eq(messageTemplates.userId, user.id),
-        eq(messageTemplates.templateKey, templateKey),
-      ),
-    )
+    .where(and(eq(messageTemplates.userId, user.id), eq(messageTemplates.templateKey, templateKey)))
     .limit(1);
 
   if (!existing) {
@@ -162,15 +157,13 @@ export async function updateTemplateImpl(
         },
       },
       // Map variable positions to example values
-      variables: Object.fromEntries(
-        variables.map((v, i) => [`${i + 1}`, v]),
-      ),
+      variables: Object.fromEntries(variables.map((v, i) => [`${i + 1}`, v])),
     };
 
     const createResponse = await fetch(`${TWILIO_CONTENT_API_BASE}/v1/Content`, {
       method: 'POST',
       headers: {
-        'Authorization': authHeader,
+        Authorization: authHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(contentPayload),
@@ -204,7 +197,7 @@ export async function updateTemplateImpl(
       {
         method: 'POST',
         headers: {
-          'Authorization': authHeader,
+          Authorization: authHeader,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

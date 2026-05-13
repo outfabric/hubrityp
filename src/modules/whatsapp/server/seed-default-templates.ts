@@ -23,7 +23,18 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
   {
     templateKey: 'lembrete_24h',
     body: 'Olá, {nome_paciente}! Lembrando da sua sessão com {nome_psicologo} amanhã, {data} ({dia_semana}), às {hora}. Duração: {duracao_min} min. Local: {endereco}. {instrucao_chegada}. Confirme: {link_confirmacao}. Valor: {valor}',
-    variables: ['nome_paciente', 'nome_psicologo', 'data', 'dia_semana', 'hora', 'duracao_min', 'endereco', 'instrucao_chegada', 'link_confirmacao', 'valor'],
+    variables: [
+      'nome_paciente',
+      'nome_psicologo',
+      'data',
+      'dia_semana',
+      'hora',
+      'duracao_min',
+      'endereco',
+      'instrucao_chegada',
+      'link_confirmacao',
+      'valor',
+    ],
   },
   {
     templateKey: 'lembrete_2h',

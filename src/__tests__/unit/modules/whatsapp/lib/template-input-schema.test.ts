@@ -72,9 +72,7 @@ describe('templateInputSchema — body length', () => {
 
     const bodyErrors = result.error.flatten().fieldErrors.body;
     expect(bodyErrors).toBeDefined();
-    expect(bodyErrors).toContain(
-      'O corpo do template deve ter pelo menos 10 caracteres.',
-    );
+    expect(bodyErrors).toContain('O corpo do template deve ter pelo menos 10 caracteres.');
   });
 
   it('accepts a body with exactly 10 characters', () => {
@@ -95,9 +93,7 @@ describe('templateInputSchema — body length', () => {
 
     const bodyErrors = result.error.flatten().fieldErrors.body;
     expect(bodyErrors).toBeDefined();
-    expect(bodyErrors).toContain(
-      'O corpo do template deve ter no máximo 1024 caracteres.',
-    );
+    expect(bodyErrors).toContain('O corpo do template deve ter no máximo 1024 caracteres.');
   });
 
   it('accepts a body with exactly 1024 characters', () => {

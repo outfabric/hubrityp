@@ -9,28 +9,10 @@ import { z } from 'zod';
 
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/shared/ui/form';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
 
 // ---------------------------------------------------------------------------
 // Mobile detection hook
@@ -230,9 +212,7 @@ export function ConnectWhatsappDialog({
               }
             }
           } else {
-            toast.error(
-              result.message ?? 'Erro ao iniciar conexao. Tente novamente.',
-            );
+            toast.error(result.message ?? 'Erro ao iniciar conexao. Tente novamente.');
           }
         }
       });
@@ -253,29 +233,17 @@ export function ConnectWhatsappDialog({
         if (result.ok) {
           onSuccess();
         } else {
-          if (
-            result.error === 'invalid_input' &&
-            result.fieldErrors?.verificationCode
-          ) {
+          if (result.error === 'invalid_input' && result.fieldErrors?.verificationCode) {
             step2Form.setError('verificationCode', {
               message: result.fieldErrors.verificationCode[0],
             });
           } else {
-            toast.error(
-              result.message ?? 'Erro ao verificar codigo. Tente novamente.',
-            );
+            toast.error(result.message ?? 'Erro ao verificar codigo. Tente novamente.');
           }
         }
       });
     },
-    [
-      onCompleteConnection,
-      onSuccess,
-      senderSid,
-      phoneForStep2,
-      displayNameForStep2,
-      step2Form,
-    ],
+    [onCompleteConnection, onSuccess, senderSid, phoneForStep2, displayNameForStep2, step2Form],
   );
 
   const handleResendCode = useCallback(() => {
@@ -290,9 +258,7 @@ export function ConnectWhatsappDialog({
         setSenderSid(result.senderSid);
         toast.success('Codigo reenviado com sucesso.');
       } else {
-        toast.error(
-          result.message ?? 'Erro ao reenviar codigo. Tente novamente.',
-        );
+        toast.error(result.message ?? 'Erro ao reenviar codigo. Tente novamente.');
       }
     });
   }, [onStartConnection, phoneForStep2, displayNameForStep2]);
@@ -368,8 +334,8 @@ export function ConnectWhatsappDialog({
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel className="text-text-secondary text-[13px] font-normal">
-                  Confirmo que tenho base legal para enviar lembretes de sessao
-                  aos meus pacientes via WhatsApp (LGPD art. 7, II e IX)
+                  Confirmo que tenho base legal para enviar lembretes de sessao aos meus pacientes
+                  via WhatsApp (LGPD art. 7, II e IX)
                 </FormLabel>
                 <FormMessage />
               </div>
@@ -391,9 +357,7 @@ export function ConnectWhatsappDialog({
             disabled={isStep1Pending}
             data-testid="connect-whatsapp-continue-button"
           >
-            {isStep1Pending && (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            )}
+            {isStep1Pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             Continuar
           </Button>
         </DialogFooter>
@@ -442,9 +406,7 @@ export function ConnectWhatsappDialog({
           disabled={isResending}
           data-testid="connect-whatsapp-resend-button"
         >
-          {isResending && (
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-          )}
+          {isResending && <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />}
           Reenviar codigo
         </Button>
 
@@ -462,9 +424,7 @@ export function ConnectWhatsappDialog({
             disabled={isStep2Pending}
             data-testid="connect-whatsapp-verify-button"
           >
-            {isStep2Pending && (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            )}
+            {isStep2Pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             Verificar e conectar
           </Button>
         </DialogFooter>
@@ -481,10 +441,7 @@ export function ConnectWhatsappDialog({
         <SheetContent side="bottom" className="h-full rounded-t-none p-6">
           <SheetHeader className="mb-6">
             <div className="flex items-center gap-3">
-              <MessageCircle
-                className="text-text-tertiary h-5 w-5 shrink-0"
-                aria-hidden="true"
-              />
+              <MessageCircle className="text-text-tertiary h-5 w-5 shrink-0" aria-hidden="true" />
               <SheetTitle>Conectar WhatsApp</SheetTitle>
             </div>
           </SheetHeader>
@@ -497,16 +454,10 @@ export function ConnectWhatsappDialog({
   // Desktop: Dialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-[640px]"
-        data-testid="connect-whatsapp-dialog"
-      >
+      <DialogContent className="max-w-[640px]" data-testid="connect-whatsapp-dialog">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <MessageCircle
-              className="text-text-tertiary h-5 w-5 shrink-0"
-              aria-hidden="true"
-            />
+            <MessageCircle className="text-text-tertiary h-5 w-5 shrink-0" aria-hidden="true" />
             <DialogTitle>Conectar WhatsApp</DialogTitle>
           </div>
         </DialogHeader>

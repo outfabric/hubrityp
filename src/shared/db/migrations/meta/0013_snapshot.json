@@ -823,10 +823,7 @@
         "oauth_identities_provider_provider_user_id_unique": {
           "name": "oauth_identities_provider_provider_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "provider",
-            "provider_user_id"
-          ]
+          "columns": ["provider", "provider_user_id"]
         }
       },
       "policies": {},
@@ -971,10 +968,7 @@
         "profiles_crp_number_crp_uf_unique": {
           "name": "profiles_crp_number_crp_uf_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "crp_number",
-            "crp_uf"
-          ]
+          "columns": ["crp_number", "crp_uf"]
         }
       },
       "policies": {},
@@ -1113,9 +1107,7 @@
         "anamnesis_patient_id_unique": {
           "name": "anamnesis_patient_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "patient_id"
-          ]
+          "columns": ["patient_id"]
         }
       },
       "policies": {},
@@ -1218,9 +1210,7 @@
         "consent_terms_signature_token_unique": {
           "name": "consent_terms_signature_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "signature_token"
-          ]
+          "columns": ["signature_token"]
         }
       },
       "policies": {},
@@ -1595,10 +1585,7 @@
         "message_templates_user_id_template_key_unique": {
           "name": "message_templates_user_id_template_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "template_key"
-          ]
+          "columns": ["user_id", "template_key"]
         }
       },
       "policies": {},
@@ -1695,9 +1682,7 @@
         "whatsapp_accounts_user_id_unique": {
           "name": "whatsapp_accounts_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},

@@ -27,11 +27,7 @@ describe('templateKeySchema — valid keys', () => {
 // ---------------------------------------------------------------------------
 
 describe('templateKeySchema — invalid keys', () => {
-  it.each([
-    ['invalido'],
-    [''],
-    ['lembrete_48h'],
-  ])('rejects "%s"', (key) => {
+  it.each([['invalido'], [''], ['lembrete_48h']])('rejects "%s"', (key) => {
     const result = templateKeySchema.safeParse(key);
     expect(result.success).toBe(false);
   });
