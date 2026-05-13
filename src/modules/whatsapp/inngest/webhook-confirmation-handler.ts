@@ -39,7 +39,6 @@ type DrizzleDb = PostgresJsDatabase<any>;
 
 export interface ConfirmationHandlerDeps {
   db: DrizzleDb;
-  emitAckEvent?: (data: { sessionId: string; patientId: string; userId: string }) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,6 +49,8 @@ export interface ConfirmationHandlerResult {
   status: 'confirmed' | 'skipped' | 'not_found';
   skipReason?: string;
   sessionId?: string;
+  patientId?: string;
+  userId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -66,7 +67,7 @@ export async function processConfirmation(
   eventData: WebhookConfirmationEventData,
   deps: ConfirmationHandlerDeps,
 ): Promise<ConfirmationHandlerResult> {
-  const { db, emitAckEvent } = deps;
+  const { db } = deps;
 
   // Resolve the original outbound message to find the session
   let sessionId = eventData.sessionId;
@@ -139,12 +140,7 @@ export async function processConfirmation(
       ),
     );
 
-  // Emit ack event for sending confirmation acknowledgment message
-  if (emitAckEvent) {
-    await emitAckEvent({ sessionId, patientId, userId });
-  }
-
-  return { status: 'confirmed', sessionId };
+  return { status: 'confirmed', sessionId, patientId, userId };
 }
 
 // ---------------------------------------------------------------------------
@@ -161,20 +157,21 @@ export const webhookConfirmationHandler = inngest.createFunction(
     const { db } = await import('@/shared/db/client');
     const data = event.data as WebhookConfirmationEventData;
 
-    const emitAckEvent = async (ackData: {
-      sessionId: string;
-      patientId: string;
-      userId: string;
-    }) => {
+    const result = await step.run('process-confirmation', async () => {
+      return processConfirmation(data, { db });
+    });
+
+    // Emit ack event as a separate step (Inngest forbids nested step calls)
+    if (result.status === 'confirmed' && result.sessionId) {
       await step.sendEvent('emit-confirmation-ack', {
         name: WHATSAPP_EVENTS.CONFIRMATION_ACK,
-        data: ackData,
+        data: {
+          sessionId: result.sessionId,
+          patientId: result.patientId ?? data.patientId,
+          userId: result.userId ?? data.userId,
+        },
       });
-    };
-
-    const result = await step.run('process-confirmation', async () => {
-      return processConfirmation(data, { db, emitAckEvent });
-    });
+    }
 
     logger.info(
       {

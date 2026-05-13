@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { eq, sql as dsql } from 'drizzle-orm';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   processConfirmation,
@@ -109,8 +109,6 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     await seedSession(userId, sessionId, { patientId });
     await seedOutboundMessage(userId, sessionId, originalBspMessageId, { patientId });
 
-    const emitAckEvent = vi.fn().mockResolvedValue(undefined);
-
     const eventData: WebhookConfirmationEventData = {
       bspMessageId: `SM_reply_${randomUUID().slice(0, 8)}`,
       sessionId,
@@ -119,12 +117,15 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     };
 
     const db = await getServiceDb();
-    const deps: ConfirmationHandlerDeps = { db, emitAckEvent };
+    const deps: ConfirmationHandlerDeps = { db };
 
     const result = await processConfirmation(eventData, deps);
 
     expect(result.status).toBe('confirmed');
     expect(result.sessionId).toBe(sessionId);
+    // Result includes patientId/userId so the Inngest handler can emit ack event
+    expect(result.patientId).toBe(patientId);
+    expect(result.userId).toBe(userId);
 
     // Verify DB state
     const [session] = await runAsService(async (sdb) => {
@@ -134,14 +135,6 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     expect(session).toBeDefined();
     expect(session!.status).toBe('confirmed');
     expect(session!.confirmedAt).toBeInstanceOf(Date);
-
-    // Verify ack event was emitted
-    expect(emitAckEvent).toHaveBeenCalledOnce();
-    expect(emitAckEvent).toHaveBeenCalledWith({
-      sessionId,
-      patientId,
-      userId,
-    });
   });
 
   it('resolves session from originalBspMessageId when sessionId is empty', async () => {
@@ -155,8 +148,6 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     await seedSession(userId, sessionId, { patientId });
     await seedOutboundMessage(userId, sessionId, originalBspMessageId, { patientId });
 
-    const emitAckEvent = vi.fn().mockResolvedValue(undefined);
-
     const eventData: WebhookConfirmationEventData = {
       bspMessageId: `SM_reply_${randomUUID().slice(0, 8)}`,
       sessionId: '', // Empty — should be resolved from original message
@@ -166,7 +157,7 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     };
 
     const db = await getServiceDb();
-    const deps: ConfirmationHandlerDeps = { db, emitAckEvent };
+    const deps: ConfirmationHandlerDeps = { db };
 
     const result = await processConfirmation(eventData, deps);
 
@@ -195,8 +186,6 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
       confirmedAt: new Date('2026-06-14T12:00:00Z'),
     });
 
-    const emitAckEvent = vi.fn().mockResolvedValue(undefined);
-
     const eventData: WebhookConfirmationEventData = {
       bspMessageId: `SM_dup_${randomUUID().slice(0, 8)}`,
       sessionId,
@@ -205,15 +194,12 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     };
 
     const db = await getServiceDb();
-    const deps: ConfirmationHandlerDeps = { db, emitAckEvent };
+    const deps: ConfirmationHandlerDeps = { db };
 
     const result = await processConfirmation(eventData, deps);
 
     expect(result.status).toBe('skipped');
     expect(result.skipReason).toBe('already_confirmed');
-
-    // Ack event should NOT be emitted for duplicates
-    expect(emitAckEvent).not.toHaveBeenCalled();
 
     // Session should remain unchanged
     const [session] = await runAsService(async (sdb) => {
@@ -236,8 +222,6 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
       cancelledAt: new Date(),
     });
 
-    const emitAckEvent = vi.fn().mockResolvedValue(undefined);
-
     const eventData: WebhookConfirmationEventData = {
       bspMessageId: `SM_canc_${randomUUID().slice(0, 8)}`,
       sessionId,
@@ -246,18 +230,15 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     };
 
     const db = await getServiceDb();
-    const deps: ConfirmationHandlerDeps = { db, emitAckEvent };
+    const deps: ConfirmationHandlerDeps = { db };
 
     const result = await processConfirmation(eventData, deps);
 
     expect(result.status).toBe('skipped');
     expect(result.skipReason).toBe('session_not_confirmable');
-    expect(emitAckEvent).not.toHaveBeenCalled();
   });
 
   it('returns not_found when session does not exist', async () => {
-    const emitAckEvent = vi.fn().mockResolvedValue(undefined);
-
     const eventData: WebhookConfirmationEventData = {
       bspMessageId: `SM_nf_${randomUUID().slice(0, 8)}`,
       sessionId: randomUUID(),
@@ -266,12 +247,11 @@ describe('webhook-confirmation-handler — processConfirmation()', () => {
     };
 
     const db = await getServiceDb();
-    const deps: ConfirmationHandlerDeps = { db, emitAckEvent };
+    const deps: ConfirmationHandlerDeps = { db };
 
     const result = await processConfirmation(eventData, deps);
 
     expect(result.status).toBe('not_found');
-    expect(emitAckEvent).not.toHaveBeenCalled();
   });
 });
 

@@ -41,12 +41,29 @@ export interface StatusHandlerResult {
 }
 
 // ---------------------------------------------------------------------------
+// Monotonic status ordering — higher index = more advanced.
+// Used to ensure we only advance status, never regress.
+// Matches the same pattern used in reconciliation-poller.ts.
+// ---------------------------------------------------------------------------
+
+const STATUS_ORDER: Record<string, number> = {
+  queued: 0,
+  sent: 1,
+  delivered: 2,
+  read: 3,
+  failed: 4,
+};
+
+// ---------------------------------------------------------------------------
 // Core logic (extracted for testing)
 // ---------------------------------------------------------------------------
 
 /**
  * Processes a status update event from Twilio.
  * Updates the whatsapp_messages row matching the bspMessageId.
+ *
+ * Enforces monotonic status ordering — a late "sent" arriving after
+ * "delivered" will be skipped to prevent status regression.
  */
 export async function processStatusUpdate(
   eventData: StatusUpdatedEventData,
@@ -68,6 +85,13 @@ export async function processStatusUpdate(
 
   if (!existing) {
     return { status: 'not_found', bspMessageId };
+  }
+
+  // Enforce monotonic status ordering — never regress
+  const currentOrder = STATUS_ORDER[existing.status ?? 'queued'] ?? 0;
+  const newOrder = STATUS_ORDER[newStatus] ?? -1;
+  if (newOrder <= currentOrder) {
+    return { status: 'skipped', bspMessageId, newStatus };
   }
 
   // Build the update set based on the new status

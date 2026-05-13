@@ -133,7 +133,7 @@ export async function processConfirmationAck(
 
   const [patientRow] = await db
     .select({
-      firstName: patients.fullName,
+      fullName: patients.fullName,
       phone: patients.phone,
       reminderPhone: patients.reminderPhone,
       whatsappOptOut: patients.whatsappOptOut,
@@ -156,7 +156,7 @@ export async function processConfirmationAck(
   }
 
   // Extract first name from full name
-  const patientFirstName = patientRow.firstName.split(' ')[0] ?? patientRow.firstName;
+  const patientFirstName = patientRow.fullName.split(' ')[0] ?? patientRow.fullName;
 
   const [profileRow] = await db
     .select({ displayName: profiles.fullName })
@@ -247,7 +247,7 @@ export async function processConfirmationAck(
     },
     {
       firstName: patientFirstName,
-      fullName: patientRow.firstName,
+      fullName: patientRow.fullName,
     },
     {
       displayName: profileRow.displayName,

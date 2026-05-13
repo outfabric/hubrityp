@@ -128,7 +128,7 @@ export async function processCancellationNotice(
   // Guard 2: Check patient opt-out
   const [patientRow] = await db
     .select({
-      firstName: patients.fullName,
+      fullName: patients.fullName,
       phone: patients.phone,
       reminderPhone: patients.reminderPhone,
       whatsappOptOut: patients.whatsappOptOut,
@@ -162,7 +162,7 @@ export async function processCancellationNotice(
   }
 
   // Extract first name from full name
-  const patientFirstName = patientRow.firstName.split(' ')[0] ?? patientRow.firstName;
+  const patientFirstName = patientRow.fullName.split(' ')[0] ?? patientRow.fullName;
 
   // Fetch psychologist profile
   const [profileRow] = await db
@@ -260,7 +260,7 @@ export async function processCancellationNotice(
     },
     {
       firstName: patientFirstName,
-      fullName: patientRow.firstName,
+      fullName: patientRow.fullName,
     },
     {
       displayName: profileRow.displayName,
