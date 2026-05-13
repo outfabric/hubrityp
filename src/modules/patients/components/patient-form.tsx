@@ -7,11 +7,13 @@ import { useCallback, useRef, useState, useTransition } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { phoneNumberSchema } from '@/modules/whatsapp/lib/phone-number-schema';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Switch } from '@/shared/ui/switch';
 import { Textarea } from '@/shared/ui/textarea';
 
 import {
@@ -105,6 +107,24 @@ const step1Schema = z
       .refine((v) => !v || v === '' || isValidBrazilianPhone(v), {
         message: 'Telefone invalido. Use o formato (11) 98765-4321.',
       }),
+    // WhatsApp opt-out controls
+    whatsappOptOut: z.boolean(),
+    whatsappOptOutReason: z.string().max(500).optional(),
+    reminderPhone: z
+      .string()
+      .optional()
+      .refine(
+        (v) => {
+          if (!v || v === '') return true;
+          // Strip display mask to E.164 before validating
+          const digits = v.replace(/\D/g, '');
+          const e164 = digits.startsWith('55') ? `+${digits}` : `+55${digits}`;
+          return phoneNumberSchema.safeParse(e164).success;
+        },
+        {
+          message: 'Telefone invalido. Use o formato +55 (DD) NNNNN-NNNN.',
+        },
+      ),
     // Guardian array for minor patients (child/adolescent)
     guardians: z.array(guardianFormSchema).max(2).optional(),
     // Partner data for couple patients
@@ -263,6 +283,8 @@ interface PatientFormEditProps {
     source: string | null;
     tags: string[];
     notes: string | null;
+    whatsappOptOut: boolean;
+    reminderPhone: string | null;
   };
   /** Callback on successful save (e.g. to show toast + redirect) */
   onSuccess?: () => void;
@@ -325,6 +347,9 @@ export function PatientForm(props: PatientFormProps) {
       birthDate: patient?.birthDate ? patient.birthDate.toISOString().split('T')[0] : '',
       approximateAge: patient?.approximateAge ?? '',
       phone: patient?.phone ?? '',
+      whatsappOptOut: patient?.whatsappOptOut ?? false,
+      whatsappOptOutReason: '',
+      reminderPhone: patient?.reminderPhone ? maskPhone(patient.reminderPhone) : '',
       guardians: [],
       partner: undefined,
     },
@@ -342,6 +367,9 @@ export function PatientForm(props: PatientFormProps) {
 
   // Watch patient type to show/hide conditional sections
   const watchedPatientType = step1Form.watch('patientType');
+
+  // Watch opt-out to show/hide conditional fields
+  const watchedOptOut = step1Form.watch('whatsappOptOut');
 
   // Step 2 form
   const step2Form = useForm<Step2Data>({
@@ -419,6 +447,16 @@ export function PatientForm(props: PatientFormProps) {
         // Phone
         if (s1.phone) {
           payload.phone = s1.phone;
+        }
+
+        // WhatsApp opt-out controls
+        payload.whatsapp_opt_out = s1.whatsappOptOut;
+        if (s1.reminderPhone && s1.reminderPhone !== '') {
+          // Convert display mask (+55 DD NNNNN-NNNN) to E.164 (+55DDNNNNNNNNN)
+          const digits = s1.reminderPhone.replace(/\D/g, '');
+          payload.reminder_phone = digits.startsWith('55') ? `+${digits}` : `+55${digits}`;
+        } else {
+          payload.reminder_phone = null;
         }
 
         // Step 2 fields (only if not skipped and non-empty)
@@ -760,6 +798,80 @@ export function PatientForm(props: PatientFormProps) {
               }}
             />
           </FormField>
+
+          {/* WhatsApp reminders section */}
+          <fieldset className="space-y-4" data-testid="whatsapp-reminders-section">
+            <legend className="text-text-secondary text-xs font-medium tracking-[0.06em] uppercase">
+              Lembretes WhatsApp
+            </legend>
+
+            {/* Switch: opt-in/opt-out */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="whatsapp-opt-out-switch" className="text-sm font-medium">
+                  Receber lembretes via WhatsApp
+                </Label>
+                <p className="text-text-tertiary text-[13px]">
+                  Quando desativado, nenhum lembrete sera enviado a este paciente
+                </p>
+              </div>
+              <Switch
+                id="whatsapp-opt-out-switch"
+                checked={!watchedOptOut}
+                onCheckedChange={(checked) => {
+                  step1Form.setValue('whatsappOptOut', !checked, { shouldValidate: false });
+                }}
+                aria-label="Receber lembretes via WhatsApp"
+              />
+            </div>
+
+            {/* Conditional fields when opted out */}
+            {watchedOptOut && (
+              <div className="space-y-4" aria-live="polite">
+                {/* Opt-out reason */}
+                <FormField
+                  id="whatsappOptOutReason"
+                  label="Motivo (visivel so para voce)"
+                  error={step1Form.formState.errors.whatsappOptOutReason?.message}
+                >
+                  <Textarea
+                    id="whatsappOptOutReason-form-item"
+                    rows={2}
+                    placeholder="Ex.: Paciente pediu para nao receber mensagens"
+                    aria-invalid={Boolean(step1Form.formState.errors.whatsappOptOutReason)}
+                    data-testid="whatsapp-opt-out-reason"
+                    {...step1Form.register('whatsappOptOutReason')}
+                  />
+                </FormField>
+              </div>
+            )}
+
+            {/* Reminder phone — always visible, independent of opt-out */}
+            <FormField
+              id="reminderPhone"
+              label="Telefone alternativo para lembretes"
+              error={step1Form.formState.errors.reminderPhone?.message}
+            >
+              <Input
+                id="reminderPhone-form-item"
+                type="tel"
+                placeholder="+55 11 91234-5678"
+                aria-invalid={Boolean(step1Form.formState.errors.reminderPhone)}
+                data-testid="reminder-phone"
+                value={step1Form.watch('reminderPhone') ?? ''}
+                onChange={(e) => {
+                  const masked = maskPhone(e.target.value);
+                  step1Form.setValue('reminderPhone', masked, { shouldValidate: false });
+                }}
+                onBlur={() => {
+                  void step1Form.trigger('reminderPhone');
+                }}
+              />
+              <p className="text-text-tertiary text-[13px]">
+                Use para enviar lembretes ao responsavel (ex.: pai/mae de menor)
+              </p>
+            </FormField>
+          </fieldset>
 
           {/* Guardians section — visible for child/adolescent */}
           {(watchedPatientType === 'child' || watchedPatientType === 'adolescent') && (

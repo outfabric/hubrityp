@@ -56,6 +56,8 @@ export function PatientEditForm({ patient, updateAction }: PatientEditFormProps)
         source: patient.source,
         tags: patient.tags,
         notes: patient.notes,
+        whatsappOptOut: patient.whatsappOptOut,
+        reminderPhone: patient.reminderPhone,
       }}
       updateAction={updateAction}
       onSuccess={handleSuccess}
