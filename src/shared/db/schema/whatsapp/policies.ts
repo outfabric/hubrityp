@@ -41,3 +41,43 @@ export const messageTemplatesPolicies = [
      FOR DELETE TO authenticated
      USING (auth.uid() = user_id);`,
 ] as const;
+
+// Owner-scoped RLS policies for the `reminder_settings` table.
+//
+// Direct ownership via `user_id` — same pattern as `whatsapp_accounts`.
+// Each psychologist can only access their own reminder preferences.
+export const reminderSettingsPolicies = [
+  `ALTER TABLE reminder_settings ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select reminder_settings" ON reminder_settings
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert reminder_settings" ON reminder_settings
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update reminder_settings" ON reminder_settings
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can delete reminder_settings" ON reminder_settings
+     FOR DELETE TO authenticated
+     USING (auth.uid() = user_id);`,
+] as const;
+
+// Owner-scoped RLS policies for the `whatsapp_messages` table.
+//
+// Direct ownership via `user_id`. Psychologists can SELECT, INSERT, and
+// UPDATE their own messages. No DELETE policy — messages serve as an
+// audit trail and must not be removed.
+export const whatsappMessagesPolicies = [
+  `ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select whatsapp_messages" ON whatsapp_messages
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert whatsapp_messages" ON whatsapp_messages
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update whatsapp_messages" ON whatsapp_messages
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;
