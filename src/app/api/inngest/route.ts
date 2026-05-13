@@ -11,6 +11,7 @@ import { serve } from 'inngest/next';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
 import { inngest } from '@/modules/whatsapp/inngest/client';
 import { confirmationAckSender } from '@/modules/whatsapp/inngest/confirmation-ack-sender';
+import { inboxMessageIngest } from '@/modules/whatsapp/inngest/inbox/inbox-message-ingest';
 import { reconciliationPoller } from '@/modules/whatsapp/inngest/reconciliation-poller';
 import { reminderSender } from '@/modules/whatsapp/inngest/reminder-sender';
 import { remindersDispatcher } from '@/modules/whatsapp/inngest/reminders-dispatcher';
@@ -31,5 +32,6 @@ export const { GET, POST, PUT } = serve({
     webhookConfirmationHandler,
     webhookCancellationHandler,
     webhookStopHandler,
+    inboxMessageIngest,
   ],
 });

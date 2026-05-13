@@ -92,6 +92,7 @@ export {
   type StopReceivedEventData,
   type InboundReceivedEventData,
   type ConfirmationAckEventData,
+  type MessagePersistedEventData,
 } from './inngest/client';
 
 // ---- Inngest functions (registered in the API route) ------------------------
@@ -104,6 +105,7 @@ export { webhookStatusHandler } from './inngest/webhook-status-handler';
 export { webhookConfirmationHandler } from './inngest/webhook-confirmation-handler';
 export { webhookCancellationHandler } from './inngest/webhook-cancellation-handler';
 export { webhookStopHandler } from './inngest/webhook-stop-handler';
+export { inboxMessageIngest } from './inngest/inbox/inbox-message-ingest';
 
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
