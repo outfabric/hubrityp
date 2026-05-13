@@ -65,7 +65,7 @@
 
 > **Design System Salvia**: sidebar nav item com MessageCircle icon, Badge danger para unread count, seguindo pattern ativo.
 
-- [ ] 10.1 Atualizar sidebar/nav component para adicionar item "Caixa de entrada" com icone `MessageCircle` (Lucide 20px), link para `/app/caixa-de-entrada`, posicionado entre "Pacientes" e "Agenda". Active state: text `brand-700`, bg `brand-50`, border-left 3px `brand-500`. Quando unread_count total > 0, mostrar `Badge danger` com count a direita do label. Query para unread count via Server Action ou cache
+- [x] 10.1 Atualizar sidebar/nav component para adicionar item "Caixa de entrada" com icone `MessageCircle` (Lucide 20px), link para `/app/caixa-de-entrada`, posicionado entre "Pacientes" e "Agenda". Active state: text `brand-700`, bg `brand-50`, border-left 3px `brand-500`. Quando unread_count total > 0, mostrar `Badge danger` com count a direita do label. Query para unread count via Server Action ou cache
 
 ## 11. Frontend — Pagina Caixa de Entrada (Layout)
 

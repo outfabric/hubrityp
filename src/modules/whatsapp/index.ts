@@ -105,6 +105,10 @@ export {
   type AnalyticsSummary,
   type AnalyticsSummaryInput,
 } from './server/inbox/get-analytics-summary';
+export {
+  getTotalUnreadCountImpl,
+  type GetTotalUnreadCountResult,
+} from './server/inbox/get-total-unread-count';
 
 // ---- Inbox schemas ----------------------------------------------------------
 export { freeTextReplySchema, type FreeTextReplyInput } from './lib/inbox/free-text-reply-schema';
