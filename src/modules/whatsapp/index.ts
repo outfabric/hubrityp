@@ -97,6 +97,8 @@ export {
 // ---- Inngest functions (registered in the API route) ------------------------
 export { remindersDispatcher } from './inngest/reminders-dispatcher';
 export { reminderSender } from './inngest/reminder-sender';
+export { confirmationAckSender } from './inngest/confirmation-ack-sender';
+export { cancellationNoticeSender } from './inngest/cancellation-notice-sender';
 
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';

@@ -45,10 +45,10 @@
 
 ## 7. Inngest Functions — Confirmation ACK + Cancellation Notice + Consent Footer
 
-- [ ] 7.1 Criar `src/modules/whatsapp/inngest/confirmation-ack-sender.ts` — Inngest function trigger `whatsapp.confirmation.ack`. Busca sessao + paciente, seleciona variaveis para kind 'confirmed_ack', renderiza template `confirmacao_recebida`, envia via adapter, persiste whatsapp_messages
-- [ ] 7.2 Criar `src/modules/whatsapp/inngest/cancellation-notice-sender.ts` — Inngest function trigger `agenda/session.cancelled`. Verifica: cancelled_by != 'patient' (paciente ja sabe), patient.whatsapp_opt_out = false, whatsapp_accounts.status = 'active'. Se ok: seleciona variaveis para kind 'cancelled', renderiza `cancelamento_aviso`, envia via adapter, persiste whatsapp_messages
-- [ ] 7.3 Criar `src/modules/whatsapp/inngest/consent-footer-sender.ts` — logica inline no reminder-sender (nao funcao separada). Ja coberto pela step 2 do reminder-sender (6.3). Este item apenas documenta que o consent footer e implementado como parte do fluxo do sender, nao como funcao Inngest separada
-- [ ] 7.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/cancellation-notice-on-cancel.int.test.ts` — mock do adapter: cancelar sessao pelo psicologo, verificar que cancelamento_aviso foi enviado. Cancelar pelo paciente: nao envia. Patient opt-out: nao envia. Account erro: nao envia
+- [x] 7.1 Criar `src/modules/whatsapp/inngest/confirmation-ack-sender.ts` — Inngest function trigger `whatsapp.confirmation.ack`. Busca sessao + paciente, seleciona variaveis para kind 'confirmed_ack', renderiza template `confirmacao_recebida`, envia via adapter, persiste whatsapp_messages
+- [x] 7.2 Criar `src/modules/whatsapp/inngest/cancellation-notice-sender.ts` — Inngest function trigger `agenda/session.cancelled`. Verifica: cancelled_by != 'patient' (paciente ja sabe), patient.whatsapp_opt_out = false, whatsapp_accounts.status = 'active'. Se ok: seleciona variaveis para kind 'cancelled', renderiza `cancelamento_aviso`, envia via adapter, persiste whatsapp_messages
+- [x] 7.3 Criar `src/modules/whatsapp/inngest/consent-footer-sender.ts` — logica inline no reminder-sender (nao funcao separada). Ja coberto pela step 2 do reminder-sender (6.3). Este item apenas documenta que o consent footer e implementado como parte do fluxo do sender, nao como funcao Inngest separada
+- [x] 7.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/cancellation-notice-on-cancel.int.test.ts` — mock do adapter: cancelar sessao pelo psicologo, verificar que cancelamento_aviso foi enviado. Cancelar pelo paciente: nao envia. Patient opt-out: nao envia. Account erro: nao envia
 
 ## 8. Inngest Function — Reconciliation Poller
 
