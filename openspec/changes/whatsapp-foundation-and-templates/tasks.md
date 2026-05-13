@@ -96,8 +96,8 @@
 
 ## 14. Route Actions
 
-- [ ] 14.1 Criar `src/app/(app)/configuracoes/lembretes/templates/actions.ts` com `'use server'` — delega listTemplates, getTemplate, updateTemplate, getTemplateMetaStatus
-- [ ] 14.2 Criar `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/actions.ts` com `'use server'` — delega getTemplate, updateTemplate, getTemplateMetaStatus
+- [x] 14.1 Criar `src/app/(app)/configuracoes/lembretes/templates/actions.ts` com `'use server'` — delega listTemplates, getTemplate, updateTemplate, getTemplateMetaStatus
+- [x] 14.2 Criar `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/actions.ts` com `'use server'` — delega getTemplate, updateTemplate, getTemplateMetaStatus
 
 ## 15. E2E Tests
 

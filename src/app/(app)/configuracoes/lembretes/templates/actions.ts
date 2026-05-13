@@ -1,16 +1,43 @@
 'use server';
 
-// Thin route shell for template-listing Server Actions.
+// Thin route shell for template Server Actions.
 //
-// The actual implementation lives in `src/modules/whatsapp/server/list-templates.ts`
-// (re-exported from `@/modules/whatsapp`). This file carries `'use server'` so
-// Next.js treats every export as a Server Action entry point.
+// The actual implementations live in `src/modules/whatsapp/server/` (re-exported
+// from `@/modules/whatsapp`). This file carries `'use server'` so Next.js
+// treats every export as a Server Action entry point.
 
-import type { ListTemplatesResult } from '@/modules/whatsapp';
-import { listTemplatesImpl } from '@/modules/whatsapp';
+import type {
+  GetTemplateMetaStatusResult,
+  GetTemplateResult,
+  ListTemplatesResult,
+  UpdateTemplateResult,
+} from '@/modules/whatsapp';
+import {
+  getTemplateImpl,
+  getTemplateMetaStatusImpl,
+  listTemplatesImpl,
+  updateTemplateImpl,
+} from '@/modules/whatsapp';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function listTemplates(): Promise<ListTemplatesResult> {
   const supabase = await createServerClient();
   return listTemplatesImpl(supabase);
+}
+
+export async function getTemplate(templateKey: string): Promise<GetTemplateResult> {
+  const supabase = await createServerClient();
+  return getTemplateImpl(supabase, templateKey);
+}
+
+export async function updateTemplate(input: unknown): Promise<UpdateTemplateResult> {
+  const supabase = await createServerClient();
+  return updateTemplateImpl(supabase, input);
+}
+
+export async function getTemplateMetaStatus(
+  templateKey: string,
+): Promise<GetTemplateMetaStatusResult> {
+  const supabase = await createServerClient();
+  return getTemplateMetaStatusImpl(supabase, templateKey);
 }
