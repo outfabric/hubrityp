@@ -27,10 +27,10 @@
 
 ## 5. Validators — Zod Schemas
 
-- [ ] 5.1 Criar `src/modules/whatsapp/lib/inbox/free-text-reply-schema.ts` — Zod schema: body (string min 1 max 4096), refinement que chama checkClinicalContent e retorna erro se blocked. Exportar tipo via z.infer
-- [ ] 5.2 Criar `src/modules/whatsapp/lib/inbox/search-message-schema.ts` — Zod schema: query (string min 1 max 200), patientId (string uuid optional), dateRange (object { from: string ISO date, to: string ISO date } optional com refinement to >= from), page (number int min 1 default 1), pageSize (number int min 10 max 100 default 20). Exportar tipo via z.infer
-- [ ] 5.3 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/free-text-reply-schema.test.ts` — testar: body valido aceito, body vazio rejeitado, body >4096 rejeitado, body com conteudo clinico rejeitado (refinement), body administrativo aceito
-- [ ] 5.4 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/search-message-schema.test.ts` — testar: query valida, query vazia rejeitada, dateRange valido (to >= from), dateRange invalido (to < from) rejeitado, patientId UUID valido/invalido, paginacao defaults
+- [x] 5.1 Criar `src/modules/whatsapp/lib/inbox/free-text-reply-schema.ts` — Zod schema: body (string min 1 max 4096), refinement que chama checkClinicalContent e retorna erro se blocked. Exportar tipo via z.infer
+- [x] 5.2 Criar `src/modules/whatsapp/lib/inbox/search-message-schema.ts` — Zod schema: query (string min 1 max 200), patientId (string uuid optional), dateRange (object { from: string ISO date, to: string ISO date } optional com refinement to >= from), page (number int min 1 default 1), pageSize (number int min 10 max 100 default 20). Exportar tipo via z.infer
+- [x] 5.3 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/free-text-reply-schema.test.ts` — testar: body valido aceito, body vazio rejeitado, body >4096 rejeitado, body com conteudo clinico rejeitado (refinement), body administrativo aceito
+- [x] 5.4 **Testes unitarios:** Criar `src/__tests__/unit/modules/whatsapp/inbox/search-message-schema.test.ts` — testar: query valida, query vazia rejeitada, dateRange valido (to >= from), dateRange invalido (to < from) rejeitado, patientId UUID valido/invalido, paginacao defaults
 
 ## 6. Inngest — Inbox Message Ingest
 
