@@ -1,6 +1,6 @@
 ## 1. Dependencies
 
-- [ ] 1.1 Adicionar env var `TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL` ao modulo de env validado (`src/shared/env/server.ts`) com Zod coerce number, default `0.10`. Documentar no `.env.example`
+- [x] 1.1 Adicionar env var `TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL` ao modulo de env validado (`src/shared/env/server.ts`) com Zod coerce number, default `0.10`. Documentar no `.env.example`
 
 ## 2. Database Schema — Inbox Additions
 
