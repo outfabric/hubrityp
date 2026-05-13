@@ -89,6 +89,19 @@ export default async function globalSetup() {
     // with a deterministic blank slate. With Testcontainers `.withReuse()`
     // the DB persists across runs, and leftovers cause spurious failures
     // (duplicate detection, non-empty states, wrong consent badges, etc.).
+
+    // WhatsApp tables — delete in FK order (conversations → messages →
+    // templates → settings → accounts). Stale whatsapp_accounts rows
+    // (especially with status='error') from previous runs cause the
+    // whatsapp-connect E2E to see "Erro de conexao" instead of
+    // "Nao conectado" when running in parallel with tests that seed
+    // the same user's account.
+    await sql`DELETE FROM public.whatsapp_conversations WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.whatsapp_messages WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.message_templates WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.reminder_settings WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
+
     await sql`DELETE FROM public.session_history WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.sessions WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.locations WHERE user_id = ${seed.userId}`;

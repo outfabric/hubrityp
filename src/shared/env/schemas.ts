@@ -31,6 +31,9 @@ export const serverEnvSchema = clientEnvSchema.extend({
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_WHATSAPP_FROM: z.string().optional(),
   TWILIO_WEBHOOK_URL: z.string().url().optional(),
+  // Estimated cost per WhatsApp template message in BRL.
+  // Used for cost estimation display only — not for billing.
+  TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL: z.coerce.number().default(0.1),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

@@ -68,6 +68,9 @@ export const reminderSettingsPolicies = [
 // Direct ownership via `user_id`. Psychologists can SELECT, INSERT, and
 // UPDATE their own messages. No DELETE policy — messages serve as an
 // audit trail and must not be removed.
+//
+// The UPDATE policy allows psychologists to mark messages as read
+// (`read_at_by_psychologist`) and resolved (`resolved_at`) in the inbox.
 export const whatsappMessagesPolicies = [
   `ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;`,
   `CREATE POLICY "owner can select whatsapp_messages" ON whatsapp_messages
@@ -80,4 +83,25 @@ export const whatsappMessagesPolicies = [
      FOR UPDATE TO authenticated
      USING (auth.uid() = user_id)
      WITH CHECK (auth.uid() = user_id);`,
+] as const;
+
+// Owner-scoped RLS policies for the `whatsapp_conversations` table.
+//
+// Direct ownership via `user_id`. Psychologists can SELECT, INSERT,
+// UPDATE, and DELETE their own conversations.
+export const whatsappConversationsPolicies = [
+  `ALTER TABLE whatsapp_conversations ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select whatsapp_conversations" ON whatsapp_conversations
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert whatsapp_conversations" ON whatsapp_conversations
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update whatsapp_conversations" ON whatsapp_conversations
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can delete whatsapp_conversations" ON whatsapp_conversations
+     FOR DELETE TO authenticated
+     USING (auth.uid() = user_id);`,
 ] as const;

@@ -110,6 +110,16 @@ export interface ConfirmationAckEventData {
   userId: string;
 }
 
+/** Data payload for `whatsapp/message.persisted` — message saved to DB. */
+export interface MessagePersistedEventData {
+  /** UUID of the whatsapp_messages row. */
+  messageId: string;
+  /** Psychologist's auth.users.id. */
+  userId: string;
+  /** Patient who sent/received the message. */
+  patientId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event name constants
 // ---------------------------------------------------------------------------
@@ -122,6 +132,7 @@ export const WHATSAPP_EVENTS = {
   STOP_RECEIVED: 'whatsapp/stop.received',
   INBOUND_RECEIVED: 'whatsapp/inbound.received',
   CONFIRMATION_ACK: 'whatsapp/confirmation.ack',
+  MESSAGE_PERSISTED: 'whatsapp/message.persisted',
 } as const;
 
 // ---------------------------------------------------------------------------

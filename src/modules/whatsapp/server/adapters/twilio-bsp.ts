@@ -104,6 +104,101 @@ export type SendTemplateResult =
  * Error codes from Twilio are mapped to typed `TwilioSendError` variants
  * (see `TWILIO_ERROR_MAP`).
  */
+// ---------------------------------------------------------------------------
+// Free-text messaging (within 24h session window)
+// ---------------------------------------------------------------------------
+
+export interface SendFreeTextInput {
+  /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
+  to: string;
+  /** The free-text message body. */
+  body: string;
+}
+
+export interface SendFreeTextSuccess {
+  bspMessageId: string;
+  status: string;
+}
+
+export type SendFreeTextResult =
+  | { ok: true; data: SendFreeTextSuccess }
+  | { ok: false; error: TwilioSendError };
+
+/**
+ * Sends a free-text WhatsApp message through Twilio's Messages API.
+ *
+ * Free-text messages can only be sent within Meta's 24-hour session window
+ * (i.e., the patient must have sent an inbound message in the last 24 hours).
+ * Window enforcement is handled by the caller — this function only handles
+ * the BSP send.
+ */
+export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTextResult> {
+  const { to, body } = input;
+
+  const accountSid = serverEnv.TWILIO_ACCOUNT_SID;
+  const authToken = serverEnv.TWILIO_AUTH_TOKEN;
+  const fromNumber = serverEnv.TWILIO_WHATSAPP_FROM;
+
+  if (!accountSid || !authToken || !fromNumber) {
+    logger.error(
+      { event: 'twilio_credentials_missing_free_text' },
+      'Twilio credentials not configured — cannot send free-text message',
+    );
+    return {
+      ok: false,
+      error: {
+        code: 'UNKNOWN',
+        twilioCode: undefined,
+        message: 'Twilio credentials not configured',
+      },
+    };
+  }
+
+  const client = twilio(accountSid, authToken);
+
+  try {
+    const message = await client.messages.create({
+      to: `whatsapp:${to}`,
+      from: `whatsapp:${fromNumber}`,
+      body,
+    });
+
+    logger.info(
+      {
+        event: 'whatsapp_free_text_sent',
+        bspMessageId: message.sid,
+        status: message.status,
+      },
+      'WhatsApp free-text message sent successfully',
+    );
+
+    return {
+      ok: true,
+      data: {
+        bspMessageId: message.sid,
+        status: message.status,
+      },
+    };
+  } catch (err: unknown) {
+    const sendError = mapTwilioError(err);
+
+    logger.error(
+      {
+        event: 'whatsapp_free_text_send_failed',
+        errorCode: sendError.code,
+        twilioCode: sendError.twilioCode,
+      },
+      'Failed to send WhatsApp free-text message',
+    );
+
+    return { ok: false, error: sendError };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Template messaging
+// ---------------------------------------------------------------------------
+
 export async function sendTemplate(input: SendTemplateInput): Promise<SendTemplateResult> {
   const { to, fromAccountId, templateKey, contentSid, variables, bodyRendered, consentFooter } =
     input;

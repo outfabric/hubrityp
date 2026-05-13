@@ -1,26 +1,40 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Calendar, LayoutDashboard, Menu, Settings, Users, X } from 'lucide-react';
+import { Calendar, LayoutDashboard, Menu, MessageCircle, Settings, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { cn } from '@/shared/lib/utils';
+import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
+
+import { getTotalUnreadCount } from './actions';
 
 interface NavItem {
   readonly label: string;
   readonly href: string;
   readonly icon: LucideIcon;
+  /** When true, a danger badge with the unread count is shown. */
+  readonly showUnreadBadge?: boolean;
 }
 
 const navItems: readonly NavItem[] = [
   { label: 'Painel', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Pacientes', href: '/pacientes', icon: Users },
+  {
+    label: 'Caixa de entrada',
+    href: '/caixa-de-entrada',
+    icon: MessageCircle,
+    showUnreadBadge: true,
+  },
   { label: 'Agenda', href: '/agenda', icon: Calendar },
   { label: 'Configuracoes', href: '/configuracoes/locais', icon: Settings },
 ];
+
+/** Polling interval for unread count refresh (60 seconds). */
+const UNREAD_POLL_MS = 60_000;
 
 /**
  * Sidebar navigation for the authenticated app shell.
@@ -36,6 +50,31 @@ const navItems: readonly NavItem[] = [
 export function SidebarNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch total unread count on mount and poll periodically.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchUnread() {
+      try {
+        const result = await getTotalUnreadCount();
+        if (!cancelled && result.ok) {
+          setUnreadCount(result.totalUnread);
+        }
+      } catch {
+        // Silently ignore — sidebar badge is non-critical.
+      }
+    }
+
+    void fetchUnread();
+    const interval = setInterval(() => void fetchUnread(), UNREAD_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   const toggleMobile = useCallback(() => {
     setMobileOpen((prev) => !prev);
@@ -49,6 +88,7 @@ export function SidebarNav() {
     navItems.map((item) => {
       const isActive = pathname.startsWith(item.href);
       const Icon = item.icon;
+      const showBadge = item.showUnreadBadge && unreadCount > 0;
 
       return (
         <Link
@@ -64,7 +104,12 @@ export function SidebarNav() {
           aria-current={isActive ? 'page' : undefined}
         >
           <Icon size={20} aria-hidden="true" />
-          {item.label}
+          <span className="flex-1">{item.label}</span>
+          {showBadge && (
+            <Badge variant="danger" aria-label={`${unreadCount} mensagens nao lidas`}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
         </Link>
       );
     });

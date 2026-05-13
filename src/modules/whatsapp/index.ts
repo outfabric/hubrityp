@@ -68,8 +68,66 @@ export {
   type TemplateVariable,
 } from './lib/template-variables';
 
+// ---- Inbox Server Actions ---------------------------------------------------
+export {
+  listConversationsImpl,
+  type ListConversationsInput,
+  type ListConversationsResult,
+  type ConversationListItem,
+} from './server/inbox/list-conversations';
+export {
+  getConversationImpl,
+  type GetConversationResult,
+  type ConversationPatientInfo,
+} from './server/inbox/get-conversation';
+export {
+  sendFreeTextReplyImpl,
+  type SendFreeTextReplyResult,
+  type SendFreeTextReplyDeps,
+} from './server/inbox/send-free-text-reply';
+export {
+  sendTemplateReplyImpl,
+  type SendTemplateReplyResult,
+  type SendTemplateReplyDeps,
+} from './server/inbox/send-template-reply';
+export {
+  markConversationResolvedImpl,
+  type MarkConversationResolvedResult,
+} from './server/inbox/mark-conversation-resolved';
+export {
+  searchMessageHistoryImpl,
+  type SearchMessageHistoryResult,
+  type SearchResultItem,
+} from './server/inbox/search-message-history';
+export {
+  getAnalyticsSummaryImpl,
+  type GetAnalyticsSummaryResult,
+  type AnalyticsSummary,
+  type AnalyticsSummaryInput,
+} from './server/inbox/get-analytics-summary';
+export {
+  getTotalUnreadCountImpl,
+  type GetTotalUnreadCountResult,
+} from './server/inbox/get-total-unread-count';
+
+// ---- Inbox schemas ----------------------------------------------------------
+export { freeTextReplySchema, type FreeTextReplyInput } from './lib/inbox/free-text-reply-schema';
+export { searchMessageSchema, type SearchMessageInput } from './lib/inbox/search-message-schema';
+
+// ---- Inbox lib helpers ------------------------------------------------------
+export { detectRiskKeywords, type RiskDetectionResult } from './lib/inbox/detect-risk-keywords';
+export {
+  checkClinicalContent,
+  type ClinicalContentResult,
+} from './lib/inbox/clinical-content-blocker';
+export { formatConversationTime } from './lib/inbox/format-conversation-time';
+
 // ---- BSP adapter (Twilio) ---------------------------------------------------
 export {
+  sendFreeText,
+  type SendFreeTextInput,
+  type SendFreeTextResult,
+  type SendFreeTextSuccess,
   sendTemplate,
   type SendTemplateInput,
   type SendTemplateResult,
@@ -92,6 +150,7 @@ export {
   type StopReceivedEventData,
   type InboundReceivedEventData,
   type ConfirmationAckEventData,
+  type MessagePersistedEventData,
 } from './inngest/client';
 
 // ---- Inngest functions (registered in the API route) ------------------------
@@ -104,6 +163,7 @@ export { webhookStatusHandler } from './inngest/webhook-status-handler';
 export { webhookConfirmationHandler } from './inngest/webhook-confirmation-handler';
 export { webhookCancellationHandler } from './inngest/webhook-cancellation-handler';
 export { webhookStopHandler } from './inngest/webhook-stop-handler';
+export { inboxMessageIngest } from './inngest/inbox/inbox-message-ingest';
 
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
@@ -117,6 +177,24 @@ export {
 // ---- Components -------------------------------------------------------------
 export { WhatsAppHealthBanner } from './components/whatsapp-health-banner';
 export { ReminderSettingsForm } from './components/reminder-settings-form';
+
+// ---- Inbox Components -------------------------------------------------------
+export { ConversationList } from './components/inbox/conversation-list';
+export { ConversationListItem as ConversationListItemComponent } from './components/inbox/conversation-list-item';
+export { ConversationsFilters, type InboxFilter } from './components/inbox/conversations-filters';
+export { ConversationThread } from './components/inbox/conversation-thread';
+export { RiskAlertBanner } from './components/inbox/risk-alert-banner';
+export { MessageComposer } from './components/inbox/message-composer';
+export { TemplateReplyDialog } from './components/inbox/template-reply-dialog';
+export { MarkResolvedButton } from './components/inbox/mark-resolved-button';
+export { AnalyticsDashboard } from './components/inbox/analytics-dashboard';
+export { RiskKeywordConfig } from './components/inbox/risk-keyword-config';
+
+// ---- Inbox notification helpers ---------------------------------------------
+export {
+  showInboxNotification,
+  type InboxNotificationPayload,
+} from './lib/inbox/risk-notification';
 
 // ---- Reminder Server Actions ------------------------------------------------
 export {
