@@ -187,6 +187,14 @@ export { RiskAlertBanner } from './components/inbox/risk-alert-banner';
 export { MessageComposer } from './components/inbox/message-composer';
 export { TemplateReplyDialog } from './components/inbox/template-reply-dialog';
 export { MarkResolvedButton } from './components/inbox/mark-resolved-button';
+export { AnalyticsDashboard } from './components/inbox/analytics-dashboard';
+export { RiskKeywordConfig } from './components/inbox/risk-keyword-config';
+
+// ---- Inbox notification helpers ---------------------------------------------
+export {
+  showInboxNotification,
+  type InboxNotificationPayload,
+} from './lib/inbox/risk-notification';
 
 // ---- Reminder Server Actions ------------------------------------------------
 export {
