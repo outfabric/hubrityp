@@ -27,5 +27,5 @@
 
 ## 6. Validation
 
-- [ ] 6.1 Run `npm run test:e2e:seeded -- --grep "@agenda"` locally and verify all 4 agenda tests pass (including with `--retries 2`)
-- [ ] 6.2 Run `npm run test:e2e:seeded -- --grep "@patients"` locally and verify all patient-listing tests pass consistently (run 3x to check for flakiness)
+- [x] 6.1 Run `npm run test:e2e:seeded -- --grep "@agenda"` locally and verify all 4 agenda tests pass (including with `--retries 2`)
+- [x] 6.2 Run `npm run test:e2e:seeded -- --grep "@patients"` locally and verify all patient-listing tests pass consistently (run 3x to check for flakiness)

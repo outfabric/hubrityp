@@ -177,9 +177,14 @@ export default async function globalSetup() {
     // Seed sessions for status change E2E tests (sections 17–18).
     // Each session is seeded at a distinct BRT hour tomorrow to avoid time
     // collisions with other e2e tests (session-create: 14:00, drag-drop:
-    // 08:00–10:00, block-create: 12:00). We use `(current_date + 1 day)`
-    // anchored at midnight UTC, then add enough hours to land within BRT
-    // business hours (BRT = UTC-3, so 10:00 BRT = 13:00 UTC).
+    // 08:00–10:00, block-create: 12:00). We anchor on the BRT date
+    // `(current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date` rather
+    // than `current_date` (UTC) because the Playwright browser uses
+    // `timezoneId: 'America/Sao_Paulo'`. Between 00:00–03:00 UTC the BRT
+    // calendar day is one day behind UTC, and `current_date` would place
+    // sessions on a day the browser's "tomorrow" navigation doesn't reach.
+    // The hour offsets after the date are in UTC
+    // (BRT = UTC-3, so 10:00 BRT = 13:00 UTC).
     //
     // Time assignments (BRT): cancel=19:00, markDone=11:00, noShow=09:00, lock=20:00
     // These times are chosen to avoid conflicts with pre-existing parallel
@@ -198,8 +203,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.cancellable.id},
         ${seed.userId},
         ${SEED_SESSIONS.cancellable.patientId},
-        (current_date + interval '1 day' + interval '22 hours'),
-        (current_date + interval '1 day' + interval '22 hours 50 minutes'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '22 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '22 hours 50 minutes'),
         50, 'scheduled', false
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -228,8 +233,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.confirmedForDone.id},
         ${seed.userId},
         ${SEED_SESSIONS.confirmedForDone.patientId},
-        (current_date + interval '1 day' + interval '14 hours'),
-        (current_date + interval '1 day' + interval '14 hours 50 minutes'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '14 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '14 hours 50 minutes'),
         50, 'confirmed', false, now()
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -258,8 +263,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.forNoShow.id},
         ${seed.userId},
         ${SEED_SESSIONS.forNoShow.patientId},
-        (current_date + interval '1 day' + interval '12 hours'),
-        (current_date + interval '1 day' + interval '12 hours 50 minutes'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '12 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '12 hours 50 minutes'),
         50, 'scheduled', false
       )
       ON CONFLICT (id) DO UPDATE SET
@@ -288,8 +293,8 @@ export default async function globalSetup() {
         ${SEED_SESSIONS.lockedDone.id},
         ${seed.userId},
         ${SEED_SESSIONS.lockedDone.patientId},
-        (current_date + interval '1 day' + interval '23 hours'),
-        (current_date + interval '1 day' + interval '23 hours 50 minutes'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '23 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '1 day' + interval '23 hours 50 minutes'),
         50, 'done', false, now() - interval '8 days'
       )
       ON CONFLICT (id) DO UPDATE SET

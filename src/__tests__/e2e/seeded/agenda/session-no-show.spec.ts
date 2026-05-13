@@ -1,3 +1,4 @@
+import { tomorrowInBrt } from '../_shared/brt-date';
 import { expect, test } from '../setup/db-fixture';
 import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -33,10 +34,17 @@ test.describe('@agenda session no-show', () => {
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // Switch to day view and navigate to tomorrow
+    // Switch to day view and navigate to tomorrow.
+    // Wait for the period title to reflect tomorrow's date before asserting
+    // on session chips — avoids a race where FullCalendar hasn't re-rendered yet.
+    const tomorrowDay = String(tomorrowInBrt().getDate());
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the forNoShow session chip for Maria Silva at 09:00.
     // Filter by patient name, "Agendada" badge, and time text to
@@ -65,6 +73,10 @@ test.describe('@agenda session no-show', () => {
     await page.waitForTimeout(1000);
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the session chip again — now it should have "Falta" badge.
     const noShowChip = page

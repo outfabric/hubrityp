@@ -1,3 +1,4 @@
+import { tomorrowInBrt } from '../_shared/brt-date';
 import { expect, test } from '../setup/db-fixture';
 import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -32,10 +33,17 @@ test.describe('@agenda mark session as done', () => {
     await page.goto('/agenda');
     await expect(page.getByTestId('agenda-page-title')).toBeVisible();
 
-    // Switch to day view and navigate to tomorrow
+    // Switch to day view and navigate to tomorrow.
+    // Wait for the period title to reflect tomorrow's date before asserting
+    // on session chips — avoids a race where FullCalendar hasn't re-rendered yet.
+    const tomorrowDay = String(tomorrowInBrt().getDate());
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the seeded confirmed session chip (patient: Joao Santos).
     // There are two Joao Santos sessions: confirmedForDone (confirmed, 11:00)
@@ -63,6 +71,10 @@ test.describe('@agenda mark session as done', () => {
     await page.waitForTimeout(1000);
     await page.getByTestId('agenda-nav-today').click();
     await page.getByTestId('agenda-nav-next').click();
+    await expect(page.getByTestId('agenda-period-title')).toContainText(
+      new RegExp(`\\b${tomorrowDay}\\b`),
+      { timeout: 10000 },
+    );
 
     // Find the session chip again — now it should have "Realizada" badge.
     // The confirmedForDone session is at 11:00 BRT, so it appears first among
