@@ -120,7 +120,9 @@ async function seedTemplate(
   });
 }
 
-function buildCancelledEvent(overrides: Partial<SessionCancelledEvent> = {}): SessionCancelledEvent {
+function buildCancelledEvent(
+  overrides: Partial<SessionCancelledEvent> = {},
+): SessionCancelledEvent {
   return {
     sessionId: randomUUID(),
     patientId: randomUUID(),

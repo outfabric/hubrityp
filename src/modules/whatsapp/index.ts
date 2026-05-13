@@ -100,6 +100,10 @@ export { reminderSender } from './inngest/reminder-sender';
 export { confirmationAckSender } from './inngest/confirmation-ack-sender';
 export { cancellationNoticeSender } from './inngest/cancellation-notice-sender';
 export { reconciliationPoller } from './inngest/reconciliation-poller';
+export { webhookStatusHandler } from './inngest/webhook-status-handler';
+export { webhookConfirmationHandler } from './inngest/webhook-confirmation-handler';
+export { webhookCancellationHandler } from './inngest/webhook-cancellation-handler';
+export { webhookStopHandler } from './inngest/webhook-stop-handler';
 
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';

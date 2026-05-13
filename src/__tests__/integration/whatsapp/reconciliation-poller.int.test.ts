@@ -28,16 +28,14 @@ async function seedAuthUser(userId: string): Promise<void> {
 }
 
 /** Insert a whatsapp_messages row directly for testing. */
-async function seedMessage(
-  overrides: {
-    id?: string;
-    userId: string;
-    bspMessageId?: string;
-    status?: string;
-    sentAt?: Date;
-    direction?: string;
-  },
-): Promise<string> {
+async function seedMessage(overrides: {
+  id?: string;
+  userId: string;
+  bspMessageId?: string;
+  status?: string;
+  sentAt?: Date;
+  direction?: string;
+}): Promise<string> {
   const id = overrides.id ?? randomUUID();
   await runAsService(async (db) => {
     await db.insert(whatsappMessages).values({
@@ -53,9 +51,7 @@ async function seedMessage(
 }
 
 /** Creates a mock FetchTwilioMessage that returns a fixed status. */
-function mockFetchTwilio(
-  statusMap: Record<string, TwilioMessageResource>,
-): FetchTwilioMessage {
+function mockFetchTwilio(statusMap: Record<string, TwilioMessageResource>): FetchTwilioMessage {
   return vi.fn((bspMessageId: string): Promise<TwilioMessageResource> => {
     const resource = statusMap[bspMessageId];
     if (!resource) {

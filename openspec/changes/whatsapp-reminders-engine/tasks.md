@@ -57,11 +57,11 @@
 
 ## 9. Route Handler — Twilio Webhook
 
-- [ ] 9.1 Criar `src/app/api/webhooks/twilio/whatsapp/route.ts` — Route Handler POST. Sequencia: (1) ler raw body, (2) validar X-Twilio-Signature via validateTwilioSignature, (3) parsear payload (detectar tipo: status update, button reply, inbound text, PARAR), (4) emitir evento Inngest correspondente, (5) retornar 200. Nenhuma logica de negocio sincrona alem do parse
-- [ ] 9.2 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-status.int.test.ts` — POST com payload de status 'delivered'/'read'/'failed' e assinatura HMAC valida: verificar que whatsapp_messages e atualizado corretamente. Assinatura invalida: 403
-- [ ] 9.3 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-button-confirm.int.test.ts` — POST com Quick Reply "Confirmar" e assinatura valida: verificar sessions.status='confirmed', confirmed_at setado, evento de ack enfileirado. Duplicata ignorada
-- [ ] 9.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-button-cancel.int.test.ts` — POST com Quick Reply "Nao posso comparecer" e assinatura valida: sessao cancelada (cancelled_by='patient'), regra de antecedencia aplicada. Duplicata ignorada
-- [ ] 9.5 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-stop-command.int.test.ts` — POST com texto "PARAR"/"parar"/" PARAR ": paciente marcado como opt-out, confirmacao enviada, psicologo notificado. Texto "quero parar de ir na quarta": NAO processa como opt-out
+- [x] 9.1 Criar `src/app/api/webhooks/twilio/whatsapp/route.ts` — Route Handler POST. Sequencia: (1) ler raw body, (2) validar X-Twilio-Signature via validateTwilioSignature, (3) parsear payload (detectar tipo: status update, button reply, inbound text, PARAR), (4) emitir evento Inngest correspondente, (5) retornar 200. Nenhuma logica de negocio sincrona alem do parse
+- [x] 9.2 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-status.int.test.ts` — POST com payload de status 'delivered'/'read'/'failed' e assinatura HMAC valida: verificar que whatsapp_messages e atualizado corretamente. Assinatura invalida: 403
+- [x] 9.3 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-button-confirm.int.test.ts` — POST com Quick Reply "Confirmar" e assinatura valida: verificar sessions.status='confirmed', confirmed_at setado, evento de ack enfileirado. Duplicata ignorada
+- [x] 9.4 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-button-cancel.int.test.ts` — POST com Quick Reply "Nao posso comparecer" e assinatura valida: sessao cancelada (cancelled_by='patient'), regra de antecedencia aplicada. Duplicata ignorada
+- [x] 9.5 **Teste de integracao:** Criar `src/__tests__/integration/whatsapp/webhook-stop-command.int.test.ts` — POST com texto "PARAR"/"parar"/" PARAR ": paciente marcado como opt-out, confirmacao enviada, psicologo notificado. Texto "quero parar de ir na quarta": NAO processa como opt-out
 
 ## 10. Server Actions — Settings + Toggle
 

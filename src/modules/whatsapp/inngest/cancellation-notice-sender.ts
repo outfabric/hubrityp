@@ -212,7 +212,11 @@ export async function processCancellationNotice(
   }
 
   // Fetch location (optional)
-  let locationData: { name: string; address: string | null; arrivalInstructions: string | null } | null = null;
+  let locationData: {
+    name: string;
+    address: string | null;
+    arrivalInstructions: string | null;
+  } | null = null;
   if (sessionRow.locationId) {
     const [locRow] = await db
       .select({

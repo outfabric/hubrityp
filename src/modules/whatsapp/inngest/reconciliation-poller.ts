@@ -97,7 +97,9 @@ export interface ReconciliationResult {
  * Core reconciliation logic — queries stuck messages and reconciles
  * their status with Twilio. Extracted from the Inngest handler for testability.
  */
-export async function reconcileStuckMessages(deps: ReconciliationDeps): Promise<ReconciliationResult> {
+export async function reconcileStuckMessages(
+  deps: ReconciliationDeps,
+): Promise<ReconciliationResult> {
   const { db, fetchTwilioMessage, now } = deps;
 
   const threshold = new Date(now.getTime() - STUCK_THRESHOLD_MINUTES * 60 * 1000);
@@ -163,10 +165,7 @@ export async function reconcileStuckMessages(deps: ReconciliationDeps): Promise<
         failed++;
       }
 
-      await db
-        .update(whatsappMessages)
-        .set(updatePayload)
-        .where(eq(whatsappMessages.id, msg.id));
+      await db.update(whatsappMessages).set(updatePayload).where(eq(whatsappMessages.id, msg.id));
 
       if (mappedStatus !== 'failed') {
         reconciled++;
@@ -196,7 +195,14 @@ export async function reconcileStuckMessages(deps: ReconciliationDeps): Promise<
  * code into test bundles at module-evaluation time).
  */
 export function createTwilioFetcher(
-  twilioFactory: (sid: string, token: string) => { messages(sid: string): { fetch(): Promise<{ status: string; errorCode?: number | null; errorMessage?: string | null }> } },
+  twilioFactory: (
+    sid: string,
+    token: string,
+  ) => {
+    messages(sid: string): {
+      fetch(): Promise<{ status: string; errorCode?: number | null; errorMessage?: string | null }>;
+    };
+  },
   accountSid: string,
   authToken: string,
 ): FetchTwilioMessage {

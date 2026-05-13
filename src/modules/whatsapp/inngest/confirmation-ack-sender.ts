@@ -187,7 +187,10 @@ export async function processConfirmationAck(
     })
     .from(messageTemplates)
     .where(
-      and(eq(messageTemplates.userId, eventData.userId), eq(messageTemplates.templateKey, TEMPLATE_KEY)),
+      and(
+        eq(messageTemplates.userId, eventData.userId),
+        eq(messageTemplates.templateKey, TEMPLATE_KEY),
+      ),
     )
     .limit(1);
 
@@ -196,7 +199,11 @@ export async function processConfirmationAck(
   }
 
   // Fetch location (optional)
-  let locationData: { name: string; address: string | null; arrivalInstructions: string | null } | null = null;
+  let locationData: {
+    name: string;
+    address: string | null;
+    arrivalInstructions: string | null;
+  } | null = null;
   if (sessionRow.locationId) {
     const [locRow] = await db
       .select({
