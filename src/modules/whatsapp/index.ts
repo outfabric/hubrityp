@@ -35,6 +35,24 @@ export {
   type HealthCheckWhatsappResult,
 } from './server/health-check-whatsapp';
 
+export {
+  listTemplatesImpl,
+  type ListTemplatesResult,
+  type TemplatePreview,
+} from './server/list-templates';
+export {
+  getTemplateImpl,
+  type GetTemplateResult,
+} from './server/get-template';
+export {
+  updateTemplateImpl,
+  type UpdateTemplateResult,
+} from './server/update-template';
+export {
+  getTemplateMetaStatusImpl,
+  type GetTemplateMetaStatusResult,
+} from './server/get-template-meta-status';
+
 // ---- Internal helpers (not Server Actions) -----------------------------------
 export { seedDefaultTemplates } from './server/seed-default-templates';
 

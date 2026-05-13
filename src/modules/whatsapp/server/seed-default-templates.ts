@@ -9,9 +9,8 @@ import { logger } from '@/shared/lib/logger';
 // ---------------------------------------------------------------------------
 // Default template definitions (PRD RF-04.06)
 //
-// Section 7 will populate these with the full template bodies. For now, they
-// are placeholders that satisfy the schema constraints and allow the
-// complete-twilio-connection flow to work end-to-end.
+// Bodies use `{variable}` format (not `{{1}}`). Variables are automatically
+// extracted from the body via regex — the `variables` array must match.
 // ---------------------------------------------------------------------------
 
 interface DefaultTemplate {
@@ -23,32 +22,32 @@ interface DefaultTemplate {
 const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
   {
     templateKey: 'lembrete_24h',
-    body: 'Ola {nome_paciente}, este e um lembrete da sua sessao com {nome_psicologo} amanha ({dia_semana}), {data} as {hora}. Duracao: {duracao_min} min. Local: {endereco}. {instrucao_chegada}. Confirme: {link_confirmacao}. Valor: {valor}.',
-    variables: ['nome_paciente', 'nome_psicologo', 'dia_semana', 'data', 'hora', 'duracao_min', 'endereco', 'instrucao_chegada', 'link_confirmacao', 'valor'],
+    body: 'Olá, {nome_paciente}! Lembrando da sua sessão com {nome_psicologo} amanhã, {data} ({dia_semana}), às {hora}. Duração: {duracao_min} min. Local: {endereco}. {instrucao_chegada}. Confirme: {link_confirmacao}. Valor: {valor}',
+    variables: ['nome_paciente', 'nome_psicologo', 'data', 'dia_semana', 'hora', 'duracao_min', 'endereco', 'instrucao_chegada', 'link_confirmacao', 'valor'],
   },
   {
     templateKey: 'lembrete_2h',
-    body: 'Ola {nome_paciente}, sua sessao com {nome_psicologo} e hoje as {hora}. Confirme: {link_confirmacao}.',
-    variables: ['nome_paciente', 'nome_psicologo', 'hora', 'link_confirmacao'],
+    body: 'Olá, {nome_paciente}! Sua sessão com {nome_psicologo} é em 2 horas, às {hora} ({dia_semana}). Confirme: {link_confirmacao}',
+    variables: ['nome_paciente', 'nome_psicologo', 'hora', 'dia_semana', 'link_confirmacao'],
   },
   {
     templateKey: 'confirmacao_recebida',
-    body: 'Obrigado, {nome_paciente}! Sua presenca esta confirmada com {nome_psicologo}. Valor: {valor}.',
+    body: 'Obrigado, {nome_paciente}! Sua presença na sessão com {nome_psicologo} está confirmada. Valor: {valor}',
     variables: ['nome_paciente', 'nome_psicologo', 'valor'],
   },
   {
     templateKey: 'cancelamento_aviso',
-    body: 'Ola {nome_paciente}, sua sessao com {nome_psicologo} em {data} as {hora} foi cancelada.',
+    body: 'Olá, {nome_paciente}. Informamos que sua sessão com {nome_psicologo} em {data}, às {hora}, foi cancelada.',
     variables: ['nome_paciente', 'nome_psicologo', 'data', 'hora'],
   },
   {
     templateKey: 'link_video',
-    body: 'Ola {nome_paciente}, sua sessao online com {nome_psicologo} esta prestes a comecar. Acesse: {link_video}.',
+    body: 'Olá, {nome_paciente}! Sua sessão online com {nome_psicologo} começa em breve. Acesse: {link_video}',
     variables: ['nome_paciente', 'nome_psicologo', 'link_video'],
   },
   {
     templateKey: 'termo_consentimento',
-    body: 'Ola {nome_completo}, {nome_psicologo} enviou um termo de consentimento para voce assinar.',
+    body: 'Olá, {nome_completo}. {nome_psicologo} enviou o Termo de Consentimento para assinatura.',
     variables: ['nome_completo', 'nome_psicologo'],
   },
 ] as const;
