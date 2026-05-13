@@ -24,11 +24,10 @@ test.describe('@patients patient listing', () => {
   // seeds if needed. For e2e simplicity, we seed via the page's server action.
 
   test.beforeEach(async ({ page }) => {
-    // Seed patients by calling the server action through the app.
-    // We use direct SQL seeding via the test database connection.
-    // Since globalSetup already seeds the user, we seed patients via API.
-    // Navigate to the patients page first.
     await page.goto('/pacientes');
+    await expect(
+      page.getByTestId('patient-list').or(page.getByTestId('patient-list-empty')),
+    ).toBeVisible();
   });
 
   test('page title "Pacientes" is visible', async ({ page }) => {

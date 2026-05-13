@@ -16,7 +16,7 @@
 
 ## 4. Fix Patient Listing Tests — Suspense Wait
 
-- [ ] 4.1 `patient-listing.spec.ts` `beforeEach` — replace bare `page.goto('/pacientes')` with `goto` + `await expect(page.getByTestId('patient-list').or(page.getByTestId('patient-list-empty'))).toBeVisible()`
+- [x] 4.1 `patient-listing.spec.ts` `beforeEach` — replace bare `page.goto('/pacientes')` with `goto` + `await expect(page.getByTestId('patient-list').or(page.getByTestId('patient-list-empty'))).toBeVisible()`
 
 ## 5. Fix Patient Listing Tests — Deterministic Assertions
 
