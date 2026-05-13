@@ -32,8 +32,8 @@
 
 ## 5. Twilio BSP Adapter
 
-- [ ] 5.1 Criar `src/modules/whatsapp/server/adapters/twilio-bsp.ts` — funcao `sendTemplate(input: { to: string, fromAccountId: string, templateKey: string, variables: Record<string, string>, bodyRendered: string, consentFooter?: string }): Promise<{ bspMessageId: string, status: string }>`. Usar twilio SDK para enviar via client.messages.create com contentSid e contentVariables. Mapear erros Twilio: 21211 -> INVALID_PHONE, 21610 -> BLOCKED_BY_USER, 21614 -> OPT_OUT, 20429 -> RATE_LIMIT, default -> UNKNOWN. Exportar tipo TwilioSendError
-- [ ] 5.2 Criar `src/modules/whatsapp/server/adapters/twilio-signature.ts` — funcao `validateTwilioSignature(authToken: string, signature: string, url: string, params: Record<string, string>): boolean` usando twilio.validateRequest
+- [x] 5.1 Criar `src/modules/whatsapp/server/adapters/twilio-bsp.ts` — funcao `sendTemplate(input: { to: string, fromAccountId: string, templateKey: string, variables: Record<string, string>, bodyRendered: string, consentFooter?: string }): Promise<{ bspMessageId: string, status: string }>`. Usar twilio SDK para enviar via client.messages.create com contentSid e contentVariables. Mapear erros Twilio: 21211 -> INVALID_PHONE, 21610 -> BLOCKED_BY_USER, 21614 -> OPT_OUT, 20429 -> RATE_LIMIT, default -> UNKNOWN. Exportar tipo TwilioSendError
+- [x] 5.2 Criar `src/modules/whatsapp/server/adapters/twilio-signature.ts` — funcao `validateTwilioSignature(authToken: string, signature: string, url: string, params: Record<string, string>): boolean` usando twilio.validateRequest
 
 ## 6. Inngest Functions — Dispatcher + Sender
 

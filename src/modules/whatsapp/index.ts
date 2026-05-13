@@ -67,3 +67,16 @@ export {
   getVariableByKey,
   type TemplateVariable,
 } from './lib/template-variables';
+
+// ---- BSP adapter (Twilio) ---------------------------------------------------
+export {
+  sendTemplate,
+  type SendTemplateInput,
+  type SendTemplateResult,
+  type SendTemplateSuccess,
+  type TwilioSendError,
+  type TwilioSendErrorCode,
+} from './server/adapters/twilio-bsp';
+
+// ---- Twilio webhook signature validation ------------------------------------
+export { validateTwilioSignature } from './server/adapters/twilio-signature';
