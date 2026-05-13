@@ -1,13 +1,12 @@
 /**
- * Template variable dictionary — fixed set of variables available for
+ * Template variable dictionary — fixed set of 12 variables available for
  * WhatsApp message templates.
  *
- * This is a stub that exports the minimum surface needed by
- * template-input-schema.ts (the valid variable key set). Section 5 will
- * flesh out the full implementation with metadata (label, example,
- * applicableTemplates) and helper functions.
+ * Each entry carries metadata: a human-readable label, an example value
+ * (used in UI previews), and the list of template types where the
+ * variable appears in the default body.
  *
- * @see PRD RF-04.08 — 12 variables
+ * @see PRD RF-04.08
  */
 
 import type { TemplateKey } from './template-key-schema';
@@ -30,15 +29,24 @@ export interface TemplateVariable {
 /**
  * The 12 valid template variables from PRD RF-04.08.
  *
- * Section 5 will replace this stub with the full metadata. The shape
- * (key set, export name, TemplateVariable interface) is stable.
+ * `applicableTemplates` lists the template keys whose default body
+ * references this variable. Psychologists may still manually insert any
+ * valid variable into any template body — this field is informational
+ * (used for autocomplete hints and documentation).
  */
 export const TEMPLATE_VARIABLES = [
   {
     key: 'nome_paciente',
     label: 'Nome do paciente',
     example: 'Maria',
-    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'confirmacao_recebida', 'cancelamento_aviso', 'link_video', 'termo_consentimento'],
+    applicableTemplates: [
+      'lembrete_24h',
+      'lembrete_2h',
+      'confirmacao_recebida',
+      'cancelamento_aviso',
+      'link_video',
+      'termo_consentimento',
+    ],
   },
   {
     key: 'nome_completo',
@@ -50,13 +58,20 @@ export const TEMPLATE_VARIABLES = [
     key: 'nome_psicologo',
     label: 'Nome do psicólogo',
     example: 'Dra. Ana',
-    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'confirmacao_recebida', 'cancelamento_aviso', 'link_video', 'termo_consentimento'],
+    applicableTemplates: [
+      'lembrete_24h',
+      'lembrete_2h',
+      'confirmacao_recebida',
+      'cancelamento_aviso',
+      'link_video',
+      'termo_consentimento',
+    ],
   },
   {
     key: 'data',
     label: 'Data',
     example: 'amanhã',
-    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'confirmacao_recebida', 'cancelamento_aviso'],
+    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'cancelamento_aviso'],
   },
   {
     key: 'dia_semana',
@@ -68,7 +83,11 @@ export const TEMPLATE_VARIABLES = [
     key: 'hora',
     label: 'Hora',
     example: '14:00',
-    applicableTemplates: ['lembrete_24h', 'lembrete_2h', 'confirmacao_recebida', 'cancelamento_aviso'],
+    applicableTemplates: [
+      'lembrete_24h',
+      'lembrete_2h',
+      'cancelamento_aviso',
+    ],
   },
   {
     key: 'duracao_min',
@@ -80,7 +99,7 @@ export const TEMPLATE_VARIABLES = [
     key: 'endereco',
     label: 'Endereço',
     example: 'Rua Domingos de Morais, 2564',
-    applicableTemplates: ['lembrete_24h', 'lembrete_2h'],
+    applicableTemplates: ['lembrete_24h'],
   },
   {
     key: 'instrucao_chegada',
@@ -104,7 +123,7 @@ export const TEMPLATE_VARIABLES = [
     key: 'valor',
     label: 'Valor',
     example: 'R$ 200,00',
-    applicableTemplates: ['lembrete_24h', 'cancelamento_aviso'],
+    applicableTemplates: ['lembrete_24h', 'confirmacao_recebida'],
   },
 ] as const satisfies readonly TemplateVariable[];
 
