@@ -1,7 +1,7 @@
 ## 1. Shared DB Fixture
 
-- [ ] 1.1 Create `src/__tests__/e2e/seeded/setup/db-fixture.ts` — Playwright fixture via `test.extend()` that reads `databaseUrl` from `seed-state.json`, exposes a `db` object with a `postgres.js` connection, and provides a `resetSession(sessionId, overrides)` helper that runs an UPDATE resetting status, cancellation fields, confirmed_at, updated_at, and deleted_at
-- [ ] 1.2 Add `resetSessionHistory(sessionId)` helper to the fixture — deletes all session_history rows for the session except the original "created" entry, so history assertions start clean
+- [x] 1.1 Create `src/__tests__/e2e/seeded/setup/db-fixture.ts` — Playwright fixture via `test.extend()` that reads `databaseUrl` from `seed-state.json`, exposes a `db` object with a `postgres.js` connection, and provides a `resetSession(sessionId, overrides)` helper that runs an UPDATE resetting status, cancellation fields, confirmed_at, updated_at, and deleted_at
+- [x] 1.2 Add `resetSessionHistory(sessionId)` helper to the fixture — deletes all session_history rows for the session except the original "created" entry, so history assertions start clean
 
 ## 2. Fix Agenda Tests — Session Reset
 
