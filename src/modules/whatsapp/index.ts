@@ -99,6 +99,7 @@ export { remindersDispatcher } from './inngest/reminders-dispatcher';
 export { reminderSender } from './inngest/reminder-sender';
 export { confirmationAckSender } from './inngest/confirmation-ack-sender';
 export { cancellationNoticeSender } from './inngest/cancellation-notice-sender';
+export { reconciliationPoller } from './inngest/reconciliation-poller';
 
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';

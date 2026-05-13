@@ -52,8 +52,8 @@
 
 ## 8. Inngest Function — Reconciliation Poller
 
-- [ ] 8.1 Criar `src/modules/whatsapp/inngest/reconciliation-poller.ts` — Inngest function com cron `*/30 * * * *`. Busca whatsapp_messages com status IN ('queued', 'sent') e sent_at < NOW() - 5 min. Para cada, consulta Twilio Messages API por bsp_message_id e atualiza status/timestamps no DB
-- [ ] 8.2 **Teste de integracao (inline no sender test):** O teste de reconciliacao e coberto ao verificar que mensagens stuck sao atualizadas. Se necessario, adicionar caso em `reminder-sender.int.test.ts` que simula mensagem stuck e verifica atualizacao
+- [x] 8.1 Criar `src/modules/whatsapp/inngest/reconciliation-poller.ts` — Inngest function com cron `*/30 * * * *`. Busca whatsapp_messages com status IN ('queued', 'sent') e sent_at < NOW() - 5 min. Para cada, consulta Twilio Messages API por bsp_message_id e atualiza status/timestamps no DB
+- [x] 8.2 **Teste de integracao (inline no sender test):** O teste de reconciliacao e coberto ao verificar que mensagens stuck sao atualizadas. Se necessario, adicionar caso em `reminder-sender.int.test.ts` que simula mensagem stuck e verifica atualizacao
 
 ## 9. Route Handler — Twilio Webhook
 
