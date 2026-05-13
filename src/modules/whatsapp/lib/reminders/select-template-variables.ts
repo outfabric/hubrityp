@@ -94,7 +94,7 @@ function resolveVariableValue(
     case 'nome_psicologo':
       return psychologist.displayName;
     case 'data':
-      return formatInTimeZone(session.startAt, SAO_PAULO_TZ, "dd/MM/yyyy", {
+      return formatInTimeZone(session.startAt, SAO_PAULO_TZ, 'dd/MM/yyyy', {
         locale: ptBR,
       });
     case 'dia_semana':
@@ -153,13 +153,7 @@ export function selectTemplateVariables(
     // Only include variables applicable to this template type
     if (!(variable.applicableTemplates as readonly string[]).includes(templateKey)) continue;
 
-    const value = resolveVariableValue(
-      variable.key,
-      session,
-      patient,
-      psychologist,
-      location,
-    );
+    const value = resolveVariableValue(variable.key, session, patient, psychologist, location);
 
     if (value !== undefined) {
       result[variable.key] = value;

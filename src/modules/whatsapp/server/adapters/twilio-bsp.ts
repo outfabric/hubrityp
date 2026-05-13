@@ -105,15 +105,8 @@ export type SendTemplateResult =
  * (see `TWILIO_ERROR_MAP`).
  */
 export async function sendTemplate(input: SendTemplateInput): Promise<SendTemplateResult> {
-  const {
-    to,
-    fromAccountId,
-    templateKey,
-    contentSid,
-    variables,
-    bodyRendered,
-    consentFooter,
-  } = input;
+  const { to, fromAccountId, templateKey, contentSid, variables, bodyRendered, consentFooter } =
+    input;
 
   const accountSid = serverEnv.TWILIO_ACCOUNT_SID;
   const authToken = serverEnv.TWILIO_AUTH_TOKEN;

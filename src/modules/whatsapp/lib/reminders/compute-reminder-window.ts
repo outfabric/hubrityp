@@ -55,11 +55,7 @@ const MORNING_HOUR = 7;
  *
  * Returns the (possibly shifted) UTC date.
  */
-function applyNightShift(
-  dueAtUtc: Date,
-  sendDuringNight: boolean,
-  timezone: string,
-): Date {
+function applyNightShift(dueAtUtc: Date, sendDuringNight: boolean, timezone: string): Date {
   if (sendDuringNight) return dueAtUtc;
 
   const zoned = toZonedTime(dueAtUtc, timezone);

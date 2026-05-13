@@ -13,7 +13,5 @@ import { createHash } from 'node:crypto';
  * for the given session and kind.
  */
 export function generateIdempotencyKey(sessionId: string, kind: string): string {
-  return createHash('sha256')
-    .update(`${sessionId}:${kind}`)
-    .digest('hex');
+  return createHash('sha256').update(`${sessionId}:${kind}`).digest('hex');
 }

@@ -5,10 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
-import {
-  reminderSettings,
-  whatsappMessages,
-} from '@/shared/db/schema/whatsapp/tables';
+import { reminderSettings, whatsappMessages } from '@/shared/db/schema/whatsapp/tables';
 
 import { runAsService } from '../setup/run-as-service';
 import { runAsUser } from '../setup/run-as-user';
@@ -122,10 +119,7 @@ describe('reminder_settings table — schema verification', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(reminderSettings)
-        .where(eq(reminderSettings.userId, userId));
+      return db.select().from(reminderSettings).where(eq(reminderSettings.userId, userId));
     });
 
     expect(rows).toHaveLength(1);
@@ -151,10 +145,7 @@ describe('reminder_settings table — schema verification', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(reminderSettings)
-        .where(eq(reminderSettings.userId, userId));
+      return db.select().from(reminderSettings).where(eq(reminderSettings.userId, userId));
     });
 
     expect(rows).toHaveLength(1);
@@ -345,10 +336,7 @@ describe('whatsapp_messages table — schema verification', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappMessages)
-        .where(eq(whatsappMessages.userId, userId));
+      return db.select().from(whatsappMessages).where(eq(whatsappMessages.userId, userId));
     });
 
     expect(rows).toHaveLength(1);
@@ -367,9 +355,7 @@ describe('whatsapp_messages — indexes verification', () => {
       );
     });
 
-    const indexNames = result.map(
-      (r: Record<string, unknown>) => r.indexname as string,
-    );
+    const indexNames = result.map((r: Record<string, unknown>) => r.indexname as string);
 
     expect(indexNames).toContain('whatsapp_messages_user_id_created_at_idx');
     expect(indexNames).toContain('whatsapp_messages_session_id_idx');
@@ -393,10 +379,7 @@ describe('whatsapp_messages — partial UNIQUE on bsp_message_id', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappMessages)
-        .where(eq(whatsappMessages.userId, userId));
+      return db.select().from(whatsappMessages).where(eq(whatsappMessages.userId, userId));
     });
 
     expect(rows).toHaveLength(2);
@@ -439,10 +422,7 @@ describe('whatsapp_messages — partial UNIQUE on idempotency_key', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappMessages)
-        .where(eq(whatsappMessages.userId, userId));
+      return db.select().from(whatsappMessages).where(eq(whatsappMessages.userId, userId));
     });
 
     expect(rows).toHaveLength(2);
@@ -498,10 +478,7 @@ describe('whatsapp_messages — partial UNIQUE on idempotency_key', () => {
     });
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(whatsappMessages)
-        .where(eq(whatsappMessages.userId, userId));
+      return db.select().from(whatsappMessages).where(eq(whatsappMessages.userId, userId));
     });
 
     expect(rows).toHaveLength(2);

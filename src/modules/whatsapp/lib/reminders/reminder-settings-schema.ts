@@ -34,18 +34,16 @@ export const reminderSettingsSchema = z.object({
   early_reminder_hours: z
     .number({ message: 'Informe as horas do lembrete antecipado.' })
     .nullable()
-    .refine(
-      (val) => val === null || (EARLY_REMINDER_HOURS as readonly number[]).includes(val),
-      { message: 'Valor inválido. Escolha 12, 24 ou 48 horas.' },
-    ),
+    .refine((val) => val === null || (EARLY_REMINDER_HOURS as readonly number[]).includes(val), {
+      message: 'Valor inválido. Escolha 12, 24 ou 48 horas.',
+    }),
 
   final_reminder_hours: z
     .number({ message: 'Informe as horas do lembrete de confirmação.' })
     .nullable()
-    .refine(
-      (val) => val === null || (FINAL_REMINDER_HOURS as readonly number[]).includes(val),
-      { message: 'Valor inválido. Escolha 0.5, 1 ou 2 horas.' },
-    ),
+    .refine((val) => val === null || (FINAL_REMINDER_HOURS as readonly number[]).includes(val), {
+      message: 'Valor inválido. Escolha 0.5, 1 ou 2 horas.',
+    }),
 
   video_link_minutes: z
     .number({ message: 'Informe os minutos para envio do link de vídeo.' })

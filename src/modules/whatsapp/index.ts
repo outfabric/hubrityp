@@ -80,3 +80,26 @@ export {
 
 // ---- Twilio webhook signature validation ------------------------------------
 export { validateTwilioSignature } from './server/adapters/twilio-signature';
+
+// ---- Inngest client + event types -------------------------------------------
+export {
+  inngest,
+  WHATSAPP_EVENTS,
+  type ReminderSendEventData,
+  type StatusUpdatedEventData,
+  type ConfirmationReceivedEventData,
+  type CancellationReceivedEventData,
+  type StopReceivedEventData,
+  type InboundReceivedEventData,
+  type ConfirmationAckEventData,
+} from './inngest/client';
+
+// ---- Inngest functions (registered in the API route) ------------------------
+export { remindersDispatcher } from './inngest/reminders-dispatcher';
+export { reminderSender } from './inngest/reminder-sender';
+
+// ---- Reminder helpers -------------------------------------------------------
+export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
+export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
+export { selectTemplateVariables } from './lib/reminders/select-template-variables';
+export { reminderSettingsSchema } from './lib/reminders/reminder-settings-schema';
