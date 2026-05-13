@@ -89,8 +89,8 @@
 
 ## 14. Frontend — Banner de saude WhatsApp
 
-- [ ] 14.1 Criar componente `src/modules/whatsapp/components/whatsapp-health-banner.tsx` — Alert danger (bg danger-50, text danger-700, icone AlertTriangle 20px). Texto: "Sua conexao com WhatsApp expirou. Lembretes nao estao sendo enviados." Button link "Reconectar" para /configuracoes/integracoes/whatsapp. Visivel se whatsapp_accounts.status='error' E reminder_settings tem ao menos um reminder habilitado. role="alert" aria-live="assertive"
-- [ ] 14.2 Integrar banner no layout `src/app/(app)/layout.tsx` — renderizar WhatsAppHealthBanner no topo, acima do conteudo. Server Component que carrega status da conta e settings
+- [x] 14.1 Criar componente `src/modules/whatsapp/components/whatsapp-health-banner.tsx` — Alert danger (bg danger-50, text danger-700, icone AlertTriangle 20px). Texto: "Sua conexao com WhatsApp expirou. Lembretes nao estao sendo enviados." Button link "Reconectar" para /configuracoes/integracoes/whatsapp. Visivel se whatsapp_accounts.status='error' E reminder_settings tem ao menos um reminder habilitado. role="alert" aria-live="assertive"
+- [x] 14.2 Integrar banner no layout `src/app/(app)/layout.tsx` — renderizar WhatsAppHealthBanner no topo, acima do conteudo. Server Component que carrega status da conta e settings
 
 ## 15. Frontend — Route Actions (Inngest registration)
 

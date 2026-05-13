@@ -111,6 +111,9 @@ export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
 export { selectTemplateVariables } from './lib/reminders/select-template-variables';
 export { reminderSettingsSchema } from './lib/reminders/reminder-settings-schema';
 
+// ---- Components (Server) ----------------------------------------------------
+export { WhatsAppHealthBanner } from './components/whatsapp-health-banner';
+
 // ---- Reminder Server Actions ------------------------------------------------
 export {
   getReminderSettingsImpl,
