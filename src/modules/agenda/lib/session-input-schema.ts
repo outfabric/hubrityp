@@ -70,6 +70,8 @@ const baseSessionSchema = z.object({
     .regex(HEX_COLOR_REGEX, { message: 'Cor inválida. Use o formato hexadecimal (#RRGGBB).' })
     .optional(),
 
+  reminders_disabled: z.boolean().optional().default(false),
+
   force_conflict: z.boolean().optional(),
 });
 

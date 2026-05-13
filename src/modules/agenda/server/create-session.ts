@@ -170,6 +170,7 @@ export async function createSessionImpl(
           amount: data.amount ?? null,
           notes: data.notes ?? null,
           color: data.color ?? null,
+          remindersDisabled: data.reminders_disabled ?? false,
           status: 'scheduled',
         })
         .returning({ id: sessions.id });

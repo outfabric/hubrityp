@@ -369,6 +369,9 @@ export function AgendaCalendar({
           amount: session.amount,
           notes: session.notes,
           color: session.color,
+          remindersDisabled: session.remindersDisabled ?? false,
+          patientPhone: session.patientPhone,
+          patientWhatsappOptOut: session.patientWhatsappOptOut,
         });
         setSessionModalOpen(true);
         handleDrawerClose();
@@ -427,6 +430,9 @@ export function AgendaCalendar({
           amount: session.amount,
           notes: session.notes,
           color: session.color,
+          remindersDisabled: session.remindersDisabled ?? false,
+          patientPhone: session.patientPhone,
+          patientWhatsappOptOut: session.patientWhatsappOptOut,
         });
         // Store the selected scope so the update handler knows to use editRecurringSession
         pendingEditScopeRef.current = scope;

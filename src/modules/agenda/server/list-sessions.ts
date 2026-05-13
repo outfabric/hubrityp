@@ -65,6 +65,10 @@ async function resolveCoupleDisplayNames(
 
 export interface SessionWithDetails extends Session {
   patientName: string | null;
+  /** Patient phone — used by the session form to decide WhatsApp checkbox visibility. */
+  patientPhone: string | null;
+  /** Whether the patient opted out of WhatsApp reminders. */
+  patientWhatsappOptOut: boolean;
   locationName: string | null;
   locationType: string | null;
   locationAddress: string | null;
@@ -111,6 +115,8 @@ export async function listSessionsImpl(
       .select({
         session: sessions,
         patientName: patients.fullName,
+        patientPhone: patients.phone,
+        patientWhatsappOptOut: patients.whatsappOptOut,
         locationName: locations.name,
         locationType: locations.type,
         locationAddress: locations.address,
@@ -139,6 +145,8 @@ export async function listSessionsImpl(
     const result: SessionWithDetails[] = rows.map((row) => ({
       ...row.session,
       patientName: row.patientName,
+      patientPhone: row.patientPhone,
+      patientWhatsappOptOut: row.patientWhatsappOptOut ?? false,
       locationName: row.locationName,
       locationType: row.locationType,
       locationAddress: row.locationAddress,

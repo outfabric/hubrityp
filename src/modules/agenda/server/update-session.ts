@@ -50,6 +50,7 @@ function computeDiff(
     amount: string | null;
     notes: string | null;
     color: string | null;
+    remindersDisabled: boolean;
   },
 ): Record<string, { old: unknown; new: unknown }> {
   const diff: Record<string, { old: unknown; new: unknown }> = {};
@@ -86,6 +87,9 @@ function computeDiff(
   }
   if (old.color !== updated.color) {
     diff.color = { old: old.color, new: updated.color };
+  }
+  if ((old.remindersDisabled ?? false) !== updated.remindersDisabled) {
+    diff.remindersDisabled = { old: old.remindersDisabled, new: updated.remindersDisabled };
   }
 
   return diff;
@@ -249,6 +253,7 @@ export async function updateSessionImpl(
       amount: data.amount ?? null,
       notes: data.notes ?? null,
       color: data.color ?? null,
+      remindersDisabled: data.reminders_disabled ?? false,
     };
 
     const diff = computeDiff(existing, updatedValues);

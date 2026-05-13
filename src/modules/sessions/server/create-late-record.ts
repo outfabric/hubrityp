@@ -200,6 +200,7 @@ export async function createLateRecordImpl(
           amount: sessionData.amount ?? null,
           notes: sessionData.notes ?? null,
           color: sessionData.color ?? null,
+          remindersDisabled: sessionData.reminders_disabled ?? false,
           status: 'done',
           isLateRecord: true,
         })

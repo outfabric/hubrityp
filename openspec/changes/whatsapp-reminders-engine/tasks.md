@@ -83,9 +83,9 @@
 
 ## 13. Frontend — Checkbox em session-form (modify agenda-sessions)
 
-- [ ] 13.1 Atualizar `src/modules/agenda/lib/session-input-schema.ts` — adicionar campo `reminders_disabled` (boolean optional default false) ao Zod schema
-- [ ] 13.2 Atualizar `src/modules/agenda/components/session-form-modal.tsx` — adicionar Checkbox shadcn "Nao enviar lembretes WhatsApp para esta sessao" apos campo "Observacao", gap space-4. Visivel so se paciente tem phone E whatsapp_opt_out=false. Helper text body-sm text-tertiary "Util quando o paciente avisou que nao pode receber". Controlado pelo campo reminders_disabled do form
-- [ ] 13.3 Atualizar Server Actions create-session e update-session para persistir reminders_disabled
+- [x] 13.1 Atualizar `src/modules/agenda/lib/session-input-schema.ts` — adicionar campo `reminders_disabled` (boolean optional default false) ao Zod schema
+- [x] 13.2 Atualizar `src/modules/agenda/components/session-form-modal.tsx` — adicionar Checkbox shadcn "Nao enviar lembretes WhatsApp para esta sessao" apos campo "Observacao", gap space-4. Visivel so se paciente tem phone E whatsapp_opt_out=false. Helper text body-sm text-tertiary "Util quando o paciente avisou que nao pode receber". Controlado pelo campo reminders_disabled do form
+- [x] 13.3 Atualizar Server Actions create-session e update-session para persistir reminders_disabled
 
 ## 14. Frontend — Banner de saude WhatsApp
 

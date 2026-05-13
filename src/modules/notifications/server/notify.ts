@@ -46,10 +46,7 @@ export interface NotificationPayload {
  * @param payload - Notification data to insert.
  * @returns The inserted notification's `id`.
  */
-export async function notify(
-  db: DrizzleDb,
-  payload: NotificationPayload,
-): Promise<{ id: string }> {
+export async function notify(db: DrizzleDb, payload: NotificationPayload): Promise<{ id: string }> {
   const [row] = await db
     .insert(notifications)
     .values({

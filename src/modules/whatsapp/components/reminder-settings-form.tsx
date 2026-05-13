@@ -211,10 +211,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
                 });
               }}
             >
-              <SelectTrigger
-                id="video-link-minutes"
-                data-testid="video-link-select"
-              >
+              <SelectTrigger id="video-link-minutes" data-testid="video-link-select">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
