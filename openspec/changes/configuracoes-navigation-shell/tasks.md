@@ -54,7 +54,7 @@
 
 > **Design System Salvia**: pages internas de configurações deixam de aplicar seu próprio `mx-auto max-w-[1200px]` porque o layout `configuracoes/layout.tsx` agora provê. Evita double-constrain do max-width. h1 das pages permanece (page title é distinto do breadcrumb wayfinding).
 
-- [ ] 8.1 Remover wrapper `<div className="mx-auto max-w-[1200px]">` das seguintes pages existentes (cada page renderiza conteúdo direto, sem o wrapper externo): `src/app/(app)/configuracoes/locais/page.tsx`, `src/app/(app)/configuracoes/agenda/page.tsx`, `src/app/(app)/configuracoes/lembretes/page.tsx`, `src/app/(app)/configuracoes/integracoes/whatsapp/page.tsx`, `src/app/(app)/configuracoes/lembretes/historico/page.tsx`, `src/app/(app)/configuracoes/lembretes/templates/page.tsx`, `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/page.tsx`. Não tocar em h1, lógica de fetch ou Server Actions de cada page
+- [x] 8.1 Remover wrapper `<div className="mx-auto max-w-[1200px]">` das seguintes pages existentes (cada page renderiza conteúdo direto, sem o wrapper externo): `src/app/(app)/configuracoes/locais/page.tsx`, `src/app/(app)/configuracoes/agenda/page.tsx`, `src/app/(app)/configuracoes/lembretes/page.tsx`, `src/app/(app)/configuracoes/integracoes/whatsapp/page.tsx`, `src/app/(app)/configuracoes/lembretes/historico/page.tsx`, `src/app/(app)/configuracoes/lembretes/templates/page.tsx`, `src/app/(app)/configuracoes/lembretes/templates/[templateKey]/page.tsx`. Não tocar em h1, lógica de fetch ou Server Actions de cada page
 
 ## 9. E2E Tests
 

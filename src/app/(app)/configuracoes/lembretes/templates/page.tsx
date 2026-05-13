@@ -57,7 +57,7 @@ async function TemplatesListServer() {
 
 export default function TemplatesPage() {
   return (
-    <div className="mx-auto max-w-[1200px]">
+    <>
       <div className="mb-6">
         <h1
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
@@ -80,6 +80,6 @@ export default function TemplatesPage() {
       >
         <TemplatesListServer />
       </Suspense>
-    </div>
+    </>
   );
 }

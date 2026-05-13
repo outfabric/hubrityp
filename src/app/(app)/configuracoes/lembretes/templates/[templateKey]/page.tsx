@@ -25,7 +25,7 @@ export default async function TemplateEditPage({ params }: TemplateEditPageProps
   const label = TEMPLATE_LABELS[result.template.templateKey] ?? result.template.templateKey;
 
   return (
-    <div className="mx-auto max-w-[1200px]">
+    <>
       {/* Page title */}
       <h1
         className="text-text-primary mb-8 text-[28px] leading-[1.25] font-semibold"
@@ -39,6 +39,6 @@ export default async function TemplateEditPage({ params }: TemplateEditPageProps
         templateKey={result.template.templateKey}
         initialBody={result.template.body}
       />
-    </div>
+    </>
   );
 }
