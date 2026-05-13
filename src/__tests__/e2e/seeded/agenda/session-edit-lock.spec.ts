@@ -43,8 +43,10 @@ test.describe('@agenda session edit lock', () => {
     const sessionChips = page.getByTestId('session-chip').filter({ hasText: patientName });
     await expect(sessionChips.first()).toBeVisible({ timeout: 10000 });
 
-    // Find the chip with a "Realizada" badge (done status)
-    const doneChip = sessionChips.filter({
+    // Find the chip with a "Realizada" badge (done status) at 20:00.
+    // The time filter disambiguates from other João Santos done chips
+    // that may appear when session-mark-done runs in parallel.
+    const doneChip = sessionChips.filter({ hasText: '20:00' }).filter({
       has: page.getByTestId('session-status-badge-done'),
     });
     await expect(doneChip).toBeVisible({ timeout: 5000 });

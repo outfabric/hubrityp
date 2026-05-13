@@ -12,7 +12,7 @@
 
 ## 3. Fix Agenda Tests — Locator Disambiguation
 
-- [ ] 3.1 `session-edit-lock.spec.ts` — add `.filter({ hasText: '20:00' })` to the done chip locator to disambiguate from other João Santos done chips that may exist after parallel test runs
+- [x] 3.1 `session-edit-lock.spec.ts` — add `.filter({ hasText: '20:00' })` to the done chip locator to disambiguate from other João Santos done chips that may exist after parallel test runs
 
 ## 4. Fix Patient Listing Tests — Suspense Wait
 
