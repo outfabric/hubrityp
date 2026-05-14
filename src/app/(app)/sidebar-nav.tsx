@@ -30,7 +30,7 @@ const navItems: readonly NavItem[] = [
     showUnreadBadge: true,
   },
   { label: 'Agenda', href: '/agenda', icon: Calendar },
-  { label: 'Configuracoes', href: '/configuracoes/locais', icon: Settings },
+  { label: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 
 /** Polling interval for unread count refresh (60 seconds). */

@@ -152,40 +152,83 @@ export default async function globalSetup() {
     // Seed sessions for the public confirmation E2E tests.
     // Each session needs a future start_at (so the token is not expired),
     // a confirmation_token, and status='scheduled'.
+    //
+    // We anchor on the BRT date (same pattern as the status-change sessions)
+    // rather than `now() + interval '2 days'` because `now()` preserves the
+    // current time of day. If the test runs late in the evening BRT, the
+    // session's start_at can fall outside the calendar's visible slot range
+    // (slotMaxTime = 21:00), making the session chip invisible in day view
+    // and causing flaky E2E failures.
+    //
+    // Time assignments (BRT): confirmable=10:00, declinable=11:00
+    // These are 2 days from now in BRT, well within business hours.
     const s = SEED_SESSIONS;
-    for (const session of [s.confirmable, s.declinable]) {
-      await sql`
-        INSERT INTO public.sessions (
-          id, user_id, patient_id,
-          start_at, end_at, duration_minutes,
-          status, is_blocking, confirmation_token
-        )
-        VALUES (
-          ${session.id},
-          ${seed.userId},
-          ${session.patientId},
-          now() + interval '2 days',
-          now() + interval '2 days' + interval '50 minutes',
-          50,
-          'scheduled',
-          false,
-          ${session.confirmationToken}
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          start_at           = EXCLUDED.start_at,
-          end_at             = EXCLUDED.end_at,
-          duration_minutes   = EXCLUDED.duration_minutes,
-          status             = EXCLUDED.status,
-          confirmation_token = EXCLUDED.confirmation_token,
-          confirmed_at       = NULL,
-          cancelled_at       = NULL,
-          cancellation_reason = NULL,
-          cancelled_by       = NULL,
-          cancellation_notice = NULL,
-          charge_cancellation = false,
-          deleted_at         = NULL;
-      `;
-    }
+
+    // confirmable: 10:00 BRT (13:00 UTC) in 2 days
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking, confirmation_token
+      )
+      VALUES (
+        ${s.confirmable.id},
+        ${seed.userId},
+        ${s.confirmable.patientId},
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '13 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '13 hours 50 minutes'),
+        50,
+        'scheduled',
+        false,
+        ${s.confirmable.confirmationToken}
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmation_token = EXCLUDED.confirmation_token,
+        confirmed_at       = NULL,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        deleted_at         = NULL;
+    `;
+
+    // declinable: 11:00 BRT (14:00 UTC) in 2 days
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking, confirmation_token
+      )
+      VALUES (
+        ${s.declinable.id},
+        ${seed.userId},
+        ${s.declinable.patientId},
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '14 hours'),
+        ((current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '14 hours 50 minutes'),
+        50,
+        'scheduled',
+        false,
+        ${s.declinable.confirmationToken}
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at           = EXCLUDED.start_at,
+        end_at             = EXCLUDED.end_at,
+        duration_minutes   = EXCLUDED.duration_minutes,
+        status             = EXCLUDED.status,
+        confirmation_token = EXCLUDED.confirmation_token,
+        confirmed_at       = NULL,
+        cancelled_at       = NULL,
+        cancellation_reason = NULL,
+        cancelled_by       = NULL,
+        cancellation_notice = NULL,
+        charge_cancellation = false,
+        deleted_at         = NULL;
+    `;
 
     // Seed sessions for status change E2E tests (sections 17–18).
     // Each session is seeded at a distinct BRT hour tomorrow to avoid time

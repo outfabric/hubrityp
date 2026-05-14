@@ -38,7 +38,7 @@ async function WhatsappAccountServer() {
 
 export default function WhatsappIntegrationPage() {
   return (
-    <div className="mx-auto max-w-[1200px]">
+    <>
       <div className="mb-6">
         <h1
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
@@ -57,6 +57,6 @@ export default function WhatsappIntegrationPage() {
       >
         <WhatsappAccountServer />
       </Suspense>
-    </div>
+    </>
   );
 }
