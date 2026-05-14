@@ -22,6 +22,11 @@ test.describe.serial('@agenda public confirmation — decline', () => {
   // No storageState needed — this is a public page
 
   // Reset the session before each test so retries start with a declinable state.
+  // We anchor start_at on the BRT date + fixed UTC hour (11:00 BRT = 14:00 UTC)
+  // rather than `now() + interval '2 days'` because the latter preserves the
+  // current time of day. This ensures consistency with the global seed pattern
+  // and prevents the session from falling outside the calendar's visible slot
+  // range if rendered by other tests.
   test.beforeEach(async () => {
     const seed = await readSeedState();
     const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
@@ -35,8 +40,8 @@ test.describe.serial('@agenda public confirmation — decline', () => {
             cancelled_by       = NULL,
             cancellation_notice = NULL,
             charge_cancellation = false,
-            start_at           = now() + interval '2 days',
-            end_at             = now() + interval '2 days' + interval '50 minutes'
+            start_at           = (current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '14 hours',
+            end_at             = (current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '14 hours 50 minutes'
         WHERE id = ${SEED_SESSIONS.declinable.id};
       `;
     } finally {

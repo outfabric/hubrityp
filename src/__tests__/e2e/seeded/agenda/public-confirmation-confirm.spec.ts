@@ -21,6 +21,11 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
   // No storageState needed — this is a public page
 
   // Reset the session before each test so retries start with a confirmable state.
+  // We anchor start_at on the BRT date + fixed UTC hour (10:00 BRT = 13:00 UTC)
+  // rather than `now() + interval '2 days'` because the latter preserves the
+  // current time of day. If the test runs late in the evening BRT, other tests
+  // that render this session in the calendar (confirmation-flow.spec.ts) would
+  // see the session outside the visible slot range, causing flaky failures.
   test.beforeEach(async () => {
     const seed = await readSeedState();
     const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
@@ -34,8 +39,8 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
             cancelled_by       = NULL,
             cancellation_notice = NULL,
             charge_cancellation = false,
-            start_at           = now() + interval '2 days',
-            end_at             = now() + interval '2 days' + interval '50 minutes'
+            start_at           = (current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '13 hours',
+            end_at             = (current_timestamp AT TIME ZONE 'America/Sao_Paulo')::date + interval '2 days' + interval '13 hours 50 minutes'
         WHERE id = ${SEED_SESSIONS.confirmable.id};
       `;
     } finally {
