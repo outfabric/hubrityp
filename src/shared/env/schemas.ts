@@ -34,6 +34,14 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Estimated cost per WhatsApp template message in BRL.
   // Used for cost estimation display only — not for billing.
   TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL: z.coerce.number().default(0.1),
+  // Inngest — chaves provisionadas automaticamente pela Vercel Marketplace
+  // Integration em production/preview. Em dev local ficam vazias e o SDK
+  // usa o Dev Server local (http://inngest:8288 via docker compose).
+  INNGEST_EVENT_KEY: z.string().optional(),
+  INNGEST_SIGNING_KEY: z.string().optional(),
+  // Override do origem usado no sync com a cloud Inngest (apenas se
+  // o domínio publico for diferente do que a Vercel detecta).
+  INNGEST_SERVE_ORIGIN: z.string().url().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

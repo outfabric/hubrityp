@@ -2,12 +2,12 @@
 #
 # Convention: the Supabase CLI (`npm run supabase:start`) owns Postgres, GoTrue,
 # Storage, Realtime, and Studio. This file only declares the Next.js dev
-# container and bridges it onto the network the CLI manages
-# (`supabase_network_<project_id>` — see `supabase/config.toml`).
+# container, the Inngest Dev Server, and bridges them onto the network the CLI
+# manages (`supabase_network_<project_id>` — see `supabase/config.toml`).
 #
 # Start order:
 #   1. `npm run supabase:start`   # boots the Supabase stack and creates the network
-#   2. `docker compose up`        # boots the Next.js dev container on that network
+#   2. `docker compose up`        # boots Next.js + Inngest Dev Server on that network
 
 services:
   app:
@@ -25,8 +25,25 @@ services:
       # if you point the app at a different stack.
       DATABASE_URL: postgresql://postgres:postgres@supabase_db_hubrityp:5432/postgres
       NEXT_PUBLIC_SUPABASE_URL: http://supabase_kong_hubrityp:8000
+      # Tell the Inngest SDK to send events to the Dev Server container
+      # instead of the default localhost:8288.
+      INNGEST_DEV: http://inngest:8288
     networks:
       - supabase
+
+  # Inngest Dev Server — provides the local execution engine for durable
+  # functions (WhatsApp reminders, reconciliation, webhooks). Connects to the
+  # Next.js serve handler at http://app:3000/api/inngest to discover and
+  # execute registered functions. UI available at http://localhost:8288.
+  inngest:
+    image: inngest/inngest:latest
+    command: inngest dev -u http://app:3000/api/inngest --no-discovery
+    ports:
+      - '8288:8288'
+    networks:
+      - supabase
+    depends_on:
+      - app
 
 volumes:
   app-node-modules:
