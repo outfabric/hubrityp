@@ -143,7 +143,15 @@ Quando você é invocado pelo slash command `/dev-cycle`, o orquestrador injeta 
 
 - `worktree_path` (sempre) — caminho absoluto do git worktree dedicado a esta change. **Toda** edição de arquivo e **todo** comando bash deve operar dentro dele. Em bash, prefixe com `cd <worktree_path> && ...` (ou `git -C <worktree_path> ...`). Nunca toque na working tree principal do repo.
 - `section` (modo section) — texto literal de uma seção do `tasks.md` (`## N. Título` + todas as linhas `- [ ] N.M ...` daquela seção, mais qualquer prosa entre elas). **Implemente TODAS as subtasks da seção como uma unidade de trabalho** — não pause entre subtasks, não rode re-validação após cada subtask. Declare no resumo pré-`VERDICT: PASS` quais camadas rodou e por quê. **Em section mode você calcula `changed_files` localmente** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = só os arquivos desta seção; o orquestrador commita um WIP entre seções, então `HEAD` reflete o fim da seção anterior).
-- `feedback_file` (modo fix) — caminho absoluto para um `review-N.md` (do `code-reviewer`), `qa-N.md` (do `qa-tester`) ou `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis). Sua tarefa é resolver TODOS os itens BLOCKER/HIGH (review) ou CRÍTICO/ALTO (QA) listados ali, sem refatorar fora do escopo. Para `sweep-fail-N.md`, leia a seção "Failing tests" e corrija a regressão; siga a instrução "Forced full re-validation" do próprio arquivo (rode integration full + e2e full no fim, não escopado).
+- `feedback_file` (modo fix) — caminho absoluto para um dos quatro tipos de feedback que o orquestrador pode te passar:
+  - `review-N.md` (do `code-reviewer`) — resolva TODOS os itens BLOCKER/HIGH listados ali.
+  - `qa-N.md` (do `qa-tester`) — resolva TODOS os itens CRÍTICO/ALTO listados ali.
+  - `sweep-fail-N.md` (regressão de cross-section pego pelo step 3.bis) — leia a seção "Failing tests" e corrija a regressão.
+  - `ci-fail-N.md` (CI vermelho na PR aberta pelo step 9) — leia as seções "Failed checks" e "Failed step logs" e corrija a causa raiz dos jobs falhos.
+
+  Em todos os casos, não refatore fora do escopo. Em **todos os tipos**, siga a instrução "Forced full re-validation" do próprio arquivo (rode os 5 comandos full no fim do fix — ver "Modo fix: full" abaixo), porque por definição o que você está corrigindo escapou da validação per-section escopada.
+
+  **Exceção flaky (apenas `ci-fail-N.md`)**: se você diagnosticar a falha do CI como genuinamente transitória (network blip, infra do GitHub Actions, runner provisioning failure, cache miss não relacionado) e NÃO causada por mudanças nesta branch, devolva `VERDICT: PASS — flaky, no code change required` SEM modificar código e SEM rodar a sequência de re-validação — não há fix para validar. O orquestrador vai rerodar os jobs falhos via `gh run rerun --failed`. Use essa saída só quando você consegue identificar a causa transitória; não use para esquivar de falhas reais (o orquestrador conta essa iteração contra o cap-3, então três "flakys" seguidos escalam mesmo assim).
 - `changed_files` (modo fix) — lista de paths calculada pelo orquestrador (`git diff <fix-base>...HEAD --name-only`). **Em fix mode esta lista é apenas contexto** — serve para você relacionar o feedback de review/QA com os arquivos a tocar. Ela **não** é usada para escopar a re-validação, que em fix mode sempre roda full (ver "Modo fix: full" abaixo). (Em section mode você não recebe este campo — use `git -C <worktree_path> diff HEAD --name-only` para computar a lista de specs alterados/criados localmente, e `npm run test:integration -- --changed` sem valor; Vitest detecta os uncommitted automaticamente.)
 - `mode: sweep` (modo sweep) — marca a invocação como regression sweep do step 3.bis. Em modo sweep você é **read-only**: só roda os comandos pedidos e devolve veredicto, sem modificar código.
 - `sweep_log_path` (modo sweep) — caminho absoluto onde você deve appendar stdout+stderr de **ambas** as suítes (use `>> "$sweep_log_path" 2>&1`).
@@ -157,6 +165,7 @@ Termine sua resposta com **exatamente uma** das linhas (a forma exata depende do
 
 - Modos section / fix:
   - `VERDICT: PASS — <resumo de uma linha do que foi feito>`
+  - `VERDICT: PASS — flaky, no code change required` — **apenas em fix mode com `feedback_file` apontando para `ci-fail-N.md`**, quando você diagnostica a falha como transitória. NÃO use essa forma em nenhum outro contexto (a working tree deve estar limpa; o orquestrador rejeita se houver mudanças não commitadas).
   - `VERDICT: FAIL — <causa raiz em uma linha>. Logs: <path absoluto sob .dev-cycle/>`
 - Modo sweep (ver seção dedicada abaixo):
   - `VERDICT: PASS — sweep clean (integration: <N> tests, e2e: <M> tests)`
@@ -209,13 +218,16 @@ Acionado quando o orquestrador te invoca com `feedback_file` apontando para `rev
 
 Justificativa: fix mode existe porque reviewer ou QA encontraram regressão em código que já passou pelos testes escopados per-section. Rodar escopado novamente aqui — mesmo via `--changed` — limita a re-validação ao mesmo subconjunto que falhou em capturar o problema original, deixando regressões cruzadas escaparem para a próxima iteração e potencialmente fazendo o loop dev↔reviewer/QA bater no cap-3 sem convergir.
 
-**Sequência obrigatória ao fim do fix** (antes de devolver `VERDICT: PASS` — todos os 5 são mandatórios, mesmo que você ache que sua mudança não afeta uma camada):
+**Sequência obrigatória ao fim do fix** (antes de devolver `VERDICT: PASS — <fix>` — todos os 5 são mandatórios, mesmo que você ache que sua mudança não afeta uma camada):
 
 1. `npm run lint` (full).
 2. `npm run typecheck` (full).
 3. `npm run test:unit` (full).
 4. `npm run test:integration` (full — **não** use `--changed` em fix mode).
 5. `npm run test:e2e:seeded` (full — **não** filtre por path).
+
+> [!IMPORTANT]
+> **Exceção flaky** — quando `feedback_file` é `ci-fail-N.md` e você diagnostica a falha como genuinamente transitória, devolva `VERDICT: PASS — flaky, no code change required` SEM rodar a sequência acima e SEM modificar arquivos. Não há fix para validar, e o orquestrador rejeita esse veredicto se a working tree tiver mudanças não commitadas (`git diff --quiet HEAD` precisa retornar zero).
 
 O cap interno de 3 retries continua valendo para corrigir falhas que aparecerem em qualquer um desses suítes durante o ciclo de fix. Se algum suíte falhar e você não conseguir corrigir em 3 tentativas, devolva `VERDICT: FAIL` com a causa raiz em uma linha.
 

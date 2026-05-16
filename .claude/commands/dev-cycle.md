@@ -471,7 +471,9 @@ Notes:
 ```bash
 git -C "$WORKTREE" push -u origin "$BRANCH"
 
-gh pr create \
+# Capture the PR URL — gh pr create prints it to stdout on success.
+# Step 9 (CI watch) depends on this variable.
+PR_URL=$(gh pr create \
   --base main \
   --head "$BRANCH" \
   --title "<change title from proposal.md>" \
@@ -494,8 +496,185 @@ gh pr create \
 - QA report: .dev-cycle/qa-N.md (final iteration, or "skipped — backend-only heuristic" / "skipped — --force-qa override")
 - Re-validation iterations: dev↔reviewer X/3, dev↔QA Y/3
 EOF
-)"
+)")
+echo "PR opened: $PR_URL"
 ```
+
+Persist `$PR_URL` for step 9 (and for resume — if the orchestrator is interrupted between 8c and 9 finishing, step 9 reads it back via `gh pr view --json url` on the current branch):
+
+```bash
+echo "$PR_URL" > "$WORKTREE/.dev-cycle/pr-url.txt"
+```
+
+### 9. Watch CI until green
+
+Trigger immediately after step 8c succeeds. Initialize `CI_ITER=0`. The orchestrator does NOT merge the PR — it only ensures CI is green. Merge stays a human decision.
+
+#### 9.0 Pre-flight — does the PR have any CI checks?
+
+GitHub takes a few seconds to register workflow runs after a push. Wait up to 30s for at least one check to appear:
+
+```bash
+CHECK_COUNT=0
+for i in $(seq 1 15); do
+  CHECK_COUNT=$(gh pr checks "$PR_URL" --json name 2>/dev/null | jq 'length' 2>/dev/null || echo 0)
+  if [ "${CHECK_COUNT:-0}" -gt 0 ]; then
+    break
+  fi
+  sleep 2
+done
+
+if [ "${CHECK_COUNT:-0}" -eq 0 ]; then
+  echo "No CI checks configured for this PR — skipping watch."
+  # Skip step 9 entirely; jump to Final summary.
+  # CI is reported as "skipped — no checks configured".
+fi
+```
+
+If the count stays zero after 30s, treat the repo as having no PR-triggered workflows and skip step 9 entirely. The final summary records this explicitly so the user knows CI wasn't validated.
+
+#### 9a. Watch CI (blocking)
+
+On iteration ≥ 2 (i.e., after a fix-push in 9f), the `git push` triggers a fresh workflow run on GitHub. Wait for it to register before watching, otherwise `gh pr checks --watch` might return immediately observing the stale (previously-failed) terminal state of the prior commit's checks:
+
+```bash
+if [ "$CI_ITER" -gt 0 ]; then
+  # Wait for a pending check on the new commit before watching.
+  for i in $(seq 1 15); do
+    HAS_PENDING=$(gh pr checks "$PR_URL" --json bucket 2>/dev/null \
+      | jq 'any(.[]; .bucket == "pending")')
+    [ "$HAS_PENDING" = "true" ] && break
+    sleep 2
+  done
+fi
+
+gh pr checks "$PR_URL" --watch --fail-fast || true
+
+# Read final state from JSON — gh's exit codes are ambiguous here:
+# exit 8 means "checks pending" (not failure), so we MUST probe JSON for the verdict.
+CHECKS_JSON=$(gh pr checks "$PR_URL" --json name,state,bucket,link,workflow)
+HAS_RED=$(echo "$CHECKS_JSON" | jq 'any(.[]; .bucket == "fail" or .bucket == "cancel")')
+```
+
+`gh pr checks --watch` blocks until every check reaches a terminal state (`pass`, `fail`, `skipping`, `cancel`). `--fail-fast` makes it exit as soon as one check fails so we don't wait on slower-but-irrelevant jobs.
+
+#### 9b. Branch on result
+
+- `HAS_RED == false` (all green / skipping) → proceed to Final summary. The PR is clean.
+- `HAS_RED == true` (at least one `fail` or `cancel` bucket):
+  - If `CI_ITER >= 3` → **stop**: print the PR URL, the persistent failed-check names from `ci-fail-<CI_ITER>.md`, escalate to user.
+  - **Loop guard**: when `CI_ITER >= 1`, compute the current failure signature as the sorted set of `name|bucket` lines and compare to `.dev-cycle/ci-fail-<CI_ITER>.signature.txt` (written by the previous iteration). If identical, halt immediately ("non-converging CI loop") and escalate with the PR URL.
+  - Otherwise: go to 9c.
+
+#### 9c. Persist synthetic feedback (`ci-fail-<N>.md`)
+
+```bash
+CI_ITER=$((CI_ITER + 1))
+FEEDBACK="$WORKTREE/.dev-cycle/ci-fail-${CI_ITER}.md"
+SIGNATURE="$WORKTREE/.dev-cycle/ci-fail-${CI_ITER}.signature.txt"
+
+# Persist signature for next-iteration loop guard.
+echo "$CHECKS_JSON" \
+  | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | "\(.name)|\(.bucket)"' \
+  | sort > "$SIGNATURE"
+
+# Build feedback file: failed checks + last 200 lines of each failed run's logs.
+{
+  echo "# CI failure (iteration $CI_ITER)"
+  echo ""
+  echo "**PR**: $PR_URL"
+  echo ""
+  echo "**Forced full re-validation**: at the end of your fix, run lint + typecheck + test:unit + test:integration + test:e2e:seeded (all full, never scoped). This is the standard fix-mode contract — the regression escaped per-section scoped validation, so we re-validate everything before pushing."
+  echo ""
+  echo "**Flaky exception**: if you diagnose any of the failures below as genuinely transient (network blip, GitHub Actions infra hiccup, unrelated cache miss, runner provisioning failure) and NOT caused by code on this branch, return \`VERDICT: PASS — flaky, no code change required\` without modifying code. The orchestrator will rerun the failed jobs. Use this only when you can identify the transient cause — do not use it to dodge real failures."
+  echo ""
+  echo "## Failed checks"
+  echo "$CHECKS_JSON" \
+    | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | "- **\(.name)** (workflow: \(.workflow), bucket: \(.bucket)) — \(.link)"'
+  echo ""
+  echo "## Failed step logs"
+  echo "$CHECKS_JSON" \
+    | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | .link' \
+    | grep -oE 'runs/[0-9]+' | cut -d/ -f2 | sort -u \
+    | while read -r RUN_ID; do
+        echo "### Run $RUN_ID"
+        echo '```'
+        gh run view "$RUN_ID" --log-failed 2>&1 | tail -200
+        echo '```'
+        echo ""
+      done
+} > "$FEEDBACK"
+```
+
+#### 9d. Invoke `fullstack-developer` in fix mode
+
+Use the fix-mode prompt template from step 6, with these CI-specific extras:
+
+- `feedback_file = $FEEDBACK` (the `ci-fail-${CI_ITER}.md` from 9c).
+- Extra instruction (verbatim): "This feedback file is a CI failure (`ci-fail-N.md`), not a review or QA report. Diagnose the failed checks listed inside, then either fix the root cause (and follow your fix-mode full re-validation contract: lint + typecheck + test:unit + test:integration + test:e2e:seeded, all full) OR, if the failures are genuinely transient and unrelated to code on this branch, return `VERDICT: PASS — flaky, no code change required` without modifying code."
+
+Three possible verdicts back from the agent:
+
+- `VERDICT: PASS — flaky, no code change required` → go to 9e (rerun failed jobs without code changes).
+- `VERDICT: PASS — <fix description>` → go to 9f (commit + push).
+- `VERDICT: FAIL — <root cause>. Logs: <path>` → stop, escalate with PR URL + feedback file path.
+
+#### 9e. Flaky path — rerun failed jobs
+
+Defensive check that the agent didn't accidentally modify code while claiming flaky:
+
+```bash
+if ! git -C "$WORKTREE" diff --quiet HEAD; then
+  echo "Agent returned 'flaky' verdict but working tree has uncommitted changes — refusing to rerun jobs."
+  echo "Inspect the tree and decide whether to discard the changes or treat the run as a real fix."
+  exit 1
+fi
+```
+
+Then rerun only the failed jobs on each affected run:
+
+```bash
+echo "$CHECKS_JSON" \
+  | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | .link' \
+  | grep -oE 'runs/[0-9]+' | cut -d/ -f2 | sort -u \
+  | while read -r RUN_ID; do
+      gh run rerun "$RUN_ID" --failed
+    done
+```
+
+Go back to 9a. `CI_ITER` was already incremented in 9c — three consecutive flaky classifications is itself suspicious enough to escalate at the cap.
+
+#### 9f. Real fix path — commit + push
+
+The agent's fix-mode contract leaves the working tree with the fix changes. Commit and push:
+
+```bash
+SUMMARY="<text after the em-dash in the agent's 'VERDICT: PASS — <text>' line, lowercased>"
+
+git -C "$WORKTREE" add -A
+git -C "$WORKTREE" commit -m "$(cat <<EOF
+fix(ci): $SUMMARY
+
+OpenSpec change: <name>
+CI iteration: $CI_ITER
+PR: $PR_URL
+EOF
+)"
+
+git -C "$WORKTREE" push
+```
+
+Subject convention: `fix(ci): <summary>` (Conventional Commits). If pre-commit hooks fail, treat as part of the agent's fix-mode retry budget (cap 3, same convention as step 3b) — re-invoke the agent with the hook output as synthetic feedback. Hook failures here are unexpected because fix mode already ran lint + typecheck + tests full locally before returning `PASS`, so a hook failure indicates a discrepancy worth surfacing in the iteration log.
+
+Go back to 9a — the new push triggers a fresh CI run.
+
+**Note on reviewer/QA after CI fix**: by design, the orchestrator does **not** re-invoke `code-reviewer` or `qa-tester` after a CI fix iteration. Justification:
+
+- Fix mode already ran full re-validation locally (lint + typecheck + unit + integration + e2e) before returning `PASS`.
+- `code-reviewer` and `qa-tester` already approved a closely-related diff in steps 4 and 5.
+- Re-running both per CI iteration could add ~20 min × 3 iterations of cost for incremental fixes that are typically small.
+
+If a CI fix introduces something review-worthy, it surfaces on the user's manual PR review before merge. This is a conscious cost trade-off; can be revisited if non-trivial fixes start showing up in step 9.
 
 ---
 
@@ -508,12 +687,13 @@ Sections: S/S complete (M/M subtasks)
 Worktree: ../hubrityp-<name>/ (branch: feature/<name>)
 Review iterations: X/3
 QA: <Y/3 | skipped (backend-only heuristic)>
+CI: <green on first watch | green after Z/3 iterations | skipped — no checks configured>
 Infra: <torn down (orchestrator-owned: supabase=<bool>, app=<bool>) | reused user-owned, no teardown | left up — QA escalated, manual teardown noted above>
 Archive: openspec/changes/archive/YYYY-MM-DD-<name>/
   - Specs synced: <list or "none">
-Commits created: <count> per-section + 1 archive commit
-Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md, infra-owned.json (if QA escalated)}
-PR: <url>
+Commits created: <count> per-section + 1 archive commit + <Z> fix(ci) commits
+Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md, ci-fail-1.md, ..., pr-url.txt, infra-owned.json (if QA escalated)}
+PR: <url> (CI ✅ green)
 ```
 
 ---
@@ -525,7 +705,8 @@ PR: <url>
 | Dev internal retries per section | 3 | Pause, show logs, wait for user |
 | dev ↔ code-reviewer (post-sections) | 3 | Pause, list persistent BLOCKER/HIGH |
 | dev ↔ qa-tester | 3 | Pause, list persistent CRÍTICO/ALTO |
-| Same finding repeats 2× consecutively | immediate | Pause (non-converging signal) |
+| dev ↔ CI (post-PR) | 3 | Pause, link PR + persistent failed checks from `ci-fail-N.md` |
+| Same finding repeats 2× consecutively | immediate | Pause (non-converging signal — applies to reviewer, QA, and CI) |
 
 ---
 
@@ -534,7 +715,8 @@ PR: <url>
 `/dev-cycle <name>` is interruptible and idempotent:
 - Detects an existing worktree and reuses it.
 - Skips sections fully complete (every subtask `[x]`); refuses to resume a section in mixed `[x]`/`[ ]` state.
-- Preserves prior `.dev-cycle/*.md` reports and counts them when applying the iteration cap (does not start `REVIEW_ITER` from 0 if `.dev-cycle/review-*.md` already exists; pick up where it stopped).
+- Preserves prior `.dev-cycle/*.md` reports and counts them when applying iteration caps. This applies to every capped loop: dev↔reviewer (`review-*.md` → `REVIEW_ITER`), dev↔QA (`qa-*.md` → `QA_ITER`), and dev↔CI (`ci-fail-*.md` → `CI_ITER`). Resume picks up where the previous run stopped rather than starting from zero.
+- Step 9 (CI watch) on resume: if `.dev-cycle/pr-url.txt` exists, reuse that URL; otherwise fall back to `gh pr view --json url --jq .url` on the current branch. If the prior run was mid-fix when interrupted (worktree dirty), the orchestrator stops and asks before deciding whether to discard or commit-and-push the dirty state.
 
 ---
 
