@@ -119,7 +119,7 @@ Oferecer um prontuário eletrônico nativamente clínico, multi-abordagem, em co
 
 **RF-05.08.** Após salvar pela primeira vez, evolução fica vinculada à sessão. Sessão `done` sem evolução por mais de 7 dias gera lembrete (notificação in-app).
 
-**RF-05.09.** Edições posteriores criam **nova versão** com histórico (versionamento). Versão original NUNCA é deletada (auditoria CFP/LGPD). Após 30 dias, edições adicionais entram em "addendum" (acréscimo, sem alterar texto original — práxis clínica).
+**RF-05.09.** Uma vez criada, NUNCA mais pode ser deletada (auditoria CFP/LGPD). Após 30 dias, edições adicionais entram em "addendum" (acréscimo, sem alterar texto original — práxis clínica).
 
 ### 5.3. Hipóteses diagnósticas
 
@@ -205,18 +205,6 @@ Oferecer um prontuário eletrônico nativamente clínico, multi-abordagem, em co
 
 **RF-05.28.** Storage criptografado (AES-256). URL assinada com expiração de 5 min para acesso.
 
-### 5.8. Histórico e auditoria
-
-**RF-05.29.** Aba "Histórico" mostra todas as alterações feitas no prontuário (quem, quando, o quê).
-
-**RF-05.30.** Auditoria de **leitura**: cada vez que prontuário é aberto, registrar `audit_log`:
-- Quem (user_id)
-- Quando (timestamp)
-- O quê (qual seção foi acessada)
-- IP e user-agent
-
-**RF-05.31.** Em Configurações > Auditoria, psicólogo pode ver últimos 90 dias de acessos a cada prontuário.
-
 ### 5.9. Exportação
 
 **RF-05.32.** Botão "Exportar prontuário completo (PDF)" gera PDF estruturado:
@@ -250,8 +238,6 @@ Oferecer um prontuário eletrônico nativamente clínico, multi-abordagem, em co
 **RNF-05.03.** Criptografia AES-256 em repouso (banco e storage).
 
 **RNF-05.05.** Tempo de retenção: 20 anos após última atividade do paciente. Após 20 anos, sistema marca para anonimização (não exclusão direta).
-
-**RNF-05.07.** Versionamento: cada save da evolução cria versão imutável (append-only).
 
 ## 7. Regras de negócio
 
@@ -292,7 +278,6 @@ Oferecer um prontuário eletrônico nativamente clínico, multi-abordagem, em co
 - [ ] Template TCC tem todos os campos especificados
 - [ ] Auto-save funciona a cada 10 segundos (testar removendo wifi, retornando)
 - [ ] Edição após 30 dias cria addendum, não altera texto original
-- [ ] Versionamento mantém todas as versões consultáveis
 - [ ] PHQ-9 link enviado ao paciente é respondido e score calculado correto
 - [ ] Gráfico de evolução do PHQ-9 exibe 3+ aplicações em série temporal
 - [ ] Geração de laudo conforme Res. CFP 06/2019 com todas as seções
@@ -307,7 +292,7 @@ Oferecer um prontuário eletrônico nativamente clínico, multi-abordagem, em co
 
 ## 10. Dependências
 
-- Editor rico: Tiptap (recomendado) ou Lexical
+- Editor rico: Tiptap (recomendado)
 - Lib de PDF: `pdfkit` (mais leve)
 - Tabela CID-10 importada (CSV oficial da OMS, Datasus)
 - Bibliotecas de gráficos: Recharts ou Chart.js (para evolução de escalas)
