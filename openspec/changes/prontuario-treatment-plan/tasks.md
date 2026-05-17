@@ -37,7 +37,7 @@
 
 ## 6. Unit Tests — Content Diff + Version Logic
 
-- [ ] 6.1 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/treatment-plan-version-logic.test.ts` — test: version increment logic (next_version = current_version + 1), content snapshot shape matches schema, contentHasChanged returns false when goals/phases/resources/criteria identical (including order), returns true when any field differs
+- [x] 6.1 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/treatment-plan-version-logic.test.ts` — test: version increment logic (next_version = current_version + 1), content snapshot shape matches schema, contentHasChanged returns false when goals/phases/resources/criteria identical (including order), returns true when any field differs
 
 ## 7. End-to-End Tests
 
