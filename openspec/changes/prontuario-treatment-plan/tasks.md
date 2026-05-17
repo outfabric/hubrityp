@@ -32,8 +32,8 @@
 
 ## 5. Frontend — Tab Integration
 
-- [ ] 5.1 Update `src/modules/medical-records/components/prontuario-tabs.tsx` — replace the `EmptyTabPlaceholder` for the "Plano Terapeutico" tab with `<TreatmentPlanTab patientId={patientId} />`. Import from `./treatment-plan/`. Pass patientId prop from page params.
-- [ ] 5.2 Verify dark mode renders correctly for all new components (tokens via CSS vars handle this automatically, but confirm no hardcoded colors)
+- [x] 5.1 Update `src/modules/medical-records/components/prontuario-tabs.tsx` — replace the `EmptyTabPlaceholder` for the "Plano Terapeutico" tab with `<TreatmentPlanTab patientId={patientId} />`. Import from `./treatment-plan/`. Pass patientId prop from page params.
+- [x] 5.2 Verify dark mode renders correctly for all new components (tokens via CSS vars handle this automatically, but confirm no hardcoded colors)
 
 ## 6. Unit Tests — Content Diff + Version Logic
 

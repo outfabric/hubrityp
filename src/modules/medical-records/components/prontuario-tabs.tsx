@@ -5,15 +5,19 @@ import type { ReactNode } from 'react';
 
 import {
   createHypothesis,
+  getTreatmentPlan,
   listHypotheses,
+  listTreatmentPlanVersions,
   searchCid10,
   updateHypothesis,
   updateHypothesisStatus,
+  upsertTreatmentPlan,
 } from '@/app/(app)/pacientes/[id]/prontuario/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { EmptyTabPlaceholder } from './empty-tab-placeholder';
 import { HypothesesTab } from './hypotheses-tab';
+import { TreatmentPlanTab } from './treatment-plan';
 
 // ---------------------------------------------------------------------------
 // Tab definitions
@@ -49,7 +53,7 @@ const TABS: TabDefinition[] = [
     value: 'plano',
     label: 'Plano',
     description: 'O plano terapeutico e objetivos de tratamento serao gerenciados aqui.',
-    functional: false,
+    functional: true,
     icon: Target,
   },
   {
@@ -137,6 +141,16 @@ export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
           updateHypothesis={updateHypothesis}
           updateHypothesisStatus={updateHypothesisStatus}
           searchCid10={searchCid10}
+        />
+      </TabsContent>
+
+      {/* Functional tab: Plano terapeutico */}
+      <TabsContent value="plano" data-testid="prontuario-tab-content-plano">
+        <TreatmentPlanTab
+          patientId={patientId}
+          getTreatmentPlan={getTreatmentPlan}
+          upsertTreatmentPlan={upsertTreatmentPlan}
+          listTreatmentPlanVersions={listTreatmentPlanVersions}
         />
       </TabsContent>
 
