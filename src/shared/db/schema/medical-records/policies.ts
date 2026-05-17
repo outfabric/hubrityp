@@ -83,8 +83,9 @@ export const treatmentPlansPolicies = [
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
 
-// JOIN-scoped RLS for `treatment_plan_versions`. SELECT/INSERT/UPDATE only.
-// NO DELETE policy — immutable version trail per Lei 13.787/2018.
+// JOIN-scoped RLS for `treatment_plan_versions`. SELECT/INSERT only — no UPDATE or
+// DELETE. Version snapshots are immutable per Lei 13.787/2018: once a version
+// is written, it must never be modified or removed.
 // Ownership is derived via the parent `treatment_plans` row:
 //   plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())
 export const treatmentPlanVersionsPolicies = [
@@ -94,9 +95,5 @@ export const treatmentPlanVersionsPolicies = [
      USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
   `CREATE POLICY "owner can insert treatment_plan_versions" ON treatment_plan_versions
      FOR INSERT TO authenticated
-     WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
-  `CREATE POLICY "owner can update treatment_plan_versions" ON treatment_plan_versions
-     FOR UPDATE TO authenticated
-     USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()))
      WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
 ] as const;

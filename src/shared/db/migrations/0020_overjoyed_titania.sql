@@ -90,7 +90,8 @@ CREATE POLICY "owner can update treatment_plans" ON "treatment_plans"
 --> statement-breakpoint
 
 -- =====================================================================
--- 5. ROW LEVEL SECURITY — treatment_plan_versions (SELECT/INSERT/UPDATE only)
+-- 5. ROW LEVEL SECURITY — treatment_plan_versions (SELECT/INSERT only)
+--    Version snapshots are immutable per Lei 13.787/2018: no UPDATE or DELETE.
 -- =====================================================================
 
 ALTER TABLE "treatment_plan_versions" ENABLE ROW LEVEL SECURITY;
@@ -103,10 +104,4 @@ CREATE POLICY "owner can select treatment_plan_versions" ON "treatment_plan_vers
 
 CREATE POLICY "owner can insert treatment_plan_versions" ON "treatment_plan_versions"
   FOR INSERT TO authenticated
-  WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));
---> statement-breakpoint
-
-CREATE POLICY "owner can update treatment_plan_versions" ON "treatment_plan_versions"
-  FOR UPDATE TO authenticated
-  USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()))
   WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));

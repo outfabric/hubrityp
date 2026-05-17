@@ -218,6 +218,57 @@ describe('treatment-plan RLS — cross-user isolation', () => {
     expect(rows).toHaveLength(1);
   });
 
+  it('no user can UPDATE treatment_plan_versions (immutable per Lei 13.787/2018)', async () => {
+    const userA = randomUUID();
+    const patientId = randomUUID();
+    const planId = randomUUID();
+    const versionId = randomUUID();
+    await seedAuthUser(userA);
+    await seedPatient(userA, patientId);
+
+    const originalContent = {
+      goals: VALID_GOALS,
+      phases: VALID_PHASES,
+      resources: null,
+      successCriteria: null,
+    };
+
+    // Seed plan + version via service-role
+    await runAsService(async (db) => {
+      await db.insert(treatmentPlans).values({
+        id: planId,
+        userId: userA,
+        patientId,
+        goals: VALID_GOALS,
+        phases: VALID_PHASES,
+        currentVersion: 1,
+      });
+      await db.insert(treatmentPlanVersions).values({
+        id: versionId,
+        planId,
+        versionNumber: 1,
+        content: originalContent,
+        modifiedBy: userA,
+      });
+    });
+
+    // Owner tries to UPDATE version content — no UPDATE policy means zero rows affected
+    await runAsUser(userA, async (db) => {
+      await db.execute(
+        dsql`UPDATE treatment_plan_versions
+             SET content = '{"goals":[],"phases":[],"resources":"tampered","successCriteria":null}'::jsonb
+             WHERE id = ${versionId}`,
+      );
+    });
+
+    // Verify content is unchanged (RLS blocked the update)
+    const rows = await runAsService(async (db) => {
+      return db.select().from(treatmentPlanVersions);
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.content).toEqual(originalContent);
+  });
+
   it('version JOIN-scoped RLS blocks cross-user access to versions', async () => {
     const userA = randomUUID();
     const userB = randomUUID();

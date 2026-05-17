@@ -169,11 +169,11 @@ describe('treatment-plans — treatment_plans RLS policies', () => {
 });
 
 // =====================================================================
-// RLS policies — treatment_plan_versions (SELECT/INSERT/UPDATE, no DELETE)
+// RLS policies — treatment_plan_versions (SELECT/INSERT only — immutable)
 // =====================================================================
 
 describe('treatment-plans — treatment_plan_versions RLS policies', () => {
-  it('has exactly 3 policies: SELECT, INSERT, UPDATE (no DELETE)', async () => {
+  it('has exactly 2 policies: SELECT, INSERT (no UPDATE, no DELETE — immutable per Lei 13.787/2018)', async () => {
     const result = await runAsService(async (db) => {
       return db.execute(
         dsql`SELECT polname, polcmd FROM pg_policy
@@ -188,10 +188,10 @@ describe('treatment-plans — treatment_plan_versions RLS policies', () => {
     }));
 
     // r=SELECT, a=INSERT, w=UPDATE, d=DELETE
-    expect(policies).toHaveLength(3);
+    expect(policies).toHaveLength(2);
     expect(policies.find((p) => p.cmd === 'r')).toBeDefined(); // SELECT
     expect(policies.find((p) => p.cmd === 'a')).toBeDefined(); // INSERT
-    expect(policies.find((p) => p.cmd === 'w')).toBeDefined(); // UPDATE
+    expect(policies.find((p) => p.cmd === 'w')).toBeUndefined(); // NO UPDATE (immutable)
     expect(policies.find((p) => p.cmd === 'd')).toBeUndefined(); // NO DELETE
   });
 

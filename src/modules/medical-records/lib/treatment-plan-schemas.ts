@@ -17,7 +17,7 @@ import { z } from 'zod';
  */
 export const goalSchema = z.object({
   id: z.string().uuid(),
-  description: z.string().min(1, 'Descricao obrigatoria'),
+  description: z.string().min(1, 'Descricao obrigatoria').max(5_000),
   targetDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')
@@ -30,8 +30,8 @@ export const goalSchema = z.object({
  */
 export const phaseSchema = z.object({
   id: z.string().uuid(),
-  title: z.string().min(1, 'Titulo obrigatorio'),
-  description: z.string(),
+  title: z.string().min(1, 'Titulo obrigatorio').max(500),
+  description: z.string().max(5_000),
   order: z.number().int().nonnegative(),
   completed: z.boolean(),
 });
@@ -45,10 +45,10 @@ export const phaseSchema = z.object({
  */
 export const upsertTreatmentPlanInputSchema = z.object({
   patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
-  goals: z.array(goalSchema),
-  phases: z.array(phaseSchema),
-  resources: z.string().nullable(),
-  successCriteria: z.string().nullable(),
+  goals: z.array(goalSchema).max(100),
+  phases: z.array(phaseSchema).max(100),
+  resources: z.string().max(50_000).nullable(),
+  successCriteria: z.string().max(50_000).nullable(),
 });
 
 /**
@@ -73,10 +73,10 @@ export const listTreatmentPlanVersionsInputSchema = z.object({
  * The shape of the JSONB `content` column in `treatment_plan_versions`.
  */
 export const versionContentSchema = z.object({
-  goals: z.array(goalSchema),
-  phases: z.array(phaseSchema),
-  resources: z.string().nullable(),
-  successCriteria: z.string().nullable(),
+  goals: z.array(goalSchema).max(100),
+  phases: z.array(phaseSchema).max(100),
+  resources: z.string().max(50_000).nullable(),
+  successCriteria: z.string().max(50_000).nullable(),
 });
 
 // ---------------------------------------------------------------------------

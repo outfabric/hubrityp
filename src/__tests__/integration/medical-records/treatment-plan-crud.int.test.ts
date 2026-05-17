@@ -274,16 +274,21 @@ describe('upsertTreatmentPlanImpl', () => {
     });
     expect(updateResult.ok).toBe(true);
 
-    // Verify audit entries
+    // Verify audit entries: first upsert = create, second upsert = update
     const auditRows = await runAsService(async (db) => {
       return db.select().from(auditLog).where(eq(auditLog.userId, userId));
     });
 
-    const treatmentPlanAudits = auditRows.filter(
+    const createAudits = auditRows.filter(
+      (r) => r.action === 'treatment-plan.create' && r.resourceType === 'treatment_plan',
+    );
+    const updateAudits = auditRows.filter(
       (r) => r.action === 'treatment-plan.update' && r.resourceType === 'treatment_plan',
     );
-    expect(treatmentPlanAudits).toHaveLength(2);
-    expect(treatmentPlanAudits[0]!.metadata).toEqual({ patient_id: patientId });
+    expect(createAudits).toHaveLength(1);
+    expect(updateAudits).toHaveLength(1);
+    expect(createAudits[0]!.metadata).toEqual({ patient_id: patientId });
+    expect(updateAudits[0]!.metadata).toEqual({ patient_id: patientId });
   });
 });
 

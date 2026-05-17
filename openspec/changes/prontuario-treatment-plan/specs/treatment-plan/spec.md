@@ -154,7 +154,7 @@ The system SHALL display an empty state when the patient has no treatment plan. 
 
 ### Requirement: RLS enforces owner-scoped access on treatment plan tables
 
-The system SHALL enable RLS on `treatment_plans` and `treatment_plan_versions`. Policies enforce that only the owning psychologist (`user_id = auth.uid()`) can SELECT/INSERT/UPDATE plans. No DELETE policy exists (Lei 13.787/2018 retention mandate). Versions are JOIN-scoped: access requires `plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())`.
+The system SHALL enable RLS on `treatment_plans` and `treatment_plan_versions`. Policies on `treatment_plans` enforce that only the owning psychologist (`user_id = auth.uid()`) can SELECT/INSERT/UPDATE plans. No DELETE policy exists (Lei 13.787/2018 retention mandate). `treatment_plan_versions` are immutable (no UPDATE or DELETE) per Lei 13.787/2018 — only SELECT and INSERT are permitted, consistent with the `evolution_versions` precedent. Versions are JOIN-scoped: access requires `plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())`.
 
 #### Scenario: Psychologist can only read own patients' plans
 
@@ -173,7 +173,7 @@ The system SHALL enable RLS on `treatment_plans` and `treatment_plan_versions`. 
 
 ### Requirement: Audit log records treatment plan access
 
-The system SHALL write an `audit_log` entry on every treatment plan read (`action='treatment-plan.read'`) and every upsert (`action='treatment-plan.update'`). Audit writes use service-role (same pattern as foundation change) to prevent user manipulation of the audit trail. The audit entry includes `resource_type='treatment_plan'`, `resource_id=plan.id`, and metadata with `patient_id`.
+The system SHALL write an `audit_log` entry on every treatment plan read (`action='treatment-plan.read'`), on first creation (`action='treatment-plan.create'`), and on every subsequent update (`action='treatment-plan.update'`). Audit writes use service-role (same pattern as foundation change) to prevent user manipulation of the audit trail. The audit entry includes `resource_type='treatment_plan'`, `resource_id=plan.id`, and metadata with `patient_id`.
 
 #### Scenario: Reading plan writes audit entry
 

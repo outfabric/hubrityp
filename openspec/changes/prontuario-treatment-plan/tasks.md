@@ -1,7 +1,7 @@
 ## 1. Database Schema + RLS + Migration
 
 - [x] 1.1 Add `treatmentPlans` and `treatmentPlanVersions` Drizzle table definitions to `src/shared/db/schema/medical-records/tables.ts` (columns, indexes, unique constraints per design.md DDL)
-- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `treatmentPlansPolicies` (SELECT/INSERT/UPDATE, `user_id = auth.uid()`), `treatmentPlanVersionsPolicies` (SELECT/INSERT/UPDATE, JOIN-scoped via `plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())`). No DELETE policies.
+- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `treatmentPlansPolicies` (SELECT/INSERT/UPDATE, `user_id = auth.uid()`), `treatmentPlanVersionsPolicies` (SELECT/INSERT, JOIN-scoped via `plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())`). No UPDATE or DELETE policies on versions (immutable per Lei 13.787/2018).
 - [x] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export `treatmentPlans` and `treatmentPlanVersions`
 - [x] 1.4 Run `npm run db:generate`, manually append RLS SQL + FK constraints (`user_id -> auth.users`, `patient_id -> patients(id) UNIQUE`, `plan_id -> treatment_plans(id) ON DELETE CASCADE`) to the generated migration file
 - [x] 1.5 Run `npm run db:migrate` locally and verify tables exist

@@ -181,10 +181,10 @@ export async function upsertTreatmentPlanImpl(
           modifiedBy: userId,
         });
 
-        // Write audit_log entry
+        // Write audit_log entry (first creation, not update)
         await tx.insert(auditLog).values({
           userId,
-          action: 'treatment-plan.update',
+          action: 'treatment-plan.create',
           resourceType: 'treatment_plan',
           resourceId: newPlan!.id,
           metadata: { patient_id: patientId },

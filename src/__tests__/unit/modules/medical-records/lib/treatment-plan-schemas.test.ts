@@ -75,6 +75,16 @@ describe('goalSchema', () => {
     const result = goalSchema.safeParse(makeGoal({ order: -1 }));
     expect(result.success).toBe(false);
   });
+
+  it('rejects a goal description exceeding 5_000 chars', () => {
+    const result = goalSchema.safeParse(makeGoal({ description: 'x'.repeat(5_001) }));
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts a goal description at exactly 5_000 chars', () => {
+    const result = goalSchema.safeParse(makeGoal({ description: 'x'.repeat(5_000) }));
+    expect(result.success).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -109,6 +119,16 @@ describe('phaseSchema', () => {
 
   it('rejects a phase with negative order', () => {
     const result = phaseSchema.safeParse(makePhase({ order: -1 }));
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a phase title exceeding 500 chars', () => {
+    const result = phaseSchema.safeParse(makePhase({ title: 'x'.repeat(501) }));
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a phase description exceeding 5_000 chars', () => {
+    const result = phaseSchema.safeParse(makePhase({ description: 'x'.repeat(5_001) }));
     expect(result.success).toBe(false);
   });
 });
@@ -176,6 +196,44 @@ describe('upsertTreatmentPlanInputSchema', () => {
     const result = upsertTreatmentPlanInputSchema.safeParse({
       ...VALID_INPUT,
       phases: [makePhase({ title: '' })],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects resources exceeding 50_000 chars', () => {
+    const result = upsertTreatmentPlanInputSchema.safeParse({
+      ...VALID_INPUT,
+      resources: 'x'.repeat(50_001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects successCriteria exceeding 50_000 chars', () => {
+    const result = upsertTreatmentPlanInputSchema.safeParse({
+      ...VALID_INPUT,
+      successCriteria: 'x'.repeat(50_001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects goals array exceeding 100 items', () => {
+    const goals = Array.from({ length: 101 }, (_, i) =>
+      makeGoal({ id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`, order: i }),
+    );
+    const result = upsertTreatmentPlanInputSchema.safeParse({
+      ...VALID_INPUT,
+      goals,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects phases array exceeding 100 items', () => {
+    const phases = Array.from({ length: 101 }, (_, i) =>
+      makePhase({ id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`, order: i }),
+    );
+    const result = upsertTreatmentPlanInputSchema.safeParse({
+      ...VALID_INPUT,
+      phases,
     });
     expect(result.success).toBe(false);
   });
