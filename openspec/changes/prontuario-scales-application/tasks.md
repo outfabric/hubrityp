@@ -15,10 +15,10 @@
 
 ## 3. Scale Definitions Library — GAD-7 and AUDIT
 
-- [ ] 3.1 Create `src/modules/medical-records/lib/scales/gad7.ts` — 7 questions (Portuguese), options 0-3, scoring (sum), classification (0-4 minimal, 5-9 mild, 10-14 moderate, 15-21 severe)
-- [ ] 3.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/gad7.test.ts` — test boundaries: 4/5, 9/10, 14/15, max 21. Test 7 questions present
-- [ ] 3.3 Create `src/modules/medical-records/lib/scales/audit.ts` — 10 questions (Portuguese), mixed options (questions 1-8: 0-4, questions 9-10: 0/2/4), scoring (sum), classification (0-7 low, 8-15 risky, 16-19 harmful, 20-40 dependence)
-- [ ] 3.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/audit.test.ts` — test boundaries: 7/8, 15/16, 19/20, max 40. Test 10 questions. Test mixed option ranges
+- [x] 3.1 Create `src/modules/medical-records/lib/scales/gad7.ts` — 7 questions (Portuguese), options 0-3, scoring (sum), classification (0-4 minimal, 5-9 mild, 10-14 moderate, 15-21 severe)
+- [x] 3.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/gad7.test.ts` — test boundaries: 4/5, 9/10, 14/15, max 21. Test 7 questions present
+- [x] 3.3 Create `src/modules/medical-records/lib/scales/audit.ts` — 10 questions (Portuguese), mixed options (questions 1-8: 0-4, questions 9-10: 0/2/4), scoring (sum), classification (0-7 low, 8-15 risky, 16-19 harmful, 20-40 dependence)
+- [x] 3.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/audit.test.ts` — test boundaries: 7/8, 15/16, 19/20, max 40. Test 10 questions. Test mixed option ranges
 
 ## 4. Scale Definitions Library — SDQ and WHOQOL-Bref
 
