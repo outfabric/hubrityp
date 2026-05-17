@@ -7,3 +7,4 @@ export * from './health/tables';
 export * from './notifications/tables';
 export * from './patients/tables';
 export * from './whatsapp/tables';
+export * from './medical-records/tables';

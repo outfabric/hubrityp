@@ -5,13 +5,13 @@
 
 ## 2. Database Schema — Medical Records Domain
 
-- [ ] 2.1 Create `src/shared/db/schema/medical-records/tables.ts` with Drizzle definitions for `evolutions`, `evolution_versions`, and `audit_log` (columns, indexes, unique constraints per design.md)
-- [ ] 2.2 Create `src/shared/db/schema/medical-records/policies.ts` with RLS SQL arrays: `evolutionsPolicies` (SELECT/INSERT/UPDATE only, user_id scoped), `evolutionVersionsPolicies` (JOIN-scoped via evolutions.user_id), `auditLogPolicies` (SELECT only for authenticated, no INSERT/UPDATE/DELETE)
-- [ ] 2.3 Create `src/shared/db/schema/medical-records/index.ts` barrel re-exporting tables and policies
-- [ ] 2.4 Update `src/shared/db/schema/index.ts` to add `export * from './medical-records/tables';`
-- [ ] 2.5 Run `npm run db:generate`, manually append RLS policies + FK constraints (user_id -> auth.users, patient_id -> patients, session_id -> sessions with UNIQUE, evolution_id -> evolutions ON DELETE CASCADE) to the generated migration file
-- [ ] 2.6 Run `npm run db:migrate` locally and verify tables exist
-- [ ] 2.7 **Integration tests:** Create `src/__tests__/integration/medical-records/schema.int.test.ts` — verify all three tables exist, RLS is enabled on each, expected policies exist (SELECT/INSERT/UPDATE on evolutions, SELECT/INSERT/UPDATE on evolution_versions, SELECT-only on audit_log), no DELETE policy on any table, UNIQUE constraint on evolutions.session_id, UNIQUE on (evolution_id, version_number)
+- [x] 2.1 Create `src/shared/db/schema/medical-records/tables.ts` with Drizzle definitions for `evolutions`, `evolution_versions`, and `audit_log` (columns, indexes, unique constraints per design.md)
+- [x] 2.2 Create `src/shared/db/schema/medical-records/policies.ts` with RLS SQL arrays: `evolutionsPolicies` (SELECT/INSERT/UPDATE only, user_id scoped), `evolutionVersionsPolicies` (JOIN-scoped via evolutions.user_id), `auditLogPolicies` (SELECT only for authenticated, no INSERT/UPDATE/DELETE)
+- [x] 2.3 Create `src/shared/db/schema/medical-records/index.ts` barrel re-exporting tables and policies
+- [x] 2.4 Update `src/shared/db/schema/index.ts` to add `export * from './medical-records/tables';`
+- [x] 2.5 Run `npm run db:generate`, manually append RLS policies + FK constraints (user_id -> auth.users, patient_id -> patients, session_id -> sessions with UNIQUE, evolution_id -> evolutions ON DELETE CASCADE) to the generated migration file
+- [x] 2.6 Run `npm run db:migrate` locally and verify tables exist
+- [x] 2.7 **Integration tests:** Create `src/__tests__/integration/medical-records/schema.int.test.ts` — verify all three tables exist, RLS is enabled on each, expected policies exist (SELECT/INSERT/UPDATE on evolutions, SELECT/INSERT/UPDATE on evolution_versions, SELECT-only on audit_log), no DELETE policy on any table, UNIQUE constraint on evolutions.session_id, UNIQUE on (evolution_id, version_number)
 
 ## 3. Module Foundation — Lib (Zod Schemas + Helpers)
 
