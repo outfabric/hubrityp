@@ -1,14 +1,14 @@
-// Esqueleto de spec E2E. Copie e adapte: jornada, asserções e mocks pontuais.
+// E2E spec skeleton. Copy and adapt: journey, assertions and targeted mocks.
 //
-// Localização canônica: src/__tests__/e2e/seeded/<dominio>.spec.ts
-// Tag de domínio (`@<dominio>`) é OBRIGATÓRIA — o orquestrador do dev-cycle
-// usa essas tags para filtrar a suíte com `--grep` em re-validação escopada.
+// Canonical location: src/__tests__/e2e/seeded/<domain>.spec.ts
+// Domain tag (`@<domain>`) is MANDATORY — the dev-cycle orchestrator
+// uses these tags to filter the suite with `--grep` for scoped re-validation.
 
 import { test, expect } from '../fixtures/test-base';
 import { createPaciente } from '../helpers/db';
 
-test.describe('@agenda agendamento de consulta', () => {
-  test('psicólogo agenda consulta, vê na agenda e dispara lembrete', async ({
+test.describe('@agenda scheduling a consultation', () => {
+  test('psychologist schedules a consultation, sees it on the agenda and triggers the reminder', async ({
     page,
     dr,
     twilioCalls,
@@ -39,7 +39,7 @@ test.describe('@agenda agendamento de consulta', () => {
     expect(twilioCalls[0]).toContain('Maria');
   });
 
-  test('mostra erro acionável quando integração externa falha', async ({
+  test('shows an actionable error when the external integration fails', async ({
     page,
     dr,
     context,

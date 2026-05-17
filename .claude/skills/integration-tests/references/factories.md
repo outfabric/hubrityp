@@ -1,8 +1,8 @@
-# Factories de dados para integração
+# Data factories for integration
 
-Fábricas tipadas reduzem repetição e mantêm os testes legíveis. Derive os tipos do schema Drizzle.
+Typed factories reduce repetition and keep tests readable. Derive types from the Drizzle schema.
 
-## Padrão básico
+## Basic pattern
 
 ```ts
 // src/__tests__/integration/factories/psicologo.ts
@@ -34,16 +34,16 @@ export async function createPsicologo(overrides: Override = {}) {
 }
 ```
 
-Pontos importantes:
+Key points:
 
-- **`runAsService`** para bypassar RLS no setup (factories não testam RLS — outros testes testam).
-- **Defaults realistas mas reconhecíveis** (`@hubrityp.test` deixa óbvio em logs).
-- **`Override` derivado do `InferInsertModel`** mantém tipo sincronizado com o schema.
-- **`returning()`** para devolver a linha completa, útil em assertions seguintes.
+- **`runAsService`** to bypass RLS in setup (factories do not test RLS — other tests do).
+- **Realistic but recognizable defaults** (`@hubrityp.test` makes it obvious in logs).
+- **`Override` derived from `InferInsertModel`** keeps the type in sync with the schema.
+- **`returning()`** to return the full row, useful in subsequent assertions.
 
-> **Tipo do schema**: para tabelas que já exportam um `New<X>` (ex.: `NewHealthPing` em `@/shared/db/schema/health/tables`), use o alias direto em vez de re-derivar com `InferInsertModel` — fica mais legível e tipa contra exatamente o que o app insere.
+> **Schema type**: for tables that already export a `New<X>` (e.g., `NewHealthPing` in `@/shared/db/schema/health/tables`), use the direct alias instead of re-deriving with `InferInsertModel` — it's more readable and types against exactly what the app inserts.
 
-## Composição
+## Composition
 
 ```ts
 // src/__tests__/integration/factories/agendamento.ts
@@ -76,9 +76,9 @@ export async function createAgendamento(overrides: Partial<{
 }
 ```
 
-## Dados realistas (PT-BR)
+## Realistic data (PT-BR)
 
-Para CPF/CNPJ válidos, mantenha um pequeno banco de strings pré-calculadas em `src/__tests__/integration/factories/_fixtures.ts`:
+For valid CPF/CNPJ, keep a small bank of pre-calculated strings in `src/__tests__/integration/factories/_fixtures.ts`:
 
 ```ts
 export const CPFS_VALIDOS = [
@@ -88,15 +88,15 @@ export const CPFS_VALIDOS = [
 ];
 ```
 
-Não gere via libs como `faker` — testes ficam não-determinísticos sem `seed`. Se usar `faker`, **sempre** `faker.seed(<número>)` no `beforeEach`.
+Do not generate via libs like `faker` — tests become non-deterministic without `seed`. If you use `faker`, **always** `faker.seed(<number>)` in `beforeEach`.
 
-## Sequências e unicidade
+## Sequences and uniqueness
 
-Use `randomUUID()` para IDs e sufixos únicos em campos com `UNIQUE` (email, CPF). Nunca dependa de "primeiro registro tem id 1".
+Use `randomUUID()` for IDs and unique suffixes in fields with `UNIQUE` (email, CPF). Never depend on "the first record has id 1".
 
-## Anti-padrões
+## Antipatterns
 
-- Factory que **mocka** algo. Factories tocam o DB real.
-- Factory que **lê configuração de teste** (env, config). Receba via parâmetro.
-- Factory que cria dados **demais** ("create um psicólogo com 10 pacientes e 50 consultas") — explicite no teste o que importa. Se vários testes precisam, faça uma factory composta nomeada (`createPsicologoComAgenda`).
-- Factory que **espera estado anterior** ("esta factory falha se já existe um paciente"). Cada factory deve ser idempotente em relação a si mesma.
+- A factory that **mocks** something. Factories touch the real DB.
+- A factory that **reads test configuration** (env, config). Receive it via parameter.
+- A factory that creates **too much** data ("create a psychologist with 10 patients and 50 appointments") — make explicit in the test what matters. If several tests need it, build a named composite factory (`createPsicologoComAgenda`).
+- A factory that **expects prior state** ("this factory fails if a patient already exists"). Each factory must be idempotent with respect to itself.

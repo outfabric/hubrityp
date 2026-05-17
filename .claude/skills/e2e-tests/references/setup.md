@@ -1,6 +1,6 @@
-# Setup do Playwright + Testcontainers
+# Playwright + Testcontainers setup
 
-## Instalação
+## Installation
 
 ```bash
 npm i -D @playwright/test @testcontainers/postgresql testcontainers \
@@ -8,27 +8,27 @@ npm i -D @playwright/test @testcontainers/postgresql testcontainers \
 npx playwright install --with-deps chromium
 ```
 
-`--with-deps` instala bibliotecas do sistema necessárias no Linux/CI. Em dev local pode ser só `npx playwright install chromium`.
+`--with-deps` installs the system libraries required on Linux/CI. In local dev it can be just `npx playwright install chromium`.
 
-## Os dois Playwright configs
+## The two Playwright configs
 
-O HubrityP separa as duas suítes em **dois configs na raiz do repo**, cada um com seu `testDir`:
+HubrityP separates the two suites into **two configs at the repo root**, each with its own `testDir`:
 
-| Config | `testDir` | Suíte | webServer |
+| Config | `testDir` | Suite | webServer |
 |---|---|---|---|
-| `playwright.seeded.config.ts` | `./src/__tests__/e2e/seeded` | Mock GoTrue + storageState | Wrapper `start-server.ts` que boota Postgres + mock GoTrue + spawn `next start` |
-| `playwright.real.config.ts` | `./src/__tests__/e2e/real` | Real Supabase (`supabase start`) | `npm run start` direto, com env injetado a partir de `npx supabase status -o json` lido em config-load |
+| `playwright.seeded.config.ts` | `./src/__tests__/e2e/seeded` | Mock GoTrue + storageState | `start-server.ts` wrapper that boots Postgres + mock GoTrue + spawns `next start` |
+| `playwright.real.config.ts` | `./src/__tests__/e2e/real` | Real Supabase (`supabase start`) | `npm run start` directly, with env injected from `npx supabase status -o json` read at config-load |
 
-Comandos:
+Commands:
 
 ```bash
 npm run test:e2e:seeded
-npm run test:e2e:real     # exige `npx supabase start` rodando
+npm run test:e2e:real     # requires `npx supabase start` running
 ```
 
-> **Conflito de porta**: as duas suítes não rodam concorrentemente — ambas usam `127.0.0.1:54321`. Pare uma antes da outra.
+> **Port conflict**: the two suites do not run concurrently — both use `127.0.0.1:54321`. Stop one before the other.
 
-## `playwright.seeded.config.ts` (suíte default)
+## `playwright.seeded.config.ts` (default suite)
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
@@ -67,25 +67,25 @@ export default defineConfig({
 });
 ```
 
-Pontos chave:
+Key points:
 
-- **`webServer.command`** aponta para o wrapper `start-server.ts` (não `npm run start` direto). O wrapper boota o container Postgres compartilhado + mock GoTrue antes de spawn `next start`, garantindo que o env do Next tenha `DATABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` resolvidos.
-- **`globalSetup`** roda **depois** do `webServer`. Use só para seed de dados (após o container já existir).
-- **`projects`**: `setup` autentica e salva `storageState` em `src/__tests__/e2e/seeded/setup/.auth/state.json`; o `chromium` não declara `storageState` no nível do projeto — testes opt-in via `test.use({ storageState: STORAGE_STATE_PATH })` (importado de `./setup/seed-state.ts`). Padrão por opt-in evita falhas em testes anônimos (ex.: redirect para `/login`).
-- **`fullyParallel: true`** com `workers: 2` no CI; ajuste se a suite começar a brigar pelo DB.
-- **`retries: 2` no CI**: reduz flakiness de rede/timing. Se um teste passa só com retry, **investigue** — ele provavelmente está mal escrito.
+- **`webServer.command`** points to the `start-server.ts` wrapper (not `npm run start` directly). The wrapper boots the shared Postgres container + mock GoTrue before spawning `next start`, making sure Next's env has `DATABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` resolved.
+- **`globalSetup`** runs **after** `webServer`. Use only for seeding data (after the container already exists).
+- **`projects`**: `setup` authenticates and saves `storageState` to `src/__tests__/e2e/seeded/setup/.auth/state.json`; `chromium` does not declare `storageState` at the project level — tests opt in via `test.use({ storageState: STORAGE_STATE_PATH })` (imported from `./setup/seed-state.ts`). Opt-in as default avoids failures in anonymous tests (e.g., redirect to `/login`).
+- **`fullyParallel: true`** with `workers: 2` in CI; adjust if the suite starts fighting for the DB.
+- **`retries: 2` in CI**: reduces network/timing flakiness. If a test only passes with retry, **investigate** — it is probably poorly written.
 
-## `playwright.real.config.ts` (suíte `@auth-real`)
+## `playwright.real.config.ts` (`@auth-real` suite)
 
-A suíte real é deliberadamente standalone — NÃO espalha o seeded config. Ela:
+The real suite is deliberately standalone — it does NOT spread the seeded config. It:
 
-- Lê `npx supabase status -o json` no top-level (em config-load) para descobrir `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`.
-- Rejeita iniciar se `supabase start` não estiver rodando, com mensagem acionável.
-- Usa `webServer.command: 'npm run start'` direto (sem wrapper) — o env vem inteiro do supabase status.
-- `outputDir: 'test-results-real'` e `playwright-report-real` para não colidir com a suíte seeded.
+- Reads `npx supabase status -o json` at top-level (at config-load) to discover `API_URL`, `DB_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`.
+- Refuses to start if `supabase start` is not running, with an actionable message.
+- Uses `webServer.command: 'npm run start'` directly (no wrapper) — env comes whole from supabase status.
+- `outputDir: 'test-results-real'` and `playwright-report-real` to avoid colliding with the seeded suite.
 
 ```ts
-// playwright.real.config.ts (resumido — ver o config real para o execSync de supabase status)
+// playwright.real.config.ts (summarized — see the real config for the supabase status execSync)
 export default defineConfig({
   testDir: './src/__tests__/e2e/real',
   testMatch: ['**/*.spec.ts'],
@@ -109,10 +109,10 @@ export default defineConfig({
 });
 ```
 
-## O wrapper `start-server.ts`
+## The `start-server.ts` wrapper
 
 ```ts
-// src/__tests__/e2e/seeded/setup/start-server.ts (resumido)
+// src/__tests__/e2e/seeded/setup/start-server.ts (summarized)
 import { spawn } from 'node:child_process';
 import { applyMigrations, bootPostgres } from '@/__tests__/e2e/_shared/postgres-container';
 import { startMockGotrue, buildFixedJwt } from './mock-gotrue';
@@ -151,16 +151,16 @@ async function main() {
 }
 ```
 
-## Container compartilhado
+## Shared container
 
-`bootPostgres` + `applyMigrations` vivem em `src/__tests__/e2e/_shared/postgres-container.ts` e são consumidos por **dois caminhos**:
+`bootPostgres` + `applyMigrations` live in `src/__tests__/e2e/_shared/postgres-container.ts` and are consumed by **two paths**:
 
-1. `vitest.integration.config.ts` → `src/__tests__/integration/setup/global-setup.ts` (suíte de integração).
-2. `playwright.seeded.config.ts` → `src/__tests__/e2e/seeded/setup/start-server.ts` (suíte e2e seeded).
+1. `vitest.integration.config.ts` → `src/__tests__/integration/setup/global-setup.ts` (integration suite).
+2. `playwright.seeded.config.ts` → `src/__tests__/e2e/seeded/setup/start-server.ts` (seeded e2e suite).
 
-Mude o boot/bootstrap LÁ — não duplique nesta suíte.
+Change boot/bootstrap THERE — do not duplicate in this suite.
 
-## Scripts no `package.json`
+## Scripts in `package.json`
 
 ```json
 {
@@ -171,11 +171,11 @@ Mude o boot/bootstrap LÁ — não duplique nesta suíte.
 }
 ```
 
-## Diferenças de ambiente
+## Environment differences
 
-- **Dev local**: `webServer.reuseExistingServer: true` permite ter `next start` em outro terminal e reaproveitar.
-- **CI**: força build/start fresco a cada run; sem reuse de container; `workers: 2` é seguro com TRUNCATE entre testes.
-- **PR preview**: opcionalmente rodar smoke subset apontando `baseURL` para a URL do preview da Vercel + `globalSetup` que nem sobe container (testes não precisam de DB próprio).
+- **Local dev**: `webServer.reuseExistingServer: true` lets you have `next start` in another terminal and reuse it.
+- **CI**: forces a fresh build/start on every run; no container reuse; `workers: 2` is safe with TRUNCATE between tests.
+- **PR preview**: optionally run a smoke subset pointing `baseURL` to the Vercel preview URL + a `globalSetup` that does not even start a container (tests do not need their own DB).
 
 ## `.gitignore`
 
@@ -186,4 +186,4 @@ test-results*/
 playwright/.cache/
 ```
 
-Storage de auth contém tokens de seed users — não comitar.
+Auth storage contains seed-user tokens — do not commit.

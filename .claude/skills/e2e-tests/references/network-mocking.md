@@ -1,10 +1,10 @@
-# Mockando rede com `page.route()`
+# Mocking network with `page.route()`
 
-Em E2E o **banco é real** mas integrações externas (Twilio, Asaas, Receita Saúde, Gemini) são interceptadas — chamada real é lenta, custa dinheiro e gera flakiness no CI.
+In E2E the **database is real** but external integrations (Twilio, Asaas, Receita Saúde, Gemini) are intercepted — a real call is slow, costs money and produces flakiness in CI.
 
-## `page.route()` básico
+## Basic `page.route()`
 
-Intercepta antes da requisição sair do contexto:
+Intercepts before the request leaves the context:
 
 ```ts
 await page.route('https://api.twilio.com/**/Messages.json', async (route) => {
@@ -18,11 +18,11 @@ await page.route('https://api.twilio.com/**/Messages.json', async (route) => {
 });
 ```
 
-Aplica-se a chamadas feitas **pelo navegador**. Se a integração roda no servidor (Server Action chama Twilio), o `page.route()` **não intercepta** — você precisa interceptar no fixture do servidor (env var pointing para mock server) ou via MSW se o app lê uma URL configurável.
+Applies to calls made **by the browser**. If the integration runs on the server (Server Action calls Twilio), `page.route()` **does not intercept** — you need to intercept in the server fixture (env var pointing to a mock server) or via MSW if the app reads a configurable URL.
 
-## Padrão: mocks padrão no fixture
+## Pattern: default mocks in the fixture
 
-Centralize mocks "sempre ligados" no `test-base`:
+Centralize "always on" mocks in `test-base`:
 
 ```ts
 // src/__tests__/e2e/seeded/fixtures/test-base.ts
@@ -49,18 +49,18 @@ export const test = base.extend<{ twilioCalls: string[] }>({
       });
       await use(calls);
     },
-    { auto: true }, // ativa o mock em todo teste, mesmo se não declarado
+    { auto: true }, // turns on the mock in every test, even if not declared
   ],
 });
 
 export { expect };
 ```
 
-`{ auto: true }` força o fixture a rodar mesmo quando o teste não menciona `twilioCalls` — perfeito para mocks defensivos.
+`{ auto: true }` forces the fixture to run even when the test does not mention `twilioCalls` — perfect for defensive mocks.
 
-## Verificar requests sem fulfilar
+## Verify requests without fulfilling
 
-Se você quer **observar** sem alterar (raro em E2E):
+If you want to **observe** without altering (rare in E2E):
 
 ```ts
 const requests: string[] = [];
@@ -69,7 +69,7 @@ page.on('request', (req) => {
 });
 ```
 
-Em geral, prefira `waitForResponse` para asserções pontuais:
+Generally, prefer `waitForResponse` for targeted assertions:
 
 ```ts
 const res = await page.waitForResponse(
@@ -79,30 +79,30 @@ expect(res.status()).toBe(201);
 expect(await res.json()).toMatchObject({ ok: true });
 ```
 
-## Erros e cenários ruins
+## Errors and bad scenarios
 
 ```ts
-// Twilio responde 503 → app deve mostrar fallback
+// Twilio responds 503 → app must show fallback
 await page.route('https://api.twilio.com/**', (route) =>
   route.fulfill({ status: 503, body: 'Service Unavailable' })
 );
 
-// Asaas responde lento (testar loading state)
+// Asaas responds slowly (test loading state)
 await page.route('https://api.asaas.com/**', async (route) => {
   await new Promise((r) => setTimeout(r, 2000));
   await route.fulfill({ status: 200, body: '{"id":"pay_x"}' });
 });
 ```
 
-Cenários de erro são onde E2E ganha valor sobre integração — você vê o **toast**, o **estado da UI**, a **mensagem que o usuário lê**.
+Error scenarios are where E2E earns its value over integration — you see the **toast**, the **UI state**, the **message the user reads**.
 
-## Webhooks de entrada
+## Incoming webhooks
 
-Webhooks (Twilio confirma entrega, Asaas confirma pagamento) chegam no Route Handler do app, vindos da internet. Em E2E, **dispare manualmente** via `request` API (HTTP cliente do Playwright):
+Webhooks (Twilio confirms delivery, Asaas confirms payment) arrive at the app's Route Handler, coming from the internet. In E2E, **fire them manually** via the `request` API (Playwright's HTTP client):
 
 ```ts
-test('cobrança vira "paga" quando webhook do Asaas chega', async ({ page, request }) => {
-  // ... cria cobrança via UI ...
+test('billing turns "paid" when the Asaas webhook arrives', async ({ page, request }) => {
+  // ... create billing via UI ...
 
   await request.post(`${page.url().split('/agenda')[0]}/api/webhooks/asaas`, {
     headers: { 'asaas-access-token': process.env.ASAAS_WEBHOOK_TOKEN! },
@@ -114,20 +114,20 @@ test('cobrança vira "paga" quando webhook do Asaas chega', async ({ page, reque
 });
 ```
 
-## Integrações server-side (Resend, Gemini, Receita Saúde)
+## Server-side integrations (Resend, Gemini, Receita Saúde)
 
-`page.route()` **não vê** chamadas feitas pelo Next.js no servidor. Estratégias:
+`page.route()` **does not see** calls made by Next.js on the server. Strategies:
 
-1. **Env var apontando para mock**: app lê `RESEND_BASE_URL` (ou similar) que em test aponta para `http://localhost:3101`. Suba um pequeno servidor mock nesse port no wrapper `start-server.ts` (mesmo padrão do `mock-gotrue.ts`).
-2. **`vi.mock` no nível do módulo do app não funciona em E2E** — Playwright não tem hook nesse nível.
-3. **Mock provider via DI no app**: se o app aceita injeção do cliente externo (ex.: `getResendClient()` lê env e retorna real ou stub), force stub em `NODE_ENV=test`.
-4. **Ignorar** se a integração é puramente lateral e o teste consegue asseverar o efeito visível (ex.: app marca `email_enviado: true` no DB — basta checar isso).
+1. **Env var pointing to a mock**: the app reads `RESEND_BASE_URL` (or similar) which in test points to `http://localhost:3101`. Spin up a small mock server on that port in the `start-server.ts` wrapper (same pattern as `mock-gotrue.ts`).
+2. **`vi.mock` at the app module level does not work in E2E** — Playwright has no hook at that level.
+3. **Mock provider via DI in the app**: if the app accepts injection of the external client (e.g., `getResendClient()` reads env and returns real or stub), force the stub in `NODE_ENV=test`.
+4. **Ignore** if the integration is purely lateral and the test can assert the visible effect (e.g., app marks `email_enviado: true` in the DB — just check that).
 
-A opção 3 é a mais limpa quando o app já tem essa abstração; senão, a opção 4 cobre 80% dos casos.
+Option 3 is the cleanest when the app already has that abstraction; otherwise, option 4 covers 80% of cases.
 
 ## Checklist
 
-- [ ] Toda chamada externa do navegador interceptada no fixture (auto: true).
-- [ ] Nenhum teste depende de Twilio/Asaas reais (procurar por `https://api.` em specs).
-- [ ] Cenários de erro (503, timeout) cobertos para fluxos críticos.
-- [ ] Webhooks de entrada disparados via `request.post` no próprio teste.
+- [ ] Every external browser call intercepted in the fixture (auto: true).
+- [ ] No test depends on real Twilio/Asaas (search for `https://api.` in specs).
+- [ ] Error scenarios (503, timeout) covered for critical flows.
+- [ ] Incoming webhooks fired via `request.post` inside the test itself.

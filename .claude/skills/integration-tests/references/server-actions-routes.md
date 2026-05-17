@@ -1,8 +1,8 @@
-# Server Actions e Route Handlers em integração
+# Server Actions and Route Handlers in integration
 
-Em integração, a Server Action / Route Handler roda **com Drizzle real contra o container**. Apenas integrações **de saída** (Twilio, Resend, Receita Saúde, Asaas, Inngest, Gemini) são mockadas — pelo MSW se forem HTTP, ou via `vi.mock` se forem SDKs.
+In integration, the Server Action / Route Handler runs **with real Drizzle against the container**. Only **outbound** integrations (Twilio, Resend, Receita Saúde, Asaas, Inngest, Gemini) are mocked — via MSW if they are HTTP, or via `vi.mock` if they are SDKs.
 
-## Server Action — fluxo padrão
+## Server Action — standard flow
 
 ```ts
 // src/__tests__/integration/app/(app)/agenda/actions.int.test.ts
@@ -22,7 +22,7 @@ vi.mock('@/shared/lib/inngest/client', () => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@/shared/supabase/server', async () => {
-  // Faz a Server Action enxergar a conexão escopada do helper runAsUser
+  // Makes the Server Action see the scoped connection from the runAsUser helper
   const { getScopedClient } = await import('@/__tests__/integration/setup/rls');
   return { createServerClient: () => getScopedClient() };
 });
@@ -32,7 +32,7 @@ import { inngest } from '@/shared/lib/inngest/client';
 describe('agendarConsulta', () => {
   beforeEach(() => truncateAll(db));
 
-  it('cria agendamento, dispara evento e responde sucesso', async () => {
+  it('creates appointment, dispatches event and returns success', async () => {
     const dr = await createPsicologo();
     const paciente = await createPaciente({ psicologoId: dr.id });
 
@@ -56,7 +56,7 @@ describe('agendarConsulta', () => {
     );
   });
 
-  it('rejeita quando paciente é de outro psicólogo (RLS bloqueia leitura)', async () => {
+  it('rejects when patient belongs to another psychologist (RLS blocks read)', async () => {
     const dr_a = await createPsicologo();
     const dr_b = await createPsicologo();
     const pacienteDeA = await createPaciente({ psicologoId: dr_a.id });
@@ -73,16 +73,16 @@ describe('agendarConsulta', () => {
 });
 ```
 
-Observe: o teste **não** mocka o DB, **não** mocka Drizzle, **não** mocka a policy. Apenas as fronteiras de saída (Inngest, revalidatePath) e a função que cria o cliente Supabase (para usar a conexão escopada do helper). Importe a Server Action **direto do módulo** (`@/modules/agenda/server/...`) — o route shell em `src/app/(app)/agenda/actions.ts` é só um wrapper `'use server'` que delega.
+Note: the test does **not** mock the DB, does **not** mock Drizzle, does **not** mock the policy. Only the outbound boundaries (Inngest, revalidatePath) and the function that creates the Supabase client (to use the scoped connection from the helper). Import the Server Action **directly from the module** (`@/modules/agenda/server/...`) — the route shell at `src/app/(app)/agenda/actions.ts` is just a `'use server'` wrapper that delegates.
 
-## Route Handler de webhook (Twilio/Asaas)
+## Webhook Route Handler (Twilio/Asaas)
 
-Webhooks são `Request → Response`. Construa nativo:
+Webhooks are `Request → Response`. Build them natively:
 
 ```ts
 import { POST } from '@/app/api/webhooks/asaas/route';
 
-it('marca cobrança como paga ao receber webhook PAYMENT_CONFIRMED', async () => {
+it('marks billing as paid when receiving PAYMENT_CONFIRMED webhook', async () => {
   const dr = await createPsicologo();
   const cobranca = await runAsService((admin) =>
     admin.insert(cobrancas).values({
@@ -115,9 +115,9 @@ it('marca cobrança como paga ao receber webhook PAYMENT_CONFIRMED', async () =>
 });
 ```
 
-## Mockando integrações de saída via MSW
+## Mocking outbound integrations via MSW
 
-Se o handler **emite** uma chamada HTTP (ex.: notificar Twilio), use MSW:
+If the handler **emits** an HTTP call (e.g., notify Twilio), use MSW:
 
 ```ts
 beforeEach(() => {
@@ -131,23 +131,23 @@ beforeEach(() => {
 });
 ```
 
-Asserções sobre `twilioPayloads` provam o contrato sem rede real.
+Assertions over `twilioPayloads` prove the contract without real network.
 
-## Validação Zod nas fronteiras
+## Zod validation at the boundaries
 
-Em integração, Zod é exercitado naturalmente — se o schema rejeita, o handler nunca chega no DB. Não duplique testes que já existem como unitários do schema; foque no **caminho do erro chegando ao usuário** (formato da resposta, status code, transação revertida).
+In integration, Zod is exercised naturally — if the schema rejects, the handler never reaches the DB. Do not duplicate tests that already exist as unit tests of the schema; focus on the **path of the error reaching the user** (response shape, status code, reverted transaction).
 
-## Checklist por Server Action
+## Checklist per Server Action
 
-- [ ] Caminho feliz cria/atualiza estado correto no DB.
-- [ ] RLS é respeitada (testar como outro psicólogo → erro/`null`).
-- [ ] Erro de validação Zod retorna formato esperado.
-- [ ] Falha de fronteira externa (MSW retorna 500) → estado consistente (rollback ou retry agendado).
-- [ ] Eventos/notificações de saída são chamados com payload correto.
-- [ ] `revalidatePath`/`revalidateTag` chamado nas rotas certas.
+- [ ] Happy path creates/updates the correct state in the DB.
+- [ ] RLS is respected (test as another psychologist → error/`null`).
+- [ ] Zod validation error returns the expected shape.
+- [ ] External boundary failure (MSW returns 500) → consistent state (rollback or scheduled retry).
+- [ ] Outbound events/notifications are called with the correct payload.
+- [ ] `revalidatePath`/`revalidateTag` called on the right routes.
 
-## O que não pertence aqui
+## What does not belong here
 
-- Render real do componente que dispara a action → use `references/ui-integration-rtl.md`.
-- Confirmar que o e-mail chegou → fora do escopo (provedor real).
-- Performance/concorrência sob carga → ferramenta dedicada.
+- Real render of the component that triggers the action → use `references/ui-integration-rtl.md`.
+- Confirming the email arrived → out of scope (real provider).
+- Performance/concurrency under load → dedicated tool.

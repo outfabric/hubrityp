@@ -1,10 +1,10 @@
-# Testando RLS do Supabase em integração
+# Testing Supabase RLS in integration
 
-A regra fundamental do HubrityP é "psicólogo só vê dados dos próprios pacientes". RLS é a fronteira que garante isso. Testes de integração devem **provar comportamento**, não apenas existência da policy.
+The fundamental rule of HubrityP is "a psychologist only sees data for their own patients". RLS is the boundary that guarantees this. Integration tests should **prove behavior**, not just the existence of the policy.
 
-## Como o Supabase autoriza por usuário
+## How Supabase authorizes per user
 
-Em produção, o cliente JS do Supabase envia o JWT no header. O Postgres seta `request.jwt.claims` por sessão e a policy lê:
+In production, the Supabase JS client sends the JWT in the header. Postgres sets `request.jwt.claims` per session and the policy reads it:
 
 ```sql
 CREATE POLICY "psicologo_le_seus_pacientes" ON pacientes
@@ -12,11 +12,11 @@ CREATE POLICY "psicologo_le_seus_pacientes" ON pacientes
   USING (psicologo_id = auth.uid());
 ```
 
-`auth.uid()` é equivalente a `(current_setting('request.jwt.claims', true)::jsonb ->> 'sub')::uuid`.
+`auth.uid()` is equivalent to `(current_setting('request.jwt.claims', true)::jsonb ->> 'sub')::uuid`.
 
-Em teste, simulamos isso na conexão.
+In tests, we simulate this on the connection.
 
-## Helper `runAsUser`
+## `runAsUser` helper
 
 ```ts
 // src/__tests__/integration/setup/rls.ts
@@ -48,7 +48,7 @@ export async function runAsService<T>(
 ): Promise<T> {
   const client = await rawPool.connect();
   try {
-    await client.query(`SET LOCAL ROLE postgres;`); // bypassa RLS
+    await client.query(`SET LOCAL ROLE postgres;`); // bypasses RLS
     const scoped = drizzle(client, { schema });
     return await fn(scoped);
   } finally {
@@ -57,20 +57,20 @@ export async function runAsService<T>(
 }
 ```
 
-`SET LOCAL` confina a mudança à transação atual; `set_config(..., true)` faz o mesmo para o claim. `client.release()` devolve a conexão limpa ao pool.
+`SET LOCAL` confines the change to the current transaction; `set_config(..., true)` does the same for the claim. `client.release()` returns the clean connection to the pool.
 
-## Casos obrigatórios por tabela com RLS
+## Mandatory cases per table with RLS
 
-Para cada tabela com policy escopada por psicólogo, escreva pelo menos:
+For each table with a policy scoped by psychologist, write at least:
 
-1. **Dono lê**: `runAsUser(dr_a)` retorna registros de `dr_a`.
-2. **Não-dono não lê**: `runAsUser(dr_b)` retorna `[]` (não erro).
-3. **Não-dono não escreve**: `runAsUser(dr_b)` insert em recurso de `dr_a` lança erro `42501` (insufficient privilege) ou viola check.
-4. **Anônimo é bloqueado**: chamada sem JWT (role `anon`) retorna `[]` ou erro.
+1. **Owner reads**: `runAsUser(dr_a)` returns `dr_a`'s records.
+2. **Non-owner does not read**: `runAsUser(dr_b)` returns `[]` (not an error).
+3. **Non-owner does not write**: `runAsUser(dr_b)` insert on `dr_a`'s resource throws error `42501` (insufficient privilege) or violates a check.
+4. **Anonymous is blocked**: call without JWT (role `anon`) returns `[]` or error.
 
-Essas asserções valem mais que checar SQL da policy — elas provam o **efeito**.
+These assertions are worth more than checking the policy SQL — they prove the **effect**.
 
-## Exemplo
+## Example
 
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -82,7 +82,7 @@ import { createPsicologo } from '@/__tests__/integration/factories/psicologo';
 describe('RLS pacientes', () => {
   beforeEach(() => truncateAll(db));
 
-  it('isola pacientes por psicólogo', async () => {
+  it('isolates patients per psychologist', async () => {
     const dr_a = await createPsicologo();
     const dr_b = await createPsicologo();
 
@@ -104,14 +104,14 @@ describe('RLS pacientes', () => {
     expect(visivelParaB.map((p) => p.nome)).toEqual(['João']);
   });
 
-  it('bloqueia escrita cruzada', async () => {
+  it('blocks cross writes', async () => {
     const dr_a = await createPsicologo();
     const dr_b = await createPsicologo();
 
     await expect(
       runAsUser(dr_b.id, (scoped) =>
         scoped.insert(pacientes).values({
-          psicologoId: dr_a.id,            // tenta escrever no slot do A
+          psicologoId: dr_a.id,            // tries to write into A's slot
           nome: 'X',
           cpf: '529.982.247-25',
         })
@@ -123,15 +123,15 @@ describe('RLS pacientes', () => {
 
 ## Pitfalls
 
-- **`SET ROLE` sem `LOCAL` vaza** entre operações no mesmo cliente. Sempre `SET LOCAL` dentro de transação ou usar conexão dedicada.
-- **`auth.uid()` retorna `NULL`** quando claims não estão setados → policy nega tudo. Bom para o caso anônimo, mas certifique-se que o helper realmente seta antes de chamar.
-- **Service client (postgres/superuser) bypassa RLS** — útil para preparar dados, **nunca** o use no caminho sob teste.
-- **Triggers `BEFORE INSERT` que setam `psicologo_id = auth.uid()`** são uma boa prática que simplifica policies; teste-os explicitamente.
-- **Connection pooler do Supabase (PgBouncer)** pode misturar sessões em produção. Use sempre `SET LOCAL` (transaction-scoped) e nunca `SET SESSION`.
+- **`SET ROLE` without `LOCAL` leaks** across operations on the same client. Always `SET LOCAL` inside a transaction or use a dedicated connection.
+- **`auth.uid()` returns `NULL`** when claims are not set → policy denies everything. Good for the anonymous case, but make sure the helper actually sets it before calling.
+- **Service client (postgres/superuser) bypasses RLS** — useful to prepare data, **never** use it in the path under test.
+- **`BEFORE INSERT` triggers that set `psicologo_id = auth.uid()`** are a good practice that simplifies policies; test them explicitly.
+- **The Supabase connection pooler (PgBouncer)** can mix sessions in production. Always use `SET LOCAL` (transaction-scoped) and never `SET SESSION`.
 
-## Checklist de revisão
+## Review checklist
 
-- [ ] Toda nova tabela com RLS tem ao menos os 4 casos acima.
-- [ ] Teste usa role `authenticated`, não superuser.
-- [ ] `runAsService` aparece **só** em fixtures/factories, nunca dentro do `it`.
-- [ ] Migration que cria a tabela inclui `ENABLE ROW LEVEL SECURITY` (assertível com query no `information_schema`).
+- [ ] Every new table with RLS has at least the 4 cases above.
+- [ ] Test uses the `authenticated` role, not superuser.
+- [ ] `runAsService` appears **only** in fixtures/factories, never inside the `it`.
+- [ ] The migration that creates the table includes `ENABLE ROW LEVEL SECURITY` (assertable with a query on `information_schema`).

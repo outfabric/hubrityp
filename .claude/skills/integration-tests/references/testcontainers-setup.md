@@ -1,6 +1,6 @@
-# Setup com Testcontainers (Postgres + Drizzle)
+# Setup with Testcontainers (Postgres + Drizzle)
 
-## Instalação
+## Installation
 
 ```bash
 npm i -D vitest @testcontainers/postgresql testcontainers \
@@ -8,21 +8,21 @@ npm i -D vitest @testcontainers/postgresql testcontainers \
         msw @mswjs/data
 ```
 
-- `@testcontainers/postgresql` — wrapper específico de Postgres (espera healthcheck pronto).
-- `testcontainers` — necessário como peer da subpackage acima.
-- `pg` — driver TCP usado pelo Drizzle no test runner (Node).
-- `msw` — interceptação HTTP nos testes que tocam UI/integrações externas.
+- `@testcontainers/postgresql` — Postgres-specific wrapper (waits for ready healthcheck).
+- `testcontainers` — required as peer of the subpackage above.
+- `pg` — TCP driver used by Drizzle in the test runner (Node).
+- `msw` — HTTP interception in tests that touch UI/external integrations.
 
-## Imagem do container
+## Container image
 
-Duas escolhas igualmente válidas:
+Two equally valid choices:
 
-- **`supabase/postgres:15.6.1.146`** — fidelidade máxima (extensões `pgcrypto`, `uuid-ossp`, `pgjwt`, `pg_graphql`, `supabase_vault` pré-instaladas; schema `auth` parcialmente populado pelo entrypoint). Imagem grande (~2GB) e entrypoint fica chato em CI sem `JWT_SECRET`.
-- **`postgres:16-alpine`** + bootstrap manual — leve (~80MB), boot rápido. As partes mínimas do `auth` (roles `authenticated`/`anon`/`service_role`, schema `auth`, função `auth.uid()`) são instaladas programaticamente. **É o que o HubrityP usa hoje** em `src/__tests__/e2e/_shared/postgres-container.ts`.
+- **`supabase/postgres:15.6.1.146`** — maximum fidelity (`pgcrypto`, `uuid-ossp`, `pgjwt`, `pg_graphql`, `supabase_vault` extensions pre-installed; `auth` schema partially populated by the entrypoint). Large image (~2GB) and the entrypoint is painful in CI without `JWT_SECRET`.
+- **`postgres:16-alpine`** + manual bootstrap — light (~80MB), fast boot. The minimal pieces of `auth` (roles `authenticated`/`anon`/`service_role`, `auth` schema, `auth.uid()` function) are installed programmatically. **This is what HubrityP uses today** in `src/__tests__/e2e/_shared/postgres-container.ts`.
 
-A escolha vive em UM lugar só: `src/__tests__/e2e/_shared/postgres-container.ts`. Tanto o `globalSetup` da integração quanto o seeded e2e importam dali — não duplique.
+The choice lives in ONE place only: `src/__tests__/e2e/_shared/postgres-container.ts`. Both the integration `globalSetup` and the seeded e2e import from there — do not duplicate.
 
-## Módulo compartilhado de container
+## Shared container module
 
 ```ts
 // src/__tests__/e2e/_shared/postgres-container.ts
@@ -43,7 +43,7 @@ export async function bootPostgres() {
     .start();
 
   const connectionString = container.getConnectionUri();
-  await bootstrapAuthSchema(connectionString); // roles + schema auth + auth.uid()
+  await bootstrapAuthSchema(connectionString); // roles + auth schema + auth.uid()
   return { container, connectionString };
 }
 
@@ -60,9 +60,9 @@ export async function applyMigrations(connectionString: string) {
 }
 ```
 
-> **Onde mora**: `src/__tests__/e2e/_shared/postgres-container.ts`. O nome `e2e/_shared` é histórico — o módulo serve **integration + e2e**, mas mora sob `e2e/` porque foi extraído da camada e2e e mantido lá para o seeded e2e poder importar sem cruzar a fronteira `integration/`. Se um dia o conjunto de consumidores crescer além de integration + seeded e2e, vale promover para `src/__tests__/_shared/`.
+> **Where it lives**: `src/__tests__/e2e/_shared/postgres-container.ts`. The `e2e/_shared` name is historical — the module serves **integration + e2e**, but lives under `e2e/` because it was extracted from the e2e layer and kept there so the seeded e2e can import without crossing the `integration/` boundary. If the set of consumers ever grows beyond integration + seeded e2e, it's worth promoting to `src/__tests__/_shared/`.
 
-## `globalSetup` da integração
+## Integration `globalSetup`
 
 ```ts
 // src/__tests__/integration/setup/global-setup.ts
@@ -80,7 +80,7 @@ export default async function globalSetup() {
 }
 ```
 
-A função NÃO precisa retornar URL via `provide()` se os testes leem direto de `process.env.DATABASE_URL`. Mas se quiser type-safety via `inject('DATABASE_URL')`, declare:
+The function does NOT need to return the URL via `provide()` if the tests read directly from `process.env.DATABASE_URL`. But if you want type-safety via `inject('DATABASE_URL')`, declare:
 
 ```ts
 // vitest-env.d.ts
@@ -91,9 +91,9 @@ declare module 'vitest' {
 }
 ```
 
-E no globalSetup: `provide('DATABASE_URL', connectionString)`.
+And in globalSetup: `provide('DATABASE_URL', connectionString)`.
 
-## Acessando dentro do teste
+## Accessing inside the test
 
 ```ts
 // src/__tests__/integration/setup/db.ts
@@ -137,7 +137,7 @@ export default defineConfig({
     poolOptions: { forks: { singleFork: false, maxForks: 4 } },
     testTimeout: 30_000,
     hookTimeout: 60_000,
-    fileParallelism: false, // serial entre arquivos para evitar cross-talk no pool
+    fileParallelism: false, // serial across files to avoid cross-talk in the pool
     clearMocks: true,
     restoreMocks: true,
   },
@@ -150,11 +150,11 @@ export default defineConfig({
 });
 ```
 
-Pool `forks` evita compartilhamento de módulos com estado (clientes pg, MSW handlers) entre arquivos. Threads compartilham memória — pode vazar.
+The `forks` pool avoids sharing stateful modules (pg clients, MSW handlers) across files. Threads share memory — can leak.
 
-> **Stub de `server-only`**: o pacote `server-only` lança em qualquer require fora do bundler do Next. O alias acima aponta para `src/__tests__/stubs/server-only.ts` (no-op) para que módulos de servidor (que importam `server-only`) sejam testáveis fora do Next.
+> **`server-only` stub**: the `server-only` package throws on any require outside Next's bundler. The alias above points to `src/__tests__/stubs/server-only.ts` (no-op) so server modules (that import `server-only`) are testable outside Next.
 
-## `setup.ts` por arquivo (não global)
+## `setup.ts` per file (not global)
 
 ```ts
 // src/__tests__/integration/setup/setup.ts
@@ -169,20 +169,20 @@ afterAll(async () => {
 });
 ```
 
-`onUnhandledRequest: 'error'` força que qualquer chamada HTTP fora dos handlers MSW falhe o teste — protege contra rede vazada.
+`onUnhandledRequest: 'error'` forces any HTTP call outside MSW handlers to fail the test — protects against leaked network.
 
-## Reuse no dev local
+## Reuse in local dev
 
-`.withReuse()` mantém o container entre runs com hash baseado na configuração. Para garantir o cache:
+`.withReuse()` keeps the container between runs with a hash based on the configuration. To ensure caching:
 
 ```bash
-# ~/.testcontainers.properties (ou via env)
+# ~/.testcontainers.properties (or via env)
 testcontainers.reuse.enable=true
 ```
 
-No CI, force `process.env.CI === 'true'` para desabilitar reuse e parar o container no teardown — runners efêmeros.
+In CI, force `process.env.CI === 'true'` to disable reuse and stop the container on teardown — ephemeral runners.
 
-## Scripts no `package.json`
+## Scripts in `package.json`
 
 ```json
 {
@@ -194,9 +194,9 @@ No CI, force `process.env.CI === 'true'` para desabilitar reuse e parar o contai
 }
 ```
 
-## Solução de problemas
+## Troubleshooting
 
-- **`Cannot find module 'pg-native'`**: ignore — `pg` tenta carregar otimização nativa, fallback funciona.
-- **`Address already in use`**: container anterior não parou; `docker ps` + `docker rm -f`.
-- **`role "authenticated" does not exist`**: o bootstrap do `_shared/postgres-container.ts` não rodou — confirme que `bootPostgres()` foi chamado antes de `applyMigrations()`.
-- **Lentidão na primeira execução**: pull da imagem. Considere `docker pull postgres:16-alpine` no `postinstall`.
+- **`Cannot find module 'pg-native'`**: ignore — `pg` tries to load native optimization, fallback works.
+- **`Address already in use`**: previous container did not stop; `docker ps` + `docker rm -f`.
+- **`role "authenticated" does not exist`**: the `_shared/postgres-container.ts` bootstrap did not run — confirm that `bootPostgres()` was called before `applyMigrations()`.
+- **Slow first run**: pulling the image. Consider `docker pull postgres:16-alpine` on `postinstall`.
