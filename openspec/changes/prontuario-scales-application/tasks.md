@@ -77,9 +77,9 @@
 
 ## 12. Inngest Cron and Module Barrel
 
-- [ ] 12.1 Create `src/modules/medical-records/inngest/expire-remote-tokens.ts` — Inngest createFunction with cron 'TZ=America/Sao_Paulo 0 * * * *', queries scale_applications with token_expires_at < now() AND completed_at IS NULL, logs count for observability
-- [ ] 12.2 Update `src/modules/medical-records/index.ts` barrel to export all new scale-related actions, types, schemas, and components
-- [ ] 12.3 Register the expire-remote-tokens function in the Inngest client configuration (same pattern as existing remind-missing-evolution)
+- [x] 12.1 Create `src/modules/medical-records/inngest/expire-remote-tokens.ts` — Inngest createFunction with cron 'TZ=America/Sao_Paulo 0 * * * *', queries scale_applications with token_expires_at < now() AND completed_at IS NULL, logs count for observability
+- [x] 12.2 Update `src/modules/medical-records/index.ts` barrel to export all new scale-related actions, types, schemas, and components
+- [x] 12.3 Register the expire-remote-tokens function in the Inngest client configuration (same pattern as existing remind-missing-evolution)
 
 ## 13. End-to-End Tests
 

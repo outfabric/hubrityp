@@ -8,6 +8,7 @@
 
 import { serve } from 'inngest/next';
 
+import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
 import { inngest } from '@/modules/whatsapp/inngest/client';
@@ -35,5 +36,6 @@ export const { GET, POST, PUT } = serve({
     webhookStopHandler,
     inboxMessageIngest,
     remindMissingEvolution,
+    expireRemoteTokens,
   ],
 });
