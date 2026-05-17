@@ -1,6 +1,6 @@
 # HubrityP
 
-SaaS para psicólogos autônomos brasileiros. Plataforma única para agenda, prontuário, lembretes WhatsApp, receita e cobrança.
+SaaS for Brazilian autonomous psychologists. Single platform for scheduling, medical records, WhatsApp reminders, prescriptions, and billing.
 
 ## Prerequisites
 
