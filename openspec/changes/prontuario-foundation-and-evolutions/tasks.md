@@ -15,13 +15,13 @@
 
 ## 3. Module Foundation — Lib (Zod Schemas + Helpers)
 
-- [ ] 3.1 Create `src/modules/medical-records/lib/template-types.ts` — export `TemplateType` union type ('tcc'|'psicanalise'|'sistemica'|'aba'|'livre'|'custom'), `TEMPLATE_OPTIONS` array for Select UI
-- [ ] 3.2 Create `src/modules/medical-records/lib/evolution-schemas.ts` — Zod schemas: `tccContentSchema`, `psicanaliseContentSchema`, `sistemicaContentSchema`, `abaContentSchema`, `livreContentSchema`, `customContentSchema`, `createEvolutionInputSchema`, `updateEvolutionInputSchema` (with conditional reason required when isAddendum)
-- [ ] 3.3 Create `src/modules/medical-records/lib/immutability-helpers.ts` — `isWithinEditWindow(createdAt: Date, now?: Date): boolean` (true if <30 days), `shouldForceAddendum(createdAt: Date, now?: Date): boolean` (true if >=30 days)
-- [ ] 3.4 Create `src/modules/medical-records/lib/content-diff.ts` — `contentHasChanged(prev: unknown, next: unknown): boolean` using JSON.stringify comparison
-- [ ] 3.5 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/evolution-schemas.test.ts` — validate each template schema (TCC rejects missing humor_inicial, livre accepts freeform, custom rejects empty object, etc.)
-- [ ] 3.6 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/immutability-helpers.test.ts` — test isWithinEditWindow returns true at 29 days, false at 30 days; shouldForceAddendum inverse; edge case at exact 30-day boundary
-- [ ] 3.7 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/content-diff.test.ts` — test identical content returns false, different content returns true, handles null/undefined
+- [x] 3.1 Create `src/modules/medical-records/lib/template-types.ts` — export `TemplateType` union type ('tcc'|'psicanalise'|'sistemica'|'aba'|'livre'|'custom'), `TEMPLATE_OPTIONS` array for Select UI
+- [x] 3.2 Create `src/modules/medical-records/lib/evolution-schemas.ts` — Zod schemas: `tccContentSchema`, `psicanaliseContentSchema`, `sistemicaContentSchema`, `abaContentSchema`, `livreContentSchema`, `customContentSchema`, `createEvolutionInputSchema`, `updateEvolutionInputSchema` (with conditional reason required when isAddendum)
+- [x] 3.3 Create `src/modules/medical-records/lib/immutability-helpers.ts` — `isWithinEditWindow(createdAt: Date, now?: Date): boolean` (true if <30 days), `shouldForceAddendum(createdAt: Date, now?: Date): boolean` (true if >=30 days)
+- [x] 3.4 Create `src/modules/medical-records/lib/content-diff.ts` — `contentHasChanged(prev: unknown, next: unknown): boolean` using JSON.stringify comparison
+- [x] 3.5 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/evolution-schemas.test.ts` — validate each template schema (TCC rejects missing humor_inicial, livre accepts freeform, custom rejects empty object, etc.)
+- [x] 3.6 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/immutability-helpers.test.ts` — test isWithinEditWindow returns true at 29 days, false at 30 days; shouldForceAddendum inverse; edge case at exact 30-day boundary
+- [x] 3.7 **Unit tests:** Create `src/__tests__/unit/modules/medical-records/lib/content-diff.test.ts` — test identical content returns false, different content returns true, handles null/undefined
 
 ## 4. Server Actions — Evolution CRUD
 
