@@ -40,18 +40,21 @@ const hypothesisFormSchema = z
     status: z.enum(['investigating', 'confirmed', 'discarded']),
     notes: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.mode === 'cid10') {
-        return Boolean(data.cid10Code);
-      }
-      return Boolean(data.description && data.description.trim().length > 0);
-    },
-    {
-      message: 'Preencha o campo obrigatorio do modo selecionado.',
-      path: ['description'],
-    },
-  );
+  .superRefine((data, ctx) => {
+    if (data.mode === 'cid10' && !data.cid10Code) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Preencha o campo obrigatorio do modo selecionado.',
+        path: ['cid10Code'],
+      });
+    } else if (data.mode === 'descriptive' && !data.description?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Preencha o campo obrigatorio do modo selecionado.',
+        path: ['description'],
+      });
+    }
+  });
 
 type HypothesisFormValues = z.infer<typeof hypothesisFormSchema>;
 

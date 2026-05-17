@@ -71,16 +71,18 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     await page.locator('#mode-cid10').click();
 
     // 7. Type "depres" in the CID-10 combobox input.
-    //    Radix PopoverTrigger (asChild) sets type="button" on the input, which
-    //    prevents Playwright's `.fill()` from working. We temporarily override
-    //    the type to "text", fill with Playwright's native method (which triggers
-    //    React's onChange correctly), then restore the type. This avoids fragile
-    //    manual event dispatching.
+    //    The input must be a real text input (type="text") that accepts keyboard
+    //    input. Verify the input value reflects the typed query — this assertion
+    //    would FAIL if the input were rendered as type="button" (the bug fixed in
+    //    QA-1: PopoverTrigger asChild injects type="button").
     const comboboxInput = page.getByTestId('cid10-combobox-input');
     await expect(comboboxInput).toBeVisible();
+    await expect(comboboxInput).toHaveAttribute('type', 'text');
     await comboboxInput.click();
-    await comboboxInput.evaluate((el) => el.setAttribute('type', 'text'));
     await comboboxInput.fill('depres');
+    // Assert the input actually received the typed text (guards against the
+    // type="button" regression where fill() silently no-ops).
+    await expect(comboboxInput).toHaveValue('depres');
 
     // 8. Wait for debounce (250ms) + server action round-trip — select the F32.0 result.
     //    The combobox renders results in a listbox with role="option".

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { Cid10Result } from '@/modules/medical-records';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent } from '@/shared/ui/popover';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -171,9 +171,10 @@ export function Cid10Combobox({ value, onChange, onSearch, disabled }: Cid10Comb
         Buscar codigo CID-10
       </span>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+        <PopoverAnchor asChild>
           <Input
             ref={inputRef}
+            type="text"
             placeholder="Buscar codigo ou descricao..."
             value={query}
             onChange={(e) => {
@@ -187,6 +188,7 @@ export function Cid10Combobox({ value, onChange, onSearch, disabled }: Cid10Comb
             disabled={disabled}
             role="combobox"
             aria-expanded={open}
+            aria-haspopup="listbox"
             aria-controls={listboxId}
             aria-labelledby={labelId}
             aria-activedescendant={
@@ -194,7 +196,7 @@ export function Cid10Combobox({ value, onChange, onSearch, disabled }: Cid10Comb
             }
             data-testid="cid10-combobox-input"
           />
-        </PopoverTrigger>
+        </PopoverAnchor>
         <PopoverContent
           className="w-[var(--radix-popover-trigger-width)] p-0"
           align="start"
