@@ -9,8 +9,8 @@
 
 ## 2. Zod Schemas + Helpers (Lib)
 
-- [ ] 2.1 Create `src/modules/medical-records/lib/treatment-plan-schemas.ts` — export `goalSchema`, `phaseSchema`, `upsertTreatmentPlanInputSchema`, `getTreatmentPlanInputSchema`, `listTreatmentPlanVersionsInputSchema`, `versionContentSchema`. Types: `Goal`, `Phase`, `TreatmentPlanInput`, `VersionContent` via `z.infer`
-- [ ] 2.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/treatment-plan-schemas.test.ts` — validate: goal with empty description rejected, goal with valid ISO date accepted, goal with invalid date format rejected, phase with empty title rejected, phase with all fields valid passes, upsert input with missing patientId rejected, full valid input passes
+- [x] 2.1 Create `src/modules/medical-records/lib/treatment-plan-schemas.ts` — export `goalSchema`, `phaseSchema`, `upsertTreatmentPlanInputSchema`, `getTreatmentPlanInputSchema`, `listTreatmentPlanVersionsInputSchema`, `versionContentSchema`. Types: `Goal`, `Phase`, `TreatmentPlanInput`, `VersionContent` via `z.infer`
+- [x] 2.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/treatment-plan-schemas.test.ts` — validate: goal with empty description rejected, goal with valid ISO date accepted, goal with invalid date format rejected, phase with empty title rejected, phase with all fields valid passes, upsert input with missing patientId rejected, full valid input passes
 
 ## 3. Server Actions
 
