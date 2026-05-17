@@ -252,3 +252,59 @@ export const treatmentPlanVersions = pgTable(
 
 export type TreatmentPlanVersion = typeof treatmentPlanVersions.$inferSelect;
 export type NewTreatmentPlanVersion = typeof treatmentPlanVersions.$inferInsert;
+
+// `scale_applications` stores standardized psychological scale/questionnaire
+// applications linked to a patient. Each row represents a single administration
+// of a validated instrument (PHQ-9, GAD-7, SDQ, AUDIT, WHOQOL-BREF).
+// The `scale_key` column is constrained via a CHECK to the supported instrument
+// set. `remote_token` enables patient self-report: if `applied_remotely` is
+// true, a unique token is generated so the patient can complete the scale via a
+// public link.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record retention.
+export const scaleApplications = pgTable(
+  'scale_applications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    // CHECK constraint in migration: scale_key IN ('phq9','gad7','sdq','audit','whoqol-bref')
+    scaleKey: text('scale_key').notNull(),
+
+    appliedAt: timestamp('applied_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    responses: jsonb('responses')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    totalScore: integer('total_score'),
+    classification: text('classification'),
+    notes: text('notes'),
+
+    appliedRemotely: boolean('applied_remotely').notNull().default(false),
+    remoteToken: varchar('remote_token', { length: 64 }), // UNIQUE WHERE NOT NULL
+    tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('idx_scale_apps_patient_scale_applied').on(
+      table.patientId,
+      table.scaleKey,
+      table.appliedAt,
+    ),
+    unique('scale_applications_remote_token_unique').on(table.remoteToken),
+  ],
+);
+
+export type ScaleApplication = typeof scaleApplications.$inferSelect;
+export type NewScaleApplication = typeof scaleApplications.$inferInsert;

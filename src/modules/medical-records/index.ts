@@ -106,3 +106,65 @@ export {
   type TreatmentPlanInput,
   type VersionContent,
 } from './lib/treatment-plan-schemas';
+
+// ---- Scale Application Server Actions ---------------------------------------
+export {
+  createScaleApplicationImpl,
+  submitScaleResponsesImpl,
+  getScaleHistory,
+  listScalesForPatient,
+  type CreateScaleApplicationResult,
+  type SubmitScaleResponsesResult,
+  type GetScaleHistoryResult,
+  type ListScalesForPatientResult,
+  type ScaleApplicationSummary,
+  type ScaleSummary,
+  type TimeseriesPoint,
+} from './server/scales';
+
+// ---- Scale Public Token Actions (service-role) -----------------------------
+export {
+  getScaleApplicationByToken,
+  submitScaleResponsesByToken,
+  type GetScaleApplicationByTokenResult,
+  type SubmitScaleResponsesByTokenResult,
+} from './server/scales-public';
+
+// ---- Scale Application Schemas ----------------------------------------------
+export {
+  createScaleApplicationSchema,
+  submitResponsesSchema,
+  submitResponsesByTokenSchema,
+  type CreateScaleApplicationInput,
+  type SubmitResponsesInput,
+  type SubmitResponsesByTokenInput,
+} from './lib/scales-schemas';
+
+// ---- Scale Library ----------------------------------------------------------
+export {
+  scaleByKey,
+  AVAILABLE_SCALES,
+  SCALE_KEYS,
+  type ScaleKey,
+  type ScaleDefinition,
+  type ScaleQuestion,
+  type ScaleOption,
+  type ClassificationResult,
+} from './lib/scales';
+
+// ---- Scale Public Form (Client Component) -----------------------------------
+export { ScalePublicForm } from './components/scale-public-form';
+
+// ---- Scale Tab Components (Client Components) --------------------------------
+export { ScalesTab } from './components/scales-tab';
+export { ScaleSummaryCard } from './components/scale-summary-card';
+export { ScaleHistoryChart } from './components/scale-history-chart';
+export { ScaleSelectModal } from './components/scale-select-modal';
+export { ScaleApplicationForm } from './components/scale-application-form';
+
+// ---- Scale Severity Tokens ---------------------------------------------------
+export {
+  classificationToSeverity,
+  severityToBadgeVariant,
+  severityToDotFill,
+} from './lib/scales/severity-tokens';

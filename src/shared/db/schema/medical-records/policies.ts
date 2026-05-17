@@ -97,3 +97,20 @@ export const treatmentPlanVersionsPolicies = [
      FOR INSERT TO authenticated
      WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
 ] as const;
+
+// Owner-scoped RLS for `scale_applications`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record retention.
+// The `user_id` column references the psychologist's `auth.users.id`.
+export const scaleApplicationsPolicies = [
+  `ALTER TABLE scale_applications ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select scale_applications" ON scale_applications
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert scale_applications" ON scale_applications
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update scale_applications" ON scale_applications
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;
