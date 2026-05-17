@@ -22,10 +22,10 @@
 
 ## 4. Scale Definitions Library — SDQ and WHOQOL-Bref
 
-- [ ] 4.1 Create `src/modules/medical-records/lib/scales/sdq.ts` — 25 questions (Portuguese, 11-17 self-report), options 0-2 (Falso/Mais ou menos verdadeiro/Verdadeiro), reverse scoring for prosocial items (1,4,9,17,20), total difficulties = sum of emotional+conduct+hyperactivity+peer (NOT prosocial), classification (0-15 normal, 16-19 borderline, 20-40 abnormal)
-- [ ] 4.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/sdq.test.ts` — test reverse scoring on prosocial items, test total difficulties excludes prosocial, test boundaries 15/16, 19/20. Test 25 questions present
-- [ ] 4.3 Create `src/modules/medical-records/lib/scales/whoqol-bref.ts` — 26 questions (Portuguese), 4 domains (Physical: items 3,4,10,15,16,17,18; Psychological: 5,6,7,11,19,26; Social: 20,21,22; Environmental: 8,9,12,13,14,23,24,25), transformation formula to 0-100, score() returns null, classify() returns severity='domains' with domain scores
-- [ ] 4.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/whoqol-bref.test.ts` — test domain transformation formula (raw 4-20 range -> 0-100), test all 26 questions grouped correctly, test score() returns null, test classify() returns 4 domain values
+- [x] 4.1 Create `src/modules/medical-records/lib/scales/sdq.ts` — 25 questions (Portuguese, 11-17 self-report), options 0-2 (Falso/Mais ou menos verdadeiro/Verdadeiro), reverse scoring for prosocial items (1,4,9,17,20), total difficulties = sum of emotional+conduct+hyperactivity+peer (NOT prosocial), classification (0-15 normal, 16-19 borderline, 20-40 abnormal)
+- [x] 4.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/sdq.test.ts` — test reverse scoring on prosocial items, test total difficulties excludes prosocial, test boundaries 15/16, 19/20. Test 25 questions present
+- [x] 4.3 Create `src/modules/medical-records/lib/scales/whoqol-bref.ts` — 26 questions (Portuguese), 4 domains (Physical: items 3,4,10,15,16,17,18; Psychological: 5,6,7,11,19,26; Social: 20,21,22; Environmental: 8,9,12,13,14,23,24,25), transformation formula to 0-100, score() returns null, classify() returns severity='domains' with domain scores
+- [x] 4.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/whoqol-bref.test.ts` — test domain transformation formula (raw 4-20 range -> 0-100), test all 26 questions grouped correctly, test score() returns null, test classify() returns 4 domain values
 
 ## 5. Scale Library Registry and Token Generation
 
