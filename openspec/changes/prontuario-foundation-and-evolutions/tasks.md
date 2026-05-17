@@ -42,12 +42,12 @@
 
 ## 6. Frontend — Components
 
-- [ ] 6.1 Create `src/modules/medical-records/components/auto-save-indicator.tsx` (Client Component) — renders status from useAutoSave: "Salvo as HH:MM" in text-tertiary caption, "Salvando..." with spinner, "Erro ao salvar" in danger-700 with AlertCircle. Container has `aria-live="polite"`. Respects prefers-reduced-motion
-- [ ] 6.2 Create `src/modules/medical-records/components/template-selector.tsx` (Client Component) — shadcn Select with TEMPLATE_OPTIONS, emits onChange with selected TemplateType. Label "Abordagem" associated via for/id
-- [ ] 6.3 Create `src/modules/medical-records/components/evolution-editor.tsx` (Client Component) — Tiptap editor with template-aware field layout (renders different fields per template type). Imports useAutoSave from patients module. Toolbar with Button ghost (bold, italic, lists, headings). Editor area: bg surface-sunken, border, focus brand-500 + shadow-focus, radius md. Max-width 720px. body-lg for content
-- [ ] 6.4 Create `src/modules/medical-records/components/version-history-panel.tsx` (Client Component) — Sheet (right side) listing evolution_versions with version number, date, is_addendum Badge, modified_by. Click shows read-only content
-- [ ] 6.5 Create `src/modules/medical-records/components/empty-tab-placeholder.tsx` — Salvia empty state pattern: Lucide icon in text-tertiary, h4 "Em breve", description in text-secondary, no CTA
-- [ ] 6.6 Create `src/modules/medical-records/components/prontuario-tabs.tsx` (Client Component) — shadcn Tabs (underline style, active border-bottom 2px brand-500). 7 tabs: Evolucoes (functional), Hipoteses/Plano/Escalas/Documentos/Anexos/Notas (each renders EmptyTabPlaceholder with contextual description)
+- [x] 6.1 Create `src/modules/medical-records/components/auto-save-indicator.tsx` (Client Component) — renders status from useAutoSave: "Salvo as HH:MM" in text-tertiary caption, "Salvando..." with spinner, "Erro ao salvar" in danger-700 with AlertCircle. Container has `aria-live="polite"`. Respects prefers-reduced-motion
+- [x] 6.2 Create `src/modules/medical-records/components/template-selector.tsx` (Client Component) — shadcn Select with TEMPLATE_OPTIONS, emits onChange with selected TemplateType. Label "Abordagem" associated via for/id
+- [x] 6.3 Create `src/modules/medical-records/components/evolution-editor.tsx` (Client Component) — Tiptap editor with template-aware field layout (renders different fields per template type). Imports useAutoSave from patients module. Toolbar with Button ghost (bold, italic, lists, headings). Editor area: bg surface-sunken, border, focus brand-500 + shadow-focus, radius md. Max-width 720px. body-lg for content
+- [x] 6.4 Create `src/modules/medical-records/components/version-history-panel.tsx` (Client Component) — Sheet (right side) listing evolution_versions with version number, date, is_addendum Badge, modified_by. Click shows read-only content
+- [x] 6.5 Create `src/modules/medical-records/components/empty-tab-placeholder.tsx` — Salvia empty state pattern: Lucide icon in text-tertiary, h4 "Em breve", description in text-secondary, no CTA
+- [x] 6.6 Create `src/modules/medical-records/components/prontuario-tabs.tsx` (Client Component) — shadcn Tabs (underline style, active border-bottom 2px brand-500). 7 tabs: Evolucoes (functional), Hipoteses/Plano/Escalas/Documentos/Anexos/Notas (each renders EmptyTabPlaceholder with contextual description)
 
 ## 7. Frontend — Routes
 
