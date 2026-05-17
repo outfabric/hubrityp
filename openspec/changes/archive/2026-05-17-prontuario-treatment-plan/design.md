@@ -166,17 +166,14 @@ CREATE POLICY "owner can update treatment_plans" ON treatment_plans
   FOR UPDATE TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
--- treatment_plan_versions: JOIN-scoped via treatment_plans.user_id, no DELETE
+-- treatment_plan_versions: JOIN-scoped via treatment_plans.user_id
+-- Append-only — no UPDATE or DELETE. Version snapshots are immutable per Lei 13.787/2018.
 ALTER TABLE treatment_plan_versions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "owner can select treatment_plan_versions" ON treatment_plan_versions
   FOR SELECT TO authenticated
   USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));
 CREATE POLICY "owner can insert treatment_plan_versions" ON treatment_plan_versions
   FOR INSERT TO authenticated
-  WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));
-CREATE POLICY "owner can update treatment_plan_versions" ON treatment_plan_versions
-  FOR UPDATE TO authenticated
-  USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()))
   WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));
 ```
 

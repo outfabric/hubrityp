@@ -1,23 +1,32 @@
 'use server';
 
-// Server Actions for the Prontuario shell — hypothesis CRUD and CID-10 search.
-// Consumed by ProntuarioTabs (client component) which passes them to HypothesesTab.
+// Server Actions for the Prontuario shell — hypothesis CRUD, CID-10 search,
+// and treatment-plan CRUD.
+// Consumed by ProntuarioTabs (client component) which passes them to
+// HypothesesTab and TreatmentPlanTab.
 
 import type {
   CreateHypothesisResult,
+  GetTreatmentPlanResult,
   HypothesisStatus,
   ListHypothesesResult,
+  ListTreatmentPlanVersionsResult,
   UpdateHypothesisResult,
   UpdateHypothesisStatusResult,
+  UpsertTreatmentPlanResult,
 } from '@/modules/medical-records';
 import {
   createHypothesisImpl,
+  getTreatmentPlanImpl,
   listHypothesesByPatientImpl,
+  listTreatmentPlanVersionsImpl,
   searchCid10Impl,
   updateHypothesisImpl,
   updateHypothesisStatusImpl,
+  upsertTreatmentPlanImpl,
 } from '@/modules/medical-records';
 import type { Cid10Result } from '@/modules/medical-records/lib/cid10-search';
+import type { Goal, Phase } from '@/modules/medical-records/lib/treatment-plan-schemas';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function listHypotheses(input: {
@@ -67,4 +76,33 @@ export async function searchCid10(query: string): Promise<Cid10Result[]> {
     return result.results;
   }
   return [];
+}
+
+// ---------------------------------------------------------------------------
+// Treatment Plan
+// ---------------------------------------------------------------------------
+
+export async function getTreatmentPlan(input: {
+  patientId: string;
+}): Promise<GetTreatmentPlanResult> {
+  const supabase = await createServerClient();
+  return getTreatmentPlanImpl(supabase, input);
+}
+
+export async function upsertTreatmentPlan(input: {
+  patientId: string;
+  goals: Goal[];
+  phases: Phase[];
+  resources: string | null;
+  successCriteria: string | null;
+}): Promise<UpsertTreatmentPlanResult> {
+  const supabase = await createServerClient();
+  return upsertTreatmentPlanImpl(supabase, input);
+}
+
+export async function listTreatmentPlanVersions(input: {
+  planId: string;
+}): Promise<ListTreatmentPlanVersionsResult> {
+  const supabase = await createServerClient();
+  return listTreatmentPlanVersionsImpl(supabase, input);
 }
