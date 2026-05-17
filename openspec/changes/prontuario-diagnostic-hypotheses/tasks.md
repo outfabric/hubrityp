@@ -9,9 +9,9 @@
 
 ## 2. CID-10 Data Build Script
 
-- [ ] 2.1 Create `data/cid10-source.csv` — commit the Datasus CID-10 CSV file (CODIGO;DESCRICAO format, UTF-8, ~12k rows). Document source URL and license (public domain) in a `data/README.md`
-- [ ] 2.2 Create `scripts/build-cid10-data.ts` — Node script that reads `data/cid10-source.csv`, parses semicolon-delimited rows, strips BOM, outputs `src/modules/medical-records/lib/cid10-data.json` as `Array<{code: string; description: string}>`. Include source URL and license note in script header
-- [ ] 2.3 Run `scripts/build-cid10-data.ts` and commit the generated `cid10-data.json` (~1.5 MB). Verify JSON is valid and contains >12000 entries
+- [x] 2.1 Create `data/cid10-source.csv` — commit the Datasus CID-10 CSV file (CODIGO;DESCRICAO format, UTF-8, ~12k rows). Document source URL and license (public domain) in a `data/README.md`
+- [x] 2.2 Create `scripts/build-cid10-data.ts` — Node script that reads `data/cid10-source.csv`, parses semicolon-delimited rows, strips BOM, outputs `src/modules/medical-records/lib/cid10-data.json` as `Array<{code: string; description: string}>`. Include source URL and license note in script header
+- [x] 2.3 Run `scripts/build-cid10-data.ts` and commit the generated `cid10-data.json` (~1.5 MB). Verify JSON is valid and contains >12000 entries
 
 ## 3. CID-10 Search Utility
 
