@@ -50,10 +50,10 @@
 
 ## 8. Public Route Handler and Middleware
 
-- [ ] 8.1 Create `src/app/api/scales/[token]/route.ts` — GET handler: calls getScaleApplicationByToken, returns scale questions from library + status flags; POST handler: validates body with Zod, extracts IP from headers, calls submitScaleResponsesByToken, returns {ok:true} or error. Both handlers implement in-memory rate limiting (20/min GET, 5/min POST per IP, 429 on excess)
-- [ ] 8.2 Update `src/middleware.ts:classifyPath()` — add explicit check for `/escala` prefix returning `'public'` BEFORE the default fallthrough (same pattern as existing public routes)
-- [ ] 8.3 **Integration test:** Create `src/__tests__/integration/medical-records/scales-middleware.int.test.ts` — test classifyPath('/escala/abc123') returns 'public'; test GET /escala/[token] does NOT redirect to login (middleware passes through for anonymous)
-- [ ] 8.4 **Integration test:** Add to `scales-public.int.test.ts` — test Route Handler GET returns questions + status only (no PII); test POST with rate limit exceeded returns 429
+- [x] 8.1 Create `src/app/api/scales/[token]/route.ts` — GET handler: calls getScaleApplicationByToken, returns scale questions from library + status flags; POST handler: validates body with Zod, extracts IP from headers, calls submitScaleResponsesByToken, returns {ok:true} or error. Both handlers implement in-memory rate limiting (20/min GET, 5/min POST per IP, 429 on excess)
+- [x] 8.2 Update `src/middleware.ts:classifyPath()` — add explicit check for `/escala` prefix returning `'public'` BEFORE the default fallthrough (same pattern as existing public routes)
+- [x] 8.3 **Integration test:** Create `src/__tests__/integration/medical-records/scales-middleware.int.test.ts` — test classifyPath('/escala/abc123') returns 'public'; test GET /escala/[token] does NOT redirect to login (middleware passes through for anonymous)
+- [x] 8.4 **Integration test:** Add to `scales-public.int.test.ts` — test Route Handler GET returns questions + status only (no PII); test POST with rate limit exceeded returns 429
 
 ## 9. Public Patient-Facing Page
 

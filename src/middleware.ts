@@ -135,6 +135,13 @@ function classifyPath(pathname: string): PathClass {
       return 'app';
     }
   }
+  // Public patient-facing routes: explicit classification prevents accidental
+  // gating if the classifier is ever refactored to default-deny instead of
+  // default-public. Same pattern as /confirmar-sessao and /termo — the token
+  // in the URL is the authorization credential, not a Supabase session.
+  if (pathname.startsWith('/escala/') || pathname === '/escala') {
+    return 'public';
+  }
   return 'public';
 }
 
