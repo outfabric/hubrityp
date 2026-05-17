@@ -36,9 +36,9 @@
 
 ## 5. Module Barrel + Inngest Cron
 
-- [ ] 5.1 Create `src/modules/medical-records/index.ts` barrel re-exporting: createEvolution, updateEvolution, getEvolutionsByPatient, getEvolutionDetail, listEvolutionVersions, logProntuarioAccess, template types, Zod schemas, immutability helpers
-- [ ] 5.2 Create `src/modules/medical-records/inngest/remind-missing-evolution.ts` — daily cron that queries sessions with status='done' AND created_at < now()-7days AND no linked evolution row, emits in-app notification per match
-- [ ] 5.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/inngest/remind-missing-evolution.test.ts` — test the query logic (mock DB): sessions >7d without evolution are flagged, sessions with evolution are skipped, sessions <7d are skipped
+- [x] 5.1 Create `src/modules/medical-records/index.ts` barrel re-exporting: createEvolution, updateEvolution, getEvolutionsByPatient, getEvolutionDetail, listEvolutionVersions, logProntuarioAccess, template types, Zod schemas, immutability helpers
+- [x] 5.2 Create `src/modules/medical-records/inngest/remind-missing-evolution.ts` — daily cron that queries sessions with status='done' AND created_at < now()-7days AND no linked evolution row, emits in-app notification per match
+- [x] 5.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/inngest/remind-missing-evolution.test.ts` — test the query logic (mock DB): sessions >7d without evolution are flagged, sessions with evolution are skipped, sessions <7d are skipped
 
 ## 6. Frontend — Components
 
