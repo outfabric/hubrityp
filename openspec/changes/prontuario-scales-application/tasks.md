@@ -37,9 +37,9 @@
 
 ## 6. Server Actions — Create and Submit (Psychologist Side)
 
-- [ ] 6.1 Create `src/modules/medical-records/server/scales.ts` — `createScaleApplication` action: validates with Zod, authenticates via getUser(), sets user_id from session, generates token if remote mode, writes row, writes audit_log 'scale.create', returns id + optional token/URL
-- [ ] 6.2 Add `submitScaleResponses` to same file — validates applicationId + responses via Zod, authenticates, verifies ownership (WHERE id=$1 AND user_id=auth.uid()), checks not already completed, calls scale's score() and classify(), updates row, writes audit_log 'scale.submit'
-- [ ] 6.3 **Integration test:** Create `src/__tests__/integration/medical-records/scales-crud.int.test.ts` — test createScaleApplication in-session persists row with correct user_id; test createScaleApplication remote generates 64-char token + token_expires_at; test submitScaleResponses scores PHQ-9 correctly and sets completed_at; test submitScaleResponses rejects already-completed; test RLS negative (psychologist B cannot read/submit for psychologist A's application); test audit_log rows created
+- [x] 6.1 Create `src/modules/medical-records/server/scales.ts` — `createScaleApplication` action: validates with Zod, authenticates via getUser(), sets user_id from session, generates token if remote mode, writes row, writes audit_log 'scale.create', returns id + optional token/URL
+- [x] 6.2 Add `submitScaleResponses` to same file — validates applicationId + responses via Zod, authenticates, verifies ownership (WHERE id=$1 AND user_id=auth.uid()), checks not already completed, calls scale's score() and classify(), updates row, writes audit_log 'scale.submit'
+- [x] 6.3 **Integration test:** Create `src/__tests__/integration/medical-records/scales-crud.int.test.ts` — test createScaleApplication in-session persists row with correct user_id; test createScaleApplication remote generates 64-char token + token_expires_at; test submitScaleResponses scores PHQ-9 correctly and sets completed_at; test submitScaleResponses rejects already-completed; test RLS negative (psychologist B cannot read/submit for psychologist A's application); test audit_log rows created
 
 ## 7. Server Actions — Public Token Submission and History
 

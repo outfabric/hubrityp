@@ -106,3 +106,33 @@ export {
   type TreatmentPlanInput,
   type VersionContent,
 } from './lib/treatment-plan-schemas';
+
+// ---- Scale Application Server Actions ---------------------------------------
+export {
+  createScaleApplicationImpl,
+  submitScaleResponsesImpl,
+  type CreateScaleApplicationResult,
+  type SubmitScaleResponsesResult,
+} from './server/scales';
+
+// ---- Scale Application Schemas ----------------------------------------------
+export {
+  createScaleApplicationSchema,
+  submitResponsesSchema,
+  submitResponsesByTokenSchema,
+  type CreateScaleApplicationInput,
+  type SubmitResponsesInput,
+  type SubmitResponsesByTokenInput,
+} from './lib/scales-schemas';
+
+// ---- Scale Library ----------------------------------------------------------
+export {
+  scaleByKey,
+  AVAILABLE_SCALES,
+  SCALE_KEYS,
+  type ScaleKey,
+  type ScaleDefinition,
+  type ScaleQuestion,
+  type ScaleOption,
+  type ClassificationResult,
+} from './lib/scales';
