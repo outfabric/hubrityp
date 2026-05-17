@@ -5,7 +5,7 @@
 - [x] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export `treatmentPlans` and `treatmentPlanVersions`
 - [x] 1.4 Run `npm run db:generate`, manually append RLS SQL + FK constraints (`user_id -> auth.users`, `patient_id -> patients(id) UNIQUE`, `plan_id -> treatment_plans(id) ON DELETE CASCADE`) to the generated migration file
 - [x] 1.5 Run `npm run db:migrate` locally and verify tables exist
-- [x] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-schema.int.test.ts` — verify both tables exist, RLS is enabled on each, expected policies exist (SELECT/INSERT/UPDATE on treatment_plans, SELECT/INSERT/UPDATE on treatment_plan_versions), no DELETE policy on either table, UNIQUE constraint on treatment_plans.patient_id, UNIQUE on (plan_id, version_number)
+- [x] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-schema.int.test.ts` — verify both tables exist, RLS is enabled on each, expected policies exist (SELECT/INSERT/UPDATE on treatment_plans, SELECT/INSERT on treatment_plan_versions), no DELETE policy on either table and no UPDATE policy on treatment_plan_versions (immutable per Lei 13.787/2018), UNIQUE constraint on treatment_plans.patient_id, UNIQUE on (plan_id, version_number)
 
 ## 2. Zod Schemas + Helpers (Lib)
 
