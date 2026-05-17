@@ -41,6 +41,6 @@
 
 ## 7. End-to-End Tests
 
-- [ ] 7.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/treatment-plan.spec.ts` — happy path: open prontuario → Plano tab → see empty state → click CTA → add 2 goals (with descriptions), 1 phase (with title), fill recursos text and criterios text → wait for "Salvo as" indicator → reload page → assert content persists (goals visible, phase visible, rich text content present)
-- [ ] 7.2 **E2E (Playwright, seeded):** Same spec file, second test: edit a goal description → wait for auto-save → open Historico de versoes sheet → assert v1 and v2 visible with timestamps → click Eye on v1 → assert prior content visible in read-only mode
-- [ ] 7.3 **E2E (Playwright, seeded):** Same spec file, negative-auth test: anonymous GET to `/pacientes/[id]/prontuario` returns redirect to login (covered by middleware gating from foundation change, but re-assert for this tab)
+- [x] 7.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/treatment-plan.spec.ts` — happy path: open prontuario → Plano tab → see empty state → click CTA → add 2 goals (with descriptions), 1 phase (with title), fill recursos text and criterios text → wait for "Salvo as" indicator → reload page → assert content persists (goals visible, phase visible, rich text content present)
+- [x] 7.2 **E2E (Playwright, seeded):** Same spec file, second test: edit a goal description → wait for auto-save → open Historico de versoes sheet → assert v1 and v2 visible with timestamps → click Eye on v1 → assert prior content visible in read-only mode
+- [x] 7.3 **E2E (Playwright, seeded):** Same spec file, negative-auth test: anonymous GET to `/pacientes/[id]/prontuario` returns redirect to login (covered by middleware gating from foundation change, but re-assert for this tab)
