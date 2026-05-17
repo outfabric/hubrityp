@@ -169,7 +169,7 @@ interface DotProps {
 function ClassificationDot({ cx, cy, payload }: DotProps) {
   if (cx === undefined || cy === undefined) return null;
   const fill = severityToDotFill(payload?.severity);
-  return <circle cx={cx} cy={cy} r={4} fill={fill} stroke="none" />;
+  return <circle cx={cx} cy={cy} r={4} fill={fill} stroke="none" data-testid="chart-dot" />;
 }
 
 function ClassificationActiveDot({ cx, cy, payload }: DotProps) {
@@ -311,21 +311,27 @@ export function ScaleHistoryChart({ scaleKey, timeseries }: ScaleHistoryChartPro
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-        <CartesianGrid stroke="var(--color-surface-muted)" strokeDasharray="3 3" />
-        <XAxis dataKey="dateLabel" tick={{ fontSize: 12 }} stroke="var(--color-text-tertiary)" />
-        <YAxis domain={[0, maxScore]} tick={{ fontSize: 12 }} stroke="var(--color-text-tertiary)" />
-        <Tooltip content={<StandardChartTooltip />} />
-        <Line
-          type="monotone"
-          dataKey="totalScore"
-          stroke="var(--color-brand-500)"
-          strokeWidth={2}
-          dot={<ClassificationDot />}
-          activeDot={<ClassificationActiveDot />}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div data-testid="scale-history-chart">
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+          <CartesianGrid stroke="var(--color-surface-muted)" strokeDasharray="3 3" />
+          <XAxis dataKey="dateLabel" tick={{ fontSize: 12 }} stroke="var(--color-text-tertiary)" />
+          <YAxis
+            domain={[0, maxScore]}
+            tick={{ fontSize: 12 }}
+            stroke="var(--color-text-tertiary)"
+          />
+          <Tooltip content={<StandardChartTooltip />} />
+          <Line
+            type="monotone"
+            dataKey="totalScore"
+            stroke="var(--color-brand-500)"
+            strokeWidth={2}
+            dot={<ClassificationDot />}
+            activeDot={<ClassificationActiveDot />}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

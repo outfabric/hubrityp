@@ -83,8 +83,8 @@
 
 ## 13. End-to-End Tests
 
-- [ ] 13.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/scales.spec.ts` — in-session flow: navigate to prontuario -> Escalas tab -> Aplicar nova escala -> select PHQ-9 -> answer 9 items -> submit -> assert score + classification Badge with correct semantic color
-- [ ] 13.2 **E2E (Playwright, seeded):** Remote flow in same file: generate link -> open in new browser context (no auth) -> fill answers -> submit -> assert "Obrigado" message -> return to psychologist view -> assert score appeared in ScalesTab
-- [ ] 13.3 **E2E (Playwright, seeded):** Chart test: seed 3 PHQ-9 applications for a patient, navigate to Escalas tab -> "Ver historico completo" -> assert Recharts container renders with 3 visible dot elements
-- [ ] 13.4 **E2E (Playwright, seeded):** Expired token UI: navigate to `/escala/{known-expired-token}` -> assert "Este link expirou" message rendered
-- [ ] 13.5 **E2E (Playwright, seeded):** Middleware negative test: unauthenticated GET to `/escala/{token}` does NOT redirect to login (confirms public classification works)
+- [x] 13.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/scales.spec.ts` — in-session flow: navigate to prontuario -> Escalas tab -> Aplicar nova escala -> select PHQ-9 -> answer 9 items -> submit -> assert score + classification Badge with correct semantic color
+- [x] 13.2 **E2E (Playwright, seeded):** Remote flow in same file: generate link -> open in new browser context (no auth) -> fill answers -> submit -> assert "Obrigado" message -> return to psychologist view -> assert score appeared in ScalesTab
+- [x] 13.3 **E2E (Playwright, seeded):** Chart test: seed 3 PHQ-9 applications for a patient, navigate to Escalas tab -> "Ver historico completo" -> assert Recharts container renders with 3 visible dot elements
+- [x] 13.4 **E2E (Playwright, seeded):** Expired token UI: navigate to `/escala/{known-expired-token}` -> assert "Este link expirou" message rendered
+- [x] 13.5 **E2E (Playwright, seeded):** Middleware negative test: unauthenticated GET to `/escala/{token}` does NOT redirect to login (confirms public classification works)
