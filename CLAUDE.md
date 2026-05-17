@@ -1,68 +1,68 @@
 # CLAUDE.md
 
-## Sobre o projeto
+## About the project
 
-SaaS web para psicólogos autônomos brasileiros (consultório, online ou híbrido). Centraliza tarefas administrativas e clínicas hoje espalhadas em Google Agenda, WhatsApp, Word, Excel e PIX manual.
+Web SaaS for Brazilian autonomous psychologists (in-office, online, or hybrid). Centralizes administrative and clinical tasks that are today scattered across Google Calendar, WhatsApp, Word, Excel, and manual PIX.
 
-## Estrutura de pastas do projeto
+## Project folder structure
 
 ```
 src/
-  app/                                     # Next.js App Router (rotas, layouts, route handlers)
-    (auth)/login/                          # rotas públicas — shells finos que delegam para módulos
-    (auth)/signup/                         # shell de /signup (delegado ao módulo registration)
-    (auth)/auth/callback/                  # shell do callback OAuth/verificação de email
-    (app)/dashboard/                       # shell autenticado da app
-    (app)/onboarding/pending/              # shell pós-signup (pending_verification / pending_crp_validation)
-    api/                                   # Route Handlers (ex.: /api/health, /api/me)
-  middleware.ts                            # edge middleware (gating de auth + status do profile)
-  modules/<dominio>/                       # código por domínio, uma pasta por capability
+  app/                                     # Next.js App Router (routes, layouts, route handlers)
+    (auth)/login/                          # public routes — thin shells that delegate to modules
+    (auth)/signup/                         # /signup shell (delegated to the registration module)
+    (auth)/auth/callback/                  # OAuth / email-verification callback shell
+    (app)/dashboard/                       # authenticated app shell
+    (app)/onboarding/pending/              # post-signup shell (pending_verification / pending_crp_validation)
+    api/                                   # Route Handlers (e.g., /api/health, /api/me)
+  middleware.ts                            # edge middleware (auth + profile-status gating)
+  modules/<domain>/                        # code by domain, one folder per capability
     auth/
-      components/                          # componentes (client/server) do módulo
-      server/                              # implementação das Server Actions (sem `'use server'`)
+      components/                          # client/server components of the module
+      server/                              # Server Action implementations (no `'use server'`)
       lib/                                 # validators, mappers, branded types
-      index.ts                             # API PÚBLICA do módulo
-    registration/                          # cadastro de psicólogo + verificação + status do profile
+      index.ts                             # module PUBLIC API
+    registration/                          # psychologist signup + verification + profile status
       components/                          # signup-form, onboarding-pending-card, auth-callback-error, resend-verification-button
-      server/                              # sign-up, resend-verification, get-profile (e variante edge)
+      server/                              # sign-up, resend-verification, get-profile (plus edge variant)
       lib/                                 # signup-input-schema (Zod), crp/password validators, profile-status, uf-table
-      edge.ts                              # API PÚBLICA edge-safe (consumida pelo middleware)
-      index.ts                             # API PÚBLICA do módulo
+      edge.ts                              # edge-safe PUBLIC API (consumed by the middleware)
+      index.ts                             # module PUBLIC API
     health/
-  shared/                                  # concerns cross-módulo (não depende de modules/)
-    ui/                                    # primitivos shadcn/ui (era components/ui)
+  shared/                                  # cross-module concerns (do not depend on modules/)
+    ui/                                    # shadcn/ui primitives (was components/ui)
     lib/                                   # utils, logger
-    env/                                   # env validado por Zod (server + client splits)
-    supabase/                              # clientes Supabase (browser, server, middleware)
+    env/                                   # Zod-validated env (server + client splits)
+    supabase/                              # Supabase clients (browser, server, middleware)
     db/                                    # Drizzle: client.ts + schema/ + migrations/
-      schema/auth/                         # tabelas auth.profiles + RLS policies (espelha schema `auth` do Supabase)
-  __tests__/                               # TODOS os testes vivem aqui (centralizados)
-    unit/                                  # Vitest unit (espelha a árvore de src/)
+      schema/auth/                         # auth.profiles tables + RLS policies (mirrors Supabase `auth` schema)
+  __tests__/                               # ALL tests live here (centralized)
+    unit/                                  # Vitest unit (mirrors the src/ tree)
     integration/                           # Vitest + Testcontainers (*.int.test.ts)
       setup/, factories/
     e2e/
-      _shared/postgres-container.ts        # módulo de boot COMPARTILHADO entre integration e seeded e2e
+      _shared/postgres-container.ts        # boot module SHARED between integration and seeded e2e
       seeded/                              # Playwright + mock GoTrue + Testcontainers
-      real/                                # Playwright contra `supabase start`
-    stubs/                                 # no-ops (ex.: server-only)
+      real/                                # Playwright against `supabase start`
+    stubs/                                 # no-ops (e.g., server-only)
 scripts/
-  db-migrate.ts                            # CLI usado por `npm run db:migrate`
-docs/                                      # docs humanas (inclui docs/prd/)
-openspec/                                  # tracker de changes OpenSpec (ativas + arquivadas)
-playwright.seeded.config.ts                # suíte e2e default
-playwright.real.config.ts                  # suíte @auth-real
+  db-migrate.ts                            # CLI used by `npm run db:migrate`
+docs/                                      # human docs (includes docs/prd/)
+openspec/                                  # OpenSpec change tracker (active + archived)
+playwright.seeded.config.ts                # default e2e suite
+playwright.real.config.ts                  # @auth-real suite
 vitest.config.ts                           # unit
 vitest.integration.config.ts               # integration
 ```
 
-## Diagrama de arquitetura
+## Architecture diagram
 
 ```
-                        ┌──────────────────────────────────┐
-                        │         USUÁRIOS                 │
-                        │  Psicólogo (web/mobile browser)  │
-                        │  Paciente (browser, WhatsApp)    │
-                        └────────────┬─────────────────────┘
+                       ┌────────────────────────────────────┐
+                       │              USERS                 │
+                       │  Psychologist (web/mobile browser) │
+                       │  Patient (browser, WhatsApp)       │
+                       └─────────────┬──────────────────────┘
                                      │ HTTPS (TLS 1.3)
                                      ▼
             ┌────────────────────────────────────────────────────┐
@@ -72,8 +72,8 @@ vitest.integration.config.ts               # integration
             │  │   Next.js App   │    │  Next.js API Routes │    │
             │  │   (RSC + CSR)   │    │  + Server Actions   │    │
             │  │                 │    │                     │    │
-            │  │  - Páginas      │    │  - CRUD             │    │
-            │  │  - Componentes  │    │  - Auth             │    │
+            │  │  - Pages        │    │  - CRUD             │    │
+            │  │  - Components   │    │  - Auth             │    │
             │  │  - shadcn/ui    │    │  - Webhooks (recv)  │    │
             │  └─────────────────┘    └──────────┬──────────┘    │
             └─────────────────────────────────────┼──────────────┘
@@ -82,48 +82,48 @@ vitest.integration.config.ts               # integration
               │                                   │                           │
               ▼                                   ▼                           ▼
     ┌─────────────────────┐          ┌─────────────────────┐       ┌──────────────────┐
-    │     SUPABASE        │          │       INNGEST       │       │   APIs Externas  │
+    │     SUPABASE        │          │       INNGEST       │       │   External APIs  │
     │   (sa-east-1)       │          │   (Jobs + Cron)     │       │                  │
     │                     │          │                     │       │  - Twilio (WA)   │
-    │  ┌──────────────┐   │          │  - WhatsApp envios  │       │  - Google Gemini │
+    │  ┌──────────────┐   │          │  - WhatsApp sends   │       │  - Google Gemini │
     │  │ Postgres 15  │   │          │  - Gemini transc.   │       │                  │
-    │  │ (RLS ativo)  │   │          │  - Receita Saúde    │       │  - Stream.io     │
-    │  └──────────────┘   │          │  - PDF em lote      │       │  - Asaas         │
+    │  │ (RLS active) │   │          │  - Receita Saúde    │       │  - Stream.io     │
+    │  └──────────────┘   │          │  - Batch PDF        │       │  - Asaas         │
     │  ┌──────────────┐   │          │  - Backups          │       │  - e-CAC         │
-    │  │  Auth        │   │          │  - Anonimização     │       │                  │
-    │  │  - JWT       │   │          │  - Lembretes cron   │       │                  │
-    │  │  - OAuth     │   │          │  - Reconciliação    │       │  - Receita Fed.  │
+    │  │  Auth        │   │          │  - Anonymization    │       │                  │
+    │  │  - JWT       │   │          │  - Cron reminders   │       │                  │
+    │  │  - OAuth     │   │          │  - Reconciliation   │       │  - Receita Fed.  │
     │  └──────────────┘   │          │                     │       │                  │
-    │  ┌──────────────┐   │          │      Plano Free     │       │  Webhooks volta  │
-    │  │  Storage     │   │          └──────────┬──────────┘       │  para Vercel     │
+    │  ┌──────────────┐   │          │      Free Plan      │       │  Webhooks back   │
+    │  │  Storage     │   │          └──────────┬──────────┘       │  to Vercel       │
     │  │  (S3-compat) │   │                     │                  └──────────────────┘
     │  └──────────────┘   │                     │
     │  ┌──────────────┐   │                     │
-    │  │  Realtime    │◄──┼─────────────────────┘
-    │  │  (WebSocket) │   │   (push de updates ao frontend
-    │  └──────────────┘   │    quando job termina)
+    │  │  Realtime    │◄──┼─────────────────────┘   (push updates to frontend
+    │  │  (WebSocket) │   │                          when a job finishes)
+    │  └──────────────┘   │
     └─────────────────────┘
 
 ```
 
-## Rodando localmente
+## Running locally
 
-Sempre use **Docker Compose** para subir a aplicação localmente (Next.js + Supabase local + dependências). Não rodar `npm run dev` direto contra Supabase de produção/staging.
+Always use **Docker Compose** to bring the application up locally (Next.js + local Supabase + dependencies). Do not run `npm run dev` directly against production/staging Supabase.
 
 ```bash
-docker compose up        # subir tudo
-docker compose down      # derrubar
+docker compose up        # bring everything up
+docker compose down      # tear everything down
 ```
 
-## Testes automatizados
+## Automated tests
 
-1. **Testes unitários** — lógica pura, validators, helpers, hooks.
-2. **Testes de integração** — Server Actions, API Routes, queries Supabase (contra Supabase local via Docker).
-3. **Testes E2E** — para fluxos críticos de UI (Playwright). Fluxos críticos incluem: cadastro/login, criação de paciente, geração de receita, prontuário etc.
+1. **Unit tests** — pure logic, validators, helpers, hooks.
+2. **Integration tests** — Server Actions, API Routes, Supabase queries (against local Supabase via Docker).
+3. **E2E tests** — for critical UI flows (Playwright). Critical flows include: signup/login, patient creation, prescription generation, medical record, etc.
 
-Os testes devem cobrir comportamento, não implementação. Se algo bloquear o teste (ex.: integração externa sem sandbox), declare explicitamente em vez de pular silenciosamente.
+Tests should cover behavior, not implementation. If something blocks the test (e.g., external integration without a sandbox), state it explicitly instead of silently skipping.
 
-## Padrões obrigatórios
+## Mandatory standards
 
-- **Pre-commit**: Husky + lint-staged já rodam lint/format/type-check em arquivos staged. Não use `--no-verify`.
-- **Consultas a docs de libs/frameworks/SDKs/CLIs/serviços usam o MCP Context7.** Sempre que precisar verificar API, sintaxe, configuração, migração de versão, setup ou comportamento de uma ferramenta/lib/pacote (Next.js, Supabase, Drizzle, shadcn/ui, Inngest, Tailwind, Zod, Twilio, Asaas, etc.), invoque `mcp__context7__resolve-library-id` seguido de `mcp__context7__query-docs` antes de escrever ou recomendar código — mesmo para libs que parecem familiares, já que o conhecimento de treinamento pode estar desatualizado. Prefira Context7 a web search para documentação.
+- **Pre-commit**: Husky + lint-staged already run lint/format/type-check on staged files. Do not use `--no-verify`.
+- **Documentation lookups for libraries/frameworks/SDKs/CLIs/services go through the Context7 MCP.** Whenever you need to verify the API, syntax, configuration, version migration, setup, or behavior of a tool/library/package (Next.js, Supabase, Drizzle, shadcn/ui, Inngest, Tailwind, Zod, Twilio, Asaas, etc.), invoke `mcp__context7__resolve-library-id` followed by `mcp__context7__query-docs` before writing or recommending code — even for libraries that feel familiar, since training-data knowledge can be out of date. Prefer Context7 over web search for documentation.
