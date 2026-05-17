@@ -9,9 +9,9 @@
 
 ## 2. Scale Definitions Library — Types and PHQ-9
 
-- [ ] 2.1 Create `src/modules/medical-records/lib/scales/types.ts` with ScaleOption, ScaleQuestion, ClassificationResult, ScaleDefinition interfaces per design.md
-- [ ] 2.2 Create `src/modules/medical-records/lib/scales/phq9.ts` — 9 questions (Portuguese prompts), options 0-3 (Nenhuma vez/Varios dias/Mais da metade dos dias/Quase todos os dias), scoring (sum), classification thresholds (0-4 minimal, 5-9 mild, 10-14 moderate, 15-19 moderately severe, 20-27 severe)
-- [ ] 2.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/phq9.test.ts` — test boundaries: score 4 -> minimal, 5 -> mild, 9 -> mild, 10 -> moderate, 14 -> moderate, 15 -> moderately severe, 19 -> moderately severe, 20 -> severe, 27 -> severe (max). Test all 9 questions present. Test scoring sums correctly
+- [x] 2.1 Create `src/modules/medical-records/lib/scales/types.ts` with ScaleOption, ScaleQuestion, ClassificationResult, ScaleDefinition interfaces per design.md
+- [x] 2.2 Create `src/modules/medical-records/lib/scales/phq9.ts` — 9 questions (Portuguese prompts), options 0-3 (Nenhuma vez/Varios dias/Mais da metade dos dias/Quase todos os dias), scoring (sum), classification thresholds (0-4 minimal, 5-9 mild, 10-14 moderate, 15-19 moderately severe, 20-27 severe)
+- [x] 2.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/phq9.test.ts` — test boundaries: score 4 -> minimal, 5 -> mild, 9 -> mild, 10 -> moderate, 14 -> moderate, 15 -> moderately severe, 19 -> moderately severe, 20 -> severe, 27 -> severe (max). Test all 9 questions present. Test scoring sums correctly
 
 ## 3. Scale Definitions Library — GAD-7 and AUDIT
 
