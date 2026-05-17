@@ -52,6 +52,25 @@ export { isWithinEditWindow, shouldForceAddendum } from './lib/immutability-help
 // ---- Content Diff -----------------------------------------------------------
 export { contentHasChanged } from './lib/content-diff';
 
+// ---- Hypothesis Server Actions -----------------------------------------------
+export {
+  createHypothesisImpl,
+  updateHypothesisImpl,
+  updateHypothesisStatusImpl,
+  listHypothesesByPatientImpl,
+  type CreateHypothesisResult,
+  type UpdateHypothesisResult,
+  type UpdateHypothesisStatusResult,
+  type ListHypothesesResult,
+  type HypothesisSummary,
+} from './server/hypotheses';
+
+// ---- CID-10 Search ----------------------------------------------------------
+export { searchCid10Impl, type SearchCid10Result } from './server/cid10';
+
+// ---- CID-10 Lib (re-export for direct use in tests/components) ---------------
+export { searchCid10, type Cid10Result } from './lib/cid10-search';
+
 // ---- Hypothesis Schemas -----------------------------------------------------
 export {
   hypothesisStatusSchema,
