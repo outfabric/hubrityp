@@ -176,3 +176,79 @@ export const diagnosticHypotheses = pgTable(
 
 export type DiagnosticHypothesis = typeof diagnosticHypotheses.$inferSelect;
 export type NewDiagnosticHypothesis = typeof diagnosticHypotheses.$inferInsert;
+
+// `treatment_plans` stores the current treatment plan for a patient.
+// Each patient has at most one treatment plan (UNIQUE on patient_id).
+// The plan contains goals, phases, resources, and success criteria.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record retention.
+export const treatmentPlans = pgTable(
+  'treatment_plans',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`, UNIQUE (one plan per patient). Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    goals: jsonb('goals')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    phases: jsonb('phases')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    resources: text('resources'), // Tiptap HTML string
+    successCriteria: text('success_criteria'), // Tiptap HTML string
+    currentVersion: integer('current_version').notNull().default(1),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    unique('treatment_plans_patient_id_unique').on(table.patientId),
+    index('idx_treatment_plans_user_id').on(table.userId),
+  ],
+);
+
+export type TreatmentPlan = typeof treatmentPlans.$inferSelect;
+export type NewTreatmentPlan = typeof treatmentPlans.$inferInsert;
+
+// `treatment_plan_versions` stores immutable version snapshots of a treatment plan.
+// Each version is linked to its parent plan via `plan_id` (FK with ON DELETE CASCADE).
+// The combination (plan_id, version_number) is UNIQUE.
+//
+// RLS policies use a JOIN-scoped subquery checking the parent plan's `user_id`.
+// NO DELETE policy — immutable version trail per Lei 13.787/2018.
+export const treatmentPlanVersions = pgTable(
+  'treatment_plan_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `treatment_plans(id)` ON DELETE CASCADE. Emitted manually in migration.
+    planId: uuid('plan_id').notNull(),
+
+    versionNumber: integer('version_number').notNull(),
+    content: jsonb('content').notNull(), // Full snapshot {goals, phases, resources, successCriteria}
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    modifiedBy: uuid('modified_by').notNull(),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    unique('treatment_plan_versions_plan_version_unique').on(table.planId, table.versionNumber),
+    index('idx_treatment_plan_versions_plan_desc').on(table.planId, table.versionNumber),
+  ],
+);
+
+export type TreatmentPlanVersion = typeof treatmentPlanVersions.$inferSelect;
+export type NewTreatmentPlanVersion = typeof treatmentPlanVersions.$inferInsert;

@@ -65,3 +65,38 @@ export const diagnosticHypothesesPolicies = [
      USING (auth.uid() = user_id)
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
+
+// Owner-scoped RLS for `treatment_plans`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record retention.
+// The `user_id` column references the psychologist's `auth.users.id`.
+export const treatmentPlansPolicies = [
+  `ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select treatment_plans" ON treatment_plans
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert treatment_plans" ON treatment_plans
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update treatment_plans" ON treatment_plans
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;
+
+// JOIN-scoped RLS for `treatment_plan_versions`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — immutable version trail per Lei 13.787/2018.
+// Ownership is derived via the parent `treatment_plans` row:
+//   plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid())
+export const treatmentPlanVersionsPolicies = [
+  `ALTER TABLE treatment_plan_versions ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select treatment_plan_versions" ON treatment_plan_versions
+     FOR SELECT TO authenticated
+     USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
+  `CREATE POLICY "owner can insert treatment_plan_versions" ON treatment_plan_versions
+     FOR INSERT TO authenticated
+     WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
+  `CREATE POLICY "owner can update treatment_plan_versions" ON treatment_plan_versions
+     FOR UPDATE TO authenticated
+     USING (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()))
+     WITH CHECK (plan_id IN (SELECT id FROM treatment_plans WHERE user_id = auth.uid()));`,
+] as const;
