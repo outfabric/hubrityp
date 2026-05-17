@@ -7,22 +7,26 @@
 
 import type {
   CreateHypothesisResult,
+  CreateScaleApplicationResult,
   GetTreatmentPlanResult,
   HypothesisStatus,
   ListHypothesesResult,
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
+  SubmitScaleResponsesResult,
   UpdateHypothesisResult,
   UpdateHypothesisStatusResult,
   UpsertTreatmentPlanResult,
 } from '@/modules/medical-records';
 import {
   createHypothesisImpl,
+  createScaleApplicationImpl,
   getTreatmentPlanImpl,
   listHypothesesByPatientImpl,
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
   searchCid10Impl,
+  submitScaleResponsesImpl,
   updateHypothesisImpl,
   updateHypothesisStatusImpl,
   upsertTreatmentPlanImpl,
@@ -118,4 +122,22 @@ export async function listScalesForPatient(input: {
 }): Promise<ListScalesForPatientResult> {
   const supabase = await createServerClient();
   return listScalesForPatientImpl(supabase, input);
+}
+
+export async function createScaleApplication(input: {
+  patientId: string;
+  scaleKey: string;
+  mode: 'in-session' | 'remote';
+  expiresInHours?: number;
+}): Promise<CreateScaleApplicationResult> {
+  const supabase = await createServerClient();
+  return createScaleApplicationImpl(supabase, input);
+}
+
+export async function submitScaleResponses(input: {
+  applicationId: string;
+  responses: Record<string, number>;
+}): Promise<SubmitScaleResponsesResult> {
+  const supabase = await createServerClient();
+  return submitScaleResponsesImpl(supabase, input);
 }

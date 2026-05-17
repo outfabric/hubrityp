@@ -71,9 +71,9 @@
 
 ## 11. Frontend — Apply Scale Flow
 
-- [ ] 11.1 Create `src/modules/medical-records/components/scale-select-modal.tsx` — Step 1: RadioGroup with 5 scale cards (label, description, estimatedMinutes). Step 2: mode select ("Aplicar agora" / "Enviar link") + expiration Select (24h/48h/7dias) for remote mode. Calls createScaleApplication on confirm
-- [ ] 11.2 Create `src/modules/medical-records/components/scale-application-form.tsx` — Client Component for in-session application: renders questions from scale definition as RadioGroups, "Salvar no prontuario" button (primary, loading state), calls submitScaleResponses, shows score+classification result after submission
-- [ ] 11.3 Create remote-link display sub-component within scale-select-modal: shows generated URL, "Copiar link" button (copies to clipboard with toast confirmation), note about "Enviar por WhatsApp" as future feature
+- [x] 11.1 Create `src/modules/medical-records/components/scale-select-modal.tsx` — Step 1: RadioGroup with 5 scale cards (label, description, estimatedMinutes). Step 2: mode select ("Aplicar agora" / "Enviar link") + expiration Select (24h/48h/7dias) for remote mode. Calls createScaleApplication on confirm
+- [x] 11.2 Create `src/modules/medical-records/components/scale-application-form.tsx` — Client Component for in-session application: renders questions from scale definition as RadioGroups, "Salvar no prontuario" button (primary, loading state), calls submitScaleResponses, shows score+classification result after submission
+- [x] 11.3 Create remote-link display sub-component within scale-select-modal: shows generated URL, "Copiar link" button (copies to clipboard with toast confirmation), note about "Enviar por WhatsApp" as future feature
 
 ## 12. Inngest Cron and Module Barrel
 

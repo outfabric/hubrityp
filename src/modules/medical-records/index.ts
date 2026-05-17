@@ -159,6 +159,8 @@ export { ScalePublicForm } from './components/scale-public-form';
 export { ScalesTab } from './components/scales-tab';
 export { ScaleSummaryCard } from './components/scale-summary-card';
 export { ScaleHistoryChart } from './components/scale-history-chart';
+export { ScaleSelectModal } from './components/scale-select-modal';
+export { ScaleApplicationForm } from './components/scale-application-form';
 
 // ---- Scale Severity Tokens ---------------------------------------------------
 export { severityToBadgeVariant, severityToDotFill } from './lib/scales/severity-tokens';

@@ -5,11 +5,13 @@ import type { ReactNode } from 'react';
 
 import {
   createHypothesis,
+  createScaleApplication,
   getTreatmentPlan,
   listHypotheses,
   listScalesForPatient,
   listTreatmentPlanVersions,
   searchCid10,
+  submitScaleResponses,
   updateHypothesis,
   updateHypothesisStatus,
   upsertTreatmentPlan,
@@ -159,7 +161,12 @@ export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
 
       {/* Functional tab: Escalas */}
       <TabsContent value="escalas" data-testid="prontuario-tab-content-escalas">
-        <ScalesTab patientId={patientId} listScalesForPatient={listScalesForPatient} />
+        <ScalesTab
+          patientId={patientId}
+          listScalesForPatient={listScalesForPatient}
+          createScaleApplication={createScaleApplication}
+          submitScaleResponses={submitScaleResponses}
+        />
       </TabsContent>
 
       {/* Non-functional placeholder tabs */}

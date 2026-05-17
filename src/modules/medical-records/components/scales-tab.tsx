@@ -3,9 +3,15 @@
 import { ClipboardCheck, Scale } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ListScalesForPatientResult, ScaleSummary } from '@/modules/medical-records';
+import type {
+  CreateScaleApplicationResult,
+  ListScalesForPatientResult,
+  ScaleSummary,
+  SubmitScaleResponsesResult,
+} from '@/modules/medical-records';
 import { Button } from '@/shared/ui/button';
 
+import { ScaleSelectModal } from './scale-select-modal';
 import { ScaleSummaryCard } from './scale-summary-card';
 
 // ---------------------------------------------------------------------------
@@ -17,6 +23,18 @@ interface ScalesTabProps {
   patientId: string;
   /** Server action: list all distinct scales applied for this patient. */
   listScalesForPatient: (input: { patientId: string }) => Promise<ListScalesForPatientResult>;
+  /** Server action: create a scale application (in-session or remote). */
+  createScaleApplication: (input: {
+    patientId: string;
+    scaleKey: string;
+    mode: 'in-session' | 'remote';
+    expiresInHours?: number;
+  }) => Promise<CreateScaleApplicationResult>;
+  /** Server action: submit in-session scale responses. */
+  submitScaleResponses: (input: {
+    applicationId: string;
+    responses: Record<string, number>;
+  }) => Promise<SubmitScaleResponsesResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,15 +48,21 @@ interface ScalesTabProps {
  * - Header row (h3 + primary "Aplicar nova escala" button)
  * - Loads scale summaries on mount via listScalesForPatient action
  * - Renders ScaleSummaryCard per scale or an empty state
- * - "Aplicar nova escala" opens ScaleSelectModal (section 11 — stubbed here)
+ * - "Aplicar nova escala" opens ScaleSelectModal
  *
  * Follows the same data-fetch-in-useEffect pattern as HypothesesTab.
  */
-export function ScalesTab({ patientId, listScalesForPatient }: ScalesTabProps) {
+export function ScalesTab({
+  patientId,
+  listScalesForPatient,
+  createScaleApplication,
+  submitScaleResponses,
+}: ScalesTabProps) {
   const [scales, setScales] = useState<ScaleSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // Load scales on mount
+  // Load scales on mount (mirrors HypothesesTab pattern)
   useEffect(() => {
     let cancelled = false;
 
@@ -59,10 +83,24 @@ export function ScalesTab({ patientId, listScalesForPatient }: ScalesTabProps) {
     };
   }, [patientId, listScalesForPatient]);
 
-  // TODO(section 11): open ScaleSelectModal
+  // Refresh scale list (called after modal flow completes)
+  const refreshScales = useCallback(() => {
+    void (async () => {
+      const result = await listScalesForPatient({ patientId });
+      if (result.ok) {
+        setScales(result.scales);
+      }
+    })();
+  }, [patientId, listScalesForPatient]);
+
   const handleApplyScale = useCallback(() => {
-    // Stub — section 11 will replace this with modal open logic
+    setModalOpen(true);
   }, []);
+
+  // Refresh scale list after a scale application is completed or created
+  const handleCompleted = useCallback(() => {
+    refreshScales();
+  }, [refreshScales]);
 
   return (
     <div className="space-y-6" data-testid="scales-tab">
@@ -89,6 +127,16 @@ export function ScalesTab({ patientId, listScalesForPatient }: ScalesTabProps) {
           ))}
         </div>
       )}
+
+      {/* Scale selection modal */}
+      <ScaleSelectModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        patientId={patientId}
+        createScaleApplication={createScaleApplication}
+        submitScaleResponses={submitScaleResponses}
+        onCompleted={handleCompleted}
+      />
     </div>
   );
 }
