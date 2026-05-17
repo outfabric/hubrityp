@@ -50,6 +50,6 @@
 
 ## 9. End-to-End Tests
 
-- [ ] 9.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/hypotheses.spec.ts` — test: open prontuario of seeded patient, click "Hipoteses Diagnosticas" tab, verify educational banner is visible, click "Adicionar hipotese", toggle to "Por CID-10", type "depres" in combobox, select F32 result, click "Salvar hipotese", assert card appears with Badge "Em investigacao" (warning variant)
-- [ ] 9.2 **E2E (continued):** In same spec file, test: confirm hypothesis via dropdown menu "Confirmar", assert badge changes to "Confirmada" (success variant)
-- [ ] 9.3 **E2E (continued):** In same spec file, test: add a descriptive-mode hypothesis (no CID-10), fill description textarea, save, assert card appears in list with the description text and Badge "Em investigacao"
+- [x] 9.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/hypotheses.spec.ts` — test: open prontuario of seeded patient, click "Hipoteses Diagnosticas" tab, verify educational banner is visible, click "Adicionar hipotese", toggle to "Por CID-10", type "depres" in combobox, select F32 result, click "Salvar hipotese", assert card appears with Badge "Em investigacao" (warning variant)
+- [x] 9.2 **E2E (continued):** In same spec file, test: confirm hypothesis via dropdown menu "Confirmar", assert badge changes to "Confirmada" (success variant)
+- [x] 9.3 **E2E (continued):** In same spec file, test: add a descriptive-mode hypothesis (no CID-10), fill description textarea, save, assert card appears in list with the description text and Badge "Em investigacao"
