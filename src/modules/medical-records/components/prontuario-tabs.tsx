@@ -7,6 +7,7 @@ import {
   createHypothesis,
   getTreatmentPlan,
   listHypotheses,
+  listScalesForPatient,
   listTreatmentPlanVersions,
   searchCid10,
   updateHypothesis,
@@ -17,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { EmptyTabPlaceholder } from './empty-tab-placeholder';
 import { HypothesesTab } from './hypotheses-tab';
+import { ScalesTab } from './scales-tab';
 import { TreatmentPlanTab } from './treatment-plan';
 
 // ---------------------------------------------------------------------------
@@ -60,7 +62,7 @@ const TABS: TabDefinition[] = [
     value: 'escalas',
     label: 'Escalas',
     description: 'Instrumentos e escalas psicometricas aplicadas serao registrados aqui.',
-    functional: false,
+    functional: true,
     icon: Scale,
   },
   {
@@ -107,8 +109,9 @@ interface ProntuarioTabsProps {
  * 7 tabs total:
  * - Evolucoes (functional — renders children)
  * - Hipoteses (functional — renders HypothesesTab)
- * - Plano, Escalas, Documentos, Anexos, Notas (each renders
- *   EmptyTabPlaceholder with contextual description)
+ * - Plano (functional — renders TreatmentPlanTab)
+ * - Escalas (functional — renders ScalesTab)
+ * - Documentos, Anexos, Notas (each renders EmptyTabPlaceholder)
  *
  * Active tab: border-bottom 2px brand-500 (handled by the shadcn Tabs primitive).
  */
@@ -152,6 +155,11 @@ export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
           upsertTreatmentPlan={upsertTreatmentPlan}
           listTreatmentPlanVersions={listTreatmentPlanVersions}
         />
+      </TabsContent>
+
+      {/* Functional tab: Escalas */}
+      <TabsContent value="escalas" data-testid="prontuario-tab-content-escalas">
+        <ScalesTab patientId={patientId} listScalesForPatient={listScalesForPatient} />
       </TabsContent>
 
       {/* Non-functional placeholder tabs */}

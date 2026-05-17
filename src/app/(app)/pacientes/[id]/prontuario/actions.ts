@@ -10,6 +10,7 @@ import type {
   GetTreatmentPlanResult,
   HypothesisStatus,
   ListHypothesesResult,
+  ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
   UpdateHypothesisResult,
   UpdateHypothesisStatusResult,
@@ -19,6 +20,7 @@ import {
   createHypothesisImpl,
   getTreatmentPlanImpl,
   listHypothesesByPatientImpl,
+  listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
   searchCid10Impl,
   updateHypothesisImpl,
@@ -105,4 +107,15 @@ export async function listTreatmentPlanVersions(input: {
 }): Promise<ListTreatmentPlanVersionsResult> {
   const supabase = await createServerClient();
   return listTreatmentPlanVersionsImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Scales
+// ---------------------------------------------------------------------------
+
+export async function listScalesForPatient(input: {
+  patientId: string;
+}): Promise<ListScalesForPatientResult> {
+  const supabase = await createServerClient();
+  return listScalesForPatientImpl(supabase, input);
 }

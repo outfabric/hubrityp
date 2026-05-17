@@ -64,10 +64,10 @@
 
 ## 10. Frontend — Scales Tab and Summary
 
-- [ ] 10.1 Create `src/modules/medical-records/components/scales-tab.tsx` — Client Component replacing "Em breve" placeholder: h3 "Escalas aplicadas", Button primary "Aplicar nova escala" (icon ClipboardCheck), scale summary cards or empty state per Salvia design rules
-- [ ] 10.2 Create `src/modules/medical-records/components/scale-summary-card.tsx` — Card showing: scale label, last application date (format dd/MM/yyyy), last score as text, Badge with classification label colored by severity (success-50/700 for minimal, warning-50/700 for mild/moderate, danger-50/700 for severe), "Ver historico completo" link
-- [ ] 10.3 Create `src/modules/medical-records/components/scale-history-chart.tsx` — Client Component: Recharts ResponsiveContainer + LineChart, brand-500 line, custom ClassificationDot (fill by severity), CartesianGrid stroke surface-muted, XAxis date formatter dd/MM, YAxis 0-max, custom Tooltip showing date+score+classification. WHOQOL-Bref variant renders 4 domain lines
-- [ ] 10.4 Update prontuario-tabs component to render ScalesTab instead of EmptyTabPlaceholder for the "Escalas" tab
+- [x] 10.1 Create `src/modules/medical-records/components/scales-tab.tsx` — Client Component replacing "Em breve" placeholder: h3 "Escalas aplicadas", Button primary "Aplicar nova escala" (icon ClipboardCheck), scale summary cards or empty state per Salvia design rules
+- [x] 10.2 Create `src/modules/medical-records/components/scale-summary-card.tsx` — Card showing: scale label, last application date (format dd/MM/yyyy), last score as text, Badge with classification label colored by severity (success-50/700 for minimal, warning-50/700 for mild/moderate, danger-50/700 for severe), "Ver historico completo" link
+- [x] 10.3 Create `src/modules/medical-records/components/scale-history-chart.tsx` — Client Component: Recharts ResponsiveContainer + LineChart, brand-500 line, custom ClassificationDot (fill by severity), CartesianGrid stroke surface-muted, XAxis date formatter dd/MM, YAxis 0-max, custom Tooltip showing date+score+classification. WHOQOL-Bref variant renders 4 domain lines
+- [x] 10.4 Update prontuario-tabs component to render ScalesTab instead of EmptyTabPlaceholder for the "Escalas" tab
 
 ## 11. Frontend — Apply Scale Flow
 

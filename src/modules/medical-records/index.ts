@@ -154,3 +154,11 @@ export {
 
 // ---- Scale Public Form (Client Component) -----------------------------------
 export { ScalePublicForm } from './components/scale-public-form';
+
+// ---- Scale Tab Components (Client Components) --------------------------------
+export { ScalesTab } from './components/scales-tab';
+export { ScaleSummaryCard } from './components/scale-summary-card';
+export { ScaleHistoryChart } from './components/scale-history-chart';
+
+// ---- Scale Severity Tokens ---------------------------------------------------
+export { severityToBadgeVariant, severityToDotFill } from './lib/scales/severity-tokens';
