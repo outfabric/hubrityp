@@ -1,17 +1,17 @@
-# UI integrada com React Testing Library + MSW
+# Integrated UI with React Testing Library + MSW
 
-Diferença para teste unitário de componente:
+Difference vs. a component unit test:
 
-| Critério | Unitário (skill `unit-tests`) | Integração (esta skill) |
+| Criterion | Unit (skill `unit-tests`) | Integration (this skill) |
 |---|---|---|
-| Providers | Mínimos / mockados | **Reais** (TanStack Query, Theme, Toaster) |
-| Camada HTTP | `vi.mock` / `vi.stubGlobal('fetch')` | **MSW** (handler por request) |
-| Server Action | Mockada | Real (Drizzle real no container) ou simulada via MSW |
-| Banco | Não toca | Real (Postgres em container) quando o caminho exige |
-| Velocidade | <100ms | 200ms–2s |
-| Quando usar | Componente isolado, hook | Fluxo: form → action → revalidate → toast |
+| Providers | Minimal / mocked | **Real** (TanStack Query, Theme, Toaster) |
+| HTTP layer | `vi.mock` / `vi.stubGlobal('fetch')` | **MSW** (handler per request) |
+| Server Action | Mocked | Real (real Drizzle on the container) or simulated via MSW |
+| DB | Does not touch | Real (Postgres in container) when the path requires it |
+| Speed | <100ms | 200ms–2s |
+| When to use | Isolated component, hook | Flow: form → action → revalidate → toast |
 
-## Setup do MSW
+## MSW setup
 
 ```ts
 // src/__tests__/integration/setup/msw-server.ts
@@ -19,9 +19,9 @@ import { setupServer } from 'msw/node';
 export const server = setupServer();
 ```
 
-Já registrado no `setup.ts` do Vitest com `onUnhandledRequest: 'error'` (ver `references/testcontainers-setup.md`).
+Already registered in Vitest's `setup.ts` with `onUnhandledRequest: 'error'` (see `references/testcontainers-setup.md`).
 
-## Renderizador com providers reais
+## Renderer with real providers
 
 ```tsx
 // src/__tests__/integration/setup/render.tsx
@@ -44,11 +44,11 @@ export function renderWithProviders(ui: ReactNode, opts?: RenderOptions) {
 }
 ```
 
-`retry: false` evita esperar 3 tentativas no teste. `gcTime: 0` libera cache imediatamente.
+`retry: false` avoids waiting 3 attempts in the test. `gcTime: 0` releases cache immediately.
 
-## Exemplo: formulário → Server Action → toast
+## Example: form → Server Action → toast
 
-A Server Action é importada **real**, mas a fronteira de DB pode ser mockada via MSW (se a action chama uma Route Handler interna) ou via DB real (se a action usa Drizzle direto). Para fluxo de UI, **prefira mockar a Server Action via MSW** — o teste foca na UI, não no banco.
+The Server Action is imported **for real**, but the DB boundary can be mocked via MSW (if the action calls an internal Route Handler) or via real DB (if the action uses Drizzle directly). For a UI flow, **prefer mocking the Server Action via MSW** — the test focuses on the UI, not the DB.
 
 ```tsx
 // src/__tests__/integration/modules/pacientes/components/novo-paciente-form.int.test.tsx
@@ -61,8 +61,8 @@ import { renderWithProviders } from '@/__tests__/integration/setup/render';
 import { server } from '@/__tests__/integration/setup/msw-server';
 import { NovoPacienteForm } from '@/modules/pacientes/components/novo-paciente-form';
 
-describe('NovoPacienteForm — integração', () => {
-  it('submete, mostra toast de sucesso e limpa o form', async () => {
+describe('NovoPacienteForm — integration', () => {
+  it('submits, shows success toast and clears the form', async () => {
     let payloadEnviado: unknown;
     server.use(
       http.post('/api/pacientes', async ({ request }) => {
@@ -86,7 +86,7 @@ describe('NovoPacienteForm — integração', () => {
     expect(screen.getByLabelText(/nome/i)).toHaveValue('');
   });
 
-  it('mostra mensagem do servidor quando POST falha', async () => {
+  it('shows server message when POST fails', async () => {
     server.use(
       http.post('/api/pacientes', () =>
         HttpResponse.json({ error: 'CPF já cadastrado' }, { status: 409 })
@@ -105,38 +105,38 @@ describe('NovoPacienteForm — integração', () => {
 });
 ```
 
-## Quando vale ir até o DB
+## When it's worth going all the way to the DB
 
-Para fluxos que dependem de **invalidação de cache** que afeta a próxima query (ex.: criar paciente → lista atualiza), pode valer renderizar a `<ListaPacientes/>` junto e provar que a nova linha aparece. Nesse caso:
+For flows that depend on **cache invalidation** affecting the next query (e.g., create patient → list updates), it may be worth rendering `<ListaPacientes/>` together and proving that the new row appears. In that case:
 
-1. MSW responde a `POST /api/pacientes` chamando a Server Action real (que escreve no DB).
-2. MSW intercepta `GET /api/pacientes` lendo do DB real via Drizzle.
-3. RTL espera com `findByText('Maria Silva')`.
+1. MSW responds to `POST /api/pacientes` by calling the real Server Action (which writes to the DB).
+2. MSW intercepts `GET /api/pacientes` reading from the real DB via Drizzle.
+3. RTL waits with `findByText('Maria Silva')`.
 
-Trade-off: complexo. Reserve para 1–2 fluxos críticos do produto (ex.: agendar consulta + reflete na agenda).
+Trade-off: complex. Reserve for 1–2 critical product flows (e.g., schedule appointment + reflect on agenda).
 
-## Padrões de espera (sem `setTimeout`)
+## Wait patterns (no `setTimeout`)
 
 ```ts
-await screen.findByRole('status', { name: /salvando/i });    // entrou em loading
+await screen.findByRole('status', { name: /salvando/i });    // entered loading
 await waitForElementToBeRemoved(() => screen.queryByRole('status'));
-await screen.findByText(/sucesso/i);                          // texto final
+await screen.findByText(/sucesso/i);                          // final text
 ```
 
-`findBy*` faz polling até `testTimeout` ou até achar — substitui `await new Promise(r => setTimeout(r, X))`.
+`findBy*` polls until `testTimeout` or until found — replaces `await new Promise(r => setTimeout(r, X))`.
 
-## Acessibilidade como first-class
+## Accessibility as first-class
 
-Inclua pelo menos uma asserção que prove acessibilidade básica:
-- `getByLabelText` para inputs (prova que `<label htmlFor>` está correto).
-- `getByRole('button', { name: /.../ })` (prova nome acessível).
-- `aria-invalid="true"` em campos com erro.
+Include at least one assertion that proves basic accessibility:
+- `getByLabelText` for inputs (proves `<label htmlFor>` is correct).
+- `getByRole('button', { name: /.../ })` (proves accessible name).
+- `aria-invalid="true"` on fields with errors.
 
-Se quiser ir além, integre `axe-core` via `vitest-axe` em uma única suíte de smoke por página.
+If you want to go further, integrate `axe-core` via `vitest-axe` in a single smoke suite per page.
 
-## Não fazer
+## Do not
 
-- Render de página inteira (`src/app/(app)/agenda/page.tsx`) com providers do Next — isso é E2E. Prefira renderizar o **componente cliente** principal com props.
-- Snapshots grandes — quebram por mudanças de Tailwind / texto.
-- Testar lib de terceiros (shadcn/ui, RHF) — confie nos testes deles.
-- Esperar com `setTimeout`. Sempre `findBy*` ou `waitFor`.
+- Render an entire page (`src/app/(app)/agenda/page.tsx`) with Next providers — that is E2E. Prefer rendering the main **client component** with props.
+- Large snapshots — break on Tailwind / text changes.
+- Test third-party libs (shadcn/ui, RHF) — trust their tests.
+- Wait with `setTimeout`. Always `findBy*` or `waitFor`.

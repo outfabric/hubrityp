@@ -1,20 +1,20 @@
 ---
 name: Module barrel server-only leakage pattern
-description: Barris de módulo (index.ts) que co-exportam Server Action implementations (server-only, next/headers) e Client Components causam build error crítico no Next.js App Router
+description: Module barrels (index.ts) that co-export Server Action implementations (server-only, next/headers) and Client Components cause a critical build error in Next.js App Router
 type: project
 ---
 
-Este projeto usa barris de módulo (index.ts) para expor a API pública de cada módulo. Um padrão perigoso identificado em 2026-05-06:
+This project uses module barrels (index.ts) to expose each module's public API. A dangerous pattern identified on 2026-05-06:
 
-Os barris de `oauth/index.ts` e `password-recovery/index.ts` re-exportam tanto implementações de Server Actions (`linkOAuthIdentityImpl`, `requestPasswordResetImpl`) quanto Client Components (`GoogleButton`, `ForgotPasswordForm`). Quando um Client Component importa apenas o componente do barrel, o bundler do browser puxa toda a árvore — incluindo o chain `import 'server-only'` + `import { headers } from 'next/headers'` — causando build error.
+The `oauth/index.ts` and `password-recovery/index.ts` barrels re-export both Server Action implementations (`linkOAuthIdentityImpl`, `requestPasswordResetImpl`) and Client Components (`GoogleButton`, `ForgotPasswordForm`). When a Client Component imports only the component from the barrel, the browser bundler pulls the entire tree — including the `import 'server-only'` + `import { headers } from 'next/headers'` chain — causing a build error.
 
-**Cadeia problemática confirmada:**
+**Confirmed problematic chain:**
 - `login-form.tsx` ('use client') → `@/modules/oauth` (barrel) → `./server/link-oauth-identity.ts` (server-only) → `log-auth-event.ts` → `next/headers` = BUILD ERROR
 - `forgot-password/page.tsx` → `@/modules/password-recovery` (barrel) → `./server/request-password-reset.ts` (server-only) → `log-auth-event.ts` → `next/headers` = BUILD ERROR
 
-**Por que é supreendente**: o barrel `auth/index.ts` tem comentário explícito alertando que Client Components não devem importar `signIn` diretamente (e `login-form.tsx` importa de `@/app/(auth)/login/actions` corretamente). Mas a mesma disciplina não foi aplicada ao barrel `oauth/index.ts` para `GoogleButton`.
+**Why it is surprising**: the `auth/index.ts` barrel has an explicit comment warning that Client Components must not import `signIn` directly (and `login-form.tsx` correctly imports from `@/app/(auth)/login/actions`). But the same discipline was not applied to the `oauth/index.ts` barrel for `GoogleButton`.
 
-**Correção**: Separar exportações de server implementations e client components nos barris, ou Client Components devem importar diretamente dos subpaths internos em vez do barrel.
+**Fix**: Split server implementations and client components into separate exports inside the barrels, or have Client Components import directly from the internal subpaths instead of the barrel.
 
-**Why:** Padrão recorrente quando novos módulos são criados sem verificar se o barrel mistura server/client exports.
-**How to apply:** Em cada QA session, verificar imediatamente se há build errors antes de tentar qualquer cenário de UI. Inspecionar os barris de novos módulos se build errors aparecerem.
+**Why:** Recurring pattern when new modules are created without checking whether the barrel mixes server/client exports.
+**How to apply:** In every QA session, check immediately for build errors before attempting any UI scenario. Inspect the barrels of new modules if build errors appear.

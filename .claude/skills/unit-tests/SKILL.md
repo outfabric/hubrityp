@@ -1,40 +1,40 @@
 ---
 name: unit-tests
-description: Boas práticas para escrever testes unitários com Vitest em projetos TypeScript + Next.js (App Router). Use sempre que precisar criar, revisar ou refatorar testes unitários — para lógica pura, validators Zod, helpers, hooks React, Server Actions, Route Handlers ou utilitários — em projetos Next.js com TypeScript. Aplica-se também quando o usuário pedir para "adicionar testes", "escrever spec", "cobrir com testes", "mockar módulo", configurar Vitest, ou quando uma feature nova precisa de cobertura unitária antes de PR.
+description: Best practices for writing unit tests with Vitest in TypeScript + Next.js (App Router) projects. Use whenever you need to create, review, or refactor unit tests — for pure logic, Zod validators, helpers, React hooks, Server Actions, Route Handlers, or utilities — in Next.js projects with TypeScript. Also applies when the user asks to "add tests", "write a spec", "cover with tests", "mock a module", configure Vitest, or when a new feature needs unit coverage before PR.
 ---
 
-# Testes unitários com Vitest (Next.js + TypeScript)
+# Unit tests with Vitest (Next.js + TypeScript)
 
-Skill para o subagent `fullstack-developer` produzir testes unitários consistentes, rápidos e confiáveis no HubrityP. Mantenha o foco em **isolar a unidade**, validar **comportamento** (não implementação) e expressar a intenção via **nome do teste**.
+Skill for the `fullstack-developer` subagent to produce consistent, fast, and reliable unit tests in HubrityP. Stay focused on **isolating the unit**, validating **behavior** (not implementation), and expressing intent via the **test name**.
 
-## Quando usar Vitest (escopo unitário)
+## When to use Vitest (unit scope)
 
-Use Vitest para o que cabe na pirâmide de testes como base:
+Use Vitest for what fits at the base of the test pyramid:
 
-- Funções puras, validators Zod, helpers de data/moeda/strings.
-- Hooks React isolados (sem rede), reducers, stores Zustand.
-- Lógica de Server Actions e Route Handlers **com dependências mockadas** (Supabase, Inngest, Resend, Twilio).
-- Mappers entre payloads externos e modelos internos.
+- Pure functions, Zod validators, date/currency/string helpers.
+- Isolated React hooks (no network), reducers, Zustand stores.
+- Server Action and Route Handler logic **with mocked dependencies** (Supabase, Inngest, Resend, Twilio).
+- Mappers between external payloads and internal models.
 
-Não use Vitest para:
+Do not use Vitest for:
 
-- Fluxo end-to-end de UI → use **Playwright** (E2E).
-- Queries reais contra Supabase, RLS, migrations → use **testes de integração** contra Postgres real via Docker (Testcontainers).
-- Renderização visual/snapshot pesada → prefira asserções de comportamento.
+- End-to-end UI flow → use **Playwright** (E2E).
+- Real queries against Supabase, RLS, migrations → use **integration tests** against real Postgres via Docker (Testcontainers).
+- Heavy visual/snapshot rendering → prefer behavior assertions.
 
-## Princípios
+## Principles
 
-1. **AAA explícito**: blocos visualmente separados de Arrange / Act / Assert. Uma asserção principal por teste; asserções auxiliares só se reforçam a mesma intenção.
-2. **Nome descreve o comportamento**: `it('rejeita CPF com dígitos repetidos', ...)`. Nada de `it('test 1')` ou `it('works')`.
-3. **Isole I/O**: nenhum teste unitário toca rede, banco, filesystem ou relógio real. Mocke nas fronteiras.
-4. **Determinismo**: sem `Math.random`, `Date.now`, UUID v4 vivos. Use `vi.useFakeTimers()` e injete clocks/IDs.
-5. **Sem lógica no teste**: nada de `if`, `for`, `switch` dentro de `it`. Se precisar repetir, use `it.each`.
-6. **Falha por motivo claro**: a mensagem do `expect` deve dizer **o que** quebrou, não **onde**.
-7. **Rápido**: testes unitários devem rodar em milissegundos. Suíte unitária inteira < 10s na máquina do dev.
+1. **Explicit AAA**: visually separated blocks of Arrange / Act / Assert. One primary assertion per test; auxiliary assertions only if they reinforce the same intent.
+2. **Name describes behavior**: `it('rejects CPF with repeating digits', ...)`. No `it('test 1')` or `it('works')`.
+3. **Isolate I/O**: no unit test touches the network, database, filesystem, or real clock. Mock at the boundaries.
+4. **Determinism**: no `Math.random`, `Date.now`, live UUID v4. Use `vi.useFakeTimers()` and inject clocks/IDs.
+5. **No logic in the test**: no `if`, `for`, `switch` inside `it`. If you need to repeat, use `it.each`.
+6. **Fails for a clear reason**: the `expect` message should say **what** broke, not **where**.
+7. **Fast**: unit tests should run in milliseconds. The whole unit suite < 10s on the dev machine.
 
-## Estrutura de arquivos
+## File structure
 
-Testes unitários vivem **centralizados** em `src/__tests__/unit/`, com a árvore espelhando a árvore de `src/`. Sufixo é `.test.ts` para lógica/server e `.test.tsx` para componentes/hooks (jsdom).
+Unit tests live **centralized** in `src/__tests__/unit/`, with the tree mirroring `src/`. Suffix is `.test.ts` for logic/server and `.test.tsx` for components/hooks (jsdom).
 
 ```
 src/
@@ -70,33 +70,33 @@ src/
             mock-gotrue.test.ts                          # unit test for an e2e helper
 ```
 
-> **Por que centralizado e não colocado**: decisão registrada na change `reorganize-folder-structure`. O custo é uma jornada extra do editor entre source e teste; o ganho é "todos os testes em um único glob" e nenhum `*.test.ts` perdido sob `src/`.
+> **Why centralized and not co-located**: decision recorded in the `reorganize-folder-structure` change. The cost is an extra editor trip between source and test; the gain is "all tests under a single glob" and no `*.test.ts` lost under `src/`.
 
-> **Helper de teste vs. teste do helper**: o helper `mock-gotrue.ts` mora em `src/__tests__/e2e/seeded/setup/` (é parte da infra de e2e), mas seu **teste unitário** mora em `src/__tests__/unit/e2e/seeded/setup/mock-gotrue.test.ts` (espelhando o caminho em `src/__tests__/`, não em `src/`). Esse é o padrão para testar arquivos que vivem fora de `src/<domain>` — espelhe o caminho real.
+> **Test helper vs. test of the helper**: the `mock-gotrue.ts` helper lives in `src/__tests__/e2e/seeded/setup/` (part of e2e infra), but its **unit test** lives in `src/__tests__/unit/e2e/seeded/setup/mock-gotrue.test.ts` (mirroring the actual path under `src/__tests__/`, not under `src/`). This is the pattern for testing files that live outside `src/<domain>` — mirror the real path.
 
-Ambiente por suíte (declarado no topo do arquivo, quando o default não bastar):
+Environment per suite (declared at the top of the file when the default isn't enough):
 
 ```ts
-// @vitest-environment jsdom   ← apenas para hooks/componentes que usam DOM
-// @vitest-environment node    ← padrão para lógica/server
+// @vitest-environment jsdom   ← only for hooks/components that use the DOM
+// @vitest-environment node    ← default for logic/server
 ```
 
-O `vitest.config.ts` do projeto já configura `environmentMatchGlobs` para resolver `.test.tsx → jsdom` e `.test.ts → node` automaticamente.
+The project's `vitest.config.ts` already configures `environmentMatchGlobs` to resolve `.test.tsx → jsdom` and `.test.ts → node` automatically.
 
-## Escolha de mock por situação
+## Mock choice per situation
 
-| Situação | Ferramenta | Por quê |
+| Situation | Tool | Why |
 |---|---|---|
-| Substituir módulo inteiro (ex.: cliente Supabase, Resend) | `vi.mock('@/shared/supabase/server', () => ({...}))` | Hoisted; evita execução real do módulo |
-| Espionar método de objeto existente preservando original | `vi.spyOn(obj, 'metodo')` | Restaurável com `mockRestore()` |
-| Função descartável passada como argumento | `vi.fn()` | Captura chamadas e retorno |
-| Tempo / cron / setTimeout | `vi.useFakeTimers()` + `vi.advanceTimersByTime(ms)` | Controle determinístico |
-| Variáveis de ambiente | `vi.stubEnv('NEXT_PUBLIC_FOO', 'bar')` | Restaurado por `vi.unstubAllEnvs()` |
-| `fetch` global | `vi.stubGlobal('fetch', vi.fn())` | Restaurado por `vi.unstubAllGlobals()` |
+| Replace an entire module (e.g., Supabase client, Resend) | `vi.mock('@/shared/supabase/server', () => ({...}))` | Hoisted; avoids real module execution |
+| Spy on a method of an existing object preserving the original | `vi.spyOn(obj, 'method')` | Restorable with `mockRestore()` |
+| Throwaway function passed as argument | `vi.fn()` | Captures calls and return |
+| Time / cron / setTimeout | `vi.useFakeTimers()` + `vi.advanceTimersByTime(ms)` | Deterministic control |
+| Environment variables | `vi.stubEnv('NEXT_PUBLIC_FOO', 'bar')` | Restored by `vi.unstubAllEnvs()` |
+| Global `fetch` | `vi.stubGlobal('fetch', vi.fn())` | Restored by `vi.unstubAllGlobals()` |
 
-Sempre limpar entre testes (configurar uma vez no `vitest.config.ts` via `clearMocks`, `restoreMocks`, `unstubGlobals`, `unstubEnvs`).
+Always clean up between tests (configure once in `vitest.config.ts` via `clearMocks`, `restoreMocks`, `unstubGlobals`, `unstubEnvs`).
 
-## Exemplo canônico (lógica pura + Zod)
+## Canonical example (pure logic + Zod)
 
 ```ts
 // src/__tests__/unit/modules/pacientes/lib/cpf.test.ts
@@ -107,16 +107,16 @@ describe('validateCpf', () => {
   it.each([
     ['529.982.247-25', true],
     ['52998224725', true],
-    ['111.111.111-11', false], // dígitos repetidos
-    ['123.456.789-00', false], // dígito verificador inválido
+    ['111.111.111-11', false], // repeating digits
+    ['123.456.789-00', false], // invalid check digit
     ['', false],
-  ])('valida "%s" como %s', (input, expected) => {
+  ])('validates "%s" as %s', (input, expected) => {
     expect(validateCpf(input)).toBe(expected);
   });
 });
 ```
 
-## Exemplo canônico (Server Action com Supabase mockado)
+## Canonical example (Server Action with mocked Supabase)
 
 ```ts
 // src/__tests__/unit/modules/pacientes/server/criar-paciente.test.ts
@@ -137,7 +137,7 @@ describe('criarPaciente', () => {
     vi.mocked(createServerClient).mockReturnValue({ from: () => select } as never);
   });
 
-  it('persiste paciente com nome normalizado', async () => {
+  it('persists patient with normalized name', async () => {
     insert.mockResolvedValue({ data: { id: 'p_1' }, error: null });
 
     const result = await criarPaciente({ nome: '  Maria  Silva ', cpf: '529.982.247-25' });
@@ -148,7 +148,7 @@ describe('criarPaciente', () => {
     expect(result).toEqual({ ok: true, id: 'p_1' });
   });
 
-  it('retorna erro acionável quando Supabase falha', async () => {
+  it('returns actionable error when Supabase fails', async () => {
     insert.mockResolvedValue({ data: null, error: { message: 'duplicate' } });
 
     await expect(
@@ -158,29 +158,29 @@ describe('criarPaciente', () => {
 });
 ```
 
-> **Importações**: o alias `@/*` resolve para `src/*`. Nunca importe da árvore de testes (`@/__tests__/...`) dentro de código de produção. Para utilities compartilhadas entre testes, viva sob `src/__tests__/unit/_helpers/` (ou outro prefixo `_`).
+> **Imports**: the `@/*` alias resolves to `src/*`. Never import from the tests tree (`@/__tests__/...`) inside production code. For utilities shared between tests, live under `src/__tests__/unit/_helpers/` (or another `_` prefix).
 
-## Antipadrões a evitar
+## Antipatterns to avoid
 
-- Testar implementação interna (nomes de variáveis privadas, ordem de chamadas irrelevante).
-- `expect(true).toBe(true)` ou testes que sempre passam.
-- `try/catch` engolindo a exceção em vez de `await expect(...).rejects.toThrow()`.
-- Mockar o módulo sob teste.
-- Compartilhar estado mutável entre testes (`let` no escopo do `describe` sem reset).
-- Esperar tempo real (`await new Promise(r => setTimeout(r, 100))`).
-- Snapshot gigante de DOM ou JSON — quebra por mudanças irrelevantes.
-- Importar Server Actions por meio do barrel do módulo (`@/modules/auth`) em testes de **Client Component** — o barrel arrasta `server-only` no grafo. Use `@/app/(auth)/login/actions` (route shell) em vez disso. Para teste de servidor, importar do barrel ou direto do `server/` é seguro.
+- Testing internal implementation (private variable names, irrelevant call order).
+- `expect(true).toBe(true)` or tests that always pass.
+- `try/catch` swallowing the exception instead of `await expect(...).rejects.toThrow()`.
+- Mocking the module under test.
+- Sharing mutable state between tests (`let` in the `describe` scope without reset).
+- Waiting on real time (`await new Promise(r => setTimeout(r, 100))`).
+- Huge DOM or JSON snapshot — breaks on irrelevant changes.
+- Importing Server Actions through the module barrel (`@/modules/auth`) in **Client Component** tests — the barrel drags `server-only` into the graph. Use `@/app/(auth)/login/actions` (route shell) instead. For server tests, importing from the barrel or directly from `server/` is safe.
 
-## Referências detalhadas
+## Detailed references
 
-Carregue conforme a tarefa exigir:
+Load as the task requires:
 
-- `references/setup.md` — `vitest.config.ts`, aliases `@/`, `environmentMatchGlobs`, scripts no `package.json`, integração com Husky, stub de `server-only`.
-- `references/mocks.md` — receitas para Supabase, Inngest, Resend, Twilio, fetch, timers e env.
-- `references/server-actions.md` — testando Server Actions, Route Handlers e validação Zod nas fronteiras.
-- `references/hooks-componentes.md` — `renderHook`, Testing Library, `userEvent`, RSC vs Client.
+- `references/setup.md` — `vitest.config.ts`, `@/` aliases, `environmentMatchGlobs`, scripts in `package.json`, Husky integration, `server-only` stub.
+- `references/mocks.md` — recipes for Supabase, Inngest, Resend, Twilio, fetch, timers, and env.
+- `references/server-actions.md` — testing Server Actions, Route Handlers, and Zod validation at the boundaries.
+- `references/hooks-components.md` — `renderHook`, Testing Library, `userEvent`, RSC vs Client.
 
 ## Templates
 
-- `assets/vitest.config.ts` — configuração base pronta para copiar (já alinhada à estrutura `src/__tests__/unit/`).
-- `assets/exemplo.test.ts` — esqueleto AAA com mocks limpos por teste.
+- `assets/vitest.config.ts` — base configuration ready to copy (already aligned with the `src/__tests__/unit/` structure).
+- `assets/example.test.ts` — AAA skeleton with mocks cleaned per test.

@@ -1,8 +1,8 @@
-# Isolamento de dados entre testes
+# Data isolation between tests
 
-Container compartilhado precisa de uma estratégia para evitar contaminação entre testes. Três opções, em ordem de preferência:
+A shared container needs a strategy to avoid contamination between tests. Three options, in order of preference:
 
-## 1. TRUNCATE em `beforeEach` (default)
+## 1. TRUNCATE in `beforeEach` (default)
 
 ```ts
 // src/__tests__/integration/setup/rls.ts
@@ -23,11 +23,11 @@ export async function truncateAll(db: typeof Db) {
 }
 ```
 
-**Quando usar:** default. Simples, previsível, fácil de debugar.
+**When to use:** default. Simple, predictable, easy to debug.
 
-**Trade-offs:** ~5–20ms por teste; requer manter a lista de tabelas.
+**Trade-offs:** ~5–20ms per test; requires maintaining the table list.
 
-**Dica:** gere a lista dinamicamente do `information_schema` se o esquema cresce muito:
+**Tip:** generate the list dynamically from `information_schema` if the schema grows a lot:
 
 ```ts
 const { rows } = await db.execute(sql`
@@ -39,7 +39,7 @@ const { rows } = await db.execute(sql`
 `);
 ```
 
-## 2. Transação com rollback
+## 2. Transaction with rollback
 
 ```ts
 beforeEach(async (ctx) => {
@@ -50,33 +50,33 @@ afterEach(async (ctx) => {
 });
 ```
 
-**Quando usar:** suítes muito grandes onde cada `TRUNCATE` virou gargalo.
+**When to use:** very large suites where each `TRUNCATE` has become a bottleneck.
 
 **Trade-offs:**
-- Código sob teste **deve** receber a tx injetada — não pode abrir nova conexão.
-- Não funciona se a função sob teste usa `BEGIN/COMMIT` interno (ex.: `db.transaction()` aninhado vira savepoint, OK; mas `pg` em pool separado, NÃO).
-- Inviável se a verificação precisa ler em **outra** conexão.
+- The code under test **must** receive the injected tx — cannot open a new connection.
+- Does not work if the function under test uses internal `BEGIN/COMMIT` (e.g., nested `db.transaction()` becomes a savepoint, OK; but `pg` on a separate pool, NO).
+- Unworkable if the assertion needs to read on **another** connection.
 
-## 3. Schema/database por arquivo de teste
+## 3. Schema/database per test file
 
 ```ts
-// global-setup cria; cada arquivo recebe um nome único
+// global-setup creates; each file gets a unique name
 const schemaName = `test_${randomUUID().replace(/-/g, '')}`;
 await db.execute(sql.raw(`CREATE SCHEMA ${schemaName};`));
-// configurar search_path para esse schema
+// configure search_path for this schema
 ```
 
-**Quando usar:** paralelismo agressivo (`maxForks: 8+`) + testes longos.
+**When to use:** aggressive parallelism (`maxForks: 8+`) + long tests.
 
-**Trade-offs:** complexidade alta, debug mais chato, custo de criação de schema.
+**Trade-offs:** high complexity, more painful debugging, schema creation cost.
 
-## Sequências e dados de referência
+## Sequences and reference data
 
-Use `RESTART IDENTITY` no TRUNCATE para resetar `serial`/`bigserial`. Para tabelas seed (ex.: `tipos_consulta`), faça `INSERT` no `beforeEach` ou exclua do TRUNCATE com `EXCEPT`.
+Use `RESTART IDENTITY` in TRUNCATE to reset `serial`/`bigserial`. For seed tables (e.g., `tipos_consulta`), `INSERT` in `beforeEach` or exclude from TRUNCATE with `EXCEPT`.
 
 ## Time-travel
 
-Use `vi.useFakeTimers({ now: ... })` ou injete um `clock` provider. Não dependa de `now()` do Postgres em assertions — set explicitamente:
+Use `vi.useFakeTimers({ now: ... })` or inject a `clock` provider. Do not depend on Postgres `now()` in assertions — set it explicitly:
 
 ```ts
 await db.insert(agendamentos).values({
@@ -84,16 +84,16 @@ await db.insert(agendamentos).values({
 });
 ```
 
-## Paralelismo
+## Parallelism
 
-Com `pool: 'forks'` cada arquivo roda em processo isolado, mas todos batem no **mesmo container**. Se o teste cria/lê em tabelas distintas, o paralelismo é seguro. Se compartilha tabela e usa TRUNCATE, **um teste pode truncar o estado de outro**. Soluções:
+With `pool: 'forks'` each file runs in an isolated process, but all hit the **same container**. If the test creates/reads in distinct tables, parallelism is safe. If it shares a table and uses TRUNCATE, **one test can truncate the state of another**. Solutions:
 
-1. Limitar `maxForks: 1` para a suite (mais lento, sempre seguro). É o default no `vitest.integration.config.ts` do HubrityP via `fileParallelism: false`.
-2. Usar schema-por-arquivo (opção 3 acima).
-3. Marcar suítes que dividem tabela com `describe.sequential` (Vitest >= 1.4) — não resolve entre arquivos, só dentro.
+1. Limit `maxForks: 1` for the suite (slower, always safe). It's the default in HubrityP's `vitest.integration.config.ts` via `fileParallelism: false`.
+2. Use schema-per-file (option 3 above).
+3. Mark suites that share a table with `describe.sequential` (Vitest >= 1.4) — does not resolve across files, only within.
 
-**Recomendação prática:** começar com `fileParallelism: false` + TRUNCATE. Subir só se a suite ficar lenta o suficiente para justificar a complexidade.
+**Practical recommendation:** start with `fileParallelism: false` + TRUNCATE. Move up only if the suite gets slow enough to justify the complexity.
 
-## Limpeza de arquivos / Storage
+## File / Storage cleanup
 
-Se a feature usa Supabase Storage, mocke o cliente de Storage no nível da fronteira (não suba MinIO no container). Storage é integração-de-integração — fora do escopo unitário e da maioria dos testes de integração.
+If the feature uses Supabase Storage, mock the Storage client at the boundary level (do not boot MinIO in the container). Storage is integration-of-integration — out of scope for unit tests and most integration tests.

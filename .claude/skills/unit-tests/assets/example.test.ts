@@ -1,12 +1,12 @@
-// Esqueleto AAA para Server Action / função com dependências mockadas.
-// Copie e adapte: renomeie módulo sob teste, dependências mockadas e cenários.
+// AAA skeleton for Server Action / function with mocked dependencies.
+// Copy and adapt: rename the module under test, mocked dependencies, and scenarios.
 //
-// Localização canônica: src/__tests__/unit/<mirror-of-source-path>.test.ts
-// Exemplo: src/__tests__/unit/modules/agenda/server/agendar-consulta.test.ts
+// Canonical location: src/__tests__/unit/<mirror-of-source-path>.test.ts
+// Example: src/__tests__/unit/modules/agenda/server/agendar-consulta.test.ts
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// 1) Hoisted mocks — declarar ANTES de qualquer import do módulo sob teste.
+// 1) Hoisted mocks — declare BEFORE any import of the module under test.
 vi.mock('@/shared/supabase/server', () => ({
   createServerClient: vi.fn(),
 }));
@@ -17,7 +17,7 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-// 2) Imports reais — vêm depois dos vi.mock por convenção.
+// 2) Real imports — come after vi.mock by convention.
 import { createServerClient } from '@/shared/supabase/server';
 import { inngest } from '@/shared/lib/inngest/client';
 import { revalidatePath } from 'next/cache';
@@ -25,7 +25,7 @@ import { funcaoSobTeste } from '@/modules/agenda/server/agendar-consulta';
 
 describe('funcaoSobTeste', () => {
   beforeEach(() => {
-    // Arrange compartilhado: estado padrão de dependências para o caminho feliz.
+    // Shared Arrange: default state of dependencies for the happy path.
     vi.mocked(createServerClient).mockReturnValue({
       from: vi.fn().mockReturnValue({
         insert: vi.fn().mockResolvedValue({ data: { id: 'x_1' }, error: null }),
@@ -39,8 +39,8 @@ describe('funcaoSobTeste', () => {
     } as never);
   });
 
-  it('descreve o comportamento esperado no caminho feliz', async () => {
-    // Arrange (extra ao beforeEach, se necessário)
+  it('describes the expected behavior on the happy path', async () => {
+    // Arrange (extra to beforeEach, if needed)
     const input = { campo: 'valor' };
 
     // Act
@@ -54,13 +54,13 @@ describe('funcaoSobTeste', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/rota-relevante');
   });
 
-  it('rejeita entrada inválida com mensagem acionável', async () => {
+  it('rejects invalid input with actionable message', async () => {
     await expect(funcaoSobTeste({ campo: '' })).rejects.toThrow(
       /campo.*obrigatório/i
     );
   });
 
-  it('propaga erro quando dependência externa falha', async () => {
+  it('propagates error when external dependency fails', async () => {
     vi.mocked(createServerClient).mockReturnValue({
       from: vi.fn().mockReturnValue({
         insert: vi.fn().mockResolvedValue({

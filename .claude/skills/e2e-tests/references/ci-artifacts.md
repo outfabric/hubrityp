@@ -1,27 +1,27 @@
-# CI, artifacts e debugging
+# CI, artifacts and debugging
 
-## Artifacts úteis no fail
+## Useful artifacts on failure
 
-A config recomendada já gera:
+The recommended config already generates:
 
-- **trace** (`trace: 'on-first-retry'`) — gravação completa de DOM, network, console, screenshots por step. Abre no [trace viewer](https://playwright.dev/docs/trace-viewer):
+- **trace** (`trace: 'on-first-retry'`) — full recording of DOM, network, console, screenshots per step. Open in the [trace viewer](https://playwright.dev/docs/trace-viewer):
 
   ```bash
   npx playwright show-trace test-results/.../trace.zip
   ```
 
-- **screenshot** (`screenshot: 'only-on-failure'`) — PNG do estado final.
-- **video** (`video: 'retain-on-failure'`) — `.webm` da execução.
-- **report HTML** — `playwright-report/` (suíte seeded) e `playwright-report-real/` (suíte real).
+- **screenshot** (`screenshot: 'only-on-failure'`) — PNG of the final state.
+- **video** (`video: 'retain-on-failure'`) — `.webm` of the run.
+- **HTML report** — `playwright-report/` (seeded suite) and `playwright-report-real/` (real suite).
 
 Outputs:
 
-| Suíte | `outputDir` (results) | Report folder |
+| Suite | `outputDir` (results) | Report folder |
 |---|---|---|
 | seeded | `test-results/` | `playwright-report/` |
 | real | `test-results-real/` | `playwright-report-real/` |
 
-## Subindo artifacts no GitHub Actions
+## Uploading artifacts on GitHub Actions
 
 ```yaml
 # .github/workflows/e2e.yml
@@ -45,11 +45,11 @@ Outputs:
     retention-days: 14
 ```
 
-Para a suíte real, use os paths `playwright-report-real/` e `test-results-real/`.
+For the real suite, use paths `playwright-report-real/` and `test-results-real/`.
 
-## Sharding (paralelismo entre máquinas)
+## Sharding (parallelism across machines)
 
-Para suites grandes, distribua entre runners:
+For large suites, distribute across runners:
 
 ```yaml
 strategy:
@@ -59,63 +59,63 @@ steps:
   - run: npx playwright test --config playwright.seeded.config.ts --shard=${{ matrix.shard }}
 ```
 
-`workers: 2` já paraleliza dentro de uma máquina; sharding adiciona paralelismo entre máquinas. Só vale quando a suite passa de ~10min em uma máquina.
+`workers: 2` already parallelizes inside a single machine; sharding adds parallelism across machines. Only worth it when the suite passes ~10min on a single machine.
 
 ## Retries
 
-`retries: 2` no CI mascara flakiness pontual mas **não corrige raiz**. Marque flakies com tag e investigue:
+`retries: 2` in CI masks occasional flakiness but **does not fix the root cause**. Tag flakies and investigate:
 
 ```ts
-test('agenda consulta @flaky', async ({ page }) => { /* ... */ });
+test('schedule consultation @flaky', async ({ page }) => { /* ... */ });
 ```
 
-Filtre nos relatórios. Se um teste passa só com retry mais de 5x em 100 runs, ele está mentindo — refatore ou remova.
+Filter in reports. If a test passes only after retry more than 5x in 100 runs, it is lying — refactor or remove.
 
-## Modo debug local
+## Local debug mode
 
 ```bash
-# UI mode: explora interativo, time-travel
+# UI mode: interactive exploration, time-travel
 npx playwright test --config playwright.seeded.config.ts --ui
 
-# Inspector: pausa em cada step, sugere locator
+# Inspector: pauses on each step, suggests a locator
 PWDEBUG=1 npx playwright test --config playwright.seeded.config.ts src/__tests__/e2e/seeded/agendamento.spec.ts
 
-# Headed (vê o navegador, sem inspector)
+# Headed (see the browser, no inspector)
 npx playwright test --config playwright.seeded.config.ts --headed --workers=1
 
-# Um único teste por nome
-npx playwright test --config playwright.seeded.config.ts -g "agenda consulta"
+# A single test by name
+npx playwright test --config playwright.seeded.config.ts -g "schedule consultation"
 
-# Filtrar por tag de domínio
+# Filter by domain tag
 npx playwright test --config playwright.seeded.config.ts --grep "@agenda"
 ```
 
 ## `test.fixme` / `test.skip` / `test.fail`
 
 ```ts
-test.skip('feature em desenvolvimento', async ({ page }) => { /* ... */ });
+test.skip('feature under development', async ({ page }) => { /* ... */ });
 
-test.fixme(({ browserName }) => browserName === 'webkit', 'bug do Safari, ver #123');
+test.fixme(({ browserName }) => browserName === 'webkit', 'Safari bug, see #123');
 
-test.fail('docs dizem que falha aqui — quando passar, remover .fail', async () => {
+test.fail('docs say this fails here — once it passes, remove .fail', async () => {
   await expect(...).toBe(...);
 });
 ```
 
-`test.fail` é útil em TDD: você documenta a expectativa atual ainda quebrada; quando o app passa a passar, o teste **falha por inversão** e força você a remover o `.fail`.
+`test.fail` is useful in TDD: you document the current broken expectation; once the app starts passing, the test **fails by inversion** and forces you to remove `.fail`.
 
-## Sentinelas de qualidade da suite
+## Suite quality sentinels
 
-Métricas para acompanhar mensalmente:
+Metrics to track monthly:
 
-- **Tempo total no CI**: alvo <8min para 15 testes (suíte seeded).
-- **Taxa de retry**: <2% dos testes precisam de retry para passar.
-- **Falsos positivos** (teste passa mas feature está quebrada): zero tolerância — investigue cada caso reportado.
-- **Tempo médio por teste**: <30s. Se subir, geralmente é login pela UI ou esperas escondidas.
+- **Total time in CI**: target <8min for 15 tests (seeded suite).
+- **Retry rate**: <2% of tests need a retry to pass.
+- **False positives** (test passes but the feature is broken): zero tolerance — investigate every reported case.
+- **Average time per test**: <30s. If it rises, it is usually UI login or hidden waits.
 
 ## CI cache
 
-Cache do `~/.cache/ms-playwright` (browsers) e `node_modules` acelera dramatically:
+Caching `~/.cache/ms-playwright` (browsers) and `node_modules` speeds things up dramatically:
 
 ```yaml
 - uses: actions/cache@v4
@@ -126,15 +126,15 @@ Cache do `~/.cache/ms-playwright` (browsers) e `node_modules` acelera dramatical
     key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 ```
 
-## Quando o teste falha no CI mas passa local
+## When the test fails in CI but passes locally
 
 Checklist:
 
-1. Timezone diferente? `timezoneId: 'America/Sao_Paulo'` na config.
-2. Locale diferente? `locale: 'pt-BR'`.
-3. Viewport diferente? Padrão `Desktop Chrome` é 1280x720 — confirme se o teste depende.
-4. Concorrência de DB no CI (`workers: 2`)? Reduza para `1` para confirmar.
-5. Container Postgres em estado diferente? Adicione `await truncateAllExceptSeed()` no início do teste e veja se resolve — se sim, isolamento estava furado.
-6. Animações: `await page.waitForLoadState('networkidle')` antes de asserções visuais.
+1. Different timezone? `timezoneId: 'America/Sao_Paulo'` in the config.
+2. Different locale? `locale: 'pt-BR'`.
+3. Different viewport? Default `Desktop Chrome` is 1280x720 — confirm if the test depends on it.
+4. DB concurrency in CI (`workers: 2`)? Drop to `1` to confirm.
+5. Postgres container in a different state? Add `await truncateAllExceptSeed()` at the start of the test and see if it resolves — if it does, isolation was leaking.
+6. Animations: `await page.waitForLoadState('networkidle')` before visual assertions.
 
-Trace + video do CI normalmente respondem em 30s — sempre olhe esses primeiro antes de chutar.
+Trace + video from CI usually answer it in 30s — always look at those first before guessing.

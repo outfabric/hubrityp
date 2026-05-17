@@ -1,19 +1,19 @@
-# Setup do Vitest no Next.js + TypeScript
+# Vitest setup in Next.js + TypeScript
 
-## Instalação
+## Installation
 
 ```bash
 npm i -D vitest @vitejs/plugin-react jsdom \
         @testing-library/react @testing-library/jest-dom @testing-library/user-event
 ```
 
-- `@vitejs/plugin-react` resolve JSX e Fast Refresh para componentes React.
-- `jsdom` é o DOM virtual usado por suítes de UI/hook.
-- `@testing-library/jest-dom` adiciona matchers como `toBeInTheDocument`.
+- `@vitejs/plugin-react` resolves JSX and Fast Refresh for React components.
+- `jsdom` is the virtual DOM used by UI/hook suites.
+- `@testing-library/jest-dom` adds matchers like `toBeInTheDocument`.
 
-> O HubrityP **não** usa `vite-tsconfig-paths` — o alias `@/*` é declarado direto no `resolve.alias` do `vitest.config.ts` (apontando para `src/`), com um stub explícito de `server-only`. Veja exemplo abaixo.
+> HubrityP does **not** use `vite-tsconfig-paths` — the `@/*` alias is declared directly in `resolve.alias` of `vitest.config.ts` (pointing to `src/`), with an explicit stub for `server-only`. See example below.
 
-## `vitest.config.ts` recomendado
+## Recommended `vitest.config.ts`
 
 ```ts
 import path from 'node:path';
@@ -49,8 +49,8 @@ export default defineConfig({
       'coverage',
     ],
     server: {
-      // `server-only` lança em qualquer require fora do bundler do Next.
-      // Inline para que o alias abaixo possa stubá-lo.
+      // `server-only` throws on any require outside Next's bundler.
+      // Inline so the alias below can stub it.
       deps: { inline: ['server-only'] },
     },
     coverage: {
@@ -69,14 +69,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'src'),
-      // No-op stub para `import 'server-only'` em módulos sob teste.
+      // No-op stub for `import 'server-only'` in modules under test.
       'server-only': path.resolve(rootDir, 'src/__tests__/stubs/server-only.ts'),
     },
   },
 });
 ```
 
-`globals: true` deixa `describe`/`it`/`expect`/`vi` disponíveis sem import (escolha do projeto). Se preferir explicitar, troque para `false` e importe de `vitest`.
+`globals: true` makes `describe`/`it`/`expect`/`vi` available without import (project choice). If you prefer explicit, switch to `false` and import from `vitest`.
 
 ## `vitest.setup.ts`
 
@@ -86,21 +86,21 @@ import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 afterEach(() => {
-  cleanup();              // desmonta árvore React entre testes
-  vi.useRealTimers();     // garante reset se algum teste esqueceu
+  cleanup();              // unmounts React tree between tests
+  vi.useRealTimers();     // ensures reset if any test forgot
 });
 ```
 
-## Stub de `server-only`
+## `server-only` stub
 
 ```ts
 // src/__tests__/stubs/server-only.ts
-// Vazio de propósito. O pacote real lança em qualquer require fora do
-// bundler do Next; este stub permite testar módulos com `import 'server-only'`.
+// Intentionally empty. The real package throws on any require outside
+// Next's bundler; this stub allows testing modules with `import 'server-only'`.
 export {};
 ```
 
-## Scripts no `package.json`
+## `package.json` scripts
 
 ```json
 {
@@ -115,7 +115,7 @@ export {};
 
 ## Aliases (`tsconfig.json`)
 
-O alias `@/*` aponta para `./src/*` (post-`reorganize-folder-structure`):
+The `@/*` alias points to `./src/*` (post-`reorganize-folder-structure`):
 
 ```json
 {
@@ -126,31 +126,31 @@ O alias `@/*` aponta para `./src/*` (post-`reorganize-folder-structure`):
 }
 ```
 
-## Ambiente por arquivo
+## Environment per file
 
-O `environmentMatchGlobs` resolve o ambiente automaticamente baseado no sufixo:
+`environmentMatchGlobs` resolves the environment automatically based on the suffix:
 
 - `*.test.ts` → `node`
 - `*.test.tsx` → `jsdom`
 
-Se precisar sobrescrever pontualmente:
+If you need to override punctually:
 
 ```ts
 // @vitest-environment jsdom
 ```
 
-## Variáveis de ambiente em testes
+## Environment variables in tests
 
-Para testes que validam `serverEnv`/`clientEnv` (Zod):
+For tests that validate `serverEnv`/`clientEnv` (Zod):
 
-- Use `vi.stubEnv('NAME', 'value')` por teste.
-- `unstubEnvs: true` no config restaura entre testes.
+- Use `vi.stubEnv('NAME', 'value')` per test.
+- `unstubEnvs: true` in config restores between tests.
 
-Nunca aponte uma `.env` de teste para Supabase real — bloqueie URLs com prefixo `https://` no schema durante testes se necessário.
+Never point a test `.env` to real Supabase — block URLs with `https://` prefix in the schema during tests if needed.
 
-## Integração com Husky / lint-staged
+## Husky / lint-staged integration
 
-No `lint-staged`, adicione execução incremental:
+In `lint-staged`, add incremental execution:
 
 ```json
 {
@@ -162,10 +162,10 @@ No `lint-staged`, adicione execução incremental:
 }
 ```
 
-`vitest related` roda apenas testes afetados pelos arquivos staged — mantém o pre-commit rápido.
+`vitest related` runs only tests affected by the staged files — keeps pre-commit fast.
 
 ## Performance
 
-- Use `pool: 'threads'` (padrão) para I/O leve; `pool: 'forks'` se algum mock global vazar entre arquivos.
-- `isolate: true` (padrão) garante módulos frescos por arquivo. Só desabilite se medir regressão e provar segurança.
-- Suítes lentas (>200ms): isole, perfile com `vitest --reporter=verbose --slowTestThreshold=100`.
+- Use `pool: 'threads'` (default) for light I/O; `pool: 'forks'` if some global mock leaks between files.
+- `isolate: true` (default) ensures fresh modules per file. Only disable if you measure regression and prove safety.
+- Slow suites (>200ms): isolate, profile with `vitest --reporter=verbose --slowTestThreshold=100`.

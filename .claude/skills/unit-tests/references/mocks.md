@@ -1,11 +1,11 @@
-# Padrões de mock no Vitest
+# Mock patterns in Vitest
 
-## Hoisting do `vi.mock`
+## `vi.mock` hoisting
 
-`vi.mock` é **hoisted** para o topo do arquivo, **antes** dos `import`. Por isso:
+`vi.mock` is **hoisted** to the top of the file, **before** the `import`s. Therefore:
 
-- Nunca referencie variáveis externas dentro da factory (elas ainda não existem). Se precisar, use `vi.hoisted()`.
-- O `import` do módulo mockado vem **depois** do `vi.mock`, mas em runtime já estará substituído.
+- Never reference external variables inside the factory (they don't exist yet). If you need to, use `vi.hoisted()`.
+- The `import` of the mocked module comes **after** the `vi.mock`, but at runtime it will already be replaced.
 
 ```ts
 const { mockedSend } = vi.hoisted(() => ({ mockedSend: vi.fn() }));
@@ -15,12 +15,12 @@ vi.mock('@/shared/lib/email/resend', () => ({
 }));
 
 import { enviarBoasVindas } from '@/modules/onboarding/server/enviar-boas-vindas';
-// ... agora `mockedSend` está disponível nos testes
+// ... `mockedSend` is now available in the tests
 ```
 
-## Mocks parciais
+## Partial mocks
 
-Preserve exports não relevantes com `importActual`:
+Preserve non-relevant exports with `importActual`:
 
 ```ts
 vi.mock('@/shared/lib/utils/date', async (importOriginal) => {
@@ -32,9 +32,9 @@ vi.mock('@/shared/lib/utils/date', async (importOriginal) => {
 });
 ```
 
-## Tipagem dos mocks
+## Typing mocks
 
-Use `vi.mocked` para acessar o mock com tipos preservados:
+Use `vi.mocked` to access the mock with types preserved:
 
 ```ts
 import { sendEmail } from '@/shared/lib/email/resend';
@@ -42,9 +42,9 @@ vi.mocked(sendEmail).mockResolvedValue({ id: 'msg_1' });
 expect(vi.mocked(sendEmail)).toHaveBeenCalledWith(/* ... */);
 ```
 
-## Cliente Supabase
+## Supabase client
 
-O builder do Supabase é encadeado (`from().select().eq().single()`). Crie um helper que retorna um proxy chainable:
+The Supabase builder is chained (`from().select().eq().single()`). Create a helper that returns a chainable proxy:
 
 ```ts
 // src/__tests__/unit/_helpers/supabase.ts
@@ -64,7 +64,7 @@ export function mockSupabaseQuery<T>(result: { data: T | null; error: unknown })
 }
 ```
 
-Uso:
+Usage:
 
 ```ts
 vi.mock('@/shared/supabase/server', () => ({
@@ -87,7 +87,7 @@ vi.mock('@/shared/lib/inngest/client', () => ({
 }));
 ```
 
-Asserções de evento despachado:
+Assertions about the dispatched event:
 
 ```ts
 expect(inngest.send).toHaveBeenCalledWith({
@@ -96,14 +96,14 @@ expect(inngest.send).toHaveBeenCalledWith({
 });
 ```
 
-## `fetch` e APIs HTTP externas
+## `fetch` and external HTTP APIs
 
 ```ts
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
 });
 
-it('chama Receita Saúde com payload correto', async () => {
+it('calls Receita Saúde with correct payload', async () => {
   vi.mocked(fetch).mockResolvedValue(
     new Response(JSON.stringify({ ok: true }), { status: 200 })
   );
@@ -117,30 +117,30 @@ it('chama Receita Saúde com payload correto', async () => {
 });
 ```
 
-## Tempo (timers, cron, debounce)
+## Time (timers, cron, debounce)
 
 ```ts
 beforeEach(() => vi.useFakeTimers({ now: new Date('2026-05-01T09:00:00-03:00') }));
 afterEach(() => vi.useRealTimers());
 
-it('agenda lembrete 24h antes da consulta', async () => {
+it('schedules reminder 24h before appointment', async () => {
   await agendarLembrete({ horario: new Date('2026-05-02T14:00:00-03:00') });
   vi.advanceTimersByTime(60 * 60 * 1000);
   expect(inngest.send).toHaveBeenCalled();
 });
 ```
 
-## Variáveis de ambiente
+## Environment variables
 
 ```ts
 beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://localhost:54321');
   vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'fake-key');
 });
-// reset automático via `unstubEnvs: true` no config
+// automatic reset via `unstubEnvs: true` in config
 ```
 
-## Spy preservando original
+## Spy preserving the original
 
 ```ts
 import * as logger from '@/shared/lib/logger';
@@ -148,11 +148,11 @@ import * as logger from '@/shared/lib/logger';
 const spy = vi.spyOn(logger, 'info');
 // ...
 expect(spy).toHaveBeenCalledWith(expect.objectContaining({ event: 'paciente.criado' }));
-// `restoreMocks: true` restaura no afterEach
+// `restoreMocks: true` restores in afterEach
 ```
 
-## Anti-receitas
+## Anti-recipes
 
-- **Não** mocke `next/navigation`, `next/headers` globalmente — mocke por arquivo apenas onde a função sob teste consome.
-- **Não** stub `console` para silenciar logs reais; ajuste o nível do logger ou ignore por configuração.
-- **Não** mocke Zod — valide com payloads reais para detectar regressão de schema.
+- **Don't** mock `next/navigation`, `next/headers` globally — mock per file only where the function under test consumes it.
+- **Don't** stub `console` to silence real logs; adjust the logger level or ignore via configuration.
+- **Don't** mock Zod — validate with real payloads to catch schema regression.

@@ -1,92 +1,92 @@
 ---
 name: e2e-tests
-description: Boas práticas para escrever testes E2E em TypeScript + Next.js usando Playwright (com Testcontainers Postgres quando o teste exige banco real). Use sempre que precisar criar, revisar ou refatorar testes end-to-end de fluxo de usuário — autenticação, CRUD pelo navegador, agendamento, lembretes WhatsApp, geração de receita, cobrança/PIX, telepsicologia, prontuário — ou quando o usuário pedir para "criar teste E2E", "smoke test", "teste de fluxo", "testar pelo navegador", configurar Playwright, lidar com `storageState`/auth reuso, mockar APIs externas via `page.route()`, ou cobrir um fluxo crítico antes de PR.
+description: Best practices for writing E2E tests in TypeScript + Next.js using Playwright (with Testcontainers Postgres when the test requires a real database). Use whenever you need to create, review or refactor end-to-end user-flow tests — authentication, browser CRUD, scheduling, WhatsApp reminders, prescription generation, billing/PIX, telepsychology, medical records — or when the user asks to "create an E2E test", "smoke test", "flow test", "test via browser", configure Playwright, handle `storageState`/auth reuse, mock external APIs via `page.route()`, or cover a critical flow before a PR.
 ---
 
-# Testes E2E (Playwright + Testcontainers)
+# E2E Tests (Playwright + Testcontainers)
 
-Skill para o subagent `fullstack-developer` produzir testes E2E que validam **o fluxo do usuário no navegador**, contra a aplicação Next.js real e Postgres real. Foco em **fluxos críticos** do HubrityP, não em cobertura ampla — E2E é caro, mantenha enxuto.
+Skill for the `fullstack-developer` subagent to produce E2E tests that validate **the user flow in the browser**, against the real Next.js application and a real Postgres. Focus on **critical flows** of HubrityP, not broad coverage — E2E is expensive, keep it lean.
 
-## Escopo
+## Scope
 
-Use Playwright para validar:
+Use Playwright to validate:
 
-- **Fluxos críticos** ponta a ponta: cadastro/login, CRUD de paciente, agendamento, lembrete WhatsApp, receita digital, cobrança PIX, sessão de telepsicologia, prontuário (lista no `references/fluxos-criticos-hubrityp.md`).
-- Comportamentos que dependem do **navegador real**: redirecionamentos, sessão, cookies, navegação entre rotas, hidratação de RSC.
-- Smoke tests pós-deploy (subset rápido em produção/staging com auth de teste).
+- **Critical end-to-end flows**: signup/login, patient CRUD, scheduling, WhatsApp reminder, digital prescription, PIX billing, telepsychology session, medical records (list in `references/critical-flows-hubrityp.md`).
+- Behaviors that depend on the **real browser**: redirects, session, cookies, navigation between routes, RSC hydration.
+- Post-deploy smoke tests (fast subset in production/staging with a test auth).
 
-Não use E2E para:
+Do not use E2E for:
 
-- Lógica pura, validators, helpers → **`unit-tests`**.
-- Server Actions/Route Handlers contra DB → **`integration-tests`**.
-- Validação isolada de RLS ou queries Drizzle → **`integration-tests`**.
+- Pure logic, validators, helpers → **`unit-tests`**.
+- Server Actions/Route Handlers against the DB → **`integration-tests`**.
+- Isolated validation of RLS or Drizzle queries → **`integration-tests`**.
 
-A pirâmide vale: muitos unitários, vários de integração, **poucos E2E** (~1 por jornada crítica).
+The pyramid holds: many unit tests, several integration tests, **few E2E** (~1 per critical journey).
 
-## Duas suítes E2E (e dois Playwright configs)
+## Two E2E suites (and two Playwright configs)
 
-O HubrityP roda E2E em **duas suítes separadas**, cada uma com seu próprio config:
+HubrityP runs E2E in **two separate suites**, each with its own config:
 
-| Suíte | Config | Diretório de testes | Auth | Quando |
+| Suite | Config | Test directory | Auth | When |
 |---|---|---|---|---|
-| **seeded** (`@<dominio>` tags) | `playwright.seeded.config.ts` | `src/__tests__/e2e/seeded/` | Mock GoTrue + cookie via `storageState` (programático) | Default — toda jornada crítica |
-| **real** (`@auth-real`) | `playwright.real.config.ts` | `src/__tests__/e2e/real/` | Stack Supabase real (`supabase start`) | Smoke do fluxo de auth real (signup/refresh/logout) — uma vez por release |
+| **seeded** (`@<domain>` tags) | `playwright.seeded.config.ts` | `src/__tests__/e2e/seeded/` | Mock GoTrue + cookie via `storageState` (programmatic) | Default — every critical journey |
+| **real** (`@auth-real`) | `playwright.real.config.ts` | `src/__tests__/e2e/real/` | Real Supabase stack (`supabase start`) | Smoke of the real auth flow (signup/refresh/logout) — once per release |
 
-Comandos:
+Commands:
 
 ```bash
-npm run test:e2e:seeded    # suíte default — Playwright + Testcontainers Postgres + mock GoTrue
-npm run test:e2e:real      # exige `npx supabase start` rodando; valida o caminho real de auth
+npm run test:e2e:seeded    # default suite — Playwright + Testcontainers Postgres + mock GoTrue
+npm run test:e2e:real      # requires `npx supabase start` running; validates the real auth path
 ```
 
-> **Conflito de porta**: as duas suítes não rodam em paralelo. Ambas precisam de `127.0.0.1:54321` (porta do Supabase local que o `next build` inlina em `NEXT_PUBLIC_SUPABASE_URL` no edge bundle). Pare uma antes de subir a outra. Ver bloco "Notas críticas" abaixo.
+> **Port conflict**: the two suites do not run in parallel. Both need `127.0.0.1:54321` (the local Supabase port that `next build` inlines into `NEXT_PUBLIC_SUPABASE_URL` in the edge bundle). Stop one before starting the other. See "Critical notes" block below.
 
-## Stack e arquitetura de teste
+## Test stack and architecture
 
-| Camada | Ferramenta | Função |
+| Layer | Tool | Function |
 |---|---|---|
-| Driver de browser | `@playwright/test` | Chromium/Firefox/WebKit, web-first assertions, auto-wait |
-| App sob teste | Next.js via `webServer` da config | `npm run build && npm run start` em porta dedicada |
-| Banco | `@testcontainers/postgresql` (`postgres:16-alpine` no HubrityP) | Container Postgres com migrations Drizzle aplicadas + bootstrap mínimo do schema `auth` |
-| Container compartilhado | `src/__tests__/e2e/_shared/postgres-container.ts` | Mesmo módulo é usado pelo runner de integração — fonte única de boot |
-| Auth (suíte seeded) | Mock GoTrue + `auth.setup.ts` que faz signin programático e salva `storageState` | Reutilizado por todos os testes via projeto dependente |
-| Auth (suíte real) | `supabase start` + cookies emitidos pelo GoTrue real | Sem `storageState` global — cada teste opera no DB do `supabase start` |
-| Integrações externas (Twilio, Asaas, Receita Saúde) | `page.route()` no fixture | Interceptadas antes de sair do navegador |
-| Dados de teste | Helpers Node que escrevem direto no DB via Drizzle | Rápido, fora do navegador |
+| Browser driver | `@playwright/test` | Chromium/Firefox/WebKit, web-first assertions, auto-wait |
+| App under test | Next.js via the config's `webServer` | `npm run build && npm run start` on a dedicated port |
+| Database | `@testcontainers/postgresql` (`postgres:16-alpine` in HubrityP) | Postgres container with Drizzle migrations applied + minimal bootstrap of the `auth` schema |
+| Shared container | `src/__tests__/e2e/_shared/postgres-container.ts` | Same module used by the integration runner — single source of boot |
+| Auth (seeded suite) | Mock GoTrue + `auth.setup.ts` doing a programmatic signin and saving `storageState` | Reused across all tests via dependent project |
+| Auth (real suite) | `supabase start` + cookies issued by the real GoTrue | No global `storageState` — each test operates on the `supabase start` DB |
+| External integrations (Twilio, Asaas, Receita Saúde) | `page.route()` in the fixture | Intercepted before leaving the browser |
+| Test data | Node helpers that write straight to the DB via Drizzle | Fast, outside the browser |
 
-## Decisão: Testcontainers vs `supabase start` para E2E
+## Decision: Testcontainers vs `supabase start` for E2E
 
-| Critério | Testcontainers Postgres-only (suíte seeded) | `supabase start` (suíte real) |
+| Criterion | Testcontainers Postgres-only (seeded suite) | `supabase start` (real suite) |
 |---|---|---|
-| Auth (gotrue) real | Não — simulado por mock GoTrue + cookie | Sim |
-| Storage real | Não — mockado em `page.route()` | Sim |
-| Velocidade de boot no CI | Rápido (~5–10s) | Lento (~30–60s) |
-| Fidelidade | Média | Alta |
-| Isolamento por run | Excelente (`.withReuse()`) | Compartilhado |
+| Real auth (gotrue) | No — simulated by mock GoTrue + cookie | Yes |
+| Real storage | No — mocked in `page.route()` | Yes |
+| CI boot speed | Fast (~5–10s) | Slow (~30–60s) |
+| Fidelity | Medium | High |
+| Per-run isolation | Excellent (`.withReuse()`) | Shared |
 
-**Default desta skill:** suíte seeded (Testcontainers Postgres + mock GoTrue + cookie via `@supabase/ssr`). A suíte real fica reservada para uma única spec de smoke por release.
+**Default for this skill:** seeded suite (Testcontainers Postgres + mock GoTrue + cookie via `@supabase/ssr`). The real suite is reserved for a single smoke spec per release.
 
-## Estrutura de arquivos
+## File structure
 
 ```
-playwright.seeded.config.ts                            # config da suíte default
-playwright.real.config.ts                              # config da suíte @auth-real
+playwright.seeded.config.ts                            # config for the default suite
+playwright.real.config.ts                              # config for the @auth-real suite
 src/
   __tests__/
     e2e/
       _shared/
-        postgres-container.ts                          # bootPostgres + applyMigrations (compartilhado com integration)
+        postgres-container.ts                          # bootPostgres + applyMigrations (shared with integration)
       seeded/
         setup/
           start-server.ts                              # webServer wrapper: boot Postgres + mock GoTrue + spawn `next start`
-          global-setup.ts                              # Playwright globalSetup: seed users + dados base
+          global-setup.ts                              # Playwright globalSetup: seed users + base data
           global-teardown.ts
-          auth.setup.ts                                # signin programático -> storageState (.auth/state.json)
-          seed-state.ts                                # serializa metadados para o auth.setup.ts ler
-          mock-gotrue.ts                               # servidor HTTP que emula o GoTrue
-          .auth/                                       # gerado em runtime (gitignored): state.json, seed-state.json
-        tags.json                                      # mapping arquivo->tag de domínio
-        auth.spec.ts                                   # specs do domínio
+          auth.setup.ts                                # programmatic signin -> storageState (.auth/state.json)
+          seed-state.ts                                # serializes metadata for auth.setup.ts to read
+          mock-gotrue.ts                               # HTTP server that emulates GoTrue
+          .auth/                                       # generated at runtime (gitignored): state.json, seed-state.json
+        tags.json                                      # mapping file->domain tag
+        auth.spec.ts                                   # domain specs
         smoke.spec.ts
         ...
       real/
@@ -94,23 +94,23 @@ src/
           global-setup.ts
           global-teardown.ts
           credentials.ts
-        auth.spec.ts                                   # @auth-real, contra `supabase start`
+        auth.spec.ts                                   # @auth-real, against `supabase start`
 ```
 
-Sufixo `.spec.ts` é o padrão do Playwright (não confunde com `.test.ts` / `.int.test.ts` do Vitest).
+The `.spec.ts` suffix is the Playwright standard (not to be confused with `.test.ts` / `.int.test.ts` from Vitest).
 
-## Princípios
+## Principles
 
-1. **Fluxos do usuário, não páginas**: um teste cobre uma jornada (`agendar consulta`), não uma tela isolada.
-2. **Locator semântico**: `getByRole`, `getByLabel`, `getByText`. **Nunca** seletor CSS frágil. `data-testid` só como último recurso e sempre estável.
-3. **Sem `sleep`/`waitForTimeout`**: use auto-wait dos locators (`expect(...).toBeVisible()`) ou `page.waitForURL`/`page.waitForResponse` quando precisar de evento específico.
-4. **Auth uma vez por worker**: o setup project gera `storageState` em `src/__tests__/e2e/seeded/setup/.auth/state.json`; cada teste começa logado em <100ms via `test.use({ storageState: STORAGE_STATE_PATH })`.
-5. **Dados via DB direto**, não pela UI: criar paciente para um teste de agendamento? `db.insert(pacientes)`. Cadastrar pelo formulário em todos os testes desperdiça tempo e amplia superfície de falha.
-6. **Mocke integrações externas no `page.route()`**: Twilio, Asaas, Receita Saúde. Banco continua real.
-7. **Isolamento por teste**: TRUNCATE no `beforeEach` do fixture (mesmo padrão da skill de integração), exceto seed users que servem ao `storageState`.
-8. **Falhe rápido e ruidoso**: sem `try/catch` que esconde erros; trace + screenshot + video automáticos no fail.
+1. **User flows, not pages**: a test covers a journey (`schedule consultation`), not an isolated screen.
+2. **Semantic locator**: `getByRole`, `getByLabel`, `getByText`. **Never** fragile CSS selectors. `data-testid` only as a last resort and always stable.
+3. **No `sleep`/`waitForTimeout`**: use the locators' auto-wait (`expect(...).toBeVisible()`) or `page.waitForURL`/`page.waitForResponse` when you need a specific event.
+4. **Auth once per worker**: the setup project generates `storageState` at `src/__tests__/e2e/seeded/setup/.auth/state.json`; each test starts logged in in <100ms via `test.use({ storageState: STORAGE_STATE_PATH })`.
+5. **Data via direct DB**, not via UI: need to create a patient for a scheduling test? `db.insert(pacientes)`. Registering via the form in every test wastes time and widens the failure surface.
+6. **Mock external integrations in `page.route()`**: Twilio, Asaas, Receita Saúde. The database stays real.
+7. **Per-test isolation**: TRUNCATE in the fixture's `beforeEach` (same pattern as the integration skill), except seed users that back the `storageState`.
+8. **Fail fast and loud**: no `try/catch` that hides errors; trace + screenshot + video automatic on failure.
 
-## Exemplo canônico
+## Canonical example
 
 ```ts
 // src/__tests__/e2e/seeded/agendamento.spec.ts
@@ -120,8 +120,8 @@ import { createPaciente } from './helpers/db';
 
 test.use({ storageState: STORAGE_STATE_PATH });
 
-test.describe('@agenda agendamento de consulta', () => {
-  test('psicólogo agenda consulta e vê na agenda', async ({ page }) => {
+test.describe('@agenda scheduling a consultation', () => {
+  test('psychologist schedules a consultation and sees it on the agenda', async ({ page }) => {
     const dr = { id: '00000000-0000-4000-8000-000000000001' };
     await createPaciente({ psicologoId: dr.id, nome: 'Maria Silva' });
 
@@ -142,51 +142,51 @@ test.describe('@agenda agendamento de consulta', () => {
 });
 ```
 
-## Antipadrões
+## Antipatterns
 
-- Testar tudo: cada bug ganha um E2E. Resultado: suite de 30min no CI. Bug → unit + integration; jornada → E2E.
-- `page.waitForTimeout(2000)` para "esperar a página carregar".
-- Selectors CSS (`page.locator('.btn-primary > span')`).
-- Login via UI em todo teste (lento e flaky).
-- Compartilhar paciente/agendamento entre testes (`test.describe.serial` é code smell — sinaliza dependência mal modelada).
-- Gravar `data-testid` em tudo "preventivamente" — só onde role/label não bastam.
-- Snapshots de screenshots para validar conteúdo (use assertions de texto/role; reserve screenshots a regressão visual com `toHaveScreenshot()` em casos calibrados).
-- Chamar Twilio/Asaas/Receita Saúde de verdade — **um teste flaky no CI vira hábito de re-rodar até passar**.
-- Mover boot do Postgres ou de mock externo para `globalSetup` — Playwright sobe `webServer` ANTES de `globalSetup`, então env de runtime do Next vai estar incompleto. Faça boot dentro do wrapper `start-server.ts` (ver "Notas críticas").
+- Testing everything: every bug gets an E2E. Result: a 30-min suite in CI. Bug → unit + integration; journey → E2E.
+- `page.waitForTimeout(2000)` to "wait for the page to load".
+- CSS selectors (`page.locator('.btn-primary > span')`).
+- Login via UI in every test (slow and flaky).
+- Sharing a patient/appointment between tests (`test.describe.serial` is a code smell — signals a poorly modeled dependency).
+- Sprinkling `data-testid` everywhere "preventively" — only where role/label do not suffice.
+- Screenshot snapshots for content validation (use text/role assertions; reserve screenshots for visual regression with `toHaveScreenshot()` in calibrated cases).
+- Calling Twilio/Asaas/Receita Saúde for real — **a flaky test in CI becomes the habit of re-running until it passes**.
+- Moving Postgres boot or external mock to `globalSetup` — Playwright spins up `webServer` BEFORE `globalSetup`, so the Next runtime env will be incomplete. Boot inside the `start-server.ts` wrapper (see "Critical notes").
 
-## Notas críticas (pegadinhas reais)
+## Critical notes (real gotchas)
 
-> Estas pegadinhas vivem aqui porque já queimaram o time uma vez. Antes de mexer em `playwright.seeded.config.ts`, `playwright.real.config.ts`, `start-server.ts` ou qualquer coisa que envolva `supabase.auth.getUser()` no servidor, releia.
+> These gotchas live here because they have burned the team once. Before touching `playwright.seeded.config.ts`, `playwright.real.config.ts`, `start-server.ts` or anything involving `supabase.auth.getUser()` on the server, re-read.
 
-### `NEXT_PUBLIC_*` é inlinado no edge runtime em build time
+### `NEXT_PUBLIC_*` is inlined into the edge runtime at build time
 
-`src/middleware.ts` roda no edge runtime, e o Next inlina o valor de `NEXT_PUBLIC_SUPABASE_URL` no bundle no momento do `next build`. Não dá para sobrescrever via `webServer.env` em runtime — o middleware sempre vai bater no host/porta que o build viu. Por isso o mock GoTrue do suite seeded precisa ouvir na **mesma porta hardcoded** que o build conhece (`127.0.0.1:54321`, idem ao `supabase start`). O helper canônico em `src/__tests__/e2e/seeded/setup/mock-gotrue.ts` (`startMockGotrue({ port })`) aceita override mas defaulta para `54321`. Consequência: as duas suítes (seeded e real) **não rodam concorrentemente** — disputam a porta.
+`src/middleware.ts` runs on the edge runtime, and Next inlines the value of `NEXT_PUBLIC_SUPABASE_URL` into the bundle at `next build` time. You cannot override it via `webServer.env` at runtime — the middleware will always hit the host/port that the build saw. That's why the mock GoTrue of the seeded suite must listen on the **same hardcoded port** the build knows (`127.0.0.1:54321`, same as `supabase start`). The canonical helper in `src/__tests__/e2e/seeded/setup/mock-gotrue.ts` (`startMockGotrue({ port })`) accepts an override but defaults to `54321`. Consequence: the two suites (seeded and real) **do not run concurrently** — they fight for the port.
 
-### Playwright sobe `webServer` ANTES de `globalSetup`
+### Playwright starts `webServer` BEFORE `globalSetup`
 
-Verificável em `node_modules/playwright/lib/runner/tasks.js::createGlobalSetupTasks`. Qualquer coisa que `globalSetup` escreve em `process.env` (URL dinâmica do Testcontainers Postgres, porta efêmera de mock) é invisível ao Next.js spawnado — `webServer.env` é capturado no config-load. Workaround canônico: `src/__tests__/e2e/seeded/setup/start-server.ts` faz o boot dinâmico (Postgres + mock GoTrue) e só então `exec`a `next start`, garantindo env completo no momento certo. Esse pattern reusável vale para qualquer suite futuro que precise de recursos efêmeros antes do servidor.
+Verifiable in `node_modules/playwright/lib/runner/tasks.js::createGlobalSetupTasks`. Anything that `globalSetup` writes into `process.env` (dynamic URL of the Testcontainers Postgres, ephemeral mock port) is invisible to the spawned Next.js — `webServer.env` is captured at config-load. Canonical workaround: `src/__tests__/e2e/seeded/setup/start-server.ts` does the dynamic boot (Postgres + mock GoTrue) and only then `exec`s `next start`, ensuring a complete env at the right moment. This reusable pattern applies to any future suite that needs ephemeral resources before the server.
 
-### `playwright.real.config.ts` chama `execSync` no top-level
+### `playwright.real.config.ts` calls `execSync` at top-level
 
-Mesmo problema da seção anterior em outra fantasia. Como `webServer.env` é capturado em config-load e o suite `@auth-real` depende de URLs/keys que só existem depois de `npx supabase start`, `playwright.real.config.ts` faz `execSync('npx supabase status -o json')` sincronamente no top-level — _não_ em `globalSetup`. **Não tente "consertar" movendo para `globalSetup`**: vai parecer mais limpo e quebrar como descrito acima, porque o Next spawnado não enxerga as vars.
+Same problem as the previous section in another disguise. Since `webServer.env` is captured at config-load and the `@auth-real` suite depends on URLs/keys that only exist after `npx supabase start`, `playwright.real.config.ts` calls `execSync('npx supabase status -o json')` synchronously at top-level — _not_ in `globalSetup`. **Do not try to "fix" by moving to `globalSetup`**: it will look cleaner and break as described above, because the spawned Next does not see the vars.
 
-## Referências detalhadas
+## Detailed references
 
-Carregue conforme a tarefa exigir:
+Load as the task requires:
 
-- `references/setup.md` — `playwright.seeded.config.ts`, `playwright.real.config.ts`, `webServer`, projects, dependências entre projects, integração com Testcontainers via `_shared/postgres-container.ts`.
-- `references/auth-storage-state.md` — `auth.setup.ts`, signin programático com `@supabase/ssr` contra mock GoTrue, scope de cookies, suíte real vs seeded.
-- `references/locators-interacoes.md` — hierarquia de locators, espera automática, `expect.poll`, padrões de form e tabela.
-- `references/network-mocking.md` — `page.route()` para Twilio, Asaas, Gemini, Receita Saúde; verificar requisições; `routeFromHAR` para fluxos complexos.
-- `references/test-data.md` — factories que escrevem direto no DB via Drizzle, isolamento entre testes, seed users imutáveis.
-- `references/fluxos-criticos-hubrityp.md` — lista priorizada de jornadas que devem ter E2E e que não devem.
-- `references/ci-artifacts.md` — trace viewer, screenshots, videos, retries, sharding em CI.
+- `references/setup.md` — `playwright.seeded.config.ts`, `playwright.real.config.ts`, `webServer`, projects, project dependencies, integration with Testcontainers via `_shared/postgres-container.ts`.
+- `references/auth-storage-state.md` — `auth.setup.ts`, programmatic signin with `@supabase/ssr` against mock GoTrue, cookie scope, real vs seeded suite.
+- `references/locators-interactions.md` — locator hierarchy, auto-wait, `expect.poll`, form and table patterns.
+- `references/network-mocking.md` — `page.route()` for Twilio, Asaas, Gemini, Receita Saúde; verifying requests; `routeFromHAR` for complex flows.
+- `references/test-data.md` — factories that write straight to the DB via Drizzle, isolation between tests, immutable seed users.
+- `references/critical-flows-hubrityp.md` — prioritized list of journeys that should have E2E and those that should not.
+- `references/ci-artifacts.md` — trace viewer, screenshots, videos, retries, sharding in CI.
 
 ## Templates
 
-- `assets/playwright.config.ts` — **legado**: o HubrityP usa `playwright.seeded.config.ts` + `playwright.real.config.ts` na raiz do repo. Use os configs reais como referência ao invés desse asset.
-- `assets/global-setup.ts` — sobe container, aplica migrations, cria seed users.
-- `assets/auth.setup.ts` — signin programático → `storageState`.
-- `assets/db-helpers.ts` — cliente Drizzle e factories.
-- `assets/test-base.ts` — fixture estendido com `dr` (psicólogo logado) e mocks de rede padrão.
-- `assets/exemplo.e2e.spec.ts` — esqueleto de spec pronto.
+- `assets/playwright.config.ts` — **legacy**: HubrityP uses `playwright.seeded.config.ts` + `playwright.real.config.ts` at the repo root. Use the real configs as a reference instead of this asset.
+- `assets/global-setup.ts` — boots the container, applies migrations, creates seed users.
+- `assets/auth.setup.ts` — programmatic signin → `storageState`.
+- `assets/db-helpers.ts` — Drizzle client and factories.
+- `assets/test-base.ts` — extended fixture with `dr` (logged-in psychologist) and default network mocks.
+- `assets/example.e2e.spec.ts` — ready-to-use spec skeleton.

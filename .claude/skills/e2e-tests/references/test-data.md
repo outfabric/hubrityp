@@ -1,8 +1,8 @@
-# Dados de teste em E2E
+# Test data in E2E
 
-Regra de ouro: **dados de teste via DB direto**, não pela UI. Cadastrar paciente pelo formulário em todos os testes que precisam de paciente desperdiça segundos por teste e amplia superfície de falha.
+Golden rule: **test data via direct DB**, not via UI. Registering a patient via the form in every test that needs one wastes seconds per test and widens the failure surface.
 
-## Helper de DB no contexto do teste
+## DB helper inside the test context
 
 ```ts
 // src/__tests__/e2e/seeded/helpers/db.ts
@@ -26,7 +26,7 @@ async function openDb() {
 export async function truncateAllExceptSeed() {
   const { client, db } = await openDb();
   try {
-    // Mantém auth.users (seed users) e psicologos (perfis seed); limpa transacionais.
+    // Keeps auth.users (seed users) and psicologos (seed profiles); clears transactional data.
     await db.execute(sql`
       TRUNCATE pacientes, agendamentos, cobrancas, prontuarios
         RESTART IDENTITY CASCADE;
@@ -59,12 +59,12 @@ export async function createPaciente(input: {
 }
 ```
 
-## Isolamento entre testes
+## Isolation between tests
 
-Use TRUNCATE no `beforeEach` do fixture base — mesmo padrão da skill `integration-tests`, mas **preserve seed users** (necessários para `storageState`).
+Use TRUNCATE in the base fixture's `beforeEach` — same pattern as the `integration-tests` skill, but **preserve seed users** (required for `storageState`).
 
 ```ts
-// src/__tests__/e2e/seeded/fixtures/test-base.ts (continuação)
+// src/__tests__/e2e/seeded/fixtures/test-base.ts (continued)
 export const test = base.extend({
   page: async ({ page }, use) => {
     await truncateAllExceptSeed();
@@ -73,11 +73,11 @@ export const test = base.extend({
 });
 ```
 
-Trade-off: TRUNCATE adiciona ~10–30ms por teste. Para suite de 50 testes, ~1s total — irrelevante. Beneficio: cada teste começa do zero, sem dependência de ordem.
+Trade-off: TRUNCATE adds ~10–30ms per test. For a 50-test suite, ~1s total — negligible. Benefit: each test starts from scratch, with no order dependency.
 
-## Fixture para "psicólogo logado"
+## Fixture for "logged-in psychologist"
 
-Combine seed user com helper de DB para uma fixture que entrega o `dr` pronto:
+Combine the seed user with the DB helper for a fixture that delivers a ready `dr`:
 
 ```ts
 // src/__tests__/e2e/seeded/fixtures/test-base.ts
@@ -121,38 +121,38 @@ export const test = base.extend<Fixtures>({
 export { expect };
 ```
 
-Spec consome:
+Spec consumes:
 
 ```ts
-test('agenda consulta', async ({ page, dr }) => {
+test('schedules a consultation', async ({ page, dr }) => {
   await createPaciente({ psicologoId: dr.id, nome: 'Maria' });
   // ...
 });
 ```
 
-## Dados realistas (CPF, CNPJ, datas)
+## Realistic data (CPF, CNPJ, dates)
 
-Use os mesmos helpers do app (`@/shared/lib/cpf`, ou de um futuro `@/modules/pacientes/lib/cpf`) para gerar dados válidos. Não duplique lógica de geração no helper de teste — se a regra de validação muda, basta atualizar o helper do app.
+Use the same app helpers (`@/shared/lib/cpf`, or a future `@/modules/pacientes/lib/cpf`) to generate valid data. Do not duplicate generation logic in the test helper — if the validation rule changes, you only have to update the app helper.
 
-Para casos onde precisa de pool de valores válidos pré-calculados:
+For cases where you need a pool of pre-computed valid values:
 
 ```ts
 // src/__tests__/e2e/seeded/helpers/fixtures.ts
 export const CPFS_VALIDOS = ['529.982.247-25', '111.444.777-35', '298.687.760-30'];
 ```
 
-## Uploads de arquivo
+## File uploads
 
 ```ts
 await page.getByLabel(/anexar receita/i)
   .setInputFiles('src/__tests__/e2e/seeded/fixtures/files/receita.pdf');
 ```
 
-Mantenha arquivos pequenos (<100KB) em `src/__tests__/e2e/seeded/fixtures/files/`. Para PDFs grandes, gere com `pdfkit` no setup.
+Keep files small (<100KB) in `src/__tests__/e2e/seeded/fixtures/files/`. For large PDFs, generate them with `pdfkit` at setup.
 
-## Datas e timezone
+## Dates and timezone
 
-O HubrityP opera em `America/Sao_Paulo`. Force timezone na fixture do `page` para evitar surpresas:
+HubrityP operates in `America/Sao_Paulo`. Force the timezone in the `page` fixture to avoid surprises:
 
 ```ts
 projects: [
@@ -167,25 +167,25 @@ projects: [
 ],
 ```
 
-Para "congelar o relógio" no navegador (ex.: testar agenda do dia), use `page.clock`:
+To "freeze the clock" in the browser (e.g., test the day's agenda), use `page.clock`:
 
 ```ts
 await page.clock.install({ time: new Date('2026-05-01T09:00:00-03:00') });
 await page.goto('/agenda');
-// Toda chamada a Date.now() no navegador retorna esse instante.
+// Every call to Date.now() in the browser returns that instant.
 ```
 
-`page.clock` afeta apenas o navegador, não o servidor Next.js. Para travar tempo no servidor, exporte uma função `agora()` no app que lê de uma flag controlada por env em test.
+`page.clock` only affects the browser, not the Next.js server. To freeze time on the server, export an `agora()` function in the app that reads from an env-controlled flag in test.
 
-## Limpeza de Storage (Supabase Storage)
+## Storage cleanup (Supabase Storage)
 
-Em E2E, prefira **mockar uploads** via `page.route()` interceptando o endpoint de Storage. Se o teste precisa do arquivo persistido, use Supabase Storage local via `supabase start` (suíte real) — não tente subir MinIO via Testcontainers só para isso.
+In E2E, prefer to **mock uploads** via `page.route()` intercepting the Storage endpoint. If the test needs the file persisted, use local Supabase Storage via `supabase start` (real suite) — do not try to spin up MinIO via Testcontainers just for that.
 
-## Antipadrões
+## Antipatterns
 
-- Cadastrar paciente pela UI em cada teste de agendamento (lento, frágil).
-- Reutilizar dados entre testes (`describe.serial` é code smell).
-- Hardcode IDs de UUIDs específicos esperando que existam — gere e capture (exceção: o `SEED_PSICOLOGO_ID` é hardcoded por design, vive em `start-server.ts`).
-- Snapshots de UI complexa por valor — mude por asserções de role/text.
-- Esquecer de limpar dados entre testes esperando "ah, vai ser único" — vai ser exatamente até não ser.
-- Ler `process.env.E2E_DATABASE_URL` no helper de teste — Playwright workers não herdam mutations do `webServer`. Use `readSeedState()`.
+- Registering a patient via UI in every scheduling test (slow, fragile).
+- Reusing data between tests (`describe.serial` is a code smell).
+- Hardcoding specific UUIDs expecting them to exist — generate and capture (exception: `SEED_PSICOLOGO_ID` is hardcoded by design, lives in `start-server.ts`).
+- Snapshotting complex UI by value — switch to role/text assertions.
+- Forgetting to clean data between tests expecting "ah, it will be unique" — it will, right up until it isn't.
+- Reading `process.env.E2E_DATABASE_URL` in the test helper — Playwright workers do not inherit mutations from the `webServer`. Use `readSeedState()`.

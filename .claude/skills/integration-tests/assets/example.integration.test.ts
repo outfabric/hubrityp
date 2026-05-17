@@ -1,5 +1,5 @@
-// Esqueleto para Server Action contra DB real, com RLS e fronteira externa mockada.
-// Copie e adapte: troque o módulo sob teste, factories e asserções.
+// Skeleton for a Server Action against the real DB, with RLS and external boundary mocked.
+// Copy and adapt: swap the module under test, factories and assertions.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
@@ -25,10 +25,10 @@ vi.mock('next/cache', () => ({
 import { inngest } from '@/shared/lib/inngest/client';
 import { revalidatePath } from 'next/cache';
 
-describe('agendarConsulta — integração', () => {
+describe('agendarConsulta — integration', () => {
   beforeEach(() => truncateAll(db));
 
-  it('cria agendamento, dispara evento e revalida agenda', async () => {
+  it('creates appointment, dispatches event and revalidates agenda', async () => {
     const dr = await createPsicologo();
     const paciente = await createPaciente({ psicologoId: dr.id });
 
@@ -57,7 +57,7 @@ describe('agendarConsulta — integração', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/agenda');
   });
 
-  it('outro psicólogo não consegue agendar para paciente alheio (RLS)', async () => {
+  it('another psychologist cannot schedule for someone else\'s patient (RLS)', async () => {
     const dr_a = await createPsicologo();
     const dr_b = await createPsicologo();
     const pacienteDeA = await createPaciente({ psicologoId: dr_a.id });
