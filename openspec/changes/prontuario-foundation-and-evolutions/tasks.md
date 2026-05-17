@@ -51,10 +51,10 @@
 
 ## 7. Frontend — Routes
 
-- [ ] 7.1 Create `src/app/(app)/pacientes/[id]/prontuario/page.tsx` (RSC) — fetches patient (confirms ownership), calls logProntuarioAccess, renders ProntuarioTabs shell. Redirects to evolucoes sub-route or renders inline depending on tab routing strategy
-- [ ] 7.2 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/page.tsx` (RSC) — fetches evolutions list via getEvolutionsByPatient, renders chronological list with EvolutionCard items or empty state with CTA "Registrar evolucao"
-- [ ] 7.3 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/nova/page.tsx` (RSC) — renders TemplateSelector + EvolutionEditor for creation. Accepts optional ?sessionId query param
-- [ ] 7.4 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/[evolutionId]/page.tsx` (RSC) — fetches evolution detail, renders EvolutionEditor (pre-filled), shows "Salvar" or "Adicionar addendum" button based on immutability window, "Historico" button opens VersionHistoryPanel
+- [x] 7.1 Create `src/app/(app)/pacientes/[id]/prontuario/page.tsx` (RSC) — fetches patient (confirms ownership), calls logProntuarioAccess, renders ProntuarioTabs shell. Redirects to evolucoes sub-route or renders inline depending on tab routing strategy
+- [x] 7.2 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/page.tsx` (RSC) — fetches evolutions list via getEvolutionsByPatient, renders chronological list with EvolutionCard items or empty state with CTA "Registrar evolucao"
+- [x] 7.3 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/nova/page.tsx` (RSC) — renders TemplateSelector + EvolutionEditor for creation. Accepts optional ?sessionId query param
+- [x] 7.4 Create `src/app/(app)/pacientes/[id]/prontuario/evolucoes/[evolutionId]/page.tsx` (RSC) — fetches evolution detail, renders EvolutionEditor (pre-filled), shows "Salvar" or "Adicionar addendum" button based on immutability window, "Historico" button opens VersionHistoryPanel
 
 ## 8. End-to-End Tests
 

@@ -1,0 +1,93 @@
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+
+import {
+  getEvolutionsByPatientImpl,
+  logProntuarioAccessImpl,
+  type EvolutionSummary,
+} from '@/modules/medical-records';
+import { ProntuarioTabs } from '@/modules/medical-records/components/prontuario-tabs';
+import { getPatientImpl } from '@/modules/patients';
+import { createServerClient } from '@/shared/supabase/server';
+import { Button } from '@/shared/ui/button';
+
+import { EvolutionsList } from './evolucoes/_components/evolutions-list';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface ProntuarioPageProps {
+  params: Promise<{ id: string }>;
+}
+
+// ---------------------------------------------------------------------------
+// Page component (Server Component)
+// ---------------------------------------------------------------------------
+
+/**
+ * Prontuario landing page for a patient.
+ *
+ * Auth: gated by middleware (classifyPath treats /pacientes* as 'app'),
+ * ownership confirmed by getPatientImpl (RLS + explicit userId filter),
+ * and access logged to audit_log.
+ */
+export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
+  const { id: patientId } = await params;
+  const supabase = await createServerClient();
+
+  // Confirm ownership — returns not_found if patient does not belong to this user
+  const patientResult = await getPatientImpl(supabase, patientId);
+
+  if (!patientResult.ok) {
+    notFound();
+  }
+
+  // Log prontuario access (fire-and-forget — does not block render)
+  void logProntuarioAccessImpl(supabase, {
+    action: 'prontuario.read',
+    resourceType: 'patient',
+    resourceId: patientId,
+  });
+
+  // Fetch evolutions for the default tab
+  const evolutionsResult = await getEvolutionsByPatientImpl(supabase, {
+    patientId,
+    limit: 20,
+  });
+
+  const evolutions: EvolutionSummary[] = evolutionsResult.ok ? evolutionsResult.evolutions : [];
+  const nextCursor: string | null = evolutionsResult.ok ? evolutionsResult.nextCursor : null;
+
+  return (
+    <div className="mx-auto max-w-[1200px]">
+      {/* Back navigation */}
+      <div className="mb-4">
+        <Link href={`/pacientes/${patientId}`}>
+          <Button variant="ghost" size="sm" data-testid="prontuario-back">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar
+          </Button>
+        </Link>
+      </div>
+
+      {/* Page title */}
+      <h1
+        className="text-text-primary mb-6 text-[28px] leading-[1.25] font-semibold"
+        data-testid="prontuario-page-title"
+      >
+        Prontuario
+      </h1>
+
+      {/* Tabs shell — Evolucoes tab active by default */}
+      <ProntuarioTabs>
+        <EvolutionsList
+          patientId={patientId}
+          initialEvolutions={evolutions}
+          initialNextCursor={nextCursor}
+        />
+      </ProntuarioTabs>
+    </div>
+  );
+}
