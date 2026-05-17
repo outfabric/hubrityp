@@ -111,9 +111,24 @@ export {
 export {
   createScaleApplicationImpl,
   submitScaleResponsesImpl,
+  getScaleHistory,
+  listScalesForPatient,
   type CreateScaleApplicationResult,
   type SubmitScaleResponsesResult,
+  type GetScaleHistoryResult,
+  type ListScalesForPatientResult,
+  type ScaleApplicationSummary,
+  type ScaleSummary,
+  type TimeseriesPoint,
 } from './server/scales';
+
+// ---- Scale Public Token Actions (service-role) -----------------------------
+export {
+  getScaleApplicationByToken,
+  submitScaleResponsesByToken,
+  type GetScaleApplicationByTokenResult,
+  type SubmitScaleResponsesByTokenResult,
+} from './server/scales-public';
 
 // ---- Scale Application Schemas ----------------------------------------------
 export {

@@ -43,10 +43,10 @@
 
 ## 7. Server Actions — Public Token Submission and History
 
-- [ ] 7.1 Create `src/modules/medical-records/server/scales-public.ts` — `getScaleApplicationByToken(token)` using service-role: returns ONLY {id, scaleKey, isExpired, isCompleted} (NO user_id, NO patient_id); `submitScaleResponsesByToken(token, responses, ip)` using service-role: validates token+expiry+not-completed, scores, updates row, writes audit_log with IP
-- [ ] 7.2 Add `getScaleHistory` to `src/modules/medical-records/server/scales.ts` — authenticates, validates patientId, queries scale_applications WHERE patient_id=$1 AND user_id=auth.uid() (RLS), optional scaleKey filter, returns applications + timeseries data, writes audit_log 'scale.history-read'
-- [ ] 7.3 Add `listScalesForPatient` to same file — authenticates, returns one summary entry per scale ever applied (last score, last date, last classification), with chart-ready timeseries per scale
-- [ ] 7.4 **Integration test:** Create `src/__tests__/integration/medical-records/scales-public.int.test.ts` — test getScaleApplicationByToken with valid token returns minimal fields (no user_id/patient_id); test submitScaleResponsesByToken with valid token works; test expired token rejected; test already-completed token rejected (double-submit); test audit_log 'scale.public-submit' has IP and no PII in metadata
+- [x] 7.1 Create `src/modules/medical-records/server/scales-public.ts` — `getScaleApplicationByToken(token)` using service-role: returns ONLY {id, scaleKey, isExpired, isCompleted} (NO user_id, NO patient_id); `submitScaleResponsesByToken(token, responses, ip)` using service-role: validates token+expiry+not-completed, scores, updates row, writes audit_log with IP
+- [x] 7.2 Add `getScaleHistory` to `src/modules/medical-records/server/scales.ts` — authenticates, validates patientId, queries scale_applications WHERE patient_id=$1 AND user_id=auth.uid() (RLS), optional scaleKey filter, returns applications + timeseries data, writes audit_log 'scale.history-read'
+- [x] 7.3 Add `listScalesForPatient` to same file — authenticates, returns one summary entry per scale ever applied (last score, last date, last classification), with chart-ready timeseries per scale
+- [x] 7.4 **Integration test:** Create `src/__tests__/integration/medical-records/scales-public.int.test.ts` — test getScaleApplicationByToken with valid token returns minimal fields (no user_id/patient_id); test submitScaleResponsesByToken with valid token works; test expired token rejected; test already-completed token rejected (double-submit); test audit_log 'scale.public-submit' has IP and no PII in metadata
 
 ## 8. Public Route Handler and Middleware
 

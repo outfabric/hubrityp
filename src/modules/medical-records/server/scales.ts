@@ -1,7 +1,8 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { scaleByKey, type ClassificationResult } from '@/modules/medical-records/lib/scales';
 import { generateScaleToken } from '@/modules/medical-records/lib/scales/token';
@@ -257,6 +258,301 @@ export async function submitScaleResponsesImpl(
     logger.error(
       { event: 'submit_scale_responses_failed', errorCode: pgError.code },
       'unexpected error submitting scale responses',
+    );
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared types for history and listing
+// ---------------------------------------------------------------------------
+
+export interface TimeseriesPoint {
+  appliedAt: string; // ISO 8601
+  totalScore: number | null;
+  classification: string | null;
+}
+
+export interface ScaleApplicationSummary {
+  id: string;
+  scaleKey: string;
+  appliedAt: string; // ISO 8601
+  totalScore: number | null;
+  classification: string | null;
+  isCompleted: boolean;
+  appliedRemotely: boolean;
+}
+
+export interface ScaleSummary {
+  scaleKey: string;
+  lastScore: number | null;
+  lastDate: string; // ISO 8601
+  lastClassification: string | null;
+  timeseries: TimeseriesPoint[];
+}
+
+// ---------------------------------------------------------------------------
+// Result types for history / listing
+// ---------------------------------------------------------------------------
+
+export type GetScaleHistoryResult =
+  | { ok: true; applications: ScaleApplicationSummary[]; timeseries: TimeseriesPoint[] }
+  | { ok: false; code: 'UNAUTHORIZED' | 'INVALID_INPUT' };
+
+export type ListScalesForPatientResult =
+  | { ok: true; scales: ScaleSummary[] }
+  | { ok: false; code: 'UNAUTHORIZED' | 'INVALID_INPUT' };
+
+// ---------------------------------------------------------------------------
+// Input schemas
+// ---------------------------------------------------------------------------
+
+const getScaleHistorySchema = z.object({
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  scaleKey: z.string().optional(),
+});
+
+const listScalesForPatientSchema = z.object({
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+});
+
+// ---------------------------------------------------------------------------
+// getScaleHistory
+// ---------------------------------------------------------------------------
+
+/**
+ * Retrieves the scale application history for a specific patient.
+ *
+ * Flow:
+ *   1. Authenticate via Supabase getUser().
+ *   2. Validate input with Zod.
+ *   3. Query scale_applications WHERE patient_id AND user_id = auth.uid()
+ *      (defense-in-depth: explicit ownership check + RLS on the db client).
+ *   4. Build application summaries + timeseries from completed applications.
+ *   5. Write audit_log 'scale.history-read'.
+ *   6. Return applications + timeseries.
+ *
+ * user_id is ALWAYS derived from the session — never from client input.
+ */
+export async function getScaleHistory(
+  supabase: SupabaseClient,
+  input: unknown,
+): Promise<GetScaleHistoryResult> {
+  // 1. Authenticate
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, code: 'UNAUTHORIZED' };
+  }
+
+  // 2. Validate input
+  const parsed = getScaleHistorySchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
+
+  const { patientId, scaleKey } = parsed.data;
+  const userId = user.id;
+
+  // 3. Query with ownership check (WHERE user_id = session.uid)
+  const conditions = [
+    eq(scaleApplications.patientId, patientId),
+    eq(scaleApplications.userId, userId),
+  ];
+  if (scaleKey) {
+    conditions.push(eq(scaleApplications.scaleKey, scaleKey));
+  }
+
+  try {
+    const rows = await db
+      .select({
+        id: scaleApplications.id,
+        scaleKey: scaleApplications.scaleKey,
+        appliedAt: scaleApplications.appliedAt,
+        totalScore: scaleApplications.totalScore,
+        classification: scaleApplications.classification,
+        completedAt: scaleApplications.completedAt,
+        appliedRemotely: scaleApplications.appliedRemotely,
+      })
+      .from(scaleApplications)
+      .where(and(...conditions))
+      .orderBy(desc(scaleApplications.appliedAt));
+
+    // 4. Build summaries + timeseries
+    const applications: ScaleApplicationSummary[] = rows.map((r) => ({
+      id: r.id,
+      scaleKey: r.scaleKey,
+      appliedAt: r.appliedAt.toISOString(),
+      totalScore: r.totalScore,
+      classification: r.classification,
+      isCompleted: r.completedAt !== null,
+      appliedRemotely: r.appliedRemotely,
+    }));
+
+    // Timeseries includes only completed applications (those with scores)
+    const timeseries: TimeseriesPoint[] = rows
+      .filter((r) => r.completedAt !== null)
+      .map((r) => ({
+        appliedAt: r.appliedAt.toISOString(),
+        totalScore: r.totalScore,
+        classification: r.classification,
+      }));
+
+    // 5. Write audit_log (fire-and-forget)
+    try {
+      await db.insert(auditLog).values({
+        userId,
+        action: 'scale.history-read',
+        resourceType: 'patient',
+        resourceId: patientId,
+        metadata: { scaleKey: scaleKey ?? null, resultCount: applications.length },
+      });
+    } catch (auditErr: unknown) {
+      const pgError = auditErr as { code?: string };
+      logger.error(
+        { event: 'scale_audit_log_failed', errorCode: pgError.code },
+        'failed to write audit_log entry for scale.history-read',
+      );
+    }
+
+    // 6. Return result
+    return { ok: true, applications, timeseries };
+  } catch (err: unknown) {
+    const pgError = err as { code?: string };
+    logger.error(
+      { event: 'get_scale_history_failed', errorCode: pgError.code },
+      'unexpected error fetching scale history',
+    );
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// listScalesForPatient
+// ---------------------------------------------------------------------------
+
+/**
+ * Lists a summary of every distinct scale ever applied for a patient.
+ *
+ * Returns one entry per scale_key with the most recent score, date,
+ * classification, and a chart-ready timeseries array.
+ *
+ * Flow:
+ *   1. Authenticate via Supabase getUser().
+ *   2. Validate input with Zod.
+ *   3. Query scale_applications WHERE patient_id AND user_id = auth.uid()
+ *      ORDER BY applied_at DESC.
+ *   4. Group by scale_key, extract latest + timeseries per scale.
+ *   5. Return the summary array.
+ *
+ * user_id is ALWAYS derived from the session — never from client input.
+ */
+export async function listScalesForPatient(
+  supabase: SupabaseClient,
+  input: unknown,
+): Promise<ListScalesForPatientResult> {
+  // 1. Authenticate
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, code: 'UNAUTHORIZED' };
+  }
+
+  // 2. Validate input
+  const parsed = listScalesForPatientSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
+
+  const { patientId } = parsed.data;
+  const userId = user.id;
+
+  try {
+    // 3. Query all applications for this patient owned by the authenticated user
+    const rows = await db
+      .select({
+        scaleKey: scaleApplications.scaleKey,
+        appliedAt: scaleApplications.appliedAt,
+        totalScore: scaleApplications.totalScore,
+        classification: scaleApplications.classification,
+        completedAt: scaleApplications.completedAt,
+      })
+      .from(scaleApplications)
+      .where(and(eq(scaleApplications.patientId, patientId), eq(scaleApplications.userId, userId)))
+      .orderBy(desc(scaleApplications.appliedAt));
+
+    // 4. Group by scaleKey, build summary per scale
+    const scaleMap = new Map<
+      string,
+      {
+        lastScore: number | null;
+        lastDate: string;
+        lastClassification: string | null;
+        timeseries: TimeseriesPoint[];
+      }
+    >();
+
+    for (const row of rows) {
+      const existing = scaleMap.get(row.scaleKey);
+
+      // Timeseries entry only for completed applications
+      const tsPoint: TimeseriesPoint | null =
+        row.completedAt !== null
+          ? {
+              appliedAt: row.appliedAt.toISOString(),
+              totalScore: row.totalScore,
+              classification: row.classification,
+            }
+          : null;
+
+      if (!existing) {
+        // First row for this scale (most recent due to ORDER BY DESC)
+        const lastCompleted = row.completedAt !== null;
+        scaleMap.set(row.scaleKey, {
+          lastScore: lastCompleted ? row.totalScore : null,
+          lastDate: row.appliedAt.toISOString(),
+          lastClassification: lastCompleted ? row.classification : null,
+          timeseries: tsPoint ? [tsPoint] : [],
+        });
+      } else {
+        // Subsequent rows — update lastScore/lastClassification if this is
+        // the first completed one we've seen and the current latest wasn't completed
+        if (
+          existing.lastScore === null &&
+          existing.lastClassification === null &&
+          row.completedAt !== null
+        ) {
+          existing.lastScore = row.totalScore;
+          existing.lastClassification = row.classification;
+        }
+        if (tsPoint) {
+          existing.timeseries.push(tsPoint);
+        }
+      }
+    }
+
+    // 5. Build result array
+    const scales: ScaleSummary[] = [];
+    for (const [scaleKey, data] of scaleMap) {
+      scales.push({
+        scaleKey,
+        lastScore: data.lastScore,
+        lastDate: data.lastDate,
+        lastClassification: data.lastClassification,
+        timeseries: data.timeseries,
+      });
+    }
+
+    return { ok: true, scales };
+  } catch (err: unknown) {
+    const pgError = err as { code?: string };
+    logger.error(
+      { event: 'list_scales_for_patient_failed', errorCode: pgError.code },
+      'unexpected error listing scales for patient',
     );
     throw err;
   }
