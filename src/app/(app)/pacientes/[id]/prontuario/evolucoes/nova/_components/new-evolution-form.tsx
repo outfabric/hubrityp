@@ -4,9 +4,18 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { CreateEvolutionResult, TemplateType } from '@/modules/medical-records';
 import { EvolutionEditor } from '@/modules/medical-records/components/evolution-editor';
 import { TemplateSelector } from '@/modules/medical-records/components/template-selector';
+import type { TemplateType } from '@/modules/medical-records/lib/template-types';
+
+// ---------------------------------------------------------------------------
+// Types (defined locally to avoid importing from server-only barrel)
+// ---------------------------------------------------------------------------
+
+/** Mirrors the shape returned by the createEvolution Server Action. */
+type CreateEvolutionResult =
+  | { ok: true; id: string }
+  | { ok: false; code: 'DUPLICATE_SESSION' | 'INVALID_TEMPLATE' | 'UNAUTHORIZED' };
 
 // ---------------------------------------------------------------------------
 // Props

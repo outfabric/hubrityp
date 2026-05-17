@@ -58,6 +58,6 @@
 
 ## 8. End-to-End Tests
 
-- [ ] 8.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/evolution-crud.spec.ts` — happy path: navigate to done session, click "Registrar evolucao", select TCC template, fill humor_inicial/final + conteudo, wait for "Salvo as" indicator, finalize, verify version history shows v1
-- [ ] 8.2 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/evolution-addendum.spec.ts` — seed evolution with finalized_at in past (>30 days), navigate to it, edit, verify addendum modal appears requiring reason, submit, verify is_addendum badge in version history
-- [ ] 8.3 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/middleware/app-routes-auth-gate.spec.ts` — unauthenticated navigation to `/pacientes/[id]/prontuario` redirects to login (negative-auth test covering the defensive sweep)
+- [x] 8.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/evolution-crud.spec.ts` — happy path: navigate to done session, click "Registrar evolucao", select TCC template, fill humor_inicial/final + conteudo, wait for "Salvo as" indicator, finalize, verify version history shows v1
+- [x] 8.2 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/evolution-addendum.spec.ts` — seed evolution with finalized_at in past (>30 days), navigate to it, edit, verify addendum modal appears requiring reason, submit, verify is_addendum badge in version history
+- [x] 8.3 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/middleware/app-routes-auth-gate.spec.ts` — unauthenticated navigation to `/pacientes/[id]/prontuario` redirects to login (negative-auth test covering the defensive sweep)

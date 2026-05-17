@@ -6,10 +6,25 @@ import { FileText, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-import type { EvolutionSummary } from '@/modules/medical-records';
-import { TEMPLATE_OPTIONS } from '@/modules/medical-records';
+import { TEMPLATE_OPTIONS } from '@/modules/medical-records/lib/template-types';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
+
+// ---------------------------------------------------------------------------
+// Types (defined locally to avoid importing from server-only barrel)
+// ---------------------------------------------------------------------------
+
+/** Mirrors the shape returned by getEvolutionsByPatientImpl. */
+interface EvolutionSummary {
+  id: string;
+  patientId: string;
+  sessionId: string | null;
+  templateType: string;
+  currentVersion: number;
+  createdAt: Date;
+  updatedAt: Date;
+  finalizedAt: Date | null;
+}
 
 // ---------------------------------------------------------------------------
 // Props

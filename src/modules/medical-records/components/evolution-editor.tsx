@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 
 import type { TemplateType } from '@/modules/medical-records/lib/template-types';
-import { TiptapEditor } from '@/modules/patients';
+import { TiptapEditor } from '@/modules/patients/components/tiptap-editor';
 import { useAutoSave } from '@/modules/patients/lib/use-auto-save';
 import { cn } from '@/shared/lib/utils';
 import { Input } from '@/shared/ui/input';
