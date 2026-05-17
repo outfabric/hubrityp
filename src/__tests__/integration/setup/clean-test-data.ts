@@ -1,7 +1,12 @@
 import { sql as dsql } from 'drizzle-orm';
 
 import { sessionHistory, sessions } from '@/shared/db/schema/agenda/tables';
-import { auditLog, evolutionVersions, evolutions } from '@/shared/db/schema/medical-records/tables';
+import {
+  auditLog,
+  diagnosticHypotheses,
+  evolutionVersions,
+  evolutions,
+} from '@/shared/db/schema/medical-records/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 
 import { runAsService } from './run-as-service';
@@ -10,12 +15,13 @@ import { runAsService } from './run-as-service';
  * Deletes test data from the shared Testcontainers database in correct FK
  * dependency order. Handles the full chain:
  *
- *   evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
+ *   diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
  *
  * The `evolutions` table references both `patients(id)` and `sessions(id)`,
  * so it must be cleared before either parent. `evolution_versions` references
  * `evolutions(id)` with ON DELETE CASCADE, but we delete explicitly for
  * clarity and robustness against future constraint changes.
+ * `diagnostic_hypotheses` references `patients(id)` so must be cleared before patients.
  *
  * Use this in `afterEach` / `afterAll` hooks of any integration test that
  * seeds patients or sessions and performs unfiltered cleanup (DELETE without
@@ -25,6 +31,7 @@ import { runAsService } from './run-as-service';
 export async function cleanTestData(): Promise<void> {
   await runAsService(async (db) => {
     // 1. Medical-records tables (children of patients + sessions)
+    await db.delete(diagnosticHypotheses);
     await db.delete(evolutionVersions);
     await db.delete(evolutions);
     await db.delete(auditLog);
@@ -33,7 +40,7 @@ export async function cleanTestData(): Promise<void> {
     await db.delete(sessionHistory);
     await db.delete(sessions);
 
-    // 3. Patients (parent referenced by evolutions + sessions)
+    // 3. Patients (parent referenced by evolutions + sessions + diagnostic_hypotheses)
     await db.delete(patients);
 
     // 4. Auth users created by tests (scoped to test-* emails)

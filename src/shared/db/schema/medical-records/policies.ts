@@ -47,3 +47,21 @@ export const auditLogPolicies = [
      FOR SELECT TO authenticated
      USING (auth.uid() = user_id);`,
 ] as const;
+
+// Owner-scoped RLS for `diagnostic_hypotheses`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates retention; "discard" is a
+// status transition, not a hard delete. The `user_id` column references the
+// psychologist's `auth.users.id` directly for RLS simplicity (no subquery).
+export const diagnosticHypothesesPolicies = [
+  `ALTER TABLE diagnostic_hypotheses ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select diagnostic_hypotheses" ON diagnostic_hypotheses
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert diagnostic_hypotheses" ON diagnostic_hypotheses
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update diagnostic_hypotheses" ON diagnostic_hypotheses
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;

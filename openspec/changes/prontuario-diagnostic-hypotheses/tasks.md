@@ -1,11 +1,11 @@
 ## 1. Database Schema — diagnostic_hypotheses Table
 
-- [ ] 1.1 Add `diagnosticHypotheses` table definition to `src/shared/db/schema/medical-records/tables.ts` with columns: id (uuid PK), user_id (uuid NOT NULL), patient_id (uuid NOT NULL), description (text nullable), cid10_code (varchar(10) nullable), cid10_description (text nullable), status (text NOT NULL default 'investigating'), notes (text nullable), created_at (timestamptz), updated_at (timestamptz). Add composite index on (patient_id, status, created_at)
-- [ ] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `diagnosticHypothesesPolicies` array with SELECT/INSERT/UPDATE scoped via `user_id = auth.uid()`. No DELETE policy
-- [ ] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export `diagnosticHypotheses` table and policies
-- [ ] 1.4 Run `npm run db:generate`, manually append to migration: RLS ENABLE, policies SQL, CHECK constraint `chk_hypothesis_has_descriptor` (description IS NOT NULL OR cid10_code IS NOT NULL), CHECK constraint `chk_hypothesis_status` (status IN ('investigating','confirmed','discarded')), FK constraints (user_id -> auth.users, patient_id -> patients)
-- [ ] 1.5 Run `npm run db:migrate` locally and verify table exists with correct structure
-- [ ] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/hypotheses/schema.int.test.ts` — verify: table exists, RLS is enabled, SELECT/INSERT/UPDATE policies exist, no DELETE policy exists, CHECK constraint rejects row with both description and cid10_code NULL, CHECK constraint rejects invalid status value, index exists on (patient_id, status, created_at)
+- [x] 1.1 Add `diagnosticHypotheses` table definition to `src/shared/db/schema/medical-records/tables.ts` with columns: id (uuid PK), user_id (uuid NOT NULL), patient_id (uuid NOT NULL), description (text nullable), cid10_code (varchar(10) nullable), cid10_description (text nullable), status (text NOT NULL default 'investigating'), notes (text nullable), created_at (timestamptz), updated_at (timestamptz). Add composite index on (patient_id, status, created_at)
+- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `diagnosticHypothesesPolicies` array with SELECT/INSERT/UPDATE scoped via `user_id = auth.uid()`. No DELETE policy
+- [x] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export `diagnosticHypotheses` table and policies
+- [x] 1.4 Run `npm run db:generate`, manually append to migration: RLS ENABLE, policies SQL, CHECK constraint `chk_hypothesis_has_descriptor` (description IS NOT NULL OR cid10_code IS NOT NULL), CHECK constraint `chk_hypothesis_status` (status IN ('investigating','confirmed','discarded')), FK constraints (user_id -> auth.users, patient_id -> patients)
+- [x] 1.5 Run `npm run db:migrate` locally and verify table exists with correct structure
+- [x] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/hypotheses/schema.int.test.ts` — verify: table exists, RLS is enabled, SELECT/INSERT/UPDATE policies exist, no DELETE policy exists, CHECK constraint rejects row with both description and cid10_code NULL, CHECK constraint rejects invalid status value, index exists on (patient_id, status, created_at)
 
 ## 2. CID-10 Data Build Script
 
