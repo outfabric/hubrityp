@@ -31,7 +31,7 @@ import { Textarea } from '@/shared/ui/textarea';
 /** Mirrors the shape returned by the updateEvolution Server Action. */
 type UpdateEvolutionResult =
   | { ok: true; version: number; isAddendum: boolean }
-  | { ok: false; code: 'NOT_FOUND' | 'UNAUTHORIZED' | 'REASON_REQUIRED' };
+  | { ok: false; code: 'NOT_FOUND' | 'UNAUTHORIZED' | 'REASON_REQUIRED' | 'CONFLICT' };
 
 // ---------------------------------------------------------------------------
 // Props
@@ -94,6 +94,8 @@ export function EvolutionDetailView({
       pendingContentRef.current = null;
     } else if (result.code === 'REASON_REQUIRED') {
       toast.error('Motivo obrigatorio para adendo.');
+    } else if (result.code === 'CONFLICT') {
+      toast.error('Conflito de versao. Recarregue a pagina e tente novamente.');
     } else {
       toast.error('Erro ao salvar adendo.');
     }
@@ -116,6 +118,8 @@ export function EvolutionDetailView({
 
       if (result.ok) {
         toast.success('Evolucao salva com sucesso');
+      } else if (result.code === 'CONFLICT') {
+        toast.error('Conflito de versao. Recarregue a pagina e tente novamente.');
       } else {
         toast.error('Erro ao salvar evolucao.');
       }

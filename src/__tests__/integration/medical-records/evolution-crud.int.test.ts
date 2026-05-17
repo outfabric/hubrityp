@@ -252,6 +252,53 @@ describe('createEvolutionImpl', () => {
     });
     expect(evoRows[0]!.sessionId).toBeNull();
   });
+
+  it('returns NOT_FOUND when patientId belongs to another user', async () => {
+    const userA = randomUUID();
+    const userB = randomUUID();
+    const patientId = randomUUID();
+    await seedAuthUser(userA);
+    await seedAuthUser(userB);
+    // Patient belongs to user A
+    await seedPatient(userA, patientId);
+
+    // User B tries to create an evolution for user A's patient
+    const result = await createEvolutionImpl(fakeSupabaseClient(userB), {
+      patientId,
+      templateType: 'livre',
+      content: { conteudo: 'Cross-tenant attempt' },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns NOT_FOUND when sessionId belongs to another user', async () => {
+    const userA = randomUUID();
+    const userB = randomUUID();
+    const patientIdA = randomUUID();
+    const patientIdB = randomUUID();
+    const sessionId = randomUUID();
+    await seedAuthUser(userA);
+    await seedAuthUser(userB);
+    await seedPatient(userA, patientIdA);
+    await seedPatient(userB, patientIdB);
+    // Session belongs to user A
+    await seedSession(userA, patientIdA, sessionId);
+
+    // User B tries to create an evolution linking to user A's session
+    const result = await createEvolutionImpl(fakeSupabaseClient(userB), {
+      patientId: patientIdB,
+      sessionId,
+      templateType: 'livre',
+      content: { conteudo: 'Cross-tenant session link' },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
 });
 
 // ---------------------------------------------------------------------------

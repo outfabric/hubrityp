@@ -27,7 +27,7 @@ const updateEvolutionServerSchema = z.object({
 
 export type UpdateEvolutionResult =
   | { ok: true; version: number; isAddendum: boolean }
-  | { ok: false; code: 'NOT_FOUND' | 'UNAUTHORIZED' | 'REASON_REQUIRED' };
+  | { ok: false; code: 'NOT_FOUND' | 'UNAUTHORIZED' | 'REASON_REQUIRED' | 'CONFLICT' };
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -160,7 +160,18 @@ export async function updateEvolutionImpl(
 
     return { ok: true, version: newVersion, isAddendum };
   } catch (err: unknown) {
-    const pgError = err as { code?: string };
+    const pgError = err as { code?: string; constraint?: string };
+
+    // Handle unique constraint violation on (evolution_id, version_number) —
+    // indicates a concurrent update race. Return a typed CONFLICT code so the
+    // client can prompt a retry instead of an unhandled 500.
+    if (
+      pgError.code === '23505' &&
+      pgError.constraint?.includes('evolution_versions_evo_version_unique')
+    ) {
+      return { ok: false, code: 'CONFLICT' };
+    }
+
     logger.error(
       { event: 'update_evolution_failed', errorCode: pgError.code },
       'unexpected error updating evolution',

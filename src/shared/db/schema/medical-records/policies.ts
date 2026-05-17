@@ -24,7 +24,9 @@ export const evolutionsPolicies = [
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
 
-// JOIN-scoped RLS for `evolution_versions`. SELECT/INSERT/UPDATE only.
+// JOIN-scoped RLS for `evolution_versions`. SELECT/INSERT only — no UPDATE or
+// DELETE. Version snapshots are immutable per Lei 13.787/2018: once a version
+// is written, it must never be modified or removed.
 // Ownership is derived via the parent `evolutions` row:
 //   evolution_id IN (SELECT id FROM evolutions WHERE user_id = auth.uid())
 export const evolutionVersionsPolicies = [
@@ -34,10 +36,6 @@ export const evolutionVersionsPolicies = [
      USING (evolution_id IN (SELECT id FROM evolutions WHERE user_id = auth.uid()));`,
   `CREATE POLICY "owner can insert evolution_versions" ON evolution_versions
      FOR INSERT TO authenticated
-     WITH CHECK (evolution_id IN (SELECT id FROM evolutions WHERE user_id = auth.uid()));`,
-  `CREATE POLICY "owner can update evolution_versions" ON evolution_versions
-     FOR UPDATE TO authenticated
-     USING (evolution_id IN (SELECT id FROM evolutions WHERE user_id = auth.uid()))
      WITH CHECK (evolution_id IN (SELECT id FROM evolutions WHERE user_id = auth.uid()));`,
 ] as const;
 

@@ -37,7 +37,8 @@ type DrizzleDb = PostgresJsDatabase<any>;
 export interface MissingEvolutionMatch {
   sessionId: string;
   userId: string;
-  patientName: string;
+  patientId: string;
+  patientFirstName: string;
   sessionCreatedAt: Date;
 }
 
@@ -66,7 +67,8 @@ export async function findSessionsMissingEvolution(
     .select({
       sessionId: sessions.id,
       userId: sessions.userId,
-      patientName: patients.fullName,
+      patientId: patients.id,
+      patientFullName: patients.fullName,
       sessionCreatedAt: sessions.createdAt,
     })
     .from(sessions)
@@ -81,7 +83,17 @@ export async function findSessionsMissingEvolution(
       ),
     );
 
-  return rows;
+  // Minimize PII: store only the first name in the notification text.
+  // The notifications table is user_id-scoped via RLS (SELECT + UPDATE only),
+  // but LGPD art. 11 data minimization still applies — avoid storing the full
+  // patient name in a context where it is not strictly necessary.
+  return rows.map((r) => ({
+    sessionId: r.sessionId,
+    userId: r.userId,
+    patientId: r.patientId,
+    patientFirstName: r.patientFullName.split(' ')[0] ?? r.patientFullName,
+    sessionCreatedAt: r.sessionCreatedAt,
+  }));
 }
 
 /**
@@ -106,8 +118,8 @@ export async function remindMissingEvolutions(deps: RemindMissingEvolutionDeps):
     await notify(db, {
       userId: match.userId,
       type: 'missing_evolution',
-      title: `Sessao de ${sessionDate} com ${match.patientName} ainda nao possui evolucao`,
-      actionUrl: `/dashboard/pacientes/${match.sessionId}`,
+      title: `Sessao de ${sessionDate} com ${match.patientFirstName} ainda nao possui evolucao`,
+      actionUrl: `/pacientes/${match.patientId}/prontuario/evolucoes/nova?sessionId=${match.sessionId}`,
     });
 
     notificationsCreated++;

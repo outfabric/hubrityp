@@ -15,7 +15,7 @@ import type { TemplateType } from '@/modules/medical-records/lib/template-types'
 /** Mirrors the shape returned by the createEvolution Server Action. */
 type CreateEvolutionResult =
   | { ok: true; id: string }
-  | { ok: false; code: 'DUPLICATE_SESSION' | 'INVALID_TEMPLATE' | 'UNAUTHORIZED' };
+  | { ok: false; code: 'DUPLICATE_SESSION' | 'INVALID_TEMPLATE' | 'UNAUTHORIZED' | 'NOT_FOUND' };
 
 // ---------------------------------------------------------------------------
 // Props
@@ -66,6 +66,8 @@ export function NewEvolutionForm({ patientId, sessionId, createAction }: NewEvol
         router.push(`/pacientes/${patientId}/prontuario/evolucoes/${result.id}`);
       } else if (result.code === 'DUPLICATE_SESSION') {
         toast.error('Ja existe uma evolucao vinculada a esta sessao.');
+      } else if (result.code === 'NOT_FOUND') {
+        toast.error('Paciente ou sessao nao encontrada.');
       } else {
         toast.error('Erro ao criar evolucao. Verifique os campos.');
       }

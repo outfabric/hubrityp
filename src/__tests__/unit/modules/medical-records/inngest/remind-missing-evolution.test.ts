@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   findSessionsMissingEvolution,
   remindMissingEvolutions,
-  type MissingEvolutionMatch,
   type RemindMissingEvolutionDeps,
 } from '@/modules/medical-records/inngest/remind-missing-evolution';
 
@@ -17,6 +16,15 @@ function daysAgo(days: number): Date {
   return new Date(NOW.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
+/** Shape returned by the Drizzle query (before the map step in the function). */
+interface DbRow {
+  sessionId: string;
+  userId: string;
+  patientId: string;
+  patientFullName: string;
+  sessionCreatedAt: Date;
+}
+
 /**
  * Creates a mock Drizzle DB that returns the given rows from the chained
  * query builder (select -> from -> innerJoin -> leftJoin -> where).
@@ -24,7 +32,7 @@ function daysAgo(days: number): Date {
  * Returns both the typed `db` (for passing to the function under test) and
  * a `spies` object (for assertions on mock call counts).
  */
-function createMockDb(rows: MissingEvolutionMatch[]) {
+function createMockDb(rows: DbRow[]) {
   const whereSpy = vi.fn().mockResolvedValue(rows);
   const insertSpy = vi.fn().mockReturnValue({
     values: vi.fn().mockReturnValue({
@@ -47,27 +55,41 @@ function createMockDb(rows: MissingEvolutionMatch[]) {
   };
 }
 
+/** Convenience: create a DbRow from a MissingEvolutionMatch-like input. */
+function toDbRow(match: {
+  sessionId: string;
+  userId: string;
+  patientId: string;
+  patientFullName: string;
+  sessionCreatedAt: Date;
+}): DbRow {
+  return match;
+}
+
 // ---------------------------------------------------------------------------
 // findSessionsMissingEvolution
 // ---------------------------------------------------------------------------
 
 describe('findSessionsMissingEvolution', () => {
   it('returns sessions done >7 days ago without linked evolution', async () => {
-    const matches: MissingEvolutionMatch[] = [
-      {
+    const dbRows: DbRow[] = [
+      toDbRow({
         sessionId: 'session-1',
         userId: 'user-1',
-        patientName: 'Maria Silva',
+        patientId: 'patient-1',
+        patientFullName: 'Maria Silva',
         sessionCreatedAt: daysAgo(8),
-      },
+      }),
     ];
 
-    const { db } = createMockDb(matches);
+    const { db } = createMockDb(dbRows);
     const result = await findSessionsMissingEvolution({ db, now: NOW });
 
     expect(result).toHaveLength(1);
     expect(result[0]!.sessionId).toBe('session-1');
-    expect(result[0]!.patientName).toBe('Maria Silva');
+    expect(result[0]!.patientId).toBe('patient-1');
+    // Only first name is retained (LGPD data minimization)
+    expect(result[0]!.patientFirstName).toBe('Maria');
   });
 
   it('returns empty array when no sessions match (all have evolutions)', async () => {
@@ -100,22 +122,24 @@ describe('findSessionsMissingEvolution', () => {
 
 describe('remindMissingEvolutions', () => {
   it('creates a notification for each session done >7d without evolution', async () => {
-    const matches: MissingEvolutionMatch[] = [
-      {
+    const dbRows: DbRow[] = [
+      toDbRow({
         sessionId: 'session-1',
         userId: 'user-1',
-        patientName: 'Maria Silva',
+        patientId: 'patient-1',
+        patientFullName: 'Maria Silva',
         sessionCreatedAt: daysAgo(8),
-      },
-      {
+      }),
+      toDbRow({
         sessionId: 'session-2',
         userId: 'user-2',
-        patientName: 'Joao Santos',
+        patientId: 'patient-2',
+        patientFullName: 'Joao Santos',
         sessionCreatedAt: daysAgo(10),
-      },
+      }),
     ];
 
-    const { db, spies } = createMockDb(matches);
+    const { db, spies } = createMockDb(dbRows);
     const result = await remindMissingEvolutions({ db, now: NOW });
 
     expect(result.sessionsScanned).toBe(2);
@@ -133,15 +157,16 @@ describe('remindMissingEvolutions', () => {
     expect(spies.insert).not.toHaveBeenCalled();
   });
 
-  it('notification title includes session date and patient name', async () => {
+  it('notification title includes session date and patient first name only', async () => {
     const sessionDate = daysAgo(8);
-    const matches: MissingEvolutionMatch[] = [
-      {
+    const dbRows: DbRow[] = [
+      toDbRow({
         sessionId: 'session-1',
         userId: 'user-1',
-        patientName: 'Maria Silva',
+        patientId: 'patient-1',
+        patientFullName: 'Maria Silva',
         sessionCreatedAt: sessionDate,
-      },
+      }),
     ];
 
     // Track the values passed to insert().values()
@@ -151,7 +176,7 @@ describe('remindMissingEvolutions', () => {
       from: vi.fn().mockReturnThis(),
       innerJoin: vi.fn().mockReturnThis(),
       leftJoin: vi.fn().mockReturnThis(),
-      where: vi.fn().mockResolvedValue(matches),
+      where: vi.fn().mockResolvedValue(dbRows),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockImplementation((val: Record<string, unknown>) => {
           insertedValues.push(val);
@@ -168,9 +193,14 @@ describe('remindMissingEvolutions', () => {
     const notification = insertedValues[0]!;
     expect(notification.type).toBe('missing_evolution');
     expect(notification.userId).toBe('user-1');
-    // Title should contain patient name and a formatted date
-    expect(notification.title).toContain('Maria Silva');
+    // Title should contain only first name (not full name) and a formatted date
+    expect(notification.title).toContain('Maria');
+    expect(notification.title).not.toContain('Silva');
     expect(notification.title).toContain('ainda nao possui evolucao');
+    // actionUrl should use patientId and correct route prefix (not /dashboard/)
+    expect(notification.actionUrl).toBe(
+      '/pacientes/patient-1/prontuario/evolucoes/nova?sessionId=session-1',
+    );
   });
 
   it('does not flag sessions done only 5 days ago (within grace period)', async () => {

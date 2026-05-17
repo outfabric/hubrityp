@@ -1,14 +1,16 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import {
   CONTENT_SCHEMA_MAP,
   createEvolutionInputSchema,
 } from '@/modules/medical-records/lib/evolution-schemas';
 import { db } from '@/shared/db/client';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { auditLog, evolutions, evolutionVersions } from '@/shared/db/schema/medical-records/tables';
+import { patients } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -17,7 +19,7 @@ import { logger } from '@/shared/lib/logger';
 
 export type CreateEvolutionResult =
   | { ok: true; id: string }
-  | { ok: false; code: 'DUPLICATE_SESSION' | 'INVALID_TEMPLATE' | 'UNAUTHORIZED' };
+  | { ok: false; code: 'DUPLICATE_SESSION' | 'INVALID_TEMPLATE' | 'UNAUTHORIZED' | 'NOT_FOUND' };
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -30,9 +32,11 @@ export type CreateEvolutionResult =
  *   1. Authenticate via Supabase getUser().
  *   2. Validate input with Zod (createEvolutionInputSchema).
  *   3. Validate content against the template-specific schema.
- *   4. Insert evolution row + initial evolution_versions v1 row.
- *   5. Write audit_log 'evolution.create'.
- *   6. Return evolution ID on success.
+ *   4. Verify patient ownership (defense-in-depth — db bypasses RLS).
+ *   5. Verify session ownership if sessionId provided.
+ *   6. Insert evolution row + initial evolution_versions v1 row.
+ *   7. Write audit_log 'evolution.create'.
+ *   8. Return evolution ID on success.
  *
  * user_id is ALWAYS derived from the session — never from client input.
  */
@@ -77,15 +81,41 @@ export async function createEvolutionImpl(
 
   const validatedContent = contentParsed.data as Record<string, unknown>;
 
-  // 4. Insert evolution + v1 version in a transaction
+  // 4. Verify patient belongs to the authenticated user (defense-in-depth:
+  // db bypasses RLS, so explicit ownership check prevents cross-tenant writes)
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientId), eq(patients.userId, userId)))
+    .limit(1);
+
+  if (!patient) {
+    return { ok: false, code: 'NOT_FOUND' };
+  }
+
+  // 5. If sessionId is provided, verify session belongs to the authenticated user
+  if (sessionId) {
+    const [session] = await db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))
+      .limit(1);
+
+    if (!session) {
+      return { ok: false, code: 'NOT_FOUND' };
+    }
+  }
+
+  // 6. Insert evolution + v1 version in a transaction
   try {
     const result = await db.transaction(async (tx) => {
-      // Check for duplicate session_id (unique constraint, but pre-check for friendly error)
+      // Check for duplicate session_id scoped to this user's evolutions
+      // (unique constraint catches global duplicates, but pre-check gives friendly error)
       if (sessionId) {
         const existing = await tx
           .select({ id: evolutions.id })
           .from(evolutions)
-          .where(eq(evolutions.sessionId, sessionId))
+          .where(and(eq(evolutions.sessionId, sessionId), eq(evolutions.userId, userId)))
           .limit(1);
 
         if (existing.length > 0) {
