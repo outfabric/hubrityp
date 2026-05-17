@@ -82,3 +82,27 @@ export {
   type UpdateHypothesisInput,
   type UpdateHypothesisStatusInput,
 } from './lib/schemas/hypothesis';
+
+// ---- Treatment Plan Server Actions ------------------------------------------
+export {
+  upsertTreatmentPlanImpl,
+  getTreatmentPlanImpl,
+  listTreatmentPlanVersionsImpl,
+  type UpsertTreatmentPlanResult,
+  type GetTreatmentPlanResult,
+  type ListTreatmentPlanVersionsResult,
+} from './server/treatment-plans';
+
+// ---- Treatment Plan Schemas -------------------------------------------------
+export {
+  goalSchema,
+  phaseSchema,
+  upsertTreatmentPlanInputSchema,
+  getTreatmentPlanInputSchema,
+  listTreatmentPlanVersionsInputSchema,
+  versionContentSchema,
+  type Goal,
+  type Phase,
+  type TreatmentPlanInput,
+  type VersionContent,
+} from './lib/treatment-plan-schemas';

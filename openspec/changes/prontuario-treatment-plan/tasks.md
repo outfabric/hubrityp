@@ -14,11 +14,11 @@
 
 ## 3. Server Actions
 
-- [ ] 3.1 Create `src/modules/medical-records/server/treatment-plans.ts` with three actions: `upsertTreatmentPlan(input)`, `getTreatmentPlan(input)`, `listTreatmentPlanVersions(input)`. All authenticate via `supabase.auth.getUser()`, validate with Zod, derive `user_id` from session. Upsert uses atomic transaction with `SELECT ... FOR UPDATE` per design.md. All write `audit_log` rows via `logProntuarioAccess` (service-role).
-- [ ] 3.2 Update `src/modules/medical-records/index.ts` barrel to re-export treatment plan actions and schemas
-- [ ] 3.3 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-crud.int.test.ts` — test: (a) upsertTreatmentPlan first time creates plan + version v1 with correct content snapshot; (b) second upsert increments current_version, prior content snapshotted into versions table; (c) getTreatmentPlan returns current plan or null; (d) listTreatmentPlanVersions returns chronological history; (e) audit_log entries created on read and update
-- [ ] 3.4 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-rls.int.test.ts` — test: (a) psychologist B cannot read psychologist A's plan (RLS negative); (b) psychologist B cannot upsert plan for psychologist A's patient; (c) no user can DELETE from either table; (d) version JOIN-scoped RLS blocks cross-user access to versions
-- [ ] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-concurrency.int.test.ts` — test: concurrent upsert race (two writers same patient) — second update sees version conflict handled by FOR UPDATE lock, both versions preserved correctly
+- [x] 3.1 Create `src/modules/medical-records/server/treatment-plans.ts` with three actions: `upsertTreatmentPlan(input)`, `getTreatmentPlan(input)`, `listTreatmentPlanVersions(input)`. All authenticate via `supabase.auth.getUser()`, validate with Zod, derive `user_id` from session. Upsert uses atomic transaction with `SELECT ... FOR UPDATE` per design.md. All write `audit_log` rows via `logProntuarioAccess` (service-role).
+- [x] 3.2 Update `src/modules/medical-records/index.ts` barrel to re-export treatment plan actions and schemas
+- [x] 3.3 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-crud.int.test.ts` — test: (a) upsertTreatmentPlan first time creates plan + version v1 with correct content snapshot; (b) second upsert increments current_version, prior content snapshotted into versions table; (c) getTreatmentPlan returns current plan or null; (d) listTreatmentPlanVersions returns chronological history; (e) audit_log entries created on read and update
+- [x] 3.4 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-rls.int.test.ts` — test: (a) psychologist B cannot read psychologist A's plan (RLS negative); (b) psychologist B cannot upsert plan for psychologist A's patient; (c) no user can DELETE from either table; (d) version JOIN-scoped RLS blocks cross-user access to versions
+- [x] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/treatment-plan-concurrency.int.test.ts` — test: concurrent upsert race (two writers same patient) — second update sees version conflict handled by FOR UPDATE lock, both versions preserved correctly
 
 ## 4. Frontend — Components
 
