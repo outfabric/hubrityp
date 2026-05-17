@@ -151,3 +151,6 @@ export {
   type ScaleOption,
   type ClassificationResult,
 } from './lib/scales';
+
+// ---- Scale Public Form (Client Component) -----------------------------------
+export { ScalePublicForm } from './components/scale-public-form';

@@ -57,10 +57,10 @@
 
 ## 9. Public Patient-Facing Page
 
-- [ ] 9.1 Create `src/app/escala/layout.tsx` — minimal public layout (same pattern as confirmar-sessao): centered card, max-width 640px, HubrityP logo header, LGPD footer
-- [ ] 9.2 Create `src/app/escala/[token]/page.tsx` — Server Component: fetches scale data via service-role, renders states (valid/expired/completed/not-found). Valid state renders ScalePublicForm client component. All states include LGPD footer. No PII displayed anywhere
-- [ ] 9.3 Create `src/modules/medical-records/components/scale-public-form.tsx` — Client Component: RadioGroup per question (all questions visible, scrollable), submit button "Enviar respostas" (full-width mobile, loading state), success state message, error handling. Accessibility: labels, keyboard nav, aria-live on result
-- [ ] 9.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/components/scale-public-form.test.ts` — test renders correct number of RadioGroups for PHQ-9 (9), test submit button disabled until all questions answered, test success message shown after submit
+- [x] 9.1 Create `src/app/escala/layout.tsx` — minimal public layout (same pattern as confirmar-sessao): centered card, max-width 640px, HubrityP logo header, LGPD footer
+- [x] 9.2 Create `src/app/escala/[token]/page.tsx` — Server Component: fetches scale data via service-role, renders states (valid/expired/completed/not-found). Valid state renders ScalePublicForm client component. All states include LGPD footer. No PII displayed anywhere
+- [x] 9.3 Create `src/modules/medical-records/components/scale-public-form.tsx` — Client Component: RadioGroup per question (all questions visible, scrollable), submit button "Enviar respostas" (full-width mobile, loading state), success state message, error handling. Accessibility: labels, keyboard nav, aria-live on result
+- [x] 9.4 **Unit test:** Create `src/__tests__/unit/modules/medical-records/components/scale-public-form.test.ts` — test renders correct number of RadioGroups for PHQ-9 (9), test submit button disabled until all questions answered, test success message shown after submit
 
 ## 10. Frontend — Scales Tab and Summary
 
