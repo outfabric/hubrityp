@@ -29,11 +29,11 @@
 
 ## 5. Scale Library Registry and Token Generation
 
-- [ ] 5.1 Create `src/modules/medical-records/lib/scales/index.ts` — export `scaleByKey(key: string): ScaleDefinition | undefined`, `AVAILABLE_SCALES` array, `ScaleKey` type union
-- [ ] 5.2 Create `src/modules/medical-records/lib/scales/token.ts` — `generateScaleToken(): string` using `crypto.randomBytes(32).toString('hex')`
-- [ ] 5.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/token.test.ts` — test returns 64 hex chars, test uses crypto (verify by checking character set [0-9a-f]), test two calls produce different tokens
-- [ ] 5.4 Create `src/modules/medical-records/lib/scales-schemas.ts` — Zod schemas: `createScaleApplicationSchema` (patientId uuid, scaleKey enum, mode 'in-session'|'remote', expiresInHours optional number), `submitResponsesSchema` (applicationId uuid, responses record), `submitResponsesByTokenSchema` (token string length 64, responses record)
-- [ ] 5.5 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/schemas.test.ts` — test createScaleApplicationSchema rejects invalid scale_key, accepts valid ones, requires mode; test submitResponsesSchema validates response shape
+- [x] 5.1 Create `src/modules/medical-records/lib/scales/index.ts` — export `scaleByKey(key: string): ScaleDefinition | undefined`, `AVAILABLE_SCALES` array, `ScaleKey` type union
+- [x] 5.2 Create `src/modules/medical-records/lib/scales/token.ts` — `generateScaleToken(): string` using `crypto.randomBytes(32).toString('hex')`
+- [x] 5.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/token.test.ts` — test returns 64 hex chars, test uses crypto (verify by checking character set [0-9a-f]), test two calls produce different tokens
+- [x] 5.4 Create `src/modules/medical-records/lib/scales-schemas.ts` — Zod schemas: `createScaleApplicationSchema` (patientId uuid, scaleKey enum, mode 'in-session'|'remote', expiresInHours optional number), `submitResponsesSchema` (applicationId uuid, responses record), `submitResponsesByTokenSchema` (token string length 64, responses record)
+- [x] 5.5 **Unit test:** Create `src/__tests__/unit/modules/medical-records/scales/schemas.test.ts` — test createScaleApplicationSchema rejects invalid scale_key, accepts valid ones, requires mode; test submitResponsesSchema validates response shape
 
 ## 6. Server Actions — Create and Submit (Psychologist Side)
 
