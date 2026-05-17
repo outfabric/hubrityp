@@ -25,14 +25,14 @@
 
 ## 4. Server Actions — Evolution CRUD
 
-- [ ] 4.1 Create `src/modules/medical-records/server/create-evolution.ts` — validates input with Zod, authenticates via getUser(), enforces user_id from session, creates evolution row + initial evolution_versions v1 row, writes audit_log 'evolution.create'
-- [ ] 4.2 Create `src/modules/medical-records/server/update-evolution.ts` — validates input, authenticates, checks ownership via RLS query, uses shouldForceAddendum() to decide path: (a) within window -> update content + create version; (b) past window -> create addendum version only, set finalized_at if null, require reason
-- [ ] 4.3 Create `src/modules/medical-records/server/get-evolutions-by-patient.ts` — validates patientId, authenticates, returns paginated list (cursor-based, ordered by created_at DESC), writes audit_log 'prontuario.read'
-- [ ] 4.4 Create `src/modules/medical-records/server/get-evolution-detail.ts` — validates evolutionId, authenticates, returns full evolution content, writes audit_log 'evolution.read'
-- [ ] 4.5 Create `src/modules/medical-records/server/list-evolution-versions.ts` — validates evolutionId, authenticates, returns all versions ordered by version_number DESC
-- [ ] 4.6 Create `src/modules/medical-records/server/log-prontuario-access.ts` — validates input via Zod, authenticates caller, writes to audit_log using service-role client (justified comment), extracts IP from headers
-- [ ] 4.7 **Integration tests:** Create `src/__tests__/integration/medical-records/evolution-crud.int.test.ts` — test createEvolution persists row + version, updateEvolution within 30d creates version (is_addendum=false), updateEvolution after 30d creates addendum (is_addendum=true, original content untouched), duplicate session_id rejected, RLS negative (psychologist B cannot read psychologist A's evolutions), audit_log row created on read
-- [ ] 4.8 **Integration tests:** Create `src/__tests__/integration/medical-records/audit-log.int.test.ts` — test logProntuarioAccess writes row, user can SELECT own audit rows, user cannot INSERT directly (RLS blocks), evolution_versions JOIN-scoped RLS enforced
+- [x] 4.1 Create `src/modules/medical-records/server/create-evolution.ts` — validates input with Zod, authenticates via getUser(), enforces user_id from session, creates evolution row + initial evolution_versions v1 row, writes audit_log 'evolution.create'
+- [x] 4.2 Create `src/modules/medical-records/server/update-evolution.ts` — validates input, authenticates, checks ownership via RLS query, uses shouldForceAddendum() to decide path: (a) within window -> update content + create version; (b) past window -> create addendum version only, set finalized_at if null, require reason
+- [x] 4.3 Create `src/modules/medical-records/server/get-evolutions-by-patient.ts` — validates patientId, authenticates, returns paginated list (cursor-based, ordered by created_at DESC), writes audit_log 'prontuario.read'
+- [x] 4.4 Create `src/modules/medical-records/server/get-evolution-detail.ts` — validates evolutionId, authenticates, returns full evolution content, writes audit_log 'evolution.read'
+- [x] 4.5 Create `src/modules/medical-records/server/list-evolution-versions.ts` — validates evolutionId, authenticates, returns all versions ordered by version_number DESC
+- [x] 4.6 Create `src/modules/medical-records/server/log-prontuario-access.ts` — validates input via Zod, authenticates caller, writes to audit_log using service-role client (justified comment), extracts IP from headers
+- [x] 4.7 **Integration tests:** Create `src/__tests__/integration/medical-records/evolution-crud.int.test.ts` — test createEvolution persists row + version, updateEvolution within 30d creates version (is_addendum=false), updateEvolution after 30d creates addendum (is_addendum=true, original content untouched), duplicate session_id rejected, RLS negative (psychologist B cannot read psychologist A's evolutions), audit_log row created on read
+- [x] 4.8 **Integration tests:** Create `src/__tests__/integration/medical-records/audit-log.int.test.ts` — test logProntuarioAccess writes row, user can SELECT own audit rows, user cannot INSERT directly (RLS blocks), evolution_versions JOIN-scoped RLS enforced
 
 ## 5. Module Barrel + Inngest Cron
 
