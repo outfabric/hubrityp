@@ -20,8 +20,8 @@
 
 ## 4. Zod Schemas — Hypothesis Validation
 
-- [ ] 4.1 Create `src/modules/medical-records/lib/schemas/hypothesis.ts` — export: `hypothesisStatusSchema` (z.enum(['investigating','confirmed','discarded'])), `createHypothesisSchema` (patientId uuid, optional description, optional cid10Code, optional cid10Description, optional notes, with `.refine()` ensuring at least one of description/cid10Code), `updateHypothesisSchema` (hypothesisId uuid, all fields optional with same refinement on update), `updateHypothesisStatusSchema` (hypothesisId uuid, status enum, optional notes). Export inferred types
-- [ ] 4.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/schemas/hypothesis.test.ts` — tests: createHypothesisSchema rejects when both description and cid10Code absent, accepts with only description, accepts with only cid10Code, accepts with both, rejects invalid patientId format. updateHypothesisStatusSchema accepts valid transitions, rejects invalid status value
+- [x] 4.1 Create `src/modules/medical-records/lib/schemas/hypothesis.ts` — export: `hypothesisStatusSchema` (z.enum(['investigating','confirmed','discarded'])), `createHypothesisSchema` (patientId uuid, optional description, optional cid10Code, optional cid10Description, optional notes, with `.refine()` ensuring at least one of description/cid10Code), `updateHypothesisSchema` (hypothesisId uuid, all fields optional with same refinement on update), `updateHypothesisStatusSchema` (hypothesisId uuid, status enum, optional notes). Export inferred types
+- [x] 4.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/schemas/hypothesis.test.ts` — tests: createHypothesisSchema rejects when both description and cid10Code absent, accepts with only description, accepts with only cid10Code, accepts with both, rejects invalid patientId format. updateHypothesisStatusSchema accepts valid transitions, rejects invalid status value
 
 ## 5. Server Actions — Hypothesis CRUD
 

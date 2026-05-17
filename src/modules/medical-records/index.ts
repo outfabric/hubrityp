@@ -51,3 +51,15 @@ export { isWithinEditWindow, shouldForceAddendum } from './lib/immutability-help
 
 // ---- Content Diff -----------------------------------------------------------
 export { contentHasChanged } from './lib/content-diff';
+
+// ---- Hypothesis Schemas -----------------------------------------------------
+export {
+  hypothesisStatusSchema,
+  createHypothesisSchema,
+  updateHypothesisSchema,
+  updateHypothesisStatusSchema,
+  type HypothesisStatus,
+  type CreateHypothesisInput,
+  type UpdateHypothesisInput,
+  type UpdateHypothesisStatusInput,
+} from './lib/schemas/hypothesis';
