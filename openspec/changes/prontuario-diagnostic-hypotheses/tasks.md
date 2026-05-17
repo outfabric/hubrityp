@@ -46,7 +46,7 @@
 
 ## 8. Frontend — Tab Integration
 
-- [ ] 8.1 Update the prontuario shell's ProntuarioTabs component (`src/modules/medical-records/components/prontuario-tabs.tsx`) to replace the EmptyTabPlaceholder for the "Hipoteses" tab with the new HypothesesTab component. Pass patient_id as prop
+- [x] 8.1 Update the prontuario shell's ProntuarioTabs component (`src/modules/medical-records/components/prontuario-tabs.tsx`) to replace the EmptyTabPlaceholder for the "Hipoteses" tab with the new HypothesesTab component. Pass patient_id as prop
 
 ## 9. End-to-End Tests
 
