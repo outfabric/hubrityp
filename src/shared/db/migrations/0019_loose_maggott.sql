@@ -27,6 +27,9 @@ CREATE TABLE "diagnostic_hypotheses" (
 CREATE INDEX "idx_diagnostic_hypotheses_patient_status_created" ON "diagnostic_hypotheses" USING btree ("patient_id","status","created_at");
 --> statement-breakpoint
 
+CREATE INDEX "idx_diagnostic_hypotheses_user_id" ON "diagnostic_hypotheses" USING btree ("user_id");
+--> statement-breakpoint
+
 -- =====================================================================
 -- 3. FOREIGN KEY CONSTRAINTS
 -- =====================================================================

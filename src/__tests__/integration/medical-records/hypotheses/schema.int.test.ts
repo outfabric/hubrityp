@@ -391,4 +391,16 @@ describe('diagnostic_hypotheses — indexes', () => {
 
     expect(result).toHaveLength(1);
   });
+
+  it('user_id index exists for RLS performance', async () => {
+    const result = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT indexname FROM pg_indexes
+             WHERE tablename = 'diagnostic_hypotheses'
+             AND indexname = 'idx_diagnostic_hypotheses_user_id'`,
+      );
+    });
+
+    expect(result).toHaveLength(1);
+  });
 });

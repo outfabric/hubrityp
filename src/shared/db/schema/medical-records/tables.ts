@@ -170,6 +170,7 @@ export const diagnosticHypotheses = pgTable(
       table.status,
       table.createdAt,
     ),
+    index('idx_diagnostic_hypotheses_user_id').on(table.userId),
   ],
 );
 
