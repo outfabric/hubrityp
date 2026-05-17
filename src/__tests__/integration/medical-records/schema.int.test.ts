@@ -7,6 +7,7 @@ import { sessions } from '@/shared/db/schema/agenda/tables';
 import { evolutions, evolutionVersions, auditLog } from '@/shared/db/schema/medical-records/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 
+import { cleanTestData } from '../setup/clean-test-data';
 import { runAsService } from '../setup/run-as-service';
 import { runAsUser } from '../setup/run-as-user';
 
@@ -49,14 +50,7 @@ async function seedSession(userId: string, patientId: string, sessionId: string)
 }
 
 afterEach(async () => {
-  await runAsService(async (db) => {
-    await db.delete(evolutionVersions);
-    await db.delete(evolutions);
-    await db.delete(auditLog);
-    await db.delete(sessions);
-    await db.delete(patients);
-    await db.execute(dsql`DELETE FROM auth.users WHERE email LIKE 'test-%@example.com'`);
-  });
+  await cleanTestData();
 });
 
 // =====================================================================
