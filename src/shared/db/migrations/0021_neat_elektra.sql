@@ -12,7 +12,7 @@ CREATE TABLE "scale_applications" (
 	"patient_id" uuid NOT NULL,
 	"scale_key" text NOT NULL,
 	"applied_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"responses" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"responses" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"total_score" integer,
 	"classification" text,
 	"notes" text,

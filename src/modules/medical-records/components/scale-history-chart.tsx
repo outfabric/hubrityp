@@ -13,7 +13,10 @@ import {
 } from 'recharts';
 
 import type { TimeseriesPoint } from '@/modules/medical-records';
-import { severityToDotFill } from '@/modules/medical-records/lib/scales/severity-tokens';
+import {
+  classificationToSeverity,
+  severityToDotFill,
+} from '@/modules/medical-records/lib/scales/severity-tokens';
 import type { ClassificationResult } from '@/modules/medical-records/lib/scales/types';
 
 // ---------------------------------------------------------------------------
@@ -122,25 +125,7 @@ interface StandardDataPoint {
   severity: ClassificationResult['severity'] | null;
 }
 
-/**
- * Map classification label -> severity for the dot color.
- * Server stores the classification label string (e.g. "Depressao minima").
- * We derive severity by keyword matching since the raw severity is not
- * persisted — it is computed from the scale's classify() at submit time.
- */
-function classificationToSeverity(
-  classification: string | null,
-): ClassificationResult['severity'] | null {
-  if (!classification) return null;
-  const lower = classification.toLowerCase();
-  if (lower.includes('minima') || lower.includes('minimal') || lower.includes('baixo risco'))
-    return 'minimal';
-  if (lower.includes('grave') || lower.includes('severa') || lower.includes('severe'))
-    return 'severe';
-  if (lower.includes('moderada') || lower.includes('moderate')) return 'moderate';
-  if (lower.includes('leve') || lower.includes('mild')) return 'mild';
-  return 'minimal';
-}
+// classificationToSeverity is imported from the shared severity-tokens helper
 
 function buildStandardData(timeseries: TimeseriesPoint[]): StandardDataPoint[] {
   const sorted = [...timeseries].reverse();

@@ -1486,7 +1486,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[]'::jsonb"
+          "default": "'{}'::jsonb"
         },
         "total_score": {
           "name": "total_score",

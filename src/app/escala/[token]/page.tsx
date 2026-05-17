@@ -1,7 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
-import { getScaleApplicationByToken, scaleByKey } from '@/modules/medical-records';
-import { ScalePublicForm } from '@/modules/medical-records/components/scale-public-form';
+import { getScaleApplicationByToken, ScalePublicForm, scaleByKey } from '@/modules/medical-records';
 
 // ---------------------------------------------------------------------------
 // Types

@@ -163,4 +163,8 @@ export { ScaleSelectModal } from './components/scale-select-modal';
 export { ScaleApplicationForm } from './components/scale-application-form';
 
 // ---- Scale Severity Tokens ---------------------------------------------------
-export { severityToBadgeVariant, severityToDotFill } from './lib/scales/severity-tokens';
+export {
+  classificationToSeverity,
+  severityToBadgeVariant,
+  severityToDotFill,
+} from './lib/scales/severity-tokens';

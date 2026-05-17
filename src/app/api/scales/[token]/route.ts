@@ -3,9 +3,9 @@
  *
  * This endpoint is intentionally public (no auth required) — the
  * `remote_token` in the URL is the authorization credential (256 bits of
- * entropy, 64 hex chars). The middleware classifies `/api/scales/*` as
- * public via the `/escala` prefix rule (this API lives behind the same
- * gate as the patient-facing `/escala/[token]` page).
+ * entropy, 64 hex chars). The middleware's `classifyPath()` returns the
+ * default `'public'` for `/api/scales/*` since it does not match any
+ * gated prefix.
  *
  * Security controls:
  *  - In-memory per-IP rate limiting (20/min GET, 5/min POST) applied BEFORE

@@ -7,8 +7,10 @@ import { useState } from 'react';
 
 import type { ScaleSummary, TimeseriesPoint } from '@/modules/medical-records';
 import { scaleByKey } from '@/modules/medical-records/lib/scales';
-import { severityToBadgeVariant } from '@/modules/medical-records/lib/scales/severity-tokens';
-import type { ClassificationResult } from '@/modules/medical-records/lib/scales/types';
+import {
+  classificationToSeverity,
+  severityToBadgeVariant,
+} from '@/modules/medical-records/lib/scales/severity-tokens';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -20,33 +22,7 @@ import { ScaleHistoryChart } from './scale-history-chart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Derive a displayable severity from the classification label stored in the DB.
- * The server stores the human-readable label (e.g., "Depressao minima"); we
- * need the severity enum value for badge coloring.
- */
-function classificationToSeverity(
-  classification: string | null,
-): ClassificationResult['severity'] | null {
-  if (!classification) return null;
-  const lower = classification.toLowerCase();
-  if (lower.includes('minima') || lower.includes('minimal') || lower.includes('baixo risco'))
-    return 'minimal';
-  if (lower.includes('grave') || lower.includes('severa') || lower.includes('severe'))
-    return 'severe';
-  if (lower.includes('moderada') || lower.includes('moderate')) return 'moderate';
-  if (lower.includes('leve') || lower.includes('mild')) return 'mild';
-  // WHOQOL-Bref stores a JSON object — classify as domains
-  try {
-    const parsed: unknown = JSON.parse(classification);
-    if (typeof parsed === 'object' && parsed !== null && 'physical' in parsed) {
-      return 'domains';
-    }
-  } catch {
-    // Not JSON — fall through to default
-  }
-  return 'minimal';
-}
+// classificationToSeverity is imported from the shared severity-tokens helper
 
 /**
  * Format the classification label for display.

@@ -235,7 +235,12 @@ export async function submitScaleResponsesByToken(
         { event: 'scale_public_audit_log_failed', errorCode: pgError.code },
         'failed to write audit_log entry for scale.public-submit',
       );
-      // Fire-and-forget: audit failure does not block the submission
+      // LGPD art. 37 / Lei 13.787/2018 compliance trade-off: audit failure
+      // is intentionally non-blocking. The patient's clinical response must
+      // not be lost due to an audit infrastructure issue. The logger.error
+      // above feeds into the alerting pipeline (Pino → observability) to
+      // surface the gap for manual remediation. If alerting is not yet
+      // configured, this is a known residual risk accepted by the team.
     }
 
     return { ok: true };

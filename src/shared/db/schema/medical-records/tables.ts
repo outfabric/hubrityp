@@ -282,7 +282,7 @@ export const scaleApplications = pgTable(
       .default(sql`now()`),
     responses: jsonb('responses')
       .notNull()
-      .default(sql`'[]'::jsonb`),
+      .default(sql`'{}'::jsonb`),
     totalScore: integer('total_score'),
     classification: text('classification'),
     notes: text('notes'),

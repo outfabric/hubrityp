@@ -17,7 +17,7 @@ export const createScaleApplicationSchema = z.object({
   patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
   scaleKey: z.enum(SCALE_KEYS, { message: 'Escala invalida.' }),
   mode: z.enum(['in-session', 'remote'], { message: 'Modo deve ser "in-session" ou "remote".' }),
-  expiresInHours: z.number().int().positive().optional(),
+  expiresInHours: z.number().int().positive().max(720).optional(),
 });
 
 export type CreateScaleApplicationInput = z.infer<typeof createScaleApplicationSchema>;
