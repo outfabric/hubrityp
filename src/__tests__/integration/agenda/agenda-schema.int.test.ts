@@ -11,6 +11,7 @@ import {
 } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 
+import { cleanTestData } from '../setup/clean-test-data';
 import { runAsService } from '../setup/run-as-service';
 import { runAsUser } from '../setup/run-as-user';
 
@@ -50,13 +51,10 @@ async function seedLocation(userId: string, locationId: string): Promise<void> {
 }
 
 afterEach(async () => {
+  await cleanTestData();
   await runAsService(async (db) => {
-    await db.delete(sessionHistory);
-    await db.delete(sessions);
     await db.delete(locations);
     await db.delete(agendaSettings);
-    await db.delete(patients);
-    await db.execute(dsql`DELETE FROM auth.users WHERE email LIKE 'test-%@example.com'`);
   });
 });
 

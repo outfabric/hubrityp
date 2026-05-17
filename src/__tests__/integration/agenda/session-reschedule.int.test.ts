@@ -10,6 +10,7 @@ import { markSessionDoneImpl } from '@/modules/agenda/server/mark-session-done';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 
+import { cleanTestData } from '../setup/clean-test-data';
 import { runAsService } from '../setup/run-as-service';
 
 // ---------------------------------------------------------------------------
@@ -72,12 +73,7 @@ async function createTestSession(
 }
 
 afterEach(async () => {
-  await runAsService(async (db) => {
-    await db.delete(sessionHistory);
-    await db.delete(sessions);
-    await db.delete(patients);
-    await db.execute(dsql`DELETE FROM auth.users WHERE email LIKE 'test-%@example.com'`);
-  });
+  await cleanTestData();
 });
 
 // =====================================================================

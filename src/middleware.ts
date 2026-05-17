@@ -120,11 +120,20 @@ function classifyPath(pathname: string): PathClass {
   if (pathname === ONBOARDING_PATH || pathname.startsWith(`${ONBOARDING_PATH}/`)) {
     return 'onboarding';
   }
-  // `(app)` shell: today only `/dashboard*`. The strict prefix check (with
-  // a separator or exact match) keeps `/some/dashboard-news` out of the
-  // gated set -- see the matcher-boundary regression test.
-  if (pathname === DASHBOARD_PATH || pathname.startsWith(`${DASHBOARD_PATH}/`)) {
-    return 'app';
+  // `(app)` shell: all authenticated route prefixes. The strict prefix check
+  // (exact match OR prefix + `/` separator) prevents false matches like
+  // `/pacientes-info` or `/dashboardnews` -- see the matcher-boundary tests.
+  const APP_PREFIXES = [
+    '/pacientes',
+    '/agenda',
+    '/caixa-de-entrada',
+    '/configuracoes',
+    '/dashboard',
+  ] as const;
+  for (const prefix of APP_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return 'app';
+    }
   }
   return 'public';
 }

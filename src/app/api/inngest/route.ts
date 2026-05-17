@@ -1,5 +1,5 @@
 /**
- * Inngest serve handler — registers all WhatsApp Inngest functions so the
+ * Inngest serve handler — registers all Inngest functions so the
  * Inngest dev server / cloud can discover and invoke them via HTTP.
  *
  * Exports GET, POST, and PUT as required by the Inngest SDK for Next.js
@@ -8,6 +8,7 @@
 
 import { serve } from 'inngest/next';
 
+import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
 import { inngest } from '@/modules/whatsapp/inngest/client';
 import { confirmationAckSender } from '@/modules/whatsapp/inngest/confirmation-ack-sender';
@@ -33,5 +34,6 @@ export const { GET, POST, PUT } = serve({
     webhookCancellationHandler,
     webhookStopHandler,
     inboxMessageIngest,
+    remindMissingEvolution,
   ],
 });

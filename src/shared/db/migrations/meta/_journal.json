@@ -120,6 +120,20 @@
       "when": 1778685201164,
       "tag": "0016_giant_hardball",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1778988754664,
+      "tag": "0017_mushy_dagger",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1779292800000,
+      "tag": "0018_drop_evolution_versions_update_policy",
+      "breakpoints": true
     }
   ]
 }
