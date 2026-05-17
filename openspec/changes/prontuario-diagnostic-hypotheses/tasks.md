@@ -15,8 +15,8 @@
 
 ## 3. CID-10 Search Utility
 
-- [ ] 3.1 Create `src/modules/medical-records/lib/cid10-search.ts` — export `searchCid10(query: string, limit?: number): Cid10Result[]`. Loads `cid10-data.json` once (lazy singleton). Performs accent-stripped, case-insensitive matching: code prefix OR description substring. Returns sorted results (exact prefix first, then alphabetical). Export `Cid10Result` type (`{ code: string; description: string }`)
-- [ ] 3.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/cid10-search.test.ts` — tests: code prefix match ('F32' returns F32.x codes), description substring match ('depressao' matches 'Depressao'), accent-insensitive search, case-insensitive search, empty query returns [], result limit respected (limit=5 returns at most 5), query with no matches returns []
+- [x] 3.1 Create `src/modules/medical-records/lib/cid10-search.ts` — export `searchCid10(query: string, limit?: number): Cid10Result[]`. Loads `cid10-data.json` once (lazy singleton). Performs accent-stripped, case-insensitive matching: code prefix OR description substring. Returns sorted results (exact prefix first, then alphabetical). Export `Cid10Result` type (`{ code: string; description: string }`)
+- [x] 3.2 **Unit test:** Create `src/__tests__/unit/modules/medical-records/lib/cid10-search.test.ts` — tests: code prefix match ('F32' returns F32.x codes), description substring match ('depressao' matches 'Depressao'), accent-insensitive search, case-insensitive search, empty query returns [], result limit respected (limit=5 returns at most 5), query with no matches returns []
 
 ## 4. Zod Schemas — Hypothesis Validation
 
