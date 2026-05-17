@@ -1,7 +1,7 @@
 ## 1. Middleware Defensive Sweep
 
-- [ ] 1.1 Update `classifyPath()` in `src/middleware.ts` to classify `/pacientes`, `/agenda`, `/caixa-de-entrada`, `/configuracoes` as `'app'` (using the same strict prefix+separator pattern as `/dashboard`)
-- [ ] 1.2 **Integration tests:** Create `src/__tests__/integration/middleware/app-route-gating.int.test.ts` — test that unauthenticated GET to `/pacientes`, `/pacientes/abc/prontuario`, `/agenda`, `/caixa-de-entrada`, `/configuracoes` all redirect to `/login?redirectTo=...`. Test that `/dashboardnews` remains public (boundary). Test that existing `/dashboard` behavior is unchanged
+- [x] 1.1 Update `classifyPath()` in `src/middleware.ts` to classify `/pacientes`, `/agenda`, `/caixa-de-entrada`, `/configuracoes` as `'app'` (using the same strict prefix+separator pattern as `/dashboard`)
+- [x] 1.2 **Integration tests:** Create `src/__tests__/integration/middleware/app-route-gating.int.test.ts` — test that unauthenticated GET to `/pacientes`, `/pacientes/abc/prontuario`, `/agenda`, `/caixa-de-entrada`, `/configuracoes` all redirect to `/login?redirectTo=...`. Test that `/dashboardnews` remains public (boundary). Test that existing `/dashboard` behavior is unchanged
 
 ## 2. Database Schema — Medical Records Domain
 
