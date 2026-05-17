@@ -1,11 +1,11 @@
 ## 1. Database Schema — scale_applications Table
 
-- [ ] 1.1 Add `scaleApplications` table definition to `src/shared/db/schema/medical-records/tables.ts` with all columns per design.md (id, user_id, patient_id, scale_key with CHECK constraint, applied_at, responses, total_score, classification, notes, applied_remotely, remote_token UNIQUE, token_expires_at, completed_at, created_at) and indexes
-- [ ] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `scaleApplicationsPolicies` array with SELECT/INSERT/UPDATE for authenticated (user_id = auth.uid()), no DELETE
-- [ ] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to export `scaleApplications` table and policies
-- [ ] 1.4 Run `npm run db:generate`, manually append RLS SQL + CHECK constraint (`scale_key IN ('phq9','gad7','sdq','audit','whoqol-bref')`) + FK constraints (user_id -> auth.users, patient_id -> patients) to the generated migration
-- [ ] 1.5 Run `npm run db:migrate` locally, verify table exists with correct columns and policies
-- [ ] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/scale-applications-schema.int.test.ts` — verify table exists, RLS enabled, SELECT/INSERT/UPDATE policies present, NO DELETE policy, UNIQUE on remote_token, CHECK on scale_key, index on (patient_id, scale_key, applied_at)
+- [x] 1.1 Add `scaleApplications` table definition to `src/shared/db/schema/medical-records/tables.ts` with all columns per design.md (id, user_id, patient_id, scale_key with CHECK constraint, applied_at, responses, total_score, classification, notes, applied_remotely, remote_token UNIQUE, token_expires_at, completed_at, created_at) and indexes
+- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `scaleApplicationsPolicies` array with SELECT/INSERT/UPDATE for authenticated (user_id = auth.uid()), no DELETE
+- [x] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to export `scaleApplications` table and policies
+- [x] 1.4 Run `npm run db:generate`, manually append RLS SQL + CHECK constraint (`scale_key IN ('phq9','gad7','sdq','audit','whoqol-bref')`) + FK constraints (user_id -> auth.users, patient_id -> patients) to the generated migration
+- [x] 1.5 Run `npm run db:migrate` locally, verify table exists with correct columns and policies
+- [x] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/scale-applications-schema.int.test.ts` — verify table exists, RLS enabled, SELECT/INSERT/UPDATE policies present, NO DELETE policy, UNIQUE on remote_token, CHECK on scale_key, index on (patient_id, scale_key, applied_at)
 
 ## 2. Scale Definitions Library — Types and PHQ-9
 
