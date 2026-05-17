@@ -34,7 +34,7 @@
 
 ## 6. Module Barrel Update
 
-- [ ] 6.1 Update `src/modules/medical-records/index.ts` barrel to re-export: createHypothesis, updateHypothesis, updateHypothesisStatus, listHypothesesByPatient, searchCid10 (server action), hypothesisStatusSchema, createHypothesisSchema, updateHypothesisSchema, updateHypothesisStatusSchema, Cid10Result type, HypothesisStatus type
+- [x] 6.1 Update `src/modules/medical-records/index.ts` barrel to re-export: createHypothesis, updateHypothesis, updateHypothesisStatus, listHypothesesByPatient, searchCid10 (server action), hypothesisStatusSchema, createHypothesisSchema, updateHypothesisSchema, updateHypothesisStatusSchema, Cid10Result type, HypothesisStatus type
 
 ## 7. Frontend — Hypotheses Tab Components
 
