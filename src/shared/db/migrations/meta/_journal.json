@@ -134,6 +134,13 @@
       "when": 1779292800000,
       "tag": "0018_drop_evolution_versions_update_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1779002783110,
+      "tag": "0019_loose_maggott",
+      "breakpoints": true
     }
   ]
 }

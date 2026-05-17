@@ -9,6 +9,7 @@ import {
   timestamp,
   unique,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 // `evolutions` stores clinical evolution records (prontuario) belonging to a
@@ -127,3 +128,51 @@ export const auditLog = pgTable(
 
 export type AuditLog = typeof auditLog.$inferSelect;
 export type NewAuditLog = typeof auditLog.$inferInsert;
+
+// `diagnostic_hypotheses` stores clinical diagnostic hypotheses linked to a
+// patient. Each hypothesis requires at least one of `description` (free-text)
+// or `cid10_code` (CID-10 catalog reference) via a CHECK constraint.
+// Status tracks the lifecycle: 'investigating' → 'confirmed' or 'discarded'.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — Lei 13.787/2018 mandates retention; "discard" is a
+// status transition, not a hard delete.
+export const diagnosticHypotheses = pgTable(
+  'diagnostic_hypotheses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    description: text('description'), // free-text hypothesis
+    cid10Code: varchar('cid10_code', { length: 10 }), // e.g. 'F32.0'
+    cid10Description: text('cid10_description'), // official description
+
+    // CHECK constraint in migration: status IN ('investigating','confirmed','discarded')
+    status: text('status').notNull().default('investigating'),
+
+    notes: text('notes'), // optional observation / discard reason
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('idx_diagnostic_hypotheses_patient_status_created').on(
+      table.patientId,
+      table.status,
+      table.createdAt,
+    ),
+    index('idx_diagnostic_hypotheses_user_id').on(table.userId),
+  ],
+);
+
+export type DiagnosticHypothesis = typeof diagnosticHypotheses.$inferSelect;
+export type NewDiagnosticHypothesis = typeof diagnosticHypotheses.$inferInsert;

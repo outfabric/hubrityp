@@ -81,7 +81,7 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
       </h1>
 
       {/* Tabs shell — Evolucoes tab active by default */}
-      <ProntuarioTabs>
+      <ProntuarioTabs patientId={patientId}>
         <EvolutionsList
           patientId={patientId}
           initialEvolutions={evolutions}

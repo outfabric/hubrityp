@@ -3,9 +3,17 @@
 import { Brain, ClipboardList, FileText, Paperclip, Scale, StickyNote, Target } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import {
+  createHypothesis,
+  listHypotheses,
+  searchCid10,
+  updateHypothesis,
+  updateHypothesisStatus,
+} from '@/app/(app)/pacientes/[id]/prontuario/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { EmptyTabPlaceholder } from './empty-tab-placeholder';
+import { HypothesesTab } from './hypotheses-tab';
 
 // ---------------------------------------------------------------------------
 // Tab definitions
@@ -34,7 +42,7 @@ const TABS: TabDefinition[] = [
     value: 'hipoteses',
     label: 'Hipoteses',
     description: 'Hipoteses diagnosticas e formulacao do caso serao registradas aqui.',
-    functional: false,
+    functional: true,
     icon: Brain,
   },
   {
@@ -81,6 +89,8 @@ const TABS: TabDefinition[] = [
 interface ProntuarioTabsProps {
   /** Content to render inside the "Evolucoes" tab. */
   children: ReactNode;
+  /** Patient ID passed to sub-tab components that need it (e.g., HypothesesTab). */
+  patientId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,12 +102,13 @@ interface ProntuarioTabsProps {
  *
  * 7 tabs total:
  * - Evolucoes (functional — renders children)
- * - Hipoteses, Plano, Escalas, Documentos, Anexos, Notas (each renders
+ * - Hipoteses (functional — renders HypothesesTab)
+ * - Plano, Escalas, Documentos, Anexos, Notas (each renders
  *   EmptyTabPlaceholder with contextual description)
  *
  * Active tab: border-bottom 2px brand-500 (handled by the shadcn Tabs primitive).
  */
-export function ProntuarioTabs({ children }: ProntuarioTabsProps) {
+export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
   return (
     <Tabs defaultValue="evolucoes" data-testid="prontuario-tabs">
       <TabsList className="w-full overflow-x-auto" data-testid="prontuario-tabs-list">
@@ -115,6 +126,18 @@ export function ProntuarioTabs({ children }: ProntuarioTabsProps) {
       {/* Functional tab: Evolucoes */}
       <TabsContent value="evolucoes" data-testid="prontuario-tab-content-evolucoes">
         {children}
+      </TabsContent>
+
+      {/* Functional tab: Hipoteses */}
+      <TabsContent value="hipoteses" data-testid="prontuario-tab-content-hipoteses">
+        <HypothesesTab
+          patientId={patientId}
+          listHypotheses={listHypotheses}
+          createHypothesis={createHypothesis}
+          updateHypothesis={updateHypothesis}
+          updateHypothesisStatus={updateHypothesisStatus}
+          searchCid10={searchCid10}
+        />
       </TabsContent>
 
       {/* Non-functional placeholder tabs */}
