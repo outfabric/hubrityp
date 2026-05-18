@@ -6,29 +6,46 @@
 // HypothesesTab and TreatmentPlanTab.
 
 import type {
+  AttachmentCategory,
   CreateHypothesisResult,
   CreateScaleApplicationResult,
+  DeleteAttachmentResult,
+  GetAttachmentSignedUrlResult,
+  GetPersonalNotesResult,
   GetTreatmentPlanResult,
   HypothesisStatus,
+  ListAttachmentsResult,
   ListHypothesesResult,
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
+  RemovePersonalNotesPasswordResult,
+  SetPersonalNotesPasswordResult,
   SubmitScaleResponsesResult,
   UpdateHypothesisResult,
   UpdateHypothesisStatusResult,
+  UploadAttachmentResult,
+  UpsertPersonalNotesResult,
   UpsertTreatmentPlanResult,
 } from '@/modules/medical-records';
 import {
   createHypothesisImpl,
   createScaleApplicationImpl,
+  deleteAttachmentImpl,
+  getAttachmentSignedUrlImpl,
+  getPersonalNotesImpl,
   getTreatmentPlanImpl,
+  listAttachmentsImpl,
   listHypothesesByPatientImpl,
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
+  removePersonalNotesPasswordImpl,
   searchCid10Impl,
+  setPersonalNotesPasswordImpl,
   submitScaleResponsesImpl,
   updateHypothesisImpl,
   updateHypothesisStatusImpl,
+  uploadAttachmentImpl,
+  upsertPersonalNotesImpl,
   upsertTreatmentPlanImpl,
 } from '@/modules/medical-records';
 import type { Cid10Result } from '@/modules/medical-records/lib/cid10-search';
@@ -140,4 +157,74 @@ export async function submitScaleResponses(input: {
 }): Promise<SubmitScaleResponsesResult> {
   const supabase = await createServerClient();
   return submitScaleResponsesImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Attachments
+// ---------------------------------------------------------------------------
+
+export async function listAttachments(input: {
+  patientId: string;
+  category?: AttachmentCategory;
+}): Promise<ListAttachmentsResult> {
+  const supabase = await createServerClient();
+  return listAttachmentsImpl(supabase, input);
+}
+
+export async function uploadAttachment(
+  patientId: string,
+  formData: FormData,
+): Promise<UploadAttachmentResult> {
+  const supabase = await createServerClient();
+  return uploadAttachmentImpl(supabase, patientId, formData);
+}
+
+export async function getAttachmentSignedUrl(input: {
+  attachmentId: string;
+}): Promise<GetAttachmentSignedUrlResult> {
+  const supabase = await createServerClient();
+  return getAttachmentSignedUrlImpl(supabase, input);
+}
+
+export async function deleteAttachment(input: {
+  attachmentId: string;
+}): Promise<DeleteAttachmentResult> {
+  const supabase = await createServerClient();
+  return deleteAttachmentImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Personal Notes
+// ---------------------------------------------------------------------------
+
+export async function getPersonalNotes(input: {
+  patientId: string;
+  password?: string;
+}): Promise<GetPersonalNotesResult> {
+  const supabase = await createServerClient();
+  return getPersonalNotesImpl(supabase, input);
+}
+
+export async function upsertPersonalNotes(input: {
+  patientId: string;
+  content: string;
+}): Promise<UpsertPersonalNotesResult> {
+  const supabase = await createServerClient();
+  return upsertPersonalNotesImpl(supabase, input);
+}
+
+export async function setPersonalNotesPassword(input: {
+  patientId: string;
+  newPassword: string;
+}): Promise<SetPersonalNotesPasswordResult> {
+  const supabase = await createServerClient();
+  return setPersonalNotesPasswordImpl(supabase, input);
+}
+
+export async function removePersonalNotesPassword(input: {
+  patientId: string;
+  currentPassword: string;
+}): Promise<RemovePersonalNotesPasswordResult> {
+  const supabase = await createServerClient();
+  return removePersonalNotesPasswordImpl(supabase, input);
 }

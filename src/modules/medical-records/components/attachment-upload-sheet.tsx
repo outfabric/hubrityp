@@ -36,8 +36,7 @@ const FILE_TYPE_LEGEND = 'PDF, JPG, PNG, MP3, MP4, DOC, DOCX';
 const ERROR_MESSAGES: Record<string, string> = {
   FILE_TOO_LARGE: 'Arquivo excede o limite de 50MB.',
   INVALID_MIME: 'Tipo de arquivo nao permitido para esta categoria.',
-  CONSENT_REQUIRED:
-    'Gravacoes requerem termo de consentimento assinado (CFP 13/2022).',
+  CONSENT_REQUIRED: 'Gravacoes requerem termo de consentimento assinado (CFP 13/2022).',
   UNAUTHORIZED: 'Voce nao tem permissao para realizar esta acao.',
   NOT_FOUND: 'Paciente nao encontrado.',
 };
@@ -53,10 +52,7 @@ interface AttachmentUploadSheetProps {
   /** Whether the patient has an active consent term (for audio uploads). */
   hasActiveConsent: boolean;
   /** Server action: upload an attachment. */
-  uploadAttachment: (
-    patientId: string,
-    formData: FormData,
-  ) => Promise<UploadAttachmentResult>;
+  uploadAttachment: (patientId: string, formData: FormData) => Promise<UploadAttachmentResult>;
   /** Called after a successful upload so the parent can refresh the list. */
   onUploaded: () => void;
 }
@@ -170,8 +166,7 @@ export function AttachmentUploadSheet({
         onOpenChange(false);
         onUploaded();
       } else {
-        const message =
-          ERROR_MESSAGES[result.code] ?? 'Erro ao anexar arquivo. Tente novamente.';
+        const message = ERROR_MESSAGES[result.code] ?? 'Erro ao anexar arquivo. Tente novamente.';
         toast.error(message);
       }
     } catch {
@@ -231,9 +226,7 @@ export function AttachmentUploadSheet({
                   <p className="text-text-primary text-sm font-medium">
                     Arraste ou clique para selecionar
                   </p>
-                  <p className="text-text-tertiary mt-1 text-xs">
-                    {FILE_TYPE_LEGEND}
-                  </p>
+                  <p className="text-text-tertiary mt-1 text-xs">{FILE_TYPE_LEGEND}</p>
                 </>
               )}
               <p className="text-text-tertiary mt-2 text-xs">Max 50MB</p>
@@ -250,9 +243,7 @@ export function AttachmentUploadSheet({
 
           {/* Category RadioGroup */}
           <div>
-            <Label className="text-text-primary mb-2 block text-sm font-medium">
-              Categoria
-            </Label>
+            <Label className="text-text-primary mb-2 block text-sm font-medium">Categoria</Label>
             <RadioGroup
               value={category}
               onValueChange={(v) => setCategory(v as AttachmentCategory)}

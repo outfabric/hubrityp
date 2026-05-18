@@ -55,18 +55,13 @@ interface AttachmentsTabProps {
     category?: AttachmentCategory;
   }) => Promise<ListAttachmentsResult>;
   /** Server action: upload an attachment. */
-  uploadAttachment: (
-    patientId: string,
-    formData: FormData,
-  ) => Promise<UploadAttachmentResult>;
+  uploadAttachment: (patientId: string, formData: FormData) => Promise<UploadAttachmentResult>;
   /** Server action: get a signed URL for an attachment. */
   getAttachmentSignedUrl: (input: {
     attachmentId: string;
   }) => Promise<GetAttachmentSignedUrlResult>;
   /** Server action: soft-delete an attachment. */
-  deleteAttachment: (input: {
-    attachmentId: string;
-  }) => Promise<DeleteAttachmentResult>;
+  deleteAttachment: (input: { attachmentId: string }) => Promise<DeleteAttachmentResult>;
 }
 
 // ---------------------------------------------------------------------------

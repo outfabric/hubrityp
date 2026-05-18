@@ -51,10 +51,10 @@
 
 ## 7. Frontend — Personal Notes Tab
 
-- [ ] 7.1 Create `src/modules/medical-records/components/personal-notes-lock.tsx` (Client Component) — centered Card with Lock icon, "Notas protegidas" h4 heading; Input type password + Button "Desbloquear"; locked state shows countdown "Bloqueado por X minutos" (computed from lockedUntilIso); failed attempt shows "Senha incorreta. Tentativas restantes: N"
-- [ ] 7.2 Create `src/modules/medical-records/components/personal-notes-password-sheet.tsx` (Client Component) — Sheet with two modes: set (new password input + confirm + warning about no recovery) and remove (current password input + Button "Remover senha"); validation inline; Sonner toast on success
-- [ ] 7.3 Create `src/modules/medical-records/components/personal-notes-tab.tsx` (Client Component) — replaces EmptyTabPlaceholder for "Notas" tab; top banner (bg warning-50, text warning-700, Lock icon, regulatory text); if password set + not unlocked this session: renders PersonalNotesLock; once unlocked: Tiptap editor (same config reused from evolutions), auto-save indicator; footer links "Configurar senha extra" / "Remover senha extra" opening PersonalNotesPasswordSheet; info note about export exclusion
-- [ ] 7.4 Update `src/modules/medical-records/components/prontuario-tabs.tsx` — replace EmptyTabPlaceholder for "Anexos" tab with AttachmentsTab component; replace EmptyTabPlaceholder for "Notas" tab with PersonalNotesTab component; add Lock icon to "Notas" tab label
+- [x] 7.1 Create `src/modules/medical-records/components/personal-notes-lock.tsx` (Client Component) — centered Card with Lock icon, "Notas protegidas" h4 heading; Input type password + Button "Desbloquear"; locked state shows countdown "Bloqueado por X minutos" (computed from lockedUntilIso); failed attempt shows "Senha incorreta. Tentativas restantes: N"
+- [x] 7.2 Create `src/modules/medical-records/components/personal-notes-password-sheet.tsx` (Client Component) — Sheet with two modes: set (new password input + confirm + warning about no recovery) and remove (current password input + Button "Remover senha"); validation inline; Sonner toast on success
+- [x] 7.3 Create `src/modules/medical-records/components/personal-notes-tab.tsx` (Client Component) — replaces EmptyTabPlaceholder for "Notas" tab; top banner (bg warning-50, text warning-700, Lock icon, regulatory text); if password set + not unlocked this session: renders PersonalNotesLock; once unlocked: Tiptap editor (same config reused from evolutions), auto-save indicator; footer links "Configurar senha extra" / "Remover senha extra" opening PersonalNotesPasswordSheet; info note about export exclusion
+- [x] 7.4 Update `src/modules/medical-records/components/prontuario-tabs.tsx` — replace EmptyTabPlaceholder for "Anexos" tab with AttachmentsTab component; replace EmptyTabPlaceholder for "Notas" tab with PersonalNotesTab component; add Lock icon to "Notas" tab label
 
 ## 8. End-to-End Tests
 

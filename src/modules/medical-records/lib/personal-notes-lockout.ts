@@ -70,7 +70,10 @@ export interface FailedAttemptResult {
  * If the new `failedAttempts` count reaches `MAX_FAILED_ATTEMPTS`, the
  * function returns a `lockedUntil` timestamp 15 minutes from `now`.
  */
-export function applyFailedAttempt(state: LockoutState, now: Date = new Date()): FailedAttemptResult {
+export function applyFailedAttempt(
+  state: LockoutState,
+  now: Date = new Date(),
+): FailedAttemptResult {
   const newCount = state.failedAttempts + 1;
   const shouldLock = newCount >= MAX_FAILED_ATTEMPTS;
 

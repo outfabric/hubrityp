@@ -1,25 +1,44 @@
 'use client';
 
-import { Brain, ClipboardList, FileText, Paperclip, Scale, StickyNote, Target } from 'lucide-react';
+import {
+  Brain,
+  ClipboardList,
+  FileText,
+  Lock,
+  Paperclip,
+  Scale,
+  StickyNote,
+  Target,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import {
   createHypothesis,
   createScaleApplication,
+  deleteAttachment,
+  getAttachmentSignedUrl,
+  getPersonalNotes,
   getTreatmentPlan,
+  listAttachments,
   listHypotheses,
   listScalesForPatient,
   listTreatmentPlanVersions,
+  removePersonalNotesPassword,
   searchCid10,
+  setPersonalNotesPassword,
   submitScaleResponses,
   updateHypothesis,
   updateHypothesisStatus,
+  uploadAttachment,
+  upsertPersonalNotes,
   upsertTreatmentPlan,
 } from '@/app/(app)/pacientes/[id]/prontuario/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
+import { AttachmentsTab } from './attachments-tab';
 import { EmptyTabPlaceholder } from './empty-tab-placeholder';
 import { HypothesesTab } from './hypotheses-tab';
+import { PersonalNotesTab } from './personal-notes-tab';
 import { ScalesTab } from './scales-tab';
 import { TreatmentPlanTab } from './treatment-plan';
 
@@ -78,14 +97,14 @@ const TABS: TabDefinition[] = [
     value: 'anexos',
     label: 'Anexos',
     description: 'Arquivos enviados pelo paciente ou pelo profissional serao organizados aqui.',
-    functional: false,
+    functional: true,
     icon: Paperclip,
   },
   {
     value: 'notas',
     label: 'Notas',
     description: 'Anotacoes rapidas e lembretes pessoais sobre o caso serao mantidos aqui.',
-    functional: false,
+    functional: true,
     icon: StickyNote,
   },
 ];
@@ -99,6 +118,8 @@ interface ProntuarioTabsProps {
   children: ReactNode;
   /** Patient ID passed to sub-tab components that need it (e.g., HypothesesTab). */
   patientId: string;
+  /** Whether the patient has an active consent term (gates audio uploads). */
+  hasActiveConsent?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,11 +134,17 @@ interface ProntuarioTabsProps {
  * - Hipoteses (functional — renders HypothesesTab)
  * - Plano (functional — renders TreatmentPlanTab)
  * - Escalas (functional — renders ScalesTab)
- * - Documentos, Anexos, Notas (each renders EmptyTabPlaceholder)
+ * - Anexos (functional — renders AttachmentsTab)
+ * - Notas (functional — renders PersonalNotesTab, Lock icon in trigger)
+ * - Documentos (renders EmptyTabPlaceholder)
  *
  * Active tab: border-bottom 2px brand-500 (handled by the shadcn Tabs primitive).
  */
-export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
+export function ProntuarioTabs({
+  children,
+  patientId,
+  hasActiveConsent = false,
+}: ProntuarioTabsProps) {
   return (
     <Tabs defaultValue="evolucoes" data-testid="prontuario-tabs">
       <TabsList className="w-full overflow-x-auto" data-testid="prontuario-tabs-list">
@@ -127,7 +154,14 @@ export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
             value={tab.value}
             data-testid={`prontuario-tab-${tab.value}`}
           >
-            {tab.label}
+            {tab.value === 'notas' ? (
+              <span className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                {tab.label}
+              </span>
+            ) : (
+              tab.label
+            )}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -166,6 +200,29 @@ export function ProntuarioTabs({ children, patientId }: ProntuarioTabsProps) {
           listScalesForPatient={listScalesForPatient}
           createScaleApplication={createScaleApplication}
           submitScaleResponses={submitScaleResponses}
+        />
+      </TabsContent>
+
+      {/* Functional tab: Anexos */}
+      <TabsContent value="anexos" data-testid="prontuario-tab-content-anexos">
+        <AttachmentsTab
+          patientId={patientId}
+          hasActiveConsent={hasActiveConsent}
+          listAttachments={listAttachments}
+          uploadAttachment={uploadAttachment}
+          getAttachmentSignedUrl={getAttachmentSignedUrl}
+          deleteAttachment={deleteAttachment}
+        />
+      </TabsContent>
+
+      {/* Functional tab: Notas pessoais */}
+      <TabsContent value="notas" data-testid="prontuario-tab-content-notas">
+        <PersonalNotesTab
+          patientId={patientId}
+          getPersonalNotes={getPersonalNotes}
+          upsertPersonalNotes={upsertPersonalNotes}
+          setPersonalNotesPassword={setPersonalNotesPassword}
+          removePersonalNotesPassword={removePersonalNotesPassword}
         />
       </TabsContent>
 

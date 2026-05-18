@@ -236,3 +236,8 @@ export {
 export { AttachmentCard, type AttachmentCardData } from './components/attachment-card';
 export { AttachmentUploadSheet } from './components/attachment-upload-sheet';
 export { AttachmentsTab } from './components/attachments-tab';
+
+// ---- Personal Notes Components (Client Components) --------------------------
+export { PersonalNotesLock } from './components/personal-notes-lock';
+export { PersonalNotesPasswordSheet } from './components/personal-notes-password-sheet';
+export { PersonalNotesTab } from './components/personal-notes-tab';

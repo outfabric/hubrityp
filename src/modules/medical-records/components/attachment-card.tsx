@@ -91,10 +91,7 @@ export function AttachmentCard({ attachment, onPreview, onDelete }: AttachmentCa
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p
-                className="text-text-primary truncate text-sm font-medium"
-                title={displayName}
-              >
+              <p className="text-text-primary truncate text-sm font-medium" title={displayName}>
                 {displayName}
               </p>
               <div className="text-text-tertiary mt-1 flex flex-wrap items-center gap-2 text-xs">
