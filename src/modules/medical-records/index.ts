@@ -197,3 +197,37 @@ export {
   severityToBadgeVariant,
   severityToDotFill,
 } from './lib/scales/severity-tokens';
+
+// ---- Personal Notes Server Actions ------------------------------------------
+export {
+  getPersonalNotesImpl,
+  upsertPersonalNotesImpl,
+  setPersonalNotesPasswordImpl,
+  removePersonalNotesPasswordImpl,
+  type GetPersonalNotesResult,
+  type UpsertPersonalNotesResult,
+  type SetPersonalNotesPasswordResult,
+  type RemovePersonalNotesPasswordResult,
+} from './server/personal-notes';
+
+// ---- Personal Notes Schemas -------------------------------------------------
+export {
+  personalNotesPasswordSchema,
+  upsertPersonalNotesInputSchema,
+  getPersonalNotesInputSchema,
+  type UpsertPersonalNotesInput,
+  type GetPersonalNotesInput,
+} from './lib/personal-notes-schemas';
+
+// ---- Personal Notes Lockout (pure helpers) -----------------------------------
+export {
+  assessLockout,
+  applyFailedAttempt,
+  applySuccessfulVerification,
+  MAX_FAILED_ATTEMPTS,
+  LOCKOUT_DURATION_MS,
+  type LockoutState,
+  type LockoutStatus,
+  type FailedAttemptResult,
+  type SuccessResult,
+} from './lib/personal-notes-lockout';
