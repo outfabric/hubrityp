@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test as baseTest, type Page } from '@playwright/test';
 
 import { test } from '../setup/db-fixture';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
@@ -536,5 +536,27 @@ test.describe('@prontuario clinical documents', () => {
       // 11. All 4 documents should be shown again
       await expect(allCards).toHaveCount(4, { timeout: 10_000 });
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Negative-auth test — must NOT use storageState (anonymous browser)
+// ---------------------------------------------------------------------------
+
+baseTest.describe('@prontuario clinical-documents negative-auth', () => {
+  baseTest('redirects anonymous user from document novo page to login', async ({ page }) => {
+    const target = `/pacientes/00000000-0000-0000-0000-000000000001/prontuario/documentos/novo`;
+    await page.goto(target);
+    await page.waitForURL('**/login**');
+    const url = new URL(page.url());
+    expect(url.searchParams.get('redirectTo')).toBeTruthy();
+  });
+
+  baseTest('redirects anonymous user from document viewer to login', async ({ page }) => {
+    const target = `/pacientes/00000000-0000-0000-0000-000000000001/prontuario/documentos/00000000-0000-0000-0000-000000000002`;
+    await page.goto(target);
+    await page.waitForURL('**/login**');
+    const url = new URL(page.url());
+    expect(url.searchParams.get('redirectTo')).toBeTruthy();
   });
 });
