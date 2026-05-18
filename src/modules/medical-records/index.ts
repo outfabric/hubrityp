@@ -249,10 +249,12 @@ export {
   updateDocumentImpl,
   listDocumentsByPatientImpl,
   getDocumentDetailImpl,
+  finalizeDocumentImpl,
   type CreateDocumentResult,
   type UpdateDocumentResult,
   type ListDocumentsByPatientResult,
   type GetDocumentDetailResult,
+  type FinalizeDocumentResult,
   type DocumentSummary,
   type DocumentFull,
 } from './server/clinical-documents';

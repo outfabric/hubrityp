@@ -4,9 +4,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { inngest } from '@/modules/medical-records/inngest/client';
 import {
   computeReferencesCid10,
   createDocumentInputSchema,
+  finalizeDocumentInputSchema,
   updateDocumentInputSchema,
 } from '@/modules/medical-records/lib/schemas/clinical-documents';
 import { db } from '@/shared/db/client';
@@ -33,6 +35,18 @@ export type ListDocumentsByPatientResult =
 export type GetDocumentDetailResult =
   | { ok: true; document: DocumentFull }
   | { ok: false; code: 'UNAUTHORIZED' | 'NOT_FOUND' | 'VALIDATION_ERROR' };
+
+export type FinalizeDocumentResult =
+  | { ok: true; data: { id: string } }
+  | {
+      ok: false;
+      code:
+        | 'UNAUTHORIZED'
+        | 'NOT_FOUND'
+        | 'ALREADY_FINALIZED'
+        | 'VALIDATION_ERROR'
+        | 'CID10_CONSENT_REQUIRED';
+    };
 
 export interface DocumentSummary {
   id: string;
@@ -472,6 +486,152 @@ export async function getDocumentDetailImpl(
     logger.error(
       { event: 'get_document_detail_failed', errorCode: pgError.code },
       'unexpected error fetching clinical document detail',
+    );
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// finalizeDocument
+// ---------------------------------------------------------------------------
+
+/** Document types that require the `analise` section per CFP 06/2019. */
+const TYPES_REQUIRING_ANALISE = new Set(['laudo', 'relatorio', 'parecer']);
+
+/**
+ * Finalizes a draft clinical document, transitioning it to 'finalized' status.
+ *
+ * Flow:
+ *   1. Validate input with Zod (finalizeDocumentInputSchema).
+ *   2. Authenticate via Supabase getUser().
+ *   3. Query document by id + userId (defense-in-depth: explicit ownership + RLS).
+ *      → NOT_FOUND if missing.
+ *   4. If status='finalized' → ALREADY_FINALIZED.
+ *   5. Per-type mandatory section validation per CFP 06/2019:
+ *      - laudo, relatorio, parecer: require content.analise to be a non-empty string.
+ *      - declaracao, atestado: no analise required.
+ *      → VALIDATION_ERROR if missing required section.
+ *   6. Compute references_cid10 from content:
+ *      - If true AND cid10ConsentConfirmed !== true → CID10_CONSENT_REQUIRED (RN-05.06).
+ *   7. Update row: status='finalized', finalized_at=now(), references_cid10, cid10_consent_confirmed.
+ *   8. Enqueue Inngest event 'documents/pdf.requested' with documentId.
+ *   9. Write audit_log 'document.finalize'.
+ *   10. Return { ok: true, data: { id } }.
+ *
+ * user_id is ALWAYS derived from the session — never from client input.
+ */
+export async function finalizeDocumentImpl(
+  supabase: SupabaseClient,
+  input: unknown,
+): Promise<FinalizeDocumentResult> {
+  // 1. Validate input
+  const parsed = finalizeDocumentInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, code: 'VALIDATION_ERROR' };
+  }
+
+  const { documentId, cid10ConsentConfirmed } = parsed.data;
+
+  // 2. Authenticate
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, code: 'UNAUTHORIZED' };
+  }
+
+  const userId = user.id;
+
+  // 3. Fetch document (defense-in-depth: explicit userId filter + RLS)
+  const [document] = await db
+    .select({
+      id: clinicalDocuments.id,
+      status: clinicalDocuments.status,
+      documentType: clinicalDocuments.documentType,
+      content: clinicalDocuments.content,
+    })
+    .from(clinicalDocuments)
+    .where(and(eq(clinicalDocuments.id, documentId), eq(clinicalDocuments.userId, userId)))
+    .limit(1);
+
+  if (!document) {
+    return { ok: false, code: 'NOT_FOUND' };
+  }
+
+  // 4. Check if already finalized
+  if (document.status === 'finalized') {
+    return { ok: false, code: 'ALREADY_FINALIZED' };
+  }
+
+  // 5. Per-type section validation (CFP 06/2019)
+  if (TYPES_REQUIRING_ANALISE.has(document.documentType)) {
+    const content = document.content as Record<string, unknown> | null;
+    const analise = content?.analise;
+
+    if (typeof analise !== 'string' || analise.trim().length === 0) {
+      return { ok: false, code: 'VALIDATION_ERROR' };
+    }
+  }
+
+  // 6. CID-10 consent gate (RN-05.06 / LGPD art. 11)
+  const referencesCid10 = computeReferencesCid10(document.content);
+
+  if (referencesCid10 && cid10ConsentConfirmed !== true) {
+    return { ok: false, code: 'CID10_CONSENT_REQUIRED' };
+  }
+
+  try {
+    // 7. Update row to finalized
+    await db
+      .update(clinicalDocuments)
+      .set({
+        status: 'finalized',
+        finalizedAt: new Date(),
+        referencesCid10,
+        cid10ConsentConfirmed: cid10ConsentConfirmed ?? false,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(clinicalDocuments.id, documentId), eq(clinicalDocuments.userId, userId)));
+
+    // 8. Enqueue Inngest event for PDF generation
+    try {
+      await inngest.send({
+        name: 'documents/pdf.requested',
+        data: { documentId },
+      });
+    } catch (inngestErr: unknown) {
+      // Log but do not fail the finalization — PDF generation can be retried.
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        { event: 'inngest_send_failed', documentId, error: errMsg },
+        'failed to enqueue documents/pdf.requested event',
+      );
+    }
+
+    // 9. Write audit_log entry
+    try {
+      await db.insert(auditLog).values({
+        userId,
+        action: 'document.finalize',
+        resourceType: 'clinical_document',
+        resourceId: documentId,
+        metadata: { referencesCid10, cid10ConsentConfirmed: cid10ConsentConfirmed ?? false },
+      });
+    } catch (auditErr: unknown) {
+      const pgError = auditErr as { code?: string };
+      logger.error(
+        { event: 'document_audit_log_failed', errorCode: pgError.code },
+        'failed to write audit_log entry for document.finalize',
+      );
+    }
+
+    return { ok: true, data: { id: documentId } };
+  } catch (err: unknown) {
+    const pgError = err as { code?: string };
+    logger.error(
+      { event: 'finalize_document_failed', errorCode: pgError.code },
+      'unexpected error finalizing clinical document',
     );
     throw err;
   }
