@@ -41,7 +41,7 @@
 
 ## 5. Module Barrel Update
 
-- [ ] 5.1 Update `src/modules/medical-records/index.ts` barrel to re-export: attachment actions (uploadAttachment, listAttachments, getAttachmentSignedUrl, deleteAttachment), personal notes actions (getPersonalNotes, upsertPersonalNotes, setPersonalNotesPassword, removePersonalNotesPassword), attachment schemas and types, personal notes schemas
+- [x] 5.1 Update `src/modules/medical-records/index.ts` barrel to re-export: attachment actions (uploadAttachment, listAttachments, getAttachmentSignedUrl, deleteAttachment), personal notes actions (getPersonalNotes, upsertPersonalNotes, setPersonalNotesPassword, removePersonalNotesPassword), attachment schemas and types, personal notes schemas
 
 ## 6. Frontend — Attachments Tab
 
