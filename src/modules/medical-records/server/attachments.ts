@@ -16,6 +16,7 @@ import { validateMimeType } from '@/modules/medical-records/lib/mime-validator';
 import { db } from '@/shared/db/client';
 import { auditLog, evolutionAttachments } from '@/shared/db/schema/medical-records/tables';
 import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
+import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -354,6 +355,13 @@ export async function getAttachmentSignedUrlImpl(
     return { ok: false, code: 'NOT_FOUND' };
   }
 
+  // Rewrite the signed URL origin to the browser-facing Supabase URL when
+  // SUPABASE_PUBLIC_URL is set. In Docker the server reaches Kong via an
+  // internal hostname (e.g. supabase_kong_hubrityp:8000) that the browser
+  // cannot resolve; the public URL (e.g. http://localhost:54321) is
+  // resolvable. In production this env var is unset so no rewrite occurs.
+  const signedUrl = toBrowserSignedUrl(signedUrlData.signedUrl);
+
   // 5. Write audit_log (fire-and-forget)
   try {
     await db.insert(auditLog).values({
@@ -371,7 +379,7 @@ export async function getAttachmentSignedUrlImpl(
     );
   }
 
-  return { ok: true, signedUrl: signedUrlData.signedUrl, expiresIn: 300 };
+  return { ok: true, signedUrl, expiresIn: 300 };
 }
 
 // ---------------------------------------------------------------------------
@@ -456,6 +464,35 @@ export async function deleteAttachmentImpl(
 }
 
 // ---------------------------------------------------------------------------
+// Internal: rewrite signed URL origin for browser consumption
+// ---------------------------------------------------------------------------
+
+/**
+ * Rewrites the origin of a Supabase Storage signed URL to the browser-facing
+ * Supabase URL when `SUPABASE_PUBLIC_URL` is set.
+ *
+ * In Docker, the server-side Supabase client uses an internal hostname
+ * (e.g. `http://supabase_kong_hubrityp:8000`) that the browser cannot
+ * resolve. `SUPABASE_PUBLIC_URL` provides the externally reachable origin
+ * (e.g. `http://localhost:54321`). In production this env var is unset so the
+ * URL passes through unchanged.
+ */
+function toBrowserSignedUrl(signedUrl: string): string {
+  const publicUrl = serverEnv.SUPABASE_PUBLIC_URL;
+  if (!publicUrl) return signedUrl;
+
+  const serverOrigin = serverEnv.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serverOrigin) return signedUrl;
+
+  // Only rewrite when the signed URL origin matches the server-internal origin
+  if (!signedUrl.startsWith(serverOrigin)) return signedUrl;
+
+  // Replace the server-internal origin with the browser-facing origin,
+  // preserving the path and query string (which includes the signed token).
+  return publicUrl + signedUrl.slice(serverOrigin.length);
+}
+
+// ---------------------------------------------------------------------------
 // Internal: check active consent for audio uploads
 // ---------------------------------------------------------------------------
 
@@ -481,4 +518,29 @@ async function checkActiveConsent(userId: string, patientId: string): Promise<bo
     .limit(1);
 
   return !!consent;
+}
+
+// ---------------------------------------------------------------------------
+// checkActiveConsentForPatient (public — used by prontuario page)
+// ---------------------------------------------------------------------------
+
+/**
+ * Public wrapper around the consent check for use by the prontuario page
+ * (Server Component). This ensures the UI consent gate uses the SAME source
+ * of truth as the server action (`consent_terms` table) — not the denormalized
+ * `patients.consent_signed_at` column, which can diverge.
+ *
+ * Authenticates via getUser(), scopes by ownership.
+ */
+export async function checkActiveConsentForPatientImpl(
+  supabase: SupabaseClient,
+  patientId: string,
+): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  return checkActiveConsent(user.id, patientId);
 }

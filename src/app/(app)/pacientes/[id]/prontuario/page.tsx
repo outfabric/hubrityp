@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
+  checkActiveConsentForPatientImpl,
   getEvolutionsByPatientImpl,
   logProntuarioAccessImpl,
   type EvolutionSummary,
@@ -51,19 +52,16 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
     resourceId: patientId,
   });
 
-  // Fetch evolutions for the default tab
-  const evolutionsResult = await getEvolutionsByPatientImpl(supabase, {
-    patientId,
-    limit: 20,
-  });
+  // Fetch evolutions and consent status in parallel — independent queries
+  const [evolutionsResult, hasActiveConsent] = await Promise.all([
+    getEvolutionsByPatientImpl(supabase, { patientId, limit: 20 }),
+    // Use the consent_terms table (same source as the server action's
+    // checkActiveConsent) so the UI gate and server-side gate never disagree.
+    checkActiveConsentForPatientImpl(supabase, patientId),
+  ]);
 
   const evolutions: EvolutionSummary[] = evolutionsResult.ok ? evolutionsResult.evolutions : [];
   const nextCursor: string | null = evolutionsResult.ok ? evolutionsResult.nextCursor : null;
-
-  // Derive active consent status from the patient record.
-  // Active consent = consent_signed_at is set AND consent_revoked_at is null.
-  const patient = patientResult.patient;
-  const hasActiveConsent = !!patient.consentSignedAt && !patient.consentRevokedAt;
 
   return (
     <div className="mx-auto max-w-[1200px]">

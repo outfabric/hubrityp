@@ -22,6 +22,13 @@ export type NodeEnv = (typeof nodeEnvs)[number];
 export const serverEnvSchema = clientEnvSchema.extend({
   DATABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  // Browser-facing Supabase URL. In local Docker the server reaches Kong via
+  // an internal hostname (e.g. http://supabase_kong_hubrityp:8000) but the
+  // browser must use a host-accessible URL (e.g. http://localhost:54321).
+  // When set, signed Storage URLs are rewritten to this origin before being
+  // returned to the client. In production this is unnecessary because
+  // NEXT_PUBLIC_SUPABASE_URL is already public.
+  SUPABASE_PUBLIC_URL: z.string().url().optional(),
   LOG_LEVEL: z.enum(logLevels).default('info'),
   NODE_ENV: z.enum(nodeEnvs).default('development'),
   RESEND_API_KEY: z.string().optional(),

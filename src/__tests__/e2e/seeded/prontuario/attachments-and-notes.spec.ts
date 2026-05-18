@@ -230,8 +230,9 @@ test.describe('@prontuario attachments tab', () => {
 
   test('audio upload succeeds after seeding an active consent term', async ({ page, db }) => {
     // Seed an active (signed, not revoked) consent term for this patient.
-    // The page.tsx now derives hasActiveConsent from patient.consentSignedAt
-    // and passes it to ProntuarioTabs, which forwards it to AttachmentsTab.
+    // The page.tsx derives hasActiveConsent from the consent_terms table
+    // (same source as the server action's checkActiveConsent), NOT from the
+    // denormalized patients.consent_signed_at column.
     await db.sql`
       INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent)
       VALUES (
@@ -239,19 +240,12 @@ test.describe('@prontuario attachments tab', () => {
         ${patientId},
         ${SEED_USER_ID},
         'Consentimento para gravacao de sessoes',
-        ${'f'.repeat(64)},
+        ${'9'.repeat(64)},
         now(),
         '127.0.0.1',
         'e2e-agent'
       )
       ON CONFLICT DO NOTHING
-    `;
-    // Update patient consent_signed_at so the page passes hasActiveConsent=true
-    await db.sql`
-      UPDATE public.patients
-      SET consent_signed_at = now(),
-          consent_revoked_at = NULL
-      WHERE id = ${patientId}
     `;
 
     await mockStorageRoutes(page);

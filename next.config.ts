@@ -14,6 +14,20 @@ function supabaseOrigin(): string {
   }
 }
 
+// When SUPABASE_PUBLIC_URL is set (Docker dev), signed Storage URLs are
+// rewritten to this origin before reaching the browser. The CSP must also
+// permit it so that <img>/<iframe> loads succeed.
+function supabasePublicOrigin(): string {
+  const raw = process.env.SUPABASE_PUBLIC_URL;
+  if (!raw) return '';
+  try {
+    const { protocol, host } = new URL(raw);
+    return `${protocol}//${host}`;
+  } catch {
+    return '';
+  }
+}
+
 function supabaseConnectSrc(): string {
   const origin = supabaseOrigin();
   if (!origin) return '';
@@ -53,12 +67,14 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      // Supabase Storage signed URLs serve images and PDFs from the project origin
-      `img-src 'self' data: blob:${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}`,
+      // Supabase Storage signed URLs serve images and PDFs from the project origin.
+      // In Docker dev, SUPABASE_PUBLIC_URL is the browser-facing origin (signed
+      // URLs are rewritten to it), so it must also be permitted.
+      `img-src 'self' data: blob:${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
       `connect-src 'self'${supabaseConnectSrc()}`,
       "font-src 'self' data:",
       // PDF preview iframe loads signed URLs from Supabase Storage
-      `frame-src 'self'${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}`,
+      `frame-src 'self'${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
     ].join('; '),
   },
 ];

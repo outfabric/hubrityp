@@ -158,6 +158,7 @@ export {
   listAttachmentsImpl,
   getAttachmentSignedUrlImpl,
   deleteAttachmentImpl,
+  checkActiveConsentForPatientImpl,
   type UploadAttachmentResult,
   type ListAttachmentsResult,
   type GetAttachmentSignedUrlResult,
