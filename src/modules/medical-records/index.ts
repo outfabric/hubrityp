@@ -231,3 +231,8 @@ export {
   type FailedAttemptResult,
   type SuccessResult,
 } from './lib/personal-notes-lockout';
+
+// ---- Attachment Components (Client Components) ------------------------------
+export { AttachmentCard, type AttachmentCardData } from './components/attachment-card';
+export { AttachmentUploadSheet } from './components/attachment-upload-sheet';
+export { AttachmentsTab } from './components/attachments-tab';
