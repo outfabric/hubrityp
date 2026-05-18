@@ -36,10 +36,10 @@
 
 ## 6. Inngest Job — Generate PDF + Integration with Mock Storage
 
-- [ ] 6.1 Create `src/modules/medical-records/inngest/client.ts` — Inngest client with typed event 'documents/pdf.requested' (data: { documentId: string })
-- [ ] 6.2 Create `src/modules/medical-records/inngest/generate-document-pdf.ts` — Inngest function with id='documents/generate-pdf', idempotency on event.data.documentId, 5 steps: read-document (service-role, return early if pdf_storage_path set), build-pdf (call buildClinicalDocumentPdf), upload-to-storage (service-role Storage client, path=${user_id}/${patient_id}/${documentId}.pdf), update-document-row (set pdf_storage_path + pdf_size, service-role justified comment), write-audit-log
-- [ ] 6.3 Register the Inngest function in `src/app/api/inngest/route.ts` (add to the serve functions array)
-- [ ] 6.4 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-pdf-job.int.test.ts` — test: job reads document row, builds PDF (non-empty buffer), uploads to mock Storage (assert correct path), updates row with pdf_storage_path and pdf_size, writes audit_log 'document.pdf-generated', idempotent: second run with pdf_storage_path already set returns early without re-upload
+- [x] 6.1 Create `src/modules/medical-records/inngest/client.ts` — Inngest client with typed event 'documents/pdf.requested' (data: { documentId: string })
+- [x] 6.2 Create `src/modules/medical-records/inngest/generate-document-pdf.ts` — Inngest function with id='documents/generate-pdf', idempotency on event.data.documentId, 5 steps: read-document (service-role, return early if pdf_storage_path set), build-pdf (call buildClinicalDocumentPdf), upload-to-storage (service-role Storage client, path=${user_id}/${patient_id}/${documentId}.pdf), update-document-row (set pdf_storage_path + pdf_size, service-role justified comment), write-audit-log
+- [x] 6.3 Register the Inngest function in `src/app/api/inngest/route.ts` (add to the serve functions array)
+- [x] 6.4 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-pdf-job.int.test.ts` — test: job reads document row, builds PDF (non-empty buffer), uploads to mock Storage (assert correct path), updates row with pdf_storage_path and pdf_size, writes audit_log 'document.pdf-generated', idempotent: second run with pdf_storage_path already set returns early without re-upload
 
 ## 7. Signed URL Action + Integration Test
 
