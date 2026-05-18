@@ -9,9 +9,9 @@
 
 ## 2. Zod Schemas Per Document Type + Unit Tests
 
-- [ ] 2.1 Create `src/modules/medical-records/lib/schemas/clinical-documents.ts` — discriminated Zod schemas: `baseDocumentContentSchema`, `declaracaoContentSchema`, `atestadoContentSchema`, `relatorioContentSchema`, `laudoContentSchema`, `parecerContentSchema`, `documentContentSchema` (discriminated union by type), `createDocumentInputSchema`, `updateDocumentInputSchema`, `finalizeDocumentInputSchema`, `DocumentType` enum, type exports via `z.infer`
-- [ ] 2.2 Implement `references_cid10` computation: `computeReferencesCid10(content)` returns true if `content.cid10Codes` has length > 0
-- [ ] 2.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/clinical-documents/schemas.test.ts` — validate: declaracao accepts without analise, laudo rejects without analise, atestado accepts period/validity, all types reject missing solicitante/demanda/procedimentos/conclusao/localData, cid10Codes array validated correctly, computeReferencesCid10 true with codes / false without
+- [x] 2.1 Create `src/modules/medical-records/lib/schemas/clinical-documents.ts` — discriminated Zod schemas: `baseDocumentContentSchema`, `declaracaoContentSchema`, `atestadoContentSchema`, `relatorioContentSchema`, `laudoContentSchema`, `parecerContentSchema`, `documentContentSchema` (discriminated union by type), `createDocumentInputSchema`, `updateDocumentInputSchema`, `finalizeDocumentInputSchema`, `DocumentType` enum, type exports via `z.infer`
+- [x] 2.2 Implement `references_cid10` computation: `computeReferencesCid10(content)` returns true if `content.cid10Codes` has length > 0
+- [x] 2.3 **Unit test:** Create `src/__tests__/unit/modules/medical-records/clinical-documents/schemas.test.ts` — validate: declaracao accepts without analise, laudo rejects without analise, atestado accepts period/validity, all types reject missing solicitante/demanda/procedimentos/conclusao/localData, cid10Codes array validated correctly, computeReferencesCid10 true with codes / false without
 
 ## 3. Server Actions — Create, Update, List, Detail
 
