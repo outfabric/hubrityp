@@ -1,13 +1,38 @@
 import type { NextConfig } from 'next';
 
 // Derive HTTP and WebSocket origins from NEXT_PUBLIC_SUPABASE_URL so that
-// GoTrue, REST, and Realtime connections are permitted by the CSP.
+// GoTrue, REST, Storage, and Realtime connections are permitted by the CSP.
 // Falls back to an empty string when the var is absent (CI, storybook, etc.).
-function supabaseConnectSrc(): string {
+function supabaseOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!raw) return '';
   try {
     const { protocol, host } = new URL(raw);
+    return `${protocol}//${host}`;
+  } catch {
+    return '';
+  }
+}
+
+// When SUPABASE_PUBLIC_URL is set (Docker dev), signed Storage URLs are
+// rewritten to this origin before reaching the browser. The CSP must also
+// permit it so that <img>/<iframe> loads succeed.
+function supabasePublicOrigin(): string {
+  const raw = process.env.SUPABASE_PUBLIC_URL;
+  if (!raw) return '';
+  try {
+    const { protocol, host } = new URL(raw);
+    return `${protocol}//${host}`;
+  } catch {
+    return '';
+  }
+}
+
+function supabaseConnectSrc(): string {
+  const origin = supabaseOrigin();
+  if (!origin) return '';
+  try {
+    const { protocol, host } = new URL(origin);
     const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
     return ` ${protocol}//${host} ${wsProtocol}//${host}`;
   } catch {
@@ -42,9 +67,14 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      // Supabase Storage signed URLs serve images and PDFs from the project origin.
+      // In Docker dev, SUPABASE_PUBLIC_URL is the browser-facing origin (signed
+      // URLs are rewritten to it), so it must also be permitted.
+      `img-src 'self' data: blob:${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
       `connect-src 'self'${supabaseConnectSrc()}`,
       "font-src 'self' data:",
+      // PDF preview iframe loads signed URLs from Supabase Storage
+      `frame-src 'self'${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
     ].join('; '),
   },
 ];

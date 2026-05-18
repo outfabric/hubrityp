@@ -4,8 +4,10 @@ import { sessionHistory, sessions } from '@/shared/db/schema/agenda/tables';
 import {
   auditLog,
   diagnosticHypotheses,
+  evolutionAttachments,
   evolutionVersions,
   evolutions,
+  personalNotes,
   scaleApplications,
   treatmentPlanVersions,
   treatmentPlans,
@@ -18,7 +20,7 @@ import { runAsService } from './run-as-service';
  * Deletes test data from the shared Testcontainers database in correct FK
  * dependency order. Handles the full chain:
  *
- *   scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
+ *   evolution_attachments → personal_notes → scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
  *
  * The `evolutions` table references both `patients(id)` and `sessions(id)`,
  * so it must be cleared before either parent. `evolution_versions` references
@@ -28,6 +30,9 @@ import { runAsService } from './run-as-service';
  * `treatment_plans` references `patients(id)` so must be cleared before patients.
  * `treatment_plan_versions` references `treatment_plans(id)` with ON DELETE CASCADE.
  * `scale_applications` references `patients(id)` so must be cleared before patients.
+ * `evolution_attachments` references `patients(id)` + `evolutions(id)` so must be
+ * cleared before both parents.
+ * `personal_notes` references `patients(id)` so must be cleared before patients.
  *
  * Use this in `afterEach` / `afterAll` hooks of any integration test that
  * seeds patients or sessions and performs unfiltered cleanup (DELETE without
@@ -36,7 +41,9 @@ import { runAsService } from './run-as-service';
  */
 export async function cleanTestData(): Promise<void> {
   await runAsService(async (db) => {
-    // 1. Medical-records tables (children of patients + sessions)
+    // 1. Medical-records tables (children of patients + sessions + evolutions)
+    await db.delete(evolutionAttachments);
+    await db.delete(personalNotes);
     await db.delete(scaleApplications);
     await db.delete(treatmentPlanVersions);
     await db.delete(treatmentPlans);

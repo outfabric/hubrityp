@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
+  checkActiveConsentForPatientImpl,
   getEvolutionsByPatientImpl,
   logProntuarioAccessImpl,
   type EvolutionSummary,
@@ -51,11 +52,13 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
     resourceId: patientId,
   });
 
-  // Fetch evolutions for the default tab
-  const evolutionsResult = await getEvolutionsByPatientImpl(supabase, {
-    patientId,
-    limit: 20,
-  });
+  // Fetch evolutions and consent status in parallel — independent queries
+  const [evolutionsResult, hasActiveConsent] = await Promise.all([
+    getEvolutionsByPatientImpl(supabase, { patientId, limit: 20 }),
+    // Use the consent_terms table (same source as the server action's
+    // checkActiveConsent) so the UI gate and server-side gate never disagree.
+    checkActiveConsentForPatientImpl(supabase, patientId),
+  ]);
 
   const evolutions: EvolutionSummary[] = evolutionsResult.ok ? evolutionsResult.evolutions : [];
   const nextCursor: string | null = evolutionsResult.ok ? evolutionsResult.nextCursor : null;
@@ -81,7 +84,7 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
       </h1>
 
       {/* Tabs shell — Evolucoes tab active by default */}
-      <ProntuarioTabs patientId={patientId}>
+      <ProntuarioTabs patientId={patientId} hasActiveConsent={hasActiveConsent}>
         <EvolutionsList
           patientId={patientId}
           initialEvolutions={evolutions}

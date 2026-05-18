@@ -503,6 +503,18 @@ async function handleRequest(
     if (method === 'POST' || method === 'PUT') {
       await readBody(req);
     }
+
+    // createSignedUrl POSTs to /storage/v1/object/sign/<bucket>/<path>.
+    // The SDK reads `data.signedURL` (a relative path) and prepends the base URL.
+    // We return a mock signedURL that the SDK can compose into a full URL.
+    if (method === 'POST' && path.includes('/object/sign/')) {
+      const mockToken = 'mock-signed-token';
+      respondJson(res, 200, {
+        signedURL: `${path.replace('/storage/v1', '')}?token=${mockToken}`,
+      });
+      return;
+    }
+
     respondJson(res, 200, { Key: path.replace('/storage/v1/object/', '') });
     return;
   }

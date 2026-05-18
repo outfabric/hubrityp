@@ -152,6 +152,36 @@ export {
   type ClassificationResult,
 } from './lib/scales';
 
+// ---- Attachment Server Actions -----------------------------------------------
+export {
+  uploadAttachmentImpl,
+  listAttachmentsImpl,
+  getAttachmentSignedUrlImpl,
+  deleteAttachmentImpl,
+  checkActiveConsentForPatientImpl,
+  type UploadAttachmentResult,
+  type ListAttachmentsResult,
+  type GetAttachmentSignedUrlResult,
+  type DeleteAttachmentResult,
+  type AttachmentSummary,
+} from './server/attachments';
+
+// ---- Attachment Schemas ------------------------------------------------------
+export {
+  attachmentCategorySchema,
+  uploadAttachmentInputSchema,
+  MIME_ALLOWLIST,
+  MAX_FILE_SIZE_BYTES,
+  type AttachmentCategory,
+  type UploadAttachmentInput,
+} from './lib/attachment-schemas';
+
+// ---- MIME Validator ----------------------------------------------------------
+export { validateMimeType, type MimeValidationResult } from './lib/mime-validator';
+
+// ---- Filename Sanitizer ------------------------------------------------------
+export { sanitizeDisplayName, generateStorageFilename } from './lib/filename-sanitizer';
+
 // ---- Scale Public Form (Client Component) -----------------------------------
 export { ScalePublicForm } from './components/scale-public-form';
 
@@ -168,3 +198,47 @@ export {
   severityToBadgeVariant,
   severityToDotFill,
 } from './lib/scales/severity-tokens';
+
+// ---- Personal Notes Server Actions ------------------------------------------
+export {
+  getPersonalNotesImpl,
+  upsertPersonalNotesImpl,
+  setPersonalNotesPasswordImpl,
+  removePersonalNotesPasswordImpl,
+  type GetPersonalNotesResult,
+  type UpsertPersonalNotesResult,
+  type SetPersonalNotesPasswordResult,
+  type RemovePersonalNotesPasswordResult,
+} from './server/personal-notes';
+
+// ---- Personal Notes Schemas -------------------------------------------------
+export {
+  personalNotesPasswordSchema,
+  upsertPersonalNotesInputSchema,
+  getPersonalNotesInputSchema,
+  type UpsertPersonalNotesInput,
+  type GetPersonalNotesInput,
+} from './lib/personal-notes-schemas';
+
+// ---- Personal Notes Lockout (pure helpers) -----------------------------------
+export {
+  assessLockout,
+  applyFailedAttempt,
+  applySuccessfulVerification,
+  MAX_FAILED_ATTEMPTS,
+  LOCKOUT_DURATION_MS,
+  type LockoutState,
+  type LockoutStatus,
+  type FailedAttemptResult,
+  type SuccessResult,
+} from './lib/personal-notes-lockout';
+
+// ---- Attachment Components (Client Components) ------------------------------
+export { AttachmentCard, type AttachmentCardData } from './components/attachment-card';
+export { AttachmentUploadSheet } from './components/attachment-upload-sheet';
+export { AttachmentsTab } from './components/attachments-tab';
+
+// ---- Personal Notes Components (Client Components) --------------------------
+export { PersonalNotesLock } from './components/personal-notes-lock';
+export { PersonalNotesPasswordSheet } from './components/personal-notes-password-sheet';
+export { PersonalNotesTab } from './components/personal-notes-tab';
