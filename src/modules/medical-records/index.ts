@@ -152,6 +152,35 @@ export {
   type ClassificationResult,
 } from './lib/scales';
 
+// ---- Attachment Server Actions -----------------------------------------------
+export {
+  uploadAttachmentImpl,
+  listAttachmentsImpl,
+  getAttachmentSignedUrlImpl,
+  deleteAttachmentImpl,
+  type UploadAttachmentResult,
+  type ListAttachmentsResult,
+  type GetAttachmentSignedUrlResult,
+  type DeleteAttachmentResult,
+  type AttachmentSummary,
+} from './server/attachments';
+
+// ---- Attachment Schemas ------------------------------------------------------
+export {
+  attachmentCategorySchema,
+  uploadAttachmentInputSchema,
+  MIME_ALLOWLIST,
+  MAX_FILE_SIZE_BYTES,
+  type AttachmentCategory,
+  type UploadAttachmentInput,
+} from './lib/attachment-schemas';
+
+// ---- MIME Validator ----------------------------------------------------------
+export { validateMimeType, type MimeValidationResult } from './lib/mime-validator';
+
+// ---- Filename Sanitizer ------------------------------------------------------
+export { sanitizeDisplayName, generateStorageFilename } from './lib/filename-sanitizer';
+
 // ---- Scale Public Form (Client Component) -----------------------------------
 export { ScalePublicForm } from './components/scale-public-form';
 

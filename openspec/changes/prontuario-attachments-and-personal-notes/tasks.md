@@ -22,12 +22,12 @@
 
 ## 3. Server Actions — Attachments
 
-- [ ] 3.1 Create `src/modules/medical-records/server/attachments.ts` with `uploadAttachment(patientId, formData)` — authenticates via getUser(), validates category + file size + MIME via magic bytes, checks consent for audio, generates UUID filename, uploads to `patient-attachments` bucket at `${userId}/${patientId}/${uuid}.${ext}`, persists `evolution_attachments` row, writes audit_log 'attachment.upload'
-- [ ] 3.2 Add `listAttachments(patientId, category?)` to attachments.ts — authenticates, queries evolution_attachments WHERE patient_id AND deleted_at IS NULL (optionally filtered by category), ordered by uploaded_at DESC
-- [ ] 3.3 Add `getAttachmentSignedUrl(attachmentId)` to attachments.ts — authenticates, verifies ownership via RLS query, generates 5-min signed URL via `supabase.storage.from('patient-attachments').createSignedUrl(path, 300)`, writes audit_log 'attachment.view-url'
-- [ ] 3.4 Add `deleteAttachment(attachmentId)` to attachments.ts — authenticates, verifies ownership, sets `deleted_at = now()` (UPDATE, not DELETE), writes audit_log 'attachment.delete'
-- [ ] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-crud.int.test.ts` — test: uploadAttachment persists row + storage object; listAttachments returns non-deleted items; getAttachmentSignedUrl returns time-bound URL; soft-deleted attachment hidden from list; audit_log entries written for upload, view-url, delete; RLS negative (psychologist B cannot list/sign-url psychologist A's attachments)
-- [ ] 3.6 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-consent-gate.int.test.ts` — test: audio upload blocked when no active consent; audio upload succeeds with active consent; audio upload blocked when consent is revoked
+- [x] 3.1 Create `src/modules/medical-records/server/attachments.ts` with `uploadAttachment(patientId, formData)` — authenticates via getUser(), validates category + file size + MIME via magic bytes, checks consent for audio, generates UUID filename, uploads to `patient-attachments` bucket at `${userId}/${patientId}/${uuid}.${ext}`, persists `evolution_attachments` row, writes audit_log 'attachment.upload'
+- [x] 3.2 Add `listAttachments(patientId, category?)` to attachments.ts — authenticates, queries evolution_attachments WHERE patient_id AND deleted_at IS NULL (optionally filtered by category), ordered by uploaded_at DESC
+- [x] 3.3 Add `getAttachmentSignedUrl(attachmentId)` to attachments.ts — authenticates, verifies ownership via RLS query, generates 5-min signed URL via `supabase.storage.from('patient-attachments').createSignedUrl(path, 300)`, writes audit_log 'attachment.view-url'
+- [x] 3.4 Add `deleteAttachment(attachmentId)` to attachments.ts — authenticates, verifies ownership, sets `deleted_at = now()` (UPDATE, not DELETE), writes audit_log 'attachment.delete'
+- [x] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-crud.int.test.ts` — test: uploadAttachment persists row + storage object; listAttachments returns non-deleted items; getAttachmentSignedUrl returns time-bound URL; soft-deleted attachment hidden from list; audit_log entries written for upload, view-url, delete; RLS negative (psychologist B cannot list/sign-url psychologist A's attachments)
+- [x] 3.6 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-consent-gate.int.test.ts` — test: audio upload blocked when no active consent; audio upload succeeds with active consent; audio upload blocked when consent is revoked
 
 ## 4. Server Actions — Personal Notes
 

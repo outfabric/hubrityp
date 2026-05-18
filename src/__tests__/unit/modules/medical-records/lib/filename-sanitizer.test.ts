@@ -85,16 +85,12 @@ describe('generateStorageFilename', () => {
   it('returns a UUID-based filename with the given extension', () => {
     const result = generateStorageFilename('pdf');
     // UUID v4 format: 8-4-4-4-12 hex digits + dot + extension
-    expect(result).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$/,
-    );
+    expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$/);
   });
 
   it('strips a leading dot from the extension', () => {
     const result = generateStorageFilename('.png');
-    expect(result).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/,
-    );
+    expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/);
     expect(result).not.toContain('..');
   });
 

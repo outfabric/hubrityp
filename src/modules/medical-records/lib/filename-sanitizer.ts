@@ -17,9 +17,7 @@ import { randomUUID } from 'node:crypto';
  */
 export function sanitizeDisplayName(original: string): string {
   // Remove path separators and traversal sequences
-  let sanitized = original
-    .replace(/\.\./g, '')
-    .replace(/[/\\]/g, '');
+  let sanitized = original.replace(/\.\./g, '').replace(/[/\\]/g, '');
 
   // Remove control characters (C0 + DEL + C1 ranges)
   sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
