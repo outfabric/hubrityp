@@ -60,6 +60,11 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
   const evolutions: EvolutionSummary[] = evolutionsResult.ok ? evolutionsResult.evolutions : [];
   const nextCursor: string | null = evolutionsResult.ok ? evolutionsResult.nextCursor : null;
 
+  // Derive active consent status from the patient record.
+  // Active consent = consent_signed_at is set AND consent_revoked_at is null.
+  const patient = patientResult.patient;
+  const hasActiveConsent = !!patient.consentSignedAt && !patient.consentRevokedAt;
+
   return (
     <div className="mx-auto max-w-[1200px]">
       {/* Back navigation */}
@@ -81,7 +86,7 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
       </h1>
 
       {/* Tabs shell — Evolucoes tab active by default */}
-      <ProntuarioTabs patientId={patientId}>
+      <ProntuarioTabs patientId={patientId} hasActiveConsent={hasActiveConsent}>
         <EvolutionsList
           patientId={patientId}
           initialEvolutions={evolutions}

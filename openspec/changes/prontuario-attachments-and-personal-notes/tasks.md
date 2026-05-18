@@ -58,5 +58,5 @@
 
 ## 8. End-to-End Tests
 
-- [ ] 8.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/attachments-and-notes.spec.ts` — test: upload PDF -> assert preview iframe loads -> verify attachment in list; upload image -> assert inline preview; try upload audio without consent -> blocked UI shown with warning Alert; seed active consent term -> upload audio succeeds; soft-delete attachment -> confirm modal -> removed from list
-- [ ] 8.2 **E2E (Playwright, seeded):** Add personal notes tests to same spec file — test: set password -> reload -> lock screen shown -> type wrong password 5x -> assert lockout message with countdown; wait (or mock time) -> correct password -> content visible; personal notes write/auto-save persists across page reload; verify banner text present
+- [x] 8.1 **E2E (Playwright, seeded):** Create `src/__tests__/e2e/seeded/prontuario/attachments-and-notes.spec.ts` — test: upload PDF -> assert preview iframe loads -> verify attachment in list; upload image -> assert inline preview; try upload audio without consent -> blocked UI shown with warning Alert; seed active consent term -> upload audio succeeds; soft-delete attachment -> confirm modal -> removed from list
+- [x] 8.2 **E2E (Playwright, seeded):** Add personal notes tests to same spec file — test: set password -> reload -> lock screen shown -> type wrong password 5x -> assert lockout message with countdown; wait (or mock time) -> correct password -> content visible; personal notes write/auto-save persists across page reload; verify banner text present
