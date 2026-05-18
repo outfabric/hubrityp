@@ -171,5 +171,38 @@ BEGIN
         AND (storage.foldername(name))[1] = auth.uid()::text
       );
     END IF;
+
+    -- Update: user can replace content only in their own prefix (defense-in-depth:
+    -- the application layer never updates storage objects, but a direct Supabase
+    -- Storage API call could bypass the app — this policy prevents cross-user
+    -- overwrites at the Postgres level)
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'user can update own attachments'
+    ) THEN
+      CREATE POLICY "user can update own attachments"
+      ON storage.objects FOR UPDATE TO authenticated
+      USING (
+        bucket_id = 'patient-attachments'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+      )
+      WITH CHECK (
+        bucket_id = 'patient-attachments'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+      );
+    END IF;
+
+    -- NO DELETE policy for patient-attachments — intentional.
+    -- Lei 13.787/2018 mandates 20-year retention for clinical documents.
+    -- Physical deletion is only permitted via service-role (system jobs)
+    -- after the retention period expires.
+    --
+    -- DEPLOYMENT NOTE: Verify that no pre-existing permissive DELETE policy
+    -- on storage.objects (from default Supabase setup or another bucket)
+    -- applies to this bucket. If one exists, either drop it or create a
+    -- restrictive policy that excludes patient-attachments:
+    --
+    --   CREATE POLICY "block delete on patient-attachments"
+    --   ON storage.objects FOR DELETE TO authenticated
+    --   USING (bucket_id <> 'patient-attachments');
   END IF;
 END$$;

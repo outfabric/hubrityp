@@ -26,7 +26,13 @@ export type UploadAttachmentResult =
   | { ok: true; id: string; displayName: string }
   | {
       ok: false;
-      code: 'FILE_TOO_LARGE' | 'INVALID_MIME' | 'CONSENT_REQUIRED' | 'UNAUTHORIZED' | 'NOT_FOUND';
+      code:
+        | 'FILE_TOO_LARGE'
+        | 'INVALID_INPUT'
+        | 'INVALID_MIME'
+        | 'CONSENT_REQUIRED'
+        | 'UNAUTHORIZED'
+        | 'NOT_FOUND';
     };
 
 export interface AttachmentSummary {
@@ -110,7 +116,7 @@ export async function uploadAttachmentImpl(
   const categoryRaw = formData.get('category');
 
   if (!(file instanceof File)) {
-    return { ok: false, code: 'INVALID_MIME' };
+    return { ok: false, code: 'INVALID_INPUT' };
   }
 
   const metaParsed = uploadAttachmentInputSchema.safeParse({
@@ -119,7 +125,7 @@ export async function uploadAttachmentImpl(
   });
 
   if (!metaParsed.success) {
-    return { ok: false, code: 'INVALID_MIME' };
+    return { ok: false, code: 'INVALID_INPUT' };
   }
 
   const { patientId: validatedPatientId, category } = metaParsed.data;

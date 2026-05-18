@@ -348,6 +348,18 @@ export async function upsertPersonalNotesImpl(
  * hashLength=32 — OWASP-recommended). Resets the failed_attempts counter
  * to prevent lockout from carrying over after a password change.
  *
+ * INTENTIONAL: This action does NOT require the current password when
+ * changing an existing password. The personal-notes password is a UX-level
+ * privacy gate (e.g., shared workstation), not a cryptographic control.
+ * The psychologist is already fully authenticated via Supabase Auth, so
+ * they are the verified resource owner. Requiring the old password would
+ * create a recovery deadlock (design.md Decision #1: no recovery mechanism).
+ * This is consistent with the spec scenario "Set password on personal
+ * notes" which only requires a new password. Note that
+ * `removePersonalNotesPassword` DOES require the current password because
+ * removal lowers the privacy bar, whereas changing to a new password
+ * maintains it.
+ *
  * user_id is ALWAYS derived from the session — never from client input.
  */
 export async function setPersonalNotesPasswordImpl(

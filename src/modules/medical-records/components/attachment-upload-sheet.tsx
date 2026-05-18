@@ -35,6 +35,7 @@ const FILE_TYPE_LEGEND = 'PDF, JPG, PNG, MP3, MP4, DOC, DOCX';
 
 const ERROR_MESSAGES: Record<string, string> = {
   FILE_TOO_LARGE: 'Arquivo excede o limite de 50MB.',
+  INVALID_INPUT: 'Dados invalidos. Verifique o arquivo e a categoria.',
   INVALID_MIME: 'Tipo de arquivo nao permitido para esta categoria.',
   CONSENT_REQUIRED: 'Gravacoes requerem termo de consentimento assinado (CFP 13/2022).',
   UNAUTHORIZED: 'Voce nao tem permissao para realizar esta acao.',
