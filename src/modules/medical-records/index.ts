@@ -242,3 +242,33 @@ export { AttachmentsTab } from './components/attachments-tab';
 export { PersonalNotesLock } from './components/personal-notes-lock';
 export { PersonalNotesPasswordSheet } from './components/personal-notes-password-sheet';
 export { PersonalNotesTab } from './components/personal-notes-tab';
+
+// ---- Clinical Document Server Actions ---------------------------------------
+export {
+  createDocumentImpl,
+  updateDocumentImpl,
+  listDocumentsByPatientImpl,
+  getDocumentDetailImpl,
+  type CreateDocumentResult,
+  type UpdateDocumentResult,
+  type ListDocumentsByPatientResult,
+  type GetDocumentDetailResult,
+  type DocumentSummary,
+  type DocumentFull,
+} from './server/clinical-documents';
+
+// ---- Clinical Document Schemas ----------------------------------------------
+export {
+  createDocumentInputSchema,
+  updateDocumentInputSchema,
+  finalizeDocumentInputSchema,
+  documentTypeSchema,
+  documentContentSchema,
+  baseDocumentContentSchema,
+  computeReferencesCid10,
+  type CreateDocumentInput,
+  type UpdateDocumentInput,
+  type FinalizeDocumentInput,
+  type DocumentType,
+  type DocumentContent,
+} from './lib/schemas/clinical-documents';

@@ -15,11 +15,11 @@
 
 ## 3. Server Actions — Create, Update, List, Detail
 
-- [ ] 3.1 Create `src/modules/medical-records/server/clinical-documents.ts` with `createDocument` — validates input with Zod, authenticates via `supabase.auth.getUser()`, snapshots psychologistInfo from user profile, inserts row with user_id from session, writes audit_log 'document.create'
-- [ ] 3.2 Implement `updateDocument` — validates input, authenticates, queries row (RLS ensures ownership), checks status='draft' (returns 'ALREADY_FINALIZED' otherwise), updates content + title + references_cid10, sets updated_at=now, writes audit_log 'document.update'
-- [ ] 3.3 Implement `listDocumentsByPatient` — validates patientId, authenticates, queries with optional type/status filters, orders by created_at DESC, writes audit_log 'document.list'
-- [ ] 3.4 Implement `getDocumentDetail` — validates documentId, authenticates, returns full document (RLS ensures ownership), writes audit_log 'document.view'
-- [ ] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-crud.int.test.ts` — test: createDocument persists row + audit entry, updateDocument works for draft (content updated), updateDocument rejects for finalized (code='ALREADY_FINALIZED'), listDocumentsByPatient returns owned docs with correct order, filter by type and status works, getDocumentDetail returns full content, RLS negative: psychologist B cannot read/update psychologist A's documents, audit_log entries written for every operation
+- [x] 3.1 Create `src/modules/medical-records/server/clinical-documents.ts` with `createDocument` — validates input with Zod, authenticates via `supabase.auth.getUser()`, snapshots psychologistInfo from user profile, inserts row with user_id from session, writes audit_log 'document.create'
+- [x] 3.2 Implement `updateDocument` — validates input, authenticates, queries row (RLS ensures ownership), checks status='draft' (returns 'ALREADY_FINALIZED' otherwise), updates content + title + references_cid10, sets updated_at=now, writes audit_log 'document.update'
+- [x] 3.3 Implement `listDocumentsByPatient` — validates patientId, authenticates, queries with optional type/status filters, orders by created_at DESC, writes audit_log 'document.list'
+- [x] 3.4 Implement `getDocumentDetail` — validates documentId, authenticates, returns full document (RLS ensures ownership), writes audit_log 'document.view'
+- [x] 3.5 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-crud.int.test.ts` — test: createDocument persists row + audit entry, updateDocument works for draft (content updated), updateDocument rejects for finalized (code='ALREADY_FINALIZED'), listDocumentsByPatient returns owned docs with correct order, filter by type and status works, getDocumentDetail returns full content, RLS negative: psychologist B cannot read/update psychologist A's documents, audit_log entries written for every operation
 
 ## 4. Finalize Action + CID-10 Consent Gate + Integration Tests
 
