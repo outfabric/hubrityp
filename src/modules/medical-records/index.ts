@@ -250,11 +250,13 @@ export {
   listDocumentsByPatientImpl,
   getDocumentDetailImpl,
   finalizeDocumentImpl,
+  getDocumentPdfUrlImpl,
   type CreateDocumentResult,
   type UpdateDocumentResult,
   type ListDocumentsByPatientResult,
   type GetDocumentDetailResult,
   type FinalizeDocumentResult,
+  type GetDocumentPdfUrlResult,
   type DocumentSummary,
   type DocumentFull,
 } from './server/clinical-documents';

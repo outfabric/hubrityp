@@ -14,6 +14,7 @@ import {
 import { db } from '@/shared/db/client';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { auditLog, clinicalDocuments } from '@/shared/db/schema/medical-records/tables';
+import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -48,6 +49,10 @@ export type FinalizeDocumentResult =
         | 'CID10_CONSENT_REQUIRED';
     };
 
+export type GetDocumentPdfUrlResult =
+  | { ok: true; data: { signedUrl: string; expiresIn: 300 } }
+  | { ok: false; code: 'UNAUTHORIZED' | 'NOT_FOUND' | 'PDF_NOT_READY' | 'STORAGE_ERROR' };
+
 export interface DocumentSummary {
   id: string;
   patientId: string;
@@ -73,6 +78,10 @@ const listDocumentsByPatientSchema = z.object({
 });
 
 const getDocumentDetailSchema = z.object({
+  documentId: z.string().uuid({ message: 'documentId deve ser um UUID valido.' }),
+});
+
+const getDocumentPdfUrlSchema = z.object({
   documentId: z.string().uuid({ message: 'documentId deve ser um UUID valido.' }),
 });
 
@@ -635,4 +644,130 @@ export async function finalizeDocumentImpl(
     );
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// getDocumentPdfUrl
+// ---------------------------------------------------------------------------
+
+/** Signed URL expiration in seconds (5 minutes). */
+const SIGNED_URL_EXPIRY_SECONDS = 300;
+
+/**
+ * Generates a time-limited signed URL for downloading the PDF of a finalized
+ * clinical document.
+ *
+ * Flow:
+ *   1. Validate documentId (UUID).
+ *   2. Authenticate via Supabase getUser().
+ *   3. Query document by id + userId (defense-in-depth: explicit ownership + RLS).
+ *      -> NOT_FOUND if missing.
+ *   4. If pdf_storage_path is null -> PDF_NOT_READY (PDF generation is async).
+ *   5. Generate signed URL from Supabase Storage with 300s expiry.
+ *      -> STORAGE_ERROR on failure.
+ *   6. Write audit_log 'document.pdf-download'.
+ *   7. Return { signedUrl, expiresIn: 300 }.
+ *
+ * user_id is ALWAYS derived from the session — never from client input.
+ */
+export async function getDocumentPdfUrlImpl(
+  supabase: SupabaseClient,
+  input: unknown,
+): Promise<GetDocumentPdfUrlResult> {
+  // 1. Validate input
+  const parsed = getDocumentPdfUrlSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, code: 'NOT_FOUND' };
+  }
+
+  const { documentId } = parsed.data;
+
+  // 2. Authenticate
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, code: 'UNAUTHORIZED' };
+  }
+
+  const userId = user.id;
+
+  // 3. Fetch document (defense-in-depth: explicit userId filter + RLS)
+  const [document] = await db
+    .select({
+      id: clinicalDocuments.id,
+      pdfStoragePath: clinicalDocuments.pdfStoragePath,
+    })
+    .from(clinicalDocuments)
+    .where(and(eq(clinicalDocuments.id, documentId), eq(clinicalDocuments.userId, userId)))
+    .limit(1);
+
+  if (!document) {
+    return { ok: false, code: 'NOT_FOUND' };
+  }
+
+  // 4. Check if PDF has been generated
+  if (!document.pdfStoragePath) {
+    return { ok: false, code: 'PDF_NOT_READY' };
+  }
+
+  // 5. Generate signed URL from Supabase Storage
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    .from('clinical-documents')
+    .createSignedUrl(document.pdfStoragePath, SIGNED_URL_EXPIRY_SECONDS);
+
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    logger.error(
+      { event: 'document_pdf_signed_url_failed', storageError: signedUrlError?.message },
+      'failed to create signed URL for clinical document PDF',
+    );
+    return { ok: false, code: 'STORAGE_ERROR' };
+  }
+
+  // Rewrite origin for local dev (Docker internal hostname -> browser-facing URL)
+  const signedUrl = toBrowserSignedUrl(signedUrlData.signedUrl);
+
+  // 6. Write audit_log entry (fire-and-forget on failure)
+  try {
+    await db.insert(auditLog).values({
+      userId,
+      action: 'document.pdf-download',
+      resourceType: 'clinical_document',
+      resourceId: documentId,
+      metadata: {},
+    });
+  } catch (auditErr: unknown) {
+    const pgError = auditErr as { code?: string };
+    logger.error(
+      { event: 'document_audit_log_failed', errorCode: pgError.code },
+      'failed to write audit_log entry for document.pdf-download',
+    );
+  }
+
+  return { ok: true, data: { signedUrl, expiresIn: 300 } };
+}
+
+// ---------------------------------------------------------------------------
+// Internal helper: rewrite signed URL origin for local development
+// ---------------------------------------------------------------------------
+
+/**
+ * In Docker Compose, the server reaches Supabase Storage via an internal
+ * hostname (e.g. `http://supabase_kong_hubrityp:8000`) that the browser
+ * cannot resolve. `SUPABASE_PUBLIC_URL` provides the externally reachable
+ * origin (e.g. `http://localhost:54321`). In production this env var is
+ * unset, so the URL passes through unchanged.
+ */
+function toBrowserSignedUrl(signedUrl: string): string {
+  const publicUrl = serverEnv.SUPABASE_PUBLIC_URL;
+  if (!publicUrl) return signedUrl;
+
+  const serverOrigin = serverEnv.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serverOrigin) return signedUrl;
+
+  // Only rewrite when the signed URL origin matches the server-internal origin
+  if (!signedUrl.startsWith(serverOrigin)) return signedUrl;
+
+  return publicUrl + signedUrl.slice(serverOrigin.length);
 }

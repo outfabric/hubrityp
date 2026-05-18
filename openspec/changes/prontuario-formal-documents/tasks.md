@@ -43,8 +43,8 @@
 
 ## 7. Signed URL Action + Integration Test
 
-- [ ] 7.1 Implement `getDocumentPdfUrl` in `src/modules/medical-records/server/clinical-documents.ts` — validates documentId, authenticates, queries document (RLS ownership), checks pdf_storage_path is set (else 'PDF_NOT_READY'), generates signed URL from Supabase Storage with 300s expiry, writes audit_log 'document.pdf-download', returns { signedUrl, expiresIn: 300 }
-- [ ] 7.2 **Integration test:** Add to `src/__tests__/integration/medical-records/clinical-documents-crud.int.test.ts` (or separate file) — test: returns signed URL when pdf_storage_path set, rejects with 'PDF_NOT_READY' when pdf_storage_path null, RLS negative: psychologist B cannot get URL for A's document, audit_log entry written
+- [x] 7.1 Implement `getDocumentPdfUrl` in `src/modules/medical-records/server/clinical-documents.ts` — validates documentId, authenticates, queries document (RLS ownership), checks pdf_storage_path is set (else 'PDF_NOT_READY'), generates signed URL from Supabase Storage with 300s expiry, writes audit_log 'document.pdf-download', returns { signedUrl, expiresIn: 300 }
+- [x] 7.2 **Integration test:** Add to `src/__tests__/integration/medical-records/clinical-documents-crud.int.test.ts` (or separate file) — test: returns signed URL when pdf_storage_path set, rejects with 'PDF_NOT_READY' when pdf_storage_path null, RLS negative: psychologist B cannot get URL for A's document, audit_log entry written
 
 ## 8. Frontend — List + Type Selector + Editor + Finalize Modal + Viewer
 
