@@ -406,10 +406,9 @@ test.describe('@prontuario personal notes tab', () => {
 
     // Verify the content persisted
     const editorAfterReload = page.locator('[contenteditable="true"]').first();
-    await expect(editorAfterReload).toContainText(
-      'Notas pessoais do teste E2E',
-      { timeout: 10_000 },
-    );
+    await expect(editorAfterReload).toContainText('Notas pessoais do teste E2E', {
+      timeout: 10_000,
+    });
   });
 
   test('set password -> reload -> lock screen -> wrong 5x -> lockout -> seed past lockout -> correct password -> content visible', async ({
