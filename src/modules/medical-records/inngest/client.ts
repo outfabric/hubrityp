@@ -9,4 +9,26 @@
 
 import { Inngest } from 'inngest';
 
+// ---------------------------------------------------------------------------
+// Event data types
+// ---------------------------------------------------------------------------
+
+/** Data payload for `documents/pdf.requested` — triggered after finalization. */
+export interface PdfRequestedEventData {
+  /** UUID of the clinical_documents row to generate a PDF for. */
+  documentId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Event name constants
+// ---------------------------------------------------------------------------
+
+export const MEDICAL_RECORDS_EVENTS = {
+  PDF_REQUESTED: 'documents/pdf.requested',
+} as const;
+
+// ---------------------------------------------------------------------------
+// Inngest client
+// ---------------------------------------------------------------------------
+
 export const inngest = new Inngest({ id: 'hubrityp' });

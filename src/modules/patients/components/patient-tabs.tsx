@@ -1,8 +1,10 @@
 'use client';
 
 import { Calendar, ClipboardList, FileText, Receipt, Wallet } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { Button } from '@/shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 // ---------------------------------------------------------------------------
@@ -46,7 +48,7 @@ const TABS: TabDefinition[] = [
     value: 'documents',
     label: 'Documentos',
     icon: <Receipt className="h-4 w-4" aria-hidden="true" />,
-    placeholder: true,
+    placeholder: false,
   },
   {
     value: 'financial',
@@ -61,6 +63,8 @@ const TABS: TabDefinition[] = [
 // ---------------------------------------------------------------------------
 
 interface PatientTabsProps {
+  /** Patient UUID — used to build links to the prontuario. */
+  patientId: string;
   /** Content for the "Visao geral" tab. */
   overviewContent: ReactNode;
   /** Content for the "Anamnese" tab. */
@@ -71,7 +75,7 @@ interface PatientTabsProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function PatientTabs({ overviewContent, anamnesisContent }: PatientTabsProps) {
+export function PatientTabs({ patientId, overviewContent, anamnesisContent }: PatientTabsProps) {
   return (
     <Tabs defaultValue="overview" data-testid="patient-tabs">
       <TabsList className="w-full overflow-x-auto" data-testid="patient-tabs-list">
@@ -91,6 +95,21 @@ export function PatientTabs({ overviewContent, anamnesisContent }: PatientTabsPr
       {/* Active tab: anamnesis */}
       <TabsContent value="anamnesis" data-testid="patient-tab-content-anamnesis">
         {anamnesisContent}
+      </TabsContent>
+
+      {/* Active tab: documents — redirect panel pointing to the prontuario */}
+      <TabsContent value="documents" data-testid="patient-tab-content-documents">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FileText className="text-text-tertiary mb-3 h-8 w-8" aria-hidden="true" />
+          <h3 className="text-text-primary mb-1 text-base font-semibold">Documentos clinicos</h3>
+          <p className="text-text-secondary mb-4 max-w-sm text-sm">
+            Os documentos clinicos (declaracoes, atestados, laudos e outros) estao disponiveis no
+            prontuario do paciente.
+          </p>
+          <Button asChild data-testid="patient-tab-documents-open-prontuario">
+            <Link href={`/pacientes/${patientId}/prontuario`}>Abrir prontuario</Link>
+          </Button>
+        </div>
       </TabsContent>
 
       {/* Placeholder tabs */}

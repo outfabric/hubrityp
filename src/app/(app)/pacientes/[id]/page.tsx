@@ -111,6 +111,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
       {/* Tabs */}
       <div className="mt-8">
         <PatientTabs
+          patientId={id}
           overviewContent={
             <PatientOverviewTab
               patient={patient}

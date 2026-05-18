@@ -3,6 +3,7 @@ import { sql as dsql } from 'drizzle-orm';
 import { sessionHistory, sessions } from '@/shared/db/schema/agenda/tables';
 import {
   auditLog,
+  clinicalDocuments,
   diagnosticHypotheses,
   evolutionAttachments,
   evolutionVersions,
@@ -20,7 +21,7 @@ import { runAsService } from './run-as-service';
  * Deletes test data from the shared Testcontainers database in correct FK
  * dependency order. Handles the full chain:
  *
- *   evolution_attachments → personal_notes → scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
+ *   clinical_documents → evolution_attachments → personal_notes → scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
  *
  * The `evolutions` table references both `patients(id)` and `sessions(id)`,
  * so it must be cleared before either parent. `evolution_versions` references
@@ -33,6 +34,7 @@ import { runAsService } from './run-as-service';
  * `evolution_attachments` references `patients(id)` + `evolutions(id)` so must be
  * cleared before both parents.
  * `personal_notes` references `patients(id)` so must be cleared before patients.
+ * `clinical_documents` references `patients(id)` so must be cleared before patients.
  *
  * Use this in `afterEach` / `afterAll` hooks of any integration test that
  * seeds patients or sessions and performs unfiltered cleanup (DELETE without
@@ -42,6 +44,7 @@ import { runAsService } from './run-as-service';
 export async function cleanTestData(): Promise<void> {
   await runAsService(async (db) => {
     // 1. Medical-records tables (children of patients + sessions + evolutions)
+    await db.delete(clinicalDocuments);
     await db.delete(evolutionAttachments);
     await db.delete(personalNotes);
     await db.delete(scaleApplications);

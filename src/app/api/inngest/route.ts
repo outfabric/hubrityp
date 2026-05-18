@@ -9,6 +9,7 @@
 import { serve } from 'inngest/next';
 
 import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
+import { generateDocumentPdf } from '@/modules/medical-records/inngest/generate-document-pdf';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
 import { inngest } from '@/modules/whatsapp/inngest/client';
@@ -37,5 +38,6 @@ export const { GET, POST, PUT } = serve({
     inboxMessageIngest,
     remindMissingEvolution,
     expireRemoteTokens,
+    generateDocumentPdf,
   ],
 });
