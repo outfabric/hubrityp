@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -308,3 +309,97 @@ export const scaleApplications = pgTable(
 
 export type ScaleApplication = typeof scaleApplications.$inferSelect;
 export type NewScaleApplication = typeof scaleApplications.$inferInsert;
+
+// `evolution_attachments` stores file attachments associated with a patient's
+// prontuario. Each attachment is tied to a psychologist (`user_id`) and a
+// patient, and optionally linked to a specific evolution record. Files are
+// stored in Supabase Storage under a `patient-attachments` bucket with the
+// path convention `${user_id}/${patient_id}/${uuid}.${ext}`.
+//
+// A CHECK constraint on `category` limits values to the allowed set.
+// Soft-delete via `deleted_at` — physical deletion is prohibited per
+// Lei 13.787/2018 (20-year retention). A future Inngest cron handles cleanup.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — retention mandate.
+export const evolutionAttachments = pgTable(
+  'evolution_attachments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    // FK to `evolutions(id)`, nullable. Emitted manually in migration.
+    evolutionId: uuid('evolution_id'),
+
+    fileName: text('file_name').notNull(), // Server-generated UUID + ext
+    displayName: text('display_name').notNull(), // Original user-supplied name, sanitized
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    mimeType: text('mime_type').notNull(),
+    storagePath: text('storage_path').notNull(), // Full path in bucket
+
+    // CHECK constraint in migration: category IN ('exam','image','drawing','audio','other')
+    category: text('category').notNull(),
+
+    consentVerified: boolean('consent_verified').notNull().default(false),
+
+    uploadedAt: timestamp('uploaded_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft delete
+  },
+  (table) => [
+    index('idx_attachments_patient_uploaded').on(table.patientId, table.uploadedAt),
+    index('idx_attachments_user_id').on(table.userId), // For RLS predicate performance
+  ],
+);
+
+export type EvolutionAttachment = typeof evolutionAttachments.$inferSelect;
+export type NewEvolutionAttachment = typeof evolutionAttachments.$inferInsert;
+
+// `personal_notes` stores private reflections by the psychologist for a
+// specific patient. These notes are legally separated from the official
+// prontuario (CFP 001/2009, art. 5) and excluded from default exports
+// (RN-05.03). Each patient has at most one personal notes row (UNIQUE on
+// `patient_id`).
+//
+// Optional argon2id password protection with a lockout state machine:
+// 5 failed attempts -> 15-minute cooldown per patient_id. The password is a
+// UX-level privacy gate, not a cryptographic control — content is not
+// encrypted at rest.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — retention mandate per Lei 13.787/2018.
+export const personalNotes = pgTable(
+  'personal_notes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`, UNIQUE (1:1). Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    content: text('content'), // Rich text (HTML from Tiptap)
+    passwordHash: text('password_hash'), // argon2id hash, nullable
+
+    failedAttempts: integer('failed_attempts').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    unique('personal_notes_patient_id_unique').on(table.patientId),
+    index('idx_personal_notes_user_id').on(table.userId), // For RLS predicate performance
+  ],
+);
+
+export type PersonalNote = typeof personalNotes.$inferSelect;
+export type NewPersonalNote = typeof personalNotes.$inferInsert;

@@ -114,3 +114,39 @@ export const scaleApplicationsPolicies = [
      USING (auth.uid() = user_id)
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
+
+// Owner-scoped RLS for `evolution_attachments`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year retention; "deletion"
+// is a soft-delete (UPDATE setting `deleted_at`), never a physical DELETE.
+// The `user_id` column references the psychologist's `auth.users.id`.
+export const evolutionAttachmentsPolicies = [
+  `ALTER TABLE evolution_attachments ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select attachments" ON evolution_attachments
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert attachments" ON evolution_attachments
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update attachments" ON evolution_attachments
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;
+
+// Owner-scoped RLS for `personal_notes`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates retention; personal notes
+// are never hard-deleted. The `user_id` column references the
+// psychologist's `auth.users.id`.
+export const personalNotesPolicies = [
+  `ALTER TABLE personal_notes ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select personal_notes" ON personal_notes
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert personal_notes" ON personal_notes
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update personal_notes" ON personal_notes
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id)
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;

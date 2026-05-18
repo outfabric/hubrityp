@@ -1,13 +1,13 @@
 ## 1. Dependencies and Database Schema
 
-- [ ] 1.1 Install npm packages: `argon2` and `file-type` (add to `package.json` dependencies)
-- [ ] 1.2 Add `evolution_attachments` and `personal_notes` table definitions to `src/shared/db/schema/medical-records/tables.ts` (columns, indexes, unique constraints per design.md DDL)
-- [ ] 1.3 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `evolutionAttachmentsPolicies` (SELECT/INSERT/UPDATE owner-scoped, no DELETE) and `personalNotesPolicies` (SELECT/INSERT/UPDATE owner-scoped, no DELETE)
-- [ ] 1.4 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export new tables and policies
-- [ ] 1.5 Run `npm run db:generate`, manually append RLS policies + FK constraints (user_id -> auth.users, patient_id -> patients, evolution_id -> evolutions nullable) + CHECK constraint on `category` column (`'exam','image','drawing','audio','other'`) to the generated migration file
-- [ ] 1.6 Add Supabase Storage bucket creation SQL and storage policies (INSERT/SELECT scoped to `(storage.foldername(name))[1] = auth.uid()::text`, no DELETE) to the migration or a separate setup script
-- [ ] 1.7 Run `npm run db:migrate` locally and verify tables + RLS + storage policies exist
-- [ ] 1.8 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-schema.int.test.ts` — verify `evolution_attachments` table exists, RLS enabled, SELECT/INSERT/UPDATE policies exist, no DELETE policy, UNIQUE on `personal_notes.patient_id`, CHECK constraint on category column
+- [x] 1.1 Install npm packages: `argon2` and `file-type` (add to `package.json` dependencies)
+- [x] 1.2 Add `evolution_attachments` and `personal_notes` table definitions to `src/shared/db/schema/medical-records/tables.ts` (columns, indexes, unique constraints per design.md DDL)
+- [x] 1.3 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: `evolutionAttachmentsPolicies` (SELECT/INSERT/UPDATE owner-scoped, no DELETE) and `personalNotesPolicies` (SELECT/INSERT/UPDATE owner-scoped, no DELETE)
+- [x] 1.4 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export new tables and policies
+- [x] 1.5 Run `npm run db:generate`, manually append RLS policies + FK constraints (user_id -> auth.users, patient_id -> patients, evolution_id -> evolutions nullable) + CHECK constraint on `category` column (`'exam','image','drawing','audio','other'`) to the generated migration file
+- [x] 1.6 Add Supabase Storage bucket creation SQL and storage policies (INSERT/SELECT scoped to `(storage.foldername(name))[1] = auth.uid()::text`, no DELETE) to the migration or a separate setup script
+- [x] 1.7 Run `npm run db:migrate` locally and verify tables + RLS + storage policies exist
+- [x] 1.8 **Integration test:** Create `src/__tests__/integration/medical-records/attachments-schema.int.test.ts` — verify `evolution_attachments` table exists, RLS enabled, SELECT/INSERT/UPDATE policies exist, no DELETE policy, UNIQUE on `personal_notes.patient_id`, CHECK constraint on category column
 
 ## 2. Module Lib — Schemas, Validators, Helpers
 
