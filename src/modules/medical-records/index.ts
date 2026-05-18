@@ -276,3 +276,22 @@ export {
   type DocumentType,
   type DocumentContent,
 } from './lib/schemas/clinical-documents';
+
+// ---- Document Type Configuration -------------------------------------------
+export {
+  DOCUMENT_TYPE_CONFIGS,
+  DOCUMENT_TYPE_LIST,
+  DOCUMENT_SECTIONS,
+  type DocumentTypeConfig,
+  type SectionKey,
+  type SectionConfig,
+} from './lib/document-type-config';
+
+// ---- Document Components (Client Components) --------------------------------
+export { DocumentsEmptyState } from './components/documents-empty-state';
+export { DocumentCard, type DocumentCardData } from './components/document-card';
+export { DocumentsTab } from './components/documents-tab';
+export { DocumentTypeSelector } from './components/document-type-selector';
+export { DocumentEditor } from './components/document-editor';
+export { FinalizeModal } from './components/finalize-modal';
+export { DocumentViewer } from './components/document-viewer';

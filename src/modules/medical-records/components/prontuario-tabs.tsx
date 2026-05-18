@@ -10,6 +10,7 @@ import {
   StickyNote,
   Target,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 
 import {
@@ -17,9 +18,11 @@ import {
   createScaleApplication,
   deleteAttachment,
   getAttachmentSignedUrl,
+  getDocumentPdfUrl,
   getPersonalNotes,
   getTreatmentPlan,
   listAttachments,
+  listDocumentsByPatient,
   listHypotheses,
   listScalesForPatient,
   listTreatmentPlanVersions,
@@ -36,11 +39,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { AttachmentsTab } from './attachments-tab';
-import { EmptyTabPlaceholder } from './empty-tab-placeholder';
 import { HypothesesTab } from './hypotheses-tab';
 import { PersonalNotesTab } from './personal-notes-tab';
 import { ScalesTab } from './scales-tab';
 import { TreatmentPlanTab } from './treatment-plan';
+
+// Lazy-load the DocumentsTab — it pulls in Tiptap and the type config
+// which are only needed when the user navigates to the "Documentos" tab.
+const DocumentsTab = dynamic(() =>
+  import('./documents-tab').then((mod) => ({ default: mod.DocumentsTab })),
+);
 
 // ---------------------------------------------------------------------------
 // Tab definitions
@@ -90,7 +98,7 @@ const TABS: TabDefinition[] = [
     value: 'documentos',
     label: 'Documentos',
     description: 'Laudos, relatorios e declaracoes serao gerados e armazenados aqui.',
-    functional: false,
+    functional: true,
     icon: ClipboardList,
   },
   {
@@ -129,14 +137,14 @@ interface ProntuarioTabsProps {
 /**
  * Prontuario tabs following the Salvia underline-style tab pattern.
  *
- * 7 tabs total:
- * - Evolucoes (functional — renders children)
- * - Hipoteses (functional — renders HypothesesTab)
- * - Plano (functional — renders TreatmentPlanTab)
- * - Escalas (functional — renders ScalesTab)
- * - Anexos (functional — renders AttachmentsTab)
- * - Notas (functional — renders PersonalNotesTab, Lock icon in trigger)
- * - Documentos (renders EmptyTabPlaceholder)
+ * 7 tabs total — all functional:
+ * - Evolucoes (renders children)
+ * - Hipoteses (renders HypothesesTab)
+ * - Plano (renders TreatmentPlanTab)
+ * - Escalas (renders ScalesTab)
+ * - Documentos (renders DocumentsTab, lazy-loaded)
+ * - Anexos (renders AttachmentsTab)
+ * - Notas (renders PersonalNotesTab, Lock icon in trigger)
  *
  * Active tab: border-bottom 2px brand-500 (handled by the shadcn Tabs primitive).
  */
@@ -203,6 +211,15 @@ export function ProntuarioTabs({
         />
       </TabsContent>
 
+      {/* Functional tab: Documentos clinicos */}
+      <TabsContent value="documentos" data-testid="prontuario-tab-content-documentos">
+        <DocumentsTab
+          patientId={patientId}
+          listDocumentsByPatient={listDocumentsByPatient}
+          getDocumentPdfUrl={getDocumentPdfUrl}
+        />
+      </TabsContent>
+
       {/* Functional tab: Anexos */}
       <TabsContent value="anexos" data-testid="prontuario-tab-content-anexos">
         <AttachmentsTab
@@ -225,17 +242,6 @@ export function ProntuarioTabs({
           removePersonalNotesPassword={removePersonalNotesPassword}
         />
       </TabsContent>
-
-      {/* Non-functional placeholder tabs */}
-      {TABS.filter((tab) => !tab.functional).map((tab) => (
-        <TabsContent
-          key={tab.value}
-          value={tab.value}
-          data-testid={`prontuario-tab-content-${tab.value}`}
-        >
-          <EmptyTabPlaceholder icon={tab.icon} description={tab.description} />
-        </TabsContent>
-      ))}
     </Tabs>
   );
 }
