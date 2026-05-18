@@ -25,6 +25,7 @@ export interface DocumentCardData {
   title: string;
   status: string;
   referencesCid10: boolean;
+  pdfStoragePath: string | null;
   finalizedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -130,7 +131,8 @@ export function DocumentCard({ document: doc, getDocumentPdfUrl }: DocumentCardP
                 variant="ghost"
                 size="sm"
                 onClick={handleDownloadPdf}
-                disabled={downloading}
+                disabled={downloading || !doc.pdfStoragePath}
+                title={!doc.pdfStoragePath ? 'PDF ainda não está disponível' : undefined}
                 data-testid={`document-download-${doc.id}`}
               >
                 <Download className="mr-1 h-3.5 w-3.5" aria-hidden="true" />

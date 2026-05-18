@@ -1,5 +1,6 @@
 'use client';
 
+import DOMPurify from 'dompurify';
 import { Copy, Download, Lock, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -184,12 +185,11 @@ export function DocumentViewer({
             <p className="text-text-secondary text-sm font-medium">{section.label}</p>
             <div
               className="prose prose-sm text-text-primary max-w-none"
-              // Content was authored in our Tiptap editor; rendering the stored
-              // HTML is safe because the editor only produces a limited set of
-              // inline/block nodes (bold, italic, headings, lists). The content
-              // never contains user-supplied raw HTML — Tiptap sanitizes through
-              // its schema. This is NOT arbitrary user HTML.
-              dangerouslySetInnerHTML={{ __html: value }}
+              // Content was authored in our Tiptap editor but passes through
+              // z.record(z.string(), z.unknown()) and lives in JSONB — the
+              // "sanitized by Tiptap" invariant does not hold for all write
+              // paths. DOMPurify provides defense-in-depth sanitization.
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(value) }}
             />
           </div>
         );

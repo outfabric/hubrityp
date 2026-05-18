@@ -17,6 +17,12 @@ import { auditLog, clinicalDocuments } from '@/shared/db/schema/medical-records/
 import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
+// SECURITY: `db` uses DATABASE_URL (Postgres owner role) which bypasses RLS.
+// Every query against user-scoped tables MUST include an explicit ownership filter:
+//   .where(and(eq(table.userId, userId), ...))
+// where `userId` is derived from supabase.auth.getUser() — never from client input.
+// Do not add queries on clinical_documents or patients without this filter.
+
 // ---------------------------------------------------------------------------
 // Result types
 // ---------------------------------------------------------------------------
@@ -60,6 +66,7 @@ export interface DocumentSummary {
   title: string;
   status: string;
   referencesCid10: boolean;
+  pdfStoragePath: string | null;
   finalizedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -381,6 +388,7 @@ export async function listDocumentsByPatientImpl(
         title: clinicalDocuments.title,
         status: clinicalDocuments.status,
         referencesCid10: clinicalDocuments.referencesCid10,
+        pdfStoragePath: clinicalDocuments.pdfStoragePath,
         finalizedAt: clinicalDocuments.finalizedAt,
         createdAt: clinicalDocuments.createdAt,
         updatedAt: clinicalDocuments.updatedAt,

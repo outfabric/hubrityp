@@ -99,6 +99,7 @@ export function DocumentsTab({
         setDocuments(
           result.documents.map((d) => ({
             ...d,
+            pdfStoragePath: d.pdfStoragePath ?? null,
             createdAt: new Date(d.createdAt),
             updatedAt: new Date(d.updatedAt),
             finalizedAt: d.finalizedAt ? new Date(d.finalizedAt) : null,
