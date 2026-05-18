@@ -1,11 +1,11 @@
 ## 1. Database Schema + RLS + Migration
 
-- [ ] 1.1 Add `clinicalDocuments` table definition to `src/shared/db/schema/medical-records/tables.ts` (columns: id, user_id, patient_id, document_type, title, content, pdf_storage_path, pdf_size, digitally_signed, signature_method, status, references_cid10, cid10_consent_confirmed, finalized_at, created_at, updated_at; indexes: patient_type_created, status_finalized, user_id)
-- [ ] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: SELECT (owner), INSERT (owner), UPDATE (owner AND status='draft' USING clause), no DELETE. Export as `clinicalDocumentsPolicies`
-- [ ] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export the new table
-- [ ] 1.4 Run `npm run db:generate`, manually append to the migration file: RLS enable + policies, FK constraints (user_id -> auth.users, patient_id -> patients), CHECK constraints (document_type, status, signature_method)
-- [ ] 1.5 Run `npm run db:migrate` locally and verify table exists with correct structure
-- [ ] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-schema.int.test.ts` — verify: table exists, RLS enabled, expected policies exist (SELECT/INSERT/UPDATE, no DELETE), CHECK constraints on document_type/status/signature_method, UPDATE on finalized row returns 0 rows affected (RLS USING clause), psychologist B cannot SELECT/UPDATE psychologist A's documents
+- [x] 1.1 Add `clinicalDocuments` table definition to `src/shared/db/schema/medical-records/tables.ts` (columns: id, user_id, patient_id, document_type, title, content, pdf_storage_path, pdf_size, digitally_signed, signature_method, status, references_cid10, cid10_consent_confirmed, finalized_at, created_at, updated_at; indexes: patient_type_created, status_finalized, user_id)
+- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts`: SELECT (owner), INSERT (owner), UPDATE (owner AND status='draft' USING clause), no DELETE. Export as `clinicalDocumentsPolicies`
+- [x] 1.3 Update `src/shared/db/schema/medical-records/index.ts` barrel to re-export the new table
+- [x] 1.4 Run `npm run db:generate`, manually append to the migration file: RLS enable + policies, FK constraints (user_id -> auth.users, patient_id -> patients), CHECK constraints (document_type, status, signature_method)
+- [x] 1.5 Run `npm run db:migrate` locally and verify table exists with correct structure
+- [x] 1.6 **Integration test:** Create `src/__tests__/integration/medical-records/clinical-documents-schema.int.test.ts` — verify: table exists, RLS enabled, expected policies exist (SELECT/INSERT/UPDATE, no DELETE), CHECK constraints on document_type/status/signature_method, UPDATE on finalized row returns 0 rows affected (RLS USING clause), psychologist B cannot SELECT/UPDATE psychologist A's documents
 
 ## 2. Zod Schemas Per Document Type + Unit Tests
 
