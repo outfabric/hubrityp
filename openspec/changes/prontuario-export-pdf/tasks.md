@@ -29,9 +29,9 @@
 
 ## 4. Server Actions
 
-- [ ] 4.1 Create `src/modules/medical-records/server/exports.ts` with `requestProntuarioExport` — validates session via `auth.getUser()`, validates patient ownership, validates filters with Zod, inserts `prontuario_exports` row, writes audit_log, triggers Inngest event, returns `{ok: true, id}`
-- [ ] 4.2 Add `listProntuarioExports` — authenticated, returns user's exports (optionally filtered by patientId), reverse chronological, includes patient name join
-- [ ] 4.3 Add `getExportSignedUrl` — validates ownership + status='ready' + not expired, generates Supabase Storage signed URL with expiry matching row's expires_at
+- [x] 4.1 Create `src/modules/medical-records/server/exports.ts` with `requestProntuarioExport` — validates session via `auth.getUser()`, validates patient ownership, validates filters with Zod, inserts `prontuario_exports` row, writes audit_log, triggers Inngest event, returns `{ok: true, id}`
+- [x] 4.2 Add `listProntuarioExports` — authenticated, returns user's exports (optionally filtered by patientId), reverse chronological, includes patient name join
+- [x] 4.3 Add `getExportSignedUrl` — validates ownership + status='ready' + not expired, generates Supabase Storage signed URL with expiry matching row's expires_at
 
 ## 5. Inngest Functions
 

@@ -261,6 +261,17 @@ export {
   type DocumentFull,
 } from './server/clinical-documents';
 
+// ---- Prontuario Export Server Actions ----------------------------------------
+export {
+  requestProntuarioExportImpl,
+  listProntuarioExportsImpl,
+  getExportSignedUrlImpl,
+  type RequestExportResult,
+  type ListExportsResult,
+  type GetExportSignedUrlResult,
+  type ExportSummary,
+} from './server/exports';
+
 // ---- Clinical Document Schemas ----------------------------------------------
 export {
   createDocumentInputSchema,

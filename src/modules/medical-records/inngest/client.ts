@@ -19,12 +19,19 @@ export interface PdfRequestedEventData {
   documentId: string;
 }
 
+/** Data payload for `prontuario/export-pdf` — triggered after export request. */
+export interface ProntuarioExportPdfEventData {
+  /** UUID of the prontuario_exports row to process. */
+  exportId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Event name constants
 // ---------------------------------------------------------------------------
 
 export const MEDICAL_RECORDS_EVENTS = {
   PDF_REQUESTED: 'documents/pdf.requested',
+  PRONTUARIO_EXPORT_PDF: 'prontuario/export-pdf',
 } as const;
 
 // ---------------------------------------------------------------------------
