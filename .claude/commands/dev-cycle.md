@@ -327,7 +327,7 @@ Prompt:
 - **Scenarios**: the full numbered list from 5b. "Validate every scenario in the browser. For each scenario, mark `Scenario N: PASS` or `Scenario N: FAIL — <reason>`."
 - **Free exploration**: after the scripted scenarios, run adjacent exploratory testing on the affected flows (visual, accessibility, edge cases per the agent's checklist).
 - **Persistence**: "Save the full report to `<worktree>/.dev-cycle/qa-<QA_ITER+1>.md`."
-- **Reporting contract**: end with `VERDICT: clean` (no CRÍTICO/ALTO) or `VERDICT: issues-found`.
+- **Reporting contract**: end with `VERDICT: clean` (no CRÍTICO/ALTO/MÉDIO) or `VERDICT: issues-found`.
 
 Increment `QA_ITER` after the agent returns.
 
@@ -336,7 +336,7 @@ Increment `QA_ITER` after the agent returns.
 - `clean` → proceed to step 5e (teardown), then step 6.
 - `issues-found`:
   - If `QA_ITER >= 3` → stop and escalate. **Do NOT run step 5e** — leave infra up for inspection (see escalation message below).
-  - **Loop guard**: same as 4b — compare CRÍTICO/ALTO titles between `qa-<QA_ITER>.md` and `qa-<QA_ITER-1>.md`; halt on identical lists. Same teardown rule: leave infra up.
+  - **Loop guard**: same as 4b — compare CRÍTICO/ALTO/MÉDIO titles between `qa-<QA_ITER>.md` and `qa-<QA_ITER-1>.md`; halt on identical lists. Same teardown rule: leave infra up.
   - Otherwise: invoke `fullstack-developer` in **fix mode** (see step 6 prompt), passing the QA report path. Then re-invoke `code-reviewer` (one short pass on the new diff — `review-after-qa-<QA_ITER>.md`); if it stays clean, re-invoke `qa-tester` (back to 5c). If the short review fails, treat it as a normal review-fix loop (subject to its own 3-iter cap, shared budget with step 4).
 
 #### 5e. Teardown (orchestrator-owned only, on QA clean)
@@ -378,7 +378,7 @@ When invoking `fullstack-developer` to address feedback:
 
 - **Scope**: worktree path (same as before).
 - **Feedback file**: absolute path to `review-N.md` or `qa-N.md`.
-- **Fix instruction**: "Address every BLOCKER/HIGH from the review (or every CRÍTICO/ALTO from the QA report). Do not introduce out-of-scope refactors."
+- **Fix instruction**: "Address every BLOCKER/HIGH from the review (or every CRÍTICO/ALTO/MÉDIO from the QA report). Do not introduce out-of-scope refactors."
 - **Re-validation**: the agent follows its built-in "Modo fix: full" contract (defined in `.claude/agents/fullstack-developer.md`). At the end of the fix iteration — before returning `VERDICT: PASS` — the agent MUST run, in order: `npm run lint`, `npm run typecheck`, `npm run test:unit` (full), `npm run test:integration` (full — never `--changed`), and `npm run test:e2e:seeded` (full — never path-filtered). All five are mandatory regardless of which files the fix touched. Rationale: fix-mode is invoked precisely because reviewer or QA found regression in code that already passed per-section scoped validation; scoped re-runs here have historically let regressions slip into the next iteration, defeating the loop.
 - **Reporting contract**: same `VERDICT: PASS` / `VERDICT: FAIL` lines as step 3b. The pre-VERDICT block must list which suites ran and their test counts so the orchestrator can audit that full re-validation actually happened.
 
@@ -704,7 +704,7 @@ PR: <url> (CI ✅ green)
 |---|---|---|
 | Dev internal retries per section | 3 | Pause, show logs, wait for user |
 | dev ↔ code-reviewer (post-sections) | 3 | Pause, list persistent BLOCKER/HIGH |
-| dev ↔ qa-tester | 3 | Pause, list persistent CRÍTICO/ALTO |
+| dev ↔ qa-tester | 3 | Pause, list persistent CRÍTICO/ALTO/MÉDIO |
 | dev ↔ CI (post-PR) | 3 | Pause, link PR + persistent failed checks from `ci-fail-N.md` |
 | Same finding repeats 2× consecutively | immediate | Pause (non-converging signal — applies to reviewer, QA, and CI) |
 

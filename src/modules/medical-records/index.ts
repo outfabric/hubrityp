@@ -242,3 +242,56 @@ export { AttachmentsTab } from './components/attachments-tab';
 export { PersonalNotesLock } from './components/personal-notes-lock';
 export { PersonalNotesPasswordSheet } from './components/personal-notes-password-sheet';
 export { PersonalNotesTab } from './components/personal-notes-tab';
+
+// ---- Clinical Document Server Actions ---------------------------------------
+export {
+  createDocumentImpl,
+  updateDocumentImpl,
+  listDocumentsByPatientImpl,
+  getDocumentDetailImpl,
+  finalizeDocumentImpl,
+  getDocumentPdfUrlImpl,
+  type CreateDocumentResult,
+  type UpdateDocumentResult,
+  type ListDocumentsByPatientResult,
+  type GetDocumentDetailResult,
+  type FinalizeDocumentResult,
+  type GetDocumentPdfUrlResult,
+  type DocumentSummary,
+  type DocumentFull,
+} from './server/clinical-documents';
+
+// ---- Clinical Document Schemas ----------------------------------------------
+export {
+  createDocumentInputSchema,
+  updateDocumentInputSchema,
+  finalizeDocumentInputSchema,
+  documentTypeSchema,
+  documentContentSchema,
+  baseDocumentContentSchema,
+  computeReferencesCid10,
+  type CreateDocumentInput,
+  type UpdateDocumentInput,
+  type FinalizeDocumentInput,
+  type DocumentType,
+  type DocumentContent,
+} from './lib/schemas/clinical-documents';
+
+// ---- Document Type Configuration -------------------------------------------
+export {
+  DOCUMENT_TYPE_CONFIGS,
+  DOCUMENT_TYPE_LIST,
+  DOCUMENT_SECTIONS,
+  type DocumentTypeConfig,
+  type SectionKey,
+  type SectionConfig,
+} from './lib/document-type-config';
+
+// ---- Document Components (Client Components) --------------------------------
+export { DocumentsEmptyState } from './components/documents-empty-state';
+export { DocumentCard, type DocumentCardData } from './components/document-card';
+export { DocumentsTab } from './components/documents-tab';
+export { DocumentTypeSelector } from './components/document-type-selector';
+export { DocumentEditor } from './components/document-editor';
+export { FinalizeModal } from './components/finalize-modal';
+export { DocumentViewer } from './components/document-viewer';

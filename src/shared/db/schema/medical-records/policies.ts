@@ -150,3 +150,26 @@ export const personalNotesPolicies = [
      USING (auth.uid() = user_id)
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
+
+// Owner-scoped RLS for `clinical_documents`. SELECT/INSERT/UPDATE only.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record
+// retention.
+//
+// KEY DIFFERENCE: the UPDATE policy has an additional guard in the USING
+// clause: `status = 'draft'`. Once a document is finalized, the USING
+// clause evaluates to false and the row becomes immutable at the RLS level.
+// The WITH CHECK still requires `user_id = auth.uid()` to prevent a user
+// from re-assigning ownership during an update.
+export const clinicalDocumentsPolicies = [
+  `ALTER TABLE clinical_documents ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select clinical_documents" ON clinical_documents
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert clinical_documents" ON clinical_documents
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can update draft clinical_documents" ON clinical_documents
+     FOR UPDATE TO authenticated
+     USING (auth.uid() = user_id AND status = 'draft')
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;

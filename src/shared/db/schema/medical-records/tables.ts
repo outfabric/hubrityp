@@ -403,3 +403,71 @@ export const personalNotes = pgTable(
 
 export type PersonalNote = typeof personalNotes.$inferSelect;
 export type NewPersonalNote = typeof personalNotes.$inferInsert;
+
+// `clinical_documents` stores formal clinical documents issued by the
+// psychologist for a patient: declaracao, atestado, relatorio, laudo, parecer
+// (per CFP Resolution 06/2019). Each document goes through a draft → finalized
+// lifecycle. Once finalized, the UPDATE RLS policy blocks further edits
+// (USING clause requires status = 'draft'), enforcing immutability at the
+// Postgres level.
+//
+// The `content` column stores structured JSONB per document type. After PDF
+// generation, `pdf_storage_path` and `pdf_size` are set. CID-10 references
+// require explicit patient consent (`cid10_consent_confirmed`).
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record retention.
+export const clinicalDocuments = pgTable(
+  'clinical_documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    // CHECK constraint in migration: document_type IN ('declaracao','atestado','relatorio','laudo','parecer')
+    documentType: text('document_type').notNull(),
+
+    title: text('title').notNull().default(''),
+    content: jsonb('content')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+
+    pdfStoragePath: text('pdf_storage_path'), // Set after PDF generation
+    pdfSize: integer('pdf_size'), // Bytes
+
+    digitallySigned: boolean('digitally_signed').notNull().default(false),
+    // CHECK constraint in migration: signature_method IN ('icp-brasil','manual') or NULL
+    signatureMethod: text('signature_method'),
+
+    // CHECK constraint in migration: status IN ('draft','finalized')
+    status: text('status').notNull().default('draft'),
+
+    referencesCid10: boolean('references_cid10').notNull().default(false),
+    cid10ConsentConfirmed: boolean('cid10_consent_confirmed').notNull().default(false),
+
+    finalizedAt: timestamp('finalized_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    index('idx_clinical_docs_patient_type_created').on(
+      table.patientId,
+      table.documentType,
+      table.createdAt,
+    ),
+    index('idx_clinical_docs_status_finalized').on(table.status, table.finalizedAt),
+    index('idx_clinical_docs_user_id').on(table.userId),
+  ],
+);
+
+export type ClinicalDocument = typeof clinicalDocuments.$inferSelect;
+export type NewClinicalDocument = typeof clinicalDocuments.$inferInsert;

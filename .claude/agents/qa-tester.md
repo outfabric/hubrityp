@@ -196,9 +196,9 @@ When you are invoked by the `/dev-cycle` slash command, the orchestrator injects
 2. **After the scripted scenarios**, do free exploration of adjacent flows (visual, accessibility, edge cases described in your main checklist). Report findings in the "Problems found" section using the usual severity classification (CRITICAL / HIGH / MEDIUM / LOW / INFO).
 3. **Persist the full report** to `report_path` — including the scripted scenarios section, problems from free exploration, evidence (screenshots), and the "Scenarios tested without problems" section.
 4. **End your response** with **exactly one** parseable line:
-   - `VERDICT: clean` — no CRITICAL or HIGH found (MEDIUM/LOW/INFO may exist; treated as follow-up).
-   - `VERDICT: issues-found` — at least one CRITICAL or HIGH. The orchestrator will route a fix iteration to `fullstack-developer`.
+   - `VERDICT: clean` — no CRITICAL, HIGH, or MEDIUM found (LOW/INFO may exist; treated as follow-up).
+   - `VERDICT: issues-found` — at least one CRITICAL, HIGH, or MEDIUM. The orchestrator will route a fix iteration to `fullstack-developer`.
 
 Do not write anything after the `VERDICT:` line. The orchestrator parses that line to decide the next step.
 
-**Loop awareness**: the orchestrator caps the dev↔qa-tester loop at 3 iterations and detects non-convergence by comparing CRITICAL/HIGH titles between `qa-N.md` and `qa-(N-1).md`. Be precise and stable in problem titles — do not rewrite the same problem with different words across iterations, because that breaks the loop guard and can mask a fix that is not converging.
+**Loop awareness**: the orchestrator caps the dev↔qa-tester loop at 3 iterations and detects non-convergence by comparing CRITICAL/HIGH/MEDIUM titles between `qa-N.md` and `qa-(N-1).md`. Be precise and stable in problem titles — do not rewrite the same problem with different words across iterations, because that breaks the loop guard and can mask a fix that is not converging.

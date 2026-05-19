@@ -7,20 +7,25 @@
 
 import type {
   AttachmentCategory,
+  CreateDocumentResult,
   CreateHypothesisResult,
   CreateScaleApplicationResult,
   DeleteAttachmentResult,
+  FinalizeDocumentResult,
   GetAttachmentSignedUrlResult,
+  GetDocumentPdfUrlResult,
   GetPersonalNotesResult,
   GetTreatmentPlanResult,
   HypothesisStatus,
   ListAttachmentsResult,
+  ListDocumentsByPatientResult,
   ListHypothesesResult,
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
   RemovePersonalNotesPasswordResult,
   SetPersonalNotesPasswordResult,
   SubmitScaleResponsesResult,
+  UpdateDocumentResult,
   UpdateHypothesisResult,
   UpdateHypothesisStatusResult,
   UploadAttachmentResult,
@@ -28,13 +33,18 @@ import type {
   UpsertTreatmentPlanResult,
 } from '@/modules/medical-records';
 import {
+  createDocumentImpl,
   createHypothesisImpl,
   createScaleApplicationImpl,
   deleteAttachmentImpl,
+  finalizeDocumentImpl,
   getAttachmentSignedUrlImpl,
+  getDocumentDetailImpl,
+  getDocumentPdfUrlImpl,
   getPersonalNotesImpl,
   getTreatmentPlanImpl,
   listAttachmentsImpl,
+  listDocumentsByPatientImpl,
   listHypothesesByPatientImpl,
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
@@ -42,6 +52,7 @@ import {
   searchCid10Impl,
   setPersonalNotesPasswordImpl,
   submitScaleResponsesImpl,
+  updateDocumentImpl,
   updateHypothesisImpl,
   updateHypothesisStatusImpl,
   uploadAttachmentImpl,
@@ -49,6 +60,7 @@ import {
   upsertTreatmentPlanImpl,
 } from '@/modules/medical-records';
 import type { Cid10Result } from '@/modules/medical-records/lib/cid10-search';
+import type { DocumentType } from '@/modules/medical-records/lib/schemas/clinical-documents';
 import type { Goal, Phase } from '@/modules/medical-records/lib/treatment-plan-schemas';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -227,4 +239,56 @@ export async function removePersonalNotesPassword(input: {
 }): Promise<RemovePersonalNotesPasswordResult> {
   const supabase = await createServerClient();
   return removePersonalNotesPasswordImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Clinical Documents
+// ---------------------------------------------------------------------------
+
+export async function createDocument(input: {
+  patientId: string;
+  document_type: DocumentType;
+  title?: string;
+  content?: Record<string, unknown>;
+}): Promise<CreateDocumentResult> {
+  const supabase = await createServerClient();
+  return createDocumentImpl(supabase, input);
+}
+
+export async function updateDocument(input: {
+  documentId: string;
+  title?: string;
+  content?: Record<string, unknown>;
+}): Promise<UpdateDocumentResult> {
+  const supabase = await createServerClient();
+  return updateDocumentImpl(supabase, input);
+}
+
+export async function listDocumentsByPatient(input: {
+  patientId: string;
+  type?: DocumentType;
+  status?: 'draft' | 'finalized';
+}): Promise<ListDocumentsByPatientResult> {
+  const supabase = await createServerClient();
+  return listDocumentsByPatientImpl(supabase, input);
+}
+
+export async function getDocumentDetail(input: { documentId: string }) {
+  const supabase = await createServerClient();
+  return getDocumentDetailImpl(supabase, input);
+}
+
+export async function finalizeDocument(input: {
+  documentId: string;
+  cid10ConsentConfirmed?: boolean;
+}): Promise<FinalizeDocumentResult> {
+  const supabase = await createServerClient();
+  return finalizeDocumentImpl(supabase, input);
+}
+
+export async function getDocumentPdfUrl(input: {
+  documentId: string;
+}): Promise<GetDocumentPdfUrlResult> {
+  const supabase = await createServerClient();
+  return getDocumentPdfUrlImpl(supabase, input);
 }
