@@ -14,11 +14,13 @@ import type {
   FinalizeDocumentResult,
   GetAttachmentSignedUrlResult,
   GetDocumentPdfUrlResult,
+  GetExportSignedUrlResult,
   GetPersonalNotesResult,
   GetTreatmentPlanResult,
   HypothesisStatus,
   ListAttachmentsResult,
   ListDocumentsByPatientResult,
+  ListExportsResult,
   ListHypothesesResult,
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
@@ -42,11 +44,13 @@ import {
   getAttachmentSignedUrlImpl,
   getDocumentDetailImpl,
   getDocumentPdfUrlImpl,
+  getExportSignedUrlImpl,
   getPersonalNotesImpl,
   getTreatmentPlanImpl,
   listAttachmentsImpl,
   listDocumentsByPatientImpl,
   listHypothesesByPatientImpl,
+  listProntuarioExportsImpl,
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
   removePersonalNotesPasswordImpl,
@@ -318,4 +322,18 @@ export async function requestProntuarioExport(input: {
 }): Promise<RequestExportResult> {
   const supabase = await createServerClient();
   return requestProntuarioExportImpl(supabase, input);
+}
+
+export async function listProntuarioExports(input: {
+  patientId?: string;
+}): Promise<ListExportsResult> {
+  const supabase = await createServerClient();
+  return listProntuarioExportsImpl(supabase, input);
+}
+
+export async function getExportSignedUrl(input: {
+  exportId: string;
+}): Promise<GetExportSignedUrlResult> {
+  const supabase = await createServerClient();
+  return getExportSignedUrlImpl(supabase, input);
 }

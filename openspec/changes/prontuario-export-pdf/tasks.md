@@ -48,11 +48,11 @@
 
 ## 7. Frontend — Exportacoes Page
 
-- [ ] 7.1 Create `src/app/(app)/pacientes/[id]/prontuario/exportacoes/page.tsx` — RSC page that fetches initial export list, renders ExportsList client component
-- [ ] 7.2 Create `src/modules/medical-records/components/exports-list.tsx` — client component with Supabase Realtime subscription on `prontuario_exports` filtered by user_id, renders Card per export with status-dependent UI (spinner/download/expired/retry)
-- [ ] 7.3 Implement empty state for no exports: Download icon, h4 "Nenhuma exportacao ainda", description "Use o botao 'Exportar prontuario' para gerar um PDF completo."
-- [ ] 7.4 Implement Sonner toast trigger on Realtime status transition to 'ready' or 'failed'
-- [ ] 7.5 Add navigation link to Exportacoes page from the prontuario shell (e.g., in the header near the export button)
+- [x] 7.1 Create `src/app/(app)/pacientes/[id]/prontuario/exportacoes/page.tsx` — RSC page that fetches initial export list, renders ExportsList client component
+- [x] 7.2 Create `src/modules/medical-records/components/exports-list.tsx` — client component with Supabase Realtime subscription on `prontuario_exports` filtered by user_id, renders Card per export with status-dependent UI (spinner/download/expired/retry)
+- [x] 7.3 Implement empty state for no exports: Download icon, h4 "Nenhuma exportacao ainda", description "Use o botao 'Exportar prontuario' para gerar um PDF completo."
+- [x] 7.4 Implement Sonner toast trigger on Realtime status transition to 'ready' or 'failed'
+- [x] 7.5 Add navigation link to Exportacoes page from the prontuario shell (e.g., in the header near the export button)
 
 ## 8. Module Barrel Update
 
