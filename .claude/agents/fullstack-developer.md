@@ -241,7 +241,7 @@ When you are invoked by the `/dev-cycle` slash command, the orchestrator injects
 - `section` (section mode) — literal text of one section of `tasks.md` (`## N. Title` + every `- [ ] N.M ...` line in that section, plus any prose between them). **Implement ALL subtasks of the section as a single unit of work** — do not pause between subtasks, do not run re-validation after each subtask. State in the pre-`VERDICT: PASS` summary which layers you ran and why. **In section mode you compute `changed_files` locally** via `git -C <worktree_path> diff HEAD --name-only` (uncommitted = only the files of this section; the orchestrator commits a WIP between sections, so `HEAD` reflects the end of the previous section).
 - `feedback_file` (fix mode) — absolute path to one of the four feedback types the orchestrator may pass:
   - `review-N.md` (from `code-reviewer`) — resolve ALL BLOCKER/HIGH items listed there.
-  - `qa-N.md` (from `qa-tester`) — resolve ALL CRITICAL/HIGH items listed there.
+  - `qa-N.md` (from `qa-tester`) — resolve ALL CRITICAL/HIGH/MEDIUM items listed there.
   - `sweep-fail-N.md` (cross-section regression caught by step 3.bis) — read the "Failing tests" section and fix the regression.
   - `ci-fail-N.md` (CI red on the PR opened by step 9) — read the "Failed checks" and "Failed step logs" sections and fix the root cause of the failing jobs.
 
