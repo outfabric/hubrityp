@@ -34,7 +34,7 @@ Sem orquestração, esses agents operam de forma isolada: o usuário precisa inv
         │                          │                  backend-only
         │ per section              │ feedback estruturado     │
         ▼                          │ (BLOCKER/HIGH)           │ feedback estruturado
-   impl → unit → integration       │                          │ (CRÍTICO/ALTO)
+   impl → unit → integration       │                          │ (CRÍTICO/ALTO/MÉDIO)
    → e2e → lint+typecheck          ▼                          ▼
                               dev corrige                dev corrige
                               + re-validação             + re-validação
@@ -225,7 +225,7 @@ A política "subi → reseto o DB" é deliberada: nunca wipear um Supabase que o
    - `clean` → step 5.2 (teardown), depois step 6.
    - `issues-found`:
      - Se `QA_ITER >= 3` → escala. **Não roda teardown** — infra fica de pé pra inspeção.
-     - Loop guard idêntico ao do reviewer (se CRÍTICO/ALTO repetem entre iterações, escala — também sem teardown).
+     - Loop guard idêntico ao do reviewer (se CRÍTICO/ALTO/MÉDIO repetem entre iterações, escala — também sem teardown).
      - Senão: invoca `fullstack-developer` em modo fix. Reinvoca `code-reviewer` (review curto sobre o novo diff). Se review limpo → reinvoca `qa-tester`.
 
 #### Step 5.2 — Teardown (orchestrator-owned, só em QA clean)
@@ -407,7 +407,7 @@ A combinação **AND** é deliberada: o sinal 1 sozinho pode dar falso-positivo 
 | Tentativas internas do dev por seção (testes/lint falhando) | 3        | Pausa, mostra logs (`.dev-cycle/section-<N>-fail.log`), espera usuário.                            |
 | Regression sweep ↔ dev (step 3.bis)                         | 3        | Pausa, mostra `sweep-fail-<N>.md` e `.dev-cycle/sweep-<N>.log`. Não invoca reviewer.               |
 | Ciclo dev ↔ code-reviewer pós-seções                        | 3        | Pausa, lista BLOCKER/HIGH persistentes do último `review-N.md`.                                    |
-| Ciclo dev ↔ qa-tester                                       | 3        | Pausa, lista CRÍTICO/ALTO persistentes do último `qa-N.md`.                                        |
+| Ciclo dev ↔ qa-tester                                       | 3        | Pausa, lista CRÍTICO/ALTO/MÉDIO persistentes do último `qa-N.md`.                                  |
 | Mesmo finding repete 2× consecutivas (review ou QA)         | imediato | Pausa ("non-converging loop"). Sinal forte de que a heurística de fix do dev não está convergindo. |
 
 Quando um cap é atingido, o orquestrador imprime:
