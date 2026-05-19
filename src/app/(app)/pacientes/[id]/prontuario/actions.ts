@@ -23,6 +23,7 @@ import type {
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
   RemovePersonalNotesPasswordResult,
+  RequestExportResult,
   SetPersonalNotesPasswordResult,
   SubmitScaleResponsesResult,
   UpdateDocumentResult,
@@ -49,6 +50,7 @@ import {
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
   removePersonalNotesPasswordImpl,
+  requestProntuarioExportImpl,
   searchCid10Impl,
   setPersonalNotesPasswordImpl,
   submitScaleResponsesImpl,
@@ -291,4 +293,29 @@ export async function getDocumentPdfUrl(input: {
 }): Promise<GetDocumentPdfUrlResult> {
   const supabase = await createServerClient();
   return getDocumentPdfUrlImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Prontuario Export
+// ---------------------------------------------------------------------------
+
+export async function requestProntuarioExport(input: {
+  patientId: string;
+  filters: {
+    dateRange: { from: string | null; to: string | null };
+    sections: {
+      anamnese: boolean;
+      evolucoes: boolean;
+      hipoteses: boolean;
+      planoTerapeutico: boolean;
+      escalas: boolean;
+      documentos: boolean;
+      anexosIndex: boolean;
+    };
+    includePersonalNotes: boolean;
+    deliveryEmail?: string;
+  };
+}): Promise<RequestExportResult> {
+  const supabase = await createServerClient();
+  return requestProntuarioExportImpl(supabase, input);
 }

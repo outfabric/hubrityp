@@ -8,11 +8,13 @@ import {
   logProntuarioAccessImpl,
   type EvolutionSummary,
 } from '@/modules/medical-records';
+import { ExportPanel } from '@/modules/medical-records/components/export-panel';
 import { ProntuarioTabs } from '@/modules/medical-records/components/prontuario-tabs';
 import { getPatientImpl } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
+import { requestProntuarioExport } from './actions';
 import { EvolutionsList } from './evolucoes/_components/evolutions-list';
 
 // ---------------------------------------------------------------------------
@@ -75,13 +77,16 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
         </Link>
       </div>
 
-      {/* Page title */}
-      <h1
-        className="text-text-primary mb-6 text-[28px] leading-[1.25] font-semibold"
-        data-testid="prontuario-page-title"
-      >
-        Prontuario
-      </h1>
+      {/* Page title + export button */}
+      <div className="mb-6 flex items-center justify-between">
+        <h1
+          className="text-text-primary text-[28px] leading-[1.25] font-semibold"
+          data-testid="prontuario-page-title"
+        >
+          Prontuario
+        </h1>
+        <ExportPanel patientId={patientId} requestExport={requestProntuarioExport} />
+      </div>
 
       {/* Tabs shell — Evolucoes tab active by default */}
       <ProntuarioTabs patientId={patientId} hasActiveConsent={hasActiveConsent}>

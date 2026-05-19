@@ -272,6 +272,10 @@ export {
   type ExportSummary,
 } from './server/exports';
 
+// ---- Export Modal + Panel Components (Client Components) --------------------
+export { ExportModal, type ExportModalProps } from './components/export-modal';
+export { ExportPanel } from './components/export-panel';
+
 // ---- Clinical Document Schemas ----------------------------------------------
 export {
   createDocumentInputSchema,

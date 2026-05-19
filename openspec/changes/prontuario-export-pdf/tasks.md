@@ -42,9 +42,9 @@
 
 ## 6. Frontend — Export Modal
 
-- [ ] 6.1 Create `src/modules/medical-records/components/export-modal.tsx` — Dialog with h3 title, info Alert, DateRangePicker, sections checkboxes, personal notes toggle with AlertDialog confirmation, optional email input, Cancel (ghost) and "Gerar exportacao" (primary) buttons
-- [ ] 6.2 Add "Exportar prontuario" button (Download icon) in the prontuario shell header (modify existing prontuario page/layout)
-- [ ] 6.3 Wire modal form submission to `requestProntuarioExport` Server Action with loading state, Sonner toast on success, modal close
+- [x] 6.1 Create `src/modules/medical-records/components/export-modal.tsx` — Dialog with h3 title, info Alert, DateRangePicker, sections checkboxes, personal notes toggle with AlertDialog confirmation, optional email input, Cancel (ghost) and "Gerar exportacao" (primary) buttons
+- [x] 6.2 Add "Exportar prontuario" button (Download icon) in the prontuario shell header (modify existing prontuario page/layout)
+- [x] 6.3 Wire modal form submission to `requestProntuarioExport` Server Action with loading state, Sonner toast on success, modal close
 
 ## 7. Frontend — Exportacoes Page
 
