@@ -1,10 +1,10 @@
 ## 1. Schema and Database
 
-- [ ] 1.1 Add `prontuarioExports` table definition to `src/shared/db/schema/medical-records/tables.ts` with all columns (id, user_id, patient_id, status, filters, storage_path, file_size, error_message, expires_at, created_at, completed_at), indexes, and CHECK constraint on status
-- [ ] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts` — SELECT and INSERT for authenticated scoped by `user_id = auth.uid()`, no UPDATE/DELETE for authenticated
-- [ ] 1.3 Re-export from `src/shared/db/schema/medical-records/index.ts` and `src/shared/db/schema/index.ts`
-- [ ] 1.4 Generate Drizzle migration via `npm run db:generate`, append RLS SQL + CHECK constraint + Storage bucket creation + Storage policies to the migration file
-- [ ] 1.5 Run `npm run db:migrate` and verify locally
+- [x] 1.1 Add `prontuarioExports` table definition to `src/shared/db/schema/medical-records/tables.ts` with all columns (id, user_id, patient_id, status, filters, storage_path, file_size, error_message, expires_at, created_at, completed_at), indexes, and CHECK constraint on status
+- [x] 1.2 Add RLS policies to `src/shared/db/schema/medical-records/policies.ts` — SELECT and INSERT for authenticated scoped by `user_id = auth.uid()`, no UPDATE/DELETE for authenticated
+- [x] 1.3 Re-export from `src/shared/db/schema/medical-records/index.ts` and `src/shared/db/schema/index.ts`
+- [x] 1.4 Generate Drizzle migration via `npm run db:generate`, append RLS SQL + CHECK constraint + Storage bucket creation + Storage policies to the migration file
+- [x] 1.5 Run `npm run db:migrate` and verify locally
 
 ## 2. Zod Schemas and Export Lib
 
