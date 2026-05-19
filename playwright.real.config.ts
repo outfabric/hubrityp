@@ -113,8 +113,13 @@ function bootSupabase(): void {
   // ~10–20s. We inherit stdio so the developer can see CLI progress instead
   // of staring at a silent terminal — a long unexplained pause here was a
   // common source of "is it stuck?" confusion before this hook existed.
-  console.log('[auth-real] Supabase stack not running — booting via `npx supabase start`...');
-  execSync('npx supabase start', { stdio: 'inherit' });
+  //
+  // Routes through `npm run supabase:start` so the `-x` exclusion list
+  // (realtime/studio/postgres-meta/edge-runtime/logflare/vector) stays the
+  // single source of truth in package.json — the app does not use any of
+  // those services, and skipping them saves ~700MB–1GB of RAM per boot.
+  console.log('[auth-real] Supabase stack not running — booting via `npm run supabase:start`...');
+  execSync('npm run supabase:start', { stdio: 'inherit' });
 }
 
 function readSupabaseStatus(): SupabaseStatus {

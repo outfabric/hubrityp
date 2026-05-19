@@ -1,9 +1,11 @@
 # HubrityP — local development compose.
 #
 # Convention: the Supabase CLI (`npm run supabase:start`) owns Postgres, GoTrue,
-# Storage, Realtime, and Studio. This file only declares the Next.js dev
-# container, the Inngest Dev Server, and bridges them onto the network the CLI
-# manages (`supabase_network_<project_id>` — see `supabase/config.toml`).
+# Kong, PostgREST, Storage, and Mailpit (Realtime/Studio/postgres-meta/edge-
+# runtime/Logflare/Vector are excluded via `-x` in the npm script because the
+# app does not use them). This file only declares the Next.js dev container,
+# the Inngest Dev Server, and bridges them onto the network the CLI manages
+# (`supabase_network_<project_id>` — see `supabase/config.toml`).
 #
 # Profiles:
 #   - inngest: Inngest Dev Server (opt-in, necessario apenas para testar background jobs)

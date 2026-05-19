@@ -22,10 +22,10 @@ npx playwright install --with-deps chromium   # one-time, only when working on e
 
 HubrityP runs on Supabase (Postgres + Auth + Storage + Realtime). Locally we use **two distinct Postgres environments** so dev ergonomics and test isolation never compete:
 
-| Environment     | Tooling                                             | When                                                                                                                      |
-| --------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Development** | Supabase CLI (`npm run supabase:start`)             | Running the app via `npm run dev` or `docker compose up`. Full stack: Postgres + GoTrue + Storage + Studio.               |
-| **Tests** (any) | `@testcontainers/postgresql` + `postgres:16-alpine` | `npm run test:integration` and `npm run test:e2e:seeded`. Postgres-only, fast boot, schema bootstrapped programmatically. |
+| Environment     | Tooling                                             | When                                                                                                                                                                                                                                                                                                                                                  |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Development** | Supabase CLI (`npm run supabase:start`)             | Running the app via `npm run dev` or `docker compose up`. Boots Postgres + GoTrue + Kong + PostgREST + Storage + Mailpit. Excludes services the app does not use (`realtime`, `studio`, `postgres-meta`, `edge-runtime`, `logflare`, `vector`) to save ~700MB–1GB of RAM — run `npx supabase start` directly if you want the full stack incl. Studio. |
+| **Tests** (any) | `@testcontainers/postgresql` + `postgres:16-alpine` | `npm run test:integration` and `npm run test:e2e:seeded`. Postgres-only, fast boot, schema bootstrapped programmatically.                                                                                                                                                                                                                             |
 
 The two coexist — they listen on different ports and use independent docker networks.
 
