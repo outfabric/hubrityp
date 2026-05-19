@@ -8,10 +8,10 @@
 
 ## 2. Zod Schemas and Export Lib
 
-- [ ] 2.1 Create `src/modules/medical-records/lib/exports/export-schemas.ts` with `exportFiltersSchema`, `exportSectionsSchema`, and derived types
-- [ ] 2.2 Create `src/modules/medical-records/lib/exports/expiry-calculator.ts` — pure function computing expires_at from file_size threshold (10MB) and completed_at
-- [ ] 2.3 Create `src/modules/medical-records/lib/exports/scale-chart-svg.ts` — pure function taking `Array<{date: string; score: number}>` with scale metadata (min/max, thresholds) and returning an SVG string (line chart with axes, dots, threshold lines)
-- [ ] 2.4 Create barrel `src/modules/medical-records/lib/exports/index.ts`
+- [x] 2.1 Create `src/modules/medical-records/lib/exports/export-schemas.ts` with `exportFiltersSchema`, `exportSectionsSchema`, and derived types
+- [x] 2.2 Create `src/modules/medical-records/lib/exports/expiry-calculator.ts` — pure function computing expires_at from file_size threshold (10MB) and completed_at
+- [x] 2.3 Create `src/modules/medical-records/lib/exports/scale-chart-svg.ts` — pure function taking `Array<{date: string; score: number}>` with scale metadata (min/max, thresholds) and returning an SVG string (line chart with axes, dots, threshold lines)
+- [x] 2.4 Create barrel `src/modules/medical-records/lib/exports/index.ts`
 
 ## 3. PDF Section Builders
 
