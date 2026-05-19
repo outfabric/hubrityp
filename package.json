@@ -20,7 +20,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e:seeded": "playwright test --config playwright.seeded.config.ts",
     "test:e2e:real": "playwright test --config playwright.real.config.ts",
-    "supabase:start": "supabase start -x realtime,studio,postgres-meta,edge-runtime,logflare,vector",
+    "supabase:start": "supabase start -x studio,postgres-meta,edge-runtime,logflare,vector",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "db:generate": "drizzle-kit generate",
