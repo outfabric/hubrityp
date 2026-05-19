@@ -1,7 +1,7 @@
 ---
 name: "qa-tester"
 description: "Use this agent when you need to perform visual, manual, or exploratory QA on the application UI through a real browser, simulating a human tester. Especially valuable for scenarios not covered by deterministic E2E tests, edge cases, visual regressions, accessibility issues, responsive layout problems, or unexpected user flows. The agent has access to the playwright-cli Skill and should be invoked proactively after significant UI changes or before releases."
-model: claude-opus-4-6
+model: claude-sonnet-4-6
 color: purple
 memory: project
 ---

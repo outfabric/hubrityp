@@ -1,3 +1,5 @@
 - [Auth hardening patterns](project_auth_hardening_patterns.md) -- lockout state machine, anti-enumeration, cookie sidecar, middleware decision table, Resend mail
 - [PII in logs is BLOCKER](feedback_pii_in_logs.md) -- email in logger payloads violates LGPD; use truncated SHA-256 hash
 - [Patient CRUD patterns](project_patient_crud_patterns.md) -- schema, Server Action delegation, RLS, form wizard, test structure for the patients module
+- [Scales module patterns](project_scales_module_patterns.md) -- public token route, service-role justification, severity keyword mapping bug, classifyPath, WHOQOL JSON divergence
+- [Clinical documents patterns](project_clinical_documents_patterns.md) -- RLS finalized-row guard, Inngest PDF job steps, dangerouslySetInnerHTML/DOMPurify requirement, negative-auth E2E gap pattern
