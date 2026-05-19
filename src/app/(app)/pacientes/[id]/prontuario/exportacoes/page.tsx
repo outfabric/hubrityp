@@ -2,8 +2,11 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { listProntuarioExportsImpl, type ExportSummary } from '@/modules/medical-records';
-import { ExportsList } from '@/modules/medical-records/components/exports-list';
+import {
+  ExportsList,
+  listProntuarioExportsImpl,
+  type ExportSummary,
+} from '@/modules/medical-records';
 import { getPatientImpl } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';

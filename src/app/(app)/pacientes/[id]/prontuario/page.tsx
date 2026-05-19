@@ -4,11 +4,11 @@ import { notFound } from 'next/navigation';
 
 import {
   checkActiveConsentForPatientImpl,
+  ExportPanel,
   getEvolutionsByPatientImpl,
   logProntuarioAccessImpl,
   type EvolutionSummary,
 } from '@/modules/medical-records';
-import { ExportPanel } from '@/modules/medical-records/components/export-panel';
 import { ProntuarioTabs } from '@/modules/medical-records/components/prontuario-tabs';
 import { getPatientImpl } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';

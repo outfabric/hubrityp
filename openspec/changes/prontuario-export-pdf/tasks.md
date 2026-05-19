@@ -56,7 +56,7 @@
 
 ## 8. Module Barrel Update
 
-- [ ] 8.1 Update `src/modules/medical-records/index.ts` barrel to export new public API surface (Server Actions, schemas, component types)
+- [x] 8.1 Update `src/modules/medical-records/index.ts` barrel to export new public API surface (Server Actions, schemas, component types)
 
 ## 9. Unit Tests
 
