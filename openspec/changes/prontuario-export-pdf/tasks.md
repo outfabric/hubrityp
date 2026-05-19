@@ -35,10 +35,10 @@
 
 ## 5. Inngest Functions
 
-- [ ] 5.1 Create `src/modules/medical-records/inngest/client.ts` (or extend existing if one exists for medical-records) with event types for `prontuario/export-pdf` and the cron
-- [ ] 5.2 Create `src/modules/medical-records/inngest/export-pdf.ts` — the main job with steps: update-status, fetch-patient, fetch-anamnesis, fetch-evolutions (with dateRange filter), fetch-hypotheses, fetch-treatment-plan, fetch-scales (with dateRange filter), fetch-documents, fetch-attachments, fetch-personal-notes (conditional), build-pdf, upload to Storage, complete (set status/path/size/expiry), notify (in-app + email if >10MB), audit-complete
-- [ ] 5.3 Create `src/modules/medical-records/inngest/expire-exports.ts` — daily cron at 06:00 UTC, selects expired-ready rows, updates status to 'expired', deletes Storage objects (non-fatal on failure)
-- [ ] 5.4 Register both functions in the Inngest serve handler (likely `src/app/api/inngest/route.ts`)
+- [x] 5.1 Create `src/modules/medical-records/inngest/client.ts` (or extend existing if one exists for medical-records) with event types for `prontuario/export-pdf` and the cron
+- [x] 5.2 Create `src/modules/medical-records/inngest/export-pdf.ts` — the main job with steps: update-status, fetch-patient, fetch-anamnesis, fetch-evolutions (with dateRange filter), fetch-hypotheses, fetch-treatment-plan, fetch-scales (with dateRange filter), fetch-documents, fetch-attachments, fetch-personal-notes (conditional), build-pdf, upload to Storage, complete (set status/path/size/expiry), notify (in-app + email if >10MB), audit-complete
+- [x] 5.3 Create `src/modules/medical-records/inngest/expire-exports.ts` — daily cron at 06:00 UTC, selects expired-ready rows, updates status to 'expired', deletes Storage objects (non-fatal on failure)
+- [x] 5.4 Register both functions in the Inngest serve handler (likely `src/app/api/inngest/route.ts`)
 
 ## 6. Frontend — Export Modal
 
