@@ -15,17 +15,17 @@
 
 ## 3. PDF Section Builders
 
-- [ ] 3.1 Create `src/modules/medical-records/lib/exports/sections/footer.ts` — page footer renderer ("Pagina X de Y - Documento sigiloso — Salvia - Gerado em {timestamp}")
-- [ ] 3.2 Create `src/modules/medical-records/lib/exports/sections/cover-page.ts` — patient identification, psychologist info, export date/time, filters summary
-- [ ] 3.3 Create `src/modules/medical-records/lib/exports/sections/anamnesis-section.ts` — renders all standard anamnesis sections formatted as headings + body text
-- [ ] 3.4 Create `src/modules/medical-records/lib/exports/sections/evolutions-section.ts` — chronological by month with template-aware field rendering and addendum blocks
-- [ ] 3.5 Create `src/modules/medical-records/lib/exports/sections/hypotheses-section.ts` — table (CID-10, description, status, date)
-- [ ] 3.6 Create `src/modules/medical-records/lib/exports/sections/treatment-plan-section.ts` — goals list, phases, resources, criteria, version count footer
-- [ ] 3.7 Create `src/modules/medical-records/lib/exports/sections/scales-section.ts` — per-scale data table + embedded SVG chart via svg-to-pdfkit
-- [ ] 3.8 Create `src/modules/medical-records/lib/exports/sections/documents-section.ts` — reference table (type, title, status, date, references_cid10)
-- [ ] 3.9 Create `src/modules/medical-records/lib/exports/sections/attachments-section.ts` — category summary + reference table (display_name, category, size, uploaded_at)
-- [ ] 3.10 Create `src/modules/medical-records/lib/exports/sections/personal-notes-section.ts` — prominent warning header + content
-- [ ] 3.11 Create `src/modules/medical-records/lib/exports/pdf-builder.ts` — orchestrator that creates PDFKit doc, registers page event for footer, calls section builders in order, returns Buffer
+- [x] 3.1 Create `src/modules/medical-records/lib/exports/sections/footer.ts` — page footer renderer ("Pagina X de Y - Documento sigiloso — Salvia - Gerado em {timestamp}")
+- [x] 3.2 Create `src/modules/medical-records/lib/exports/sections/cover-page.ts` — patient identification, psychologist info, export date/time, filters summary
+- [x] 3.3 Create `src/modules/medical-records/lib/exports/sections/anamnesis-section.ts` — renders all standard anamnesis sections formatted as headings + body text
+- [x] 3.4 Create `src/modules/medical-records/lib/exports/sections/evolutions-section.ts` — chronological by month with template-aware field rendering and addendum blocks
+- [x] 3.5 Create `src/modules/medical-records/lib/exports/sections/hypotheses-section.ts` — table (CID-10, description, status, date)
+- [x] 3.6 Create `src/modules/medical-records/lib/exports/sections/treatment-plan-section.ts` — goals list, phases, resources, criteria, version count footer
+- [x] 3.7 Create `src/modules/medical-records/lib/exports/sections/scales-section.ts` — per-scale data table + embedded SVG chart via svg-to-pdfkit
+- [x] 3.8 Create `src/modules/medical-records/lib/exports/sections/documents-section.ts` — reference table (type, title, status, date, references_cid10)
+- [x] 3.9 Create `src/modules/medical-records/lib/exports/sections/attachments-section.ts` — category summary + reference table (display_name, category, size, uploaded_at)
+- [x] 3.10 Create `src/modules/medical-records/lib/exports/sections/personal-notes-section.ts` — prominent warning header + content
+- [x] 3.11 Create `src/modules/medical-records/lib/exports/pdf-builder.ts` — orchestrator that creates PDFKit doc, registers page event for footer, calls section builders in order, returns Buffer
 
 ## 4. Server Actions
 

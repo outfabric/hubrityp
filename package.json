@@ -84,6 +84,7 @@
     "recharts": "^3.8.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
+    "svg-to-pdfkit": "^0.1.8",
     "tailwind-merge": "^2.6.0",
     "twilio": "^6.0.2",
     "zod": "^4.4.2"
@@ -100,6 +101,7 @@
     "@types/pdfkit": "^0.17.6",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "@types/svg-to-pdfkit": "^0.1.4",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
