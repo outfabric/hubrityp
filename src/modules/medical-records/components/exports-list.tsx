@@ -90,9 +90,8 @@ function effectiveStatus(exp: ExportSummary): ExportStatus {
   return 'pending';
 }
 
-function buildFilterBadges(filters: unknown): string[] {
-  if (!filters || typeof filters !== 'object') return [];
-  const f = filters as Partial<ExportFilters>;
+function buildFilterBadges(filters: ExportFilters): string[] {
+  const f = filters;
   const badges: string[] = [];
 
   // Date range
@@ -411,7 +410,7 @@ function mapRealtimeRow(row: Record<string, unknown>): ExportSummary {
     patientId: row.patient_id as string,
     patientName: '', // Realtime payload doesn't include the join — name not critical for the card
     status: row.status as string,
-    filters: row.filters,
+    filters: row.filters as ExportFilters,
     fileSize: row.file_size != null ? Number(row.file_size) : null,
     createdAt: new Date(row.created_at as string),
     completedAt: row.completed_at ? new Date(row.completed_at as string) : null,

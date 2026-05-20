@@ -76,6 +76,16 @@ function toDate(v: Date | string): Date {
   return v instanceof Date ? v : new Date(v);
 }
 
+/** Escape special HTML characters to prevent injection in email templates. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /** Sanitize error for storage — no PII, no SQL, no stack trace. */
 function sanitizeErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -239,9 +249,12 @@ export const prontuarioExportPdfFunction = inngest.createFunction(
       if (!filters.sections.anamnese) return null;
 
       const { db } = await import('@/shared/db/client');
+      const { patients } = await import('@/shared/db/schema/patients/tables');
 
-      // anamnesis has no user_id column; ownership is via the patient's
-      // user_id. The patientId was already verified as belonging to userId.
+      // SECURITY: anamnesis has no user_id column; ownership is via the
+      // patient's user_id. patientId was verified to belong to userId in
+      // 'fetch-patient' (step 2). The defensive subquery below ensures this
+      // step remains independently safe if ever extracted or reordered.
       const [row] = await db
         .select({
           chiefComplaint: anamnesis.chiefComplaint,
@@ -255,7 +268,12 @@ export const prontuarioExportPdfFunction = inngest.createFunction(
           customSections: anamnesis.customSections,
         })
         .from(anamnesis)
-        .where(eq(anamnesis.patientId, patientId))
+        .where(
+          and(
+            eq(anamnesis.patientId, patientId),
+            sql`${patientId} IN (SELECT ${patients.id} FROM ${patients} WHERE ${patients.userId} = ${userId})`,
+          ),
+        )
         .limit(1);
 
       if (!row) return null;
@@ -682,7 +700,7 @@ export const prontuarioExportPdfFunction = inngest.createFunction(
       const { db } = await import('@/shared/db/client');
 
       // In-app notification (always)
-      const patientFirstName = patientData.patient.fullName.split(' ')[0] ?? 'paciente';
+      const patientFirstName = patientData.patient.fullName.trim().split(' ')[0] || 'paciente';
       await notify(db, {
         userId,
         type: 'prontuario_export_ready',
@@ -780,6 +798,18 @@ interface ExportEmailParams {
 }
 
 function buildExportEmailHtml(params: ExportEmailParams): string {
+  // Belt-and-suspenders: reject non-HTTPS URLs to prevent injection via
+  // unexpected protocol schemes (javascript:, data:, etc.)
+  if (!params.downloadUrl.startsWith('https://') && !params.downloadUrl.startsWith('http://')) {
+    throw new Error('downloadUrl must use https:// or http:// protocol');
+  }
+
+  // Escape all interpolated values to prevent HTML injection
+  const name = escapeHtml(params.patientFirstName);
+  const size = escapeHtml(params.fileSizeMb);
+  const url = escapeHtml(params.downloadUrl);
+  const expiry = escapeHtml(params.expiryDate);
+
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -787,10 +817,10 @@ function buildExportEmailHtml(params: ExportEmailParams): string {
 <body style="font-family: sans-serif; color: #1a1a1a; line-height: 1.6;">
   <h2>Exportacao de prontuario pronta</h2>
   <p>Ola,</p>
-  <p>A exportacao do prontuario de <strong>${params.patientFirstName}</strong> foi concluida com sucesso.</p>
-  <p>Tamanho do arquivo: <strong>${params.fileSizeMb} MB</strong></p>
-  <p>O link para download expira em <strong>${params.expiryDate}</strong>.</p>
-  <p><a href="${params.downloadUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Baixar prontuario</a></p>
+  <p>A exportacao do prontuario de <strong>${name}</strong> foi concluida com sucesso.</p>
+  <p>Tamanho do arquivo: <strong>${size} MB</strong></p>
+  <p>O link para download expira em <strong>${expiry}</strong>.</p>
+  <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Baixar prontuario</a></p>
   <p style="font-size: 0.85em; color: #666;">Se voce nao solicitou esta exportacao, por favor desconsidere este e-mail.</p>
   <br/>
   <p>— Equipe HubrityP</p>

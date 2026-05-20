@@ -24,7 +24,10 @@ import { inngest } from './client';
 // Types (internal)
 // ---------------------------------------------------------------------------
 
-/** Minimal DB interface — any Drizzle Postgres client. */
+/** Minimal DB interface — accepts any Drizzle Postgres client regardless of
+ *  schema generic. `any` is intentional: it serves as a test seam so that
+ *  integration tests can inject a mock/scoped client without matching the
+ *  production schema type exactly. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DrizzleDb = PostgresJsDatabase<any>;
 

@@ -135,6 +135,41 @@ describe('prontuario export audit_log entries', () => {
     expect(metadata).toHaveProperty('ip', '192.168.1.42');
   });
 
+  it('request redacts deliveryEmail in audit_log metadata (LGPD)', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    await seedAuthUser(userId);
+    await seedProfile(userId);
+    await seedPatient(userId, patientId);
+
+    const filtersWithEmail = {
+      ...VALID_FILTERS,
+      deliveryEmail: 'alternate@example.com',
+    };
+
+    const result = await requestProntuarioExportImpl(fakeSupabaseClient(userId), {
+      patientId,
+      filters: filtersWithEmail,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const auditRows = await runAsService(async (db) => {
+      return db.select().from(auditLog).where(eq(auditLog.resourceId, result.id));
+    });
+
+    expect(auditRows).toHaveLength(1);
+    const metadata = auditRows[0]!.metadata as Record<string, unknown>;
+    const storedFilters = metadata.filters as Record<string, unknown>;
+
+    // The email must be redacted — never stored as plaintext in audit_log
+    expect(storedFilters.deliveryEmail).toBe('[REDACTED]');
+    // Other filter fields should remain intact
+    expect(storedFilters.includePersonalNotes).toBe(false);
+    expect(storedFilters.sections).toEqual(VALID_FILTERS.sections);
+  });
+
   it('completion audit_log entry has correct metadata', async () => {
     const userId = randomUUID();
     const exportId = randomUUID();

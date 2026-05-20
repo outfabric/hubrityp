@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { inngest, MEDICAL_RECORDS_EVENTS } from '@/modules/medical-records/inngest/client';
-import { exportFiltersSchema } from '@/modules/medical-records/lib/exports';
+import { exportFiltersSchema, type ExportFilters } from '@/modules/medical-records/lib/exports';
 import { db } from '@/shared/db/client';
 import { auditLog, prontuarioExports } from '@/shared/db/schema/medical-records/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
@@ -29,7 +29,7 @@ export type RequestExportResult =
 
 export type ListExportsResult =
   | { ok: true; exports: ExportSummary[] }
-  | { ok: false; code: 'UNAUTHORIZED' | 'VALIDATION_ERROR' };
+  | { ok: false; code: 'UNAUTHORIZED' | 'VALIDATION_ERROR' | 'INTERNAL' };
 
 export type GetExportSignedUrlResult =
   | { ok: true; signedUrl: string; fileName: string }
@@ -40,7 +40,7 @@ export interface ExportSummary {
   patientName: string;
   patientId: string;
   status: string;
-  filters: unknown;
+  filters: ExportFilters;
   fileSize: number | null;
   createdAt: Date;
   completedAt: Date | null;
@@ -149,12 +149,21 @@ export async function requestProntuarioExportImpl(
     // writes only (design decision #4). The db client connects as the DB
     // owner (postgres), which bypasses RLS intentionally.
     try {
+      // LGPD: redact deliveryEmail before writing to audit metadata.
+      // The full filters (including the real email) are stored in the
+      // prontuario_exports.filters column (source of truth); the audit
+      // entry only records that an alternate email WAS specified.
+      const auditFilters = { ...filters };
+      if (auditFilters.deliveryEmail) {
+        auditFilters.deliveryEmail = '[REDACTED]';
+      }
+
       await db.insert(auditLog).values({
         userId,
         action: 'prontuario.export-request',
         resourceType: 'prontuario_export',
         resourceId: exportId,
-        metadata: { filters, ip: ipAddress },
+        metadata: { filters: auditFilters, ip: ipAddress },
         ipAddress,
       });
     } catch (auditErr: unknown) {
@@ -255,14 +264,21 @@ export async function listProntuarioExportsImpl(
       .where(and(...conditions))
       .orderBy(desc(prontuarioExports.createdAt));
 
-    return { ok: true, exports: rows };
+    // Drizzle returns filters as `unknown` (JSONB); cast to the validated
+    // type — every row was inserted via Zod-parsed ExportFilters.
+    const exports: ExportSummary[] = rows.map((r) => ({
+      ...r,
+      filters: r.filters as ExportFilters,
+    }));
+
+    return { ok: true, exports };
   } catch (err: unknown) {
     const pgError = err as { code?: string };
     logger.error(
       { event: 'list_exports_failed', errorCode: pgError.code },
       'unexpected error listing prontuario exports',
     );
-    throw err;
+    return { ok: false, code: 'INTERNAL' };
   }
 }
 
@@ -374,7 +390,7 @@ export async function getExportSignedUrlImpl(
       .where(eq(patients.id, exportRow.patientId))
       .limit(1);
 
-    const patientFirstName = patientRow?.fullName.split(' ')[0] ?? 'paciente';
+    const patientFirstName = patientRow?.fullName.trim().split(' ')[0] || 'paciente';
     const dateStr = exportRow.createdAt.toISOString().slice(0, 10);
     const fileName = `prontuario-${patientFirstName}-${dateStr}.pdf`;
 
@@ -404,8 +420,19 @@ function toBrowserSignedUrl(signedUrl: string): string {
   const publicUrl = serverEnv.SUPABASE_PUBLIC_URL;
   if (!publicUrl) return signedUrl;
 
+  // NEXT_PUBLIC_SUPABASE_URL is the Docker-internal Supabase origin (e.g.
+  // http://supabase_kong_hubrityp:8000). If misconfigured, signed URLs would
+  // be silently rewritten to an incorrect origin.
   const serverOrigin = serverEnv.NEXT_PUBLIC_SUPABASE_URL;
   if (!serverOrigin) return signedUrl;
+
+  if (!serverOrigin.startsWith('http')) {
+    logger.warn(
+      { event: 'signed_url_rewrite_misconfigured', serverOrigin },
+      'NEXT_PUBLIC_SUPABASE_URL does not start with http — signed URL rewrite skipped',
+    );
+    return signedUrl;
+  }
 
   // Only rewrite when the signed URL origin matches the server-internal origin
   if (!signedUrl.startsWith(serverOrigin)) return signedUrl;
