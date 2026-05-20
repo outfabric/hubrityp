@@ -17,10 +17,10 @@
 
 Escopo: somente os três deltas desta change — (a) remoção da aba "Documentos", (b) ícone de "Financeiro" → `Receipt`, (c) aba "Prontuário" → painel de redirect. Composição/ordem dos triggers sobreviventes, aba default e comportamento placeholder de "Sessões"/"Financeiro" são pré-existentes e NÃO devem ser asseridos aqui.
 
-- [ ] 3.1 Criar `src/__tests__/unit/modules/patients/components/patient-tabs.test.tsx` com setup Vitest + React Testing Library, importando `PatientTabs` e mockando `next/link` somente se necessário.
-- [ ] 3.2 Adicionar teste para o delta (a): nenhum elemento com `data-testid="patient-tab-documents"` existe no DOM, e nenhum `data-testid="patient-tab-content-documents"` também.
-- [ ] 3.3 Adicionar teste para o delta (b): o trigger "Financeiro" (`patient-tab-financial`) contém um SVG do ícone `Receipt` (ex.: classe `lucide-receipt`) e NÃO contém o ícone `Wallet` (`lucide-wallet`). O teste foca exclusivamente no ícone — não reafirma o texto da aba nem o placeholder "Em breve".
-- [ ] 3.4 Adicionar teste para o delta (c): ao clicar em `patient-tab-records`, `patient-tab-content-records` fica visível, contém o título "Prontuario" e um link/botão `patient-tab-records-open-prontuario` cujo `href` é `/pacientes/<patientId>/prontuario` (usar `patientId` arbitrário, ex.: `"abc-123"`).
+- [x] 3.1 Criar `src/__tests__/unit/modules/patients/components/patient-tabs.test.tsx` com setup Vitest + React Testing Library, importando `PatientTabs` e mockando `next/link` somente se necessário.
+- [x] 3.2 Adicionar teste para o delta (a): nenhum elemento com `data-testid="patient-tab-documents"` existe no DOM, e nenhum `data-testid="patient-tab-content-documents"` também.
+- [x] 3.3 Adicionar teste para o delta (b): o trigger "Financeiro" (`patient-tab-financial`) contém um SVG do ícone `Receipt` (ex.: classe `lucide-receipt`) e NÃO contém o ícone `Wallet` (`lucide-wallet`). O teste foca exclusivamente no ícone — não reafirma o texto da aba nem o placeholder "Em breve".
+- [x] 3.4 Adicionar teste para o delta (c): ao clicar em `patient-tab-records`, `patient-tab-content-records` fica visível, contém o título "Prontuario" e um link/botão `patient-tab-records-open-prontuario` cujo `href` é `/pacientes/<patientId>/prontuario` (usar `patientId` arbitrário, ex.: `"abc-123"`).
 
 ## 4. Testes E2E
 
