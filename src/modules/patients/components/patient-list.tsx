@@ -504,7 +504,9 @@ export function PatientList({
                   </TableCell>
                   <TableCell>
                     <span className="text-text-secondary text-sm">
-                      {new Date(patient.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(patient.createdAt).toLocaleDateString('pt-BR', {
+                        timeZone: 'America/Sao_Paulo',
+                      })}
                     </span>
                   </TableCell>
                 </TableRow>
