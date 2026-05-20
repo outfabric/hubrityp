@@ -1,7 +1,7 @@
 ## 1. Verificação prévia
 
-- [ ] 1.1 Rodar `grep -rn "patient-tab-documents\|Documentos clinicos\|patient-tab-documents-open-prontuario" src/` para confirmar que os únicos consumidores das referências da aba "Documentos" são o próprio `patient-tabs.tsx` e (eventualmente) testes. Listar achados antes de prosseguir.
-- [ ] 1.2 Confirmar que `src/app/(app)/pacientes/[id]/prontuario/page.tsx` e a rota filha `documentos/` continuam existindo e funcionais (rota de destino do botão "Abrir prontuario").
+- [x] 1.1 Rodar `grep -rn "patient-tab-documents\|Documentos clinicos\|patient-tab-documents-open-prontuario" src/` para confirmar que os únicos consumidores das referências da aba "Documentos" são o próprio `patient-tabs.tsx` e (eventualmente) testes. Listar achados antes de prosseguir.
+- [x] 1.2 Confirmar que `src/app/(app)/pacientes/[id]/prontuario/page.tsx` e a rota filha `documentos/` continuam existindo e funcionais (rota de destino do botão "Abrir prontuario").
 
 ## 2. Source change — `PatientTabs`
 
