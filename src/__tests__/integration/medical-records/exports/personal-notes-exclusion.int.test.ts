@@ -13,11 +13,11 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { inflateSync } from 'node:zlib';
 
 import { sql as dsql } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { extractPdfText } from '@/__tests__/_shared/pdf-text';
 import { cleanTestData } from '@/__tests__/integration/setup/clean-test-data';
 import { runAsService } from '@/__tests__/integration/setup/run-as-service';
 import { buildProntuarioPdf } from '@/modules/medical-records/lib/exports/pdf-builder';
@@ -43,69 +43,6 @@ vi.mock('next/headers', () => ({
 
 // Sentinel string for detection in the decompressed PDF streams.
 const SENTINEL = 'XSECRET789';
-
-/**
- * Extract text from a PDFKit-generated buffer by inflating FlateDecode streams
- * and collecting all PDF text operators (`Tj`, `TJ`, and `'`).
- *
- * This is a minimal PDF text extractor — not a general-purpose parser. It
- * handles the subset PDFKit produces: each page's content stream is compressed
- * with zlib and contains text operators like `(text) Tj`.
- */
-function extractPdfText(buffer: Buffer): string {
-  const raw = buffer.toString('binary');
-  const texts: string[] = [];
-
-  // Find streams by locating `stream\n...\nendstream` boundaries
-  const streamStartRegex = /stream\r?\n/g;
-  let startMatch;
-
-  while ((startMatch = streamStartRegex.exec(raw)) !== null) {
-    const dataStart = startMatch.index + startMatch[0].length;
-    const endIdx = raw.indexOf('endstream', dataStart);
-    if (endIdx <= dataStart) continue;
-
-    // Trim trailing whitespace before endstream
-    let dataEnd = endIdx;
-    while (
-      dataEnd > dataStart &&
-      (raw.charCodeAt(dataEnd - 1) === 0x0a || raw.charCodeAt(dataEnd - 1) === 0x0d)
-    ) {
-      dataEnd--;
-    }
-
-    const streamBytes = Buffer.from(raw.substring(dataStart, dataEnd), 'binary');
-    try {
-      const inflated = inflateSync(streamBytes).toString('latin1');
-
-      // Extract text from parenthesized Tj operators: `(text) Tj`
-      const tjRegex = /\(([^)]*)\)\s*Tj/g;
-      let tjMatch;
-      while ((tjMatch = tjRegex.exec(inflated)) !== null) {
-        texts.push(tjMatch[1]!);
-      }
-
-      // Extract text from hex-encoded strings: `<hex> Tj` or inside `[...] TJ`
-      // PDFKit often uses `<hexstring>` instead of `(string)` for text.
-      const hexTjRegex = /<([0-9a-fA-F]+)>/g;
-      let hexMatch;
-      while ((hexMatch = hexTjRegex.exec(inflated)) !== null) {
-        const hex = hexMatch[1]!;
-        let decoded = '';
-        for (let i = 0; i < hex.length; i += 2) {
-          decoded += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
-        }
-        if (decoded.length > 0) {
-          texts.push(decoded);
-        }
-      }
-    } catch {
-      // Not a zlib-compressed stream — skip (e.g., image data, metadata)
-    }
-  }
-
-  return texts.join('');
-}
 
 // ---------------------------------------------------------------------------
 // Helpers

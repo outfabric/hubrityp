@@ -82,6 +82,6 @@
 
 ## 11. E2E Tests
 
-- [ ] 11.1 Create `src/__tests__/e2e/seeded/prontuario/export.spec.ts` — open prontuario -> click "Exportar prontuario" -> set date range -> uncheck "Documentos" -> submit -> toast appears -> navigate to Exportacoes page -> assert export appears with status; Inngest runs sync in e2e env -> status becomes ready -> click "Baixar" -> assert PDF download starts and file is non-empty
-- [ ] 11.2 Add personal notes scenario to e2e: toggle personal notes on -> AlertDialog requires "INCLUIR" typed -> submit -> export includes personal notes section header (verify via integration assertion or PDF text parse)
-- [ ] 11.3 Add date range exclusion scenario: filter date range that excludes all evolutions -> export PDF generates with "Nenhuma evolucao no periodo selecionado" text
+- [x] 11.1 Create `src/__tests__/e2e/seeded/prontuario/export.spec.ts` — open prontuario -> click "Exportar prontuario" -> set date range -> uncheck "Documentos" -> submit -> toast appears -> navigate to Exportacoes page -> assert export appears with status; Inngest runs sync in e2e env -> status becomes ready -> click "Baixar" -> assert PDF download starts and file is non-empty
+- [x] 11.2 Add personal notes scenario to e2e: toggle personal notes on -> AlertDialog requires "INCLUIR" typed -> submit -> export includes personal notes section header (verify via integration assertion or PDF text parse)
+- [x] 11.3 Add date range exclusion scenario: filter date range that excludes all evolutions -> export PDF generates with "Nenhuma evolucao no periodo selecionado" text
