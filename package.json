@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run format:check && npm run typecheck",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run db:check",
     "test:unit": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e:seeded": "playwright test --config playwright.seeded.config.ts",
@@ -24,6 +24,7 @@
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "db:generate": "drizzle-kit generate",
+    "db:check": "tsx scripts/check-migrations.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
@@ -133,6 +134,9 @@
     ],
     "*.{md,json,yml,yaml,css}": [
       "prettier --write"
+    ],
+    "src/shared/db/migrations/meta/_journal.json": [
+      "bash -c 'npm run db:check'"
     ]
   }
 }
