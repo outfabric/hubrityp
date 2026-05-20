@@ -6,6 +6,7 @@ import { CalendarIcon, Info, Loader2 } from 'lucide-react';
 import { useCallback, useState, useTransition } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import {
@@ -69,6 +70,13 @@ function defaultSections(): Record<SectionKey, boolean> {
 
 const CONFIRMATION_KEYWORD = 'INCLUIR';
 
+/**
+ * Client-side email validation schema — mirrors the server-side
+ * `exportFiltersSchema.deliveryEmail` (z.string().email().optional()) so
+ * the user sees a field-level error BEFORE the Server Action is called.
+ */
+const deliveryEmailSchema = z.string().email({ message: 'Email invalido.' });
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -110,6 +118,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
   const [sections, setSections] = useState<Record<SectionKey, boolean>>(defaultSections);
   const [includePersonalNotes, setIncludePersonalNotes] = useState(false);
   const [deliveryEmail, setDeliveryEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // -- AlertDialog state for personal notes confirmation --------------------
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
@@ -127,6 +136,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
     setSections(defaultSections());
     setIncludePersonalNotes(false);
     setDeliveryEmail('');
+    setEmailError(null);
     setConfirmationInput('');
     setNotesDialogOpen(false);
     setDatePopoverOpen(false);
@@ -178,6 +188,17 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
 
   // -- Submit handler -------------------------------------------------------
   const handleSubmit = useCallback(() => {
+    // Client-side email validation before calling the server action
+    const trimmedEmail = deliveryEmail.trim();
+    if (trimmedEmail) {
+      const emailResult = deliveryEmailSchema.safeParse(trimmedEmail);
+      if (!emailResult.success) {
+        setEmailError(emailResult.error.issues[0]?.message ?? 'Email invalido.');
+        return;
+      }
+    }
+    setEmailError(null);
+
     startTransition(() => {
       void requestExport({
         patientId,
@@ -188,13 +209,15 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
           },
           sections,
           includePersonalNotes,
-          deliveryEmail: deliveryEmail.trim() || undefined,
+          deliveryEmail: trimmedEmail || undefined,
         },
       })
         .then((result) => {
           if (result.ok) {
             toast.success('Exportacao solicitada. Voce sera notificado quando estiver pronta.');
             handleOpenChange(false);
+          } else if (result.code === 'VALIDATION_ERROR') {
+            toast.error('Verifique os campos e tente novamente.');
           } else {
             toast.error('Erro ao solicitar exportacao. Tente novamente.');
           }
@@ -344,9 +367,23 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
               type="email"
               placeholder="Para receber exportacoes grandes (>10MB)"
               value={deliveryEmail}
-              onChange={(e) => setDeliveryEmail(e.target.value)}
+              onChange={(e) => {
+                setDeliveryEmail(e.target.value);
+                if (emailError) setEmailError(null);
+              }}
+              aria-invalid={!!emailError}
+              aria-describedby={emailError ? 'delivery-email-error' : undefined}
               data-testid="export-delivery-email"
             />
+            {emailError && (
+              <p
+                id="delivery-email-error"
+                className="text-destructive text-sm"
+                data-testid="export-delivery-email-error"
+              >
+                {emailError}
+              </p>
+            )}
           </div>
 
           {/* Footer */}

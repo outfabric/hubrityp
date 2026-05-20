@@ -78,14 +78,14 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
       </div>
 
       {/* Page title + export actions */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="prontuario-page-title"
         >
           Prontuario
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href={`/pacientes/${patientId}/prontuario/exportacoes`}>
             <Button variant="ghost" size="sm" data-testid="prontuario-exports-link">
               <History className="h-4 w-4" aria-hidden="true" />
