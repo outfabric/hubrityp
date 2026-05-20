@@ -26,6 +26,6 @@ Escopo: somente os três deltas desta change — (a) remoção da aba "Documento
 
 Escopo: cobrir o novo fluxo de redirect da aba "Prontuário" (delta c) e a ausência da aba "Documentos" (delta a). O teste já existente `placeholder tabs show "Em breve" message` cobre apenas `sessions` e `financial` — NÃO o tocaremos (continua válido sem alteração). O delta do ícone Financeiro (b) é coberto suficientemente em unit (item 3.3), sem precisar de E2E adicional.
 
-- [ ] 4.1 Em `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`, fazer uma busca por `patient-tab-documents` no arquivo; remover qualquer asserção encontrada (não há nenhuma esperada hoje, mas confirmar).
-- [ ] 4.2 Adicionar novo teste `'Prontuário tab redirects to prontuario page'`: navegar para a página do paciente seed, clicar em `patient-tab-records`, aguardar `patient-tab-content-records` visível, clicar em `patient-tab-records-open-prontuario`, e confirmar que `page.url()` termina em `/pacientes/<patientId>/prontuario`.
-- [ ] 4.3 Adicionar novo teste curto `'Documentos tab is not rendered'`: navegar para a página do paciente, verificar `expect(page.getByTestId('patient-tab-documents')).toHaveCount(0)`.
+- [x] 4.1 Em `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`, fazer uma busca por `patient-tab-documents` no arquivo; remover qualquer asserção encontrada (não há nenhuma esperada hoje, mas confirmar).
+- [x] 4.2 Adicionar novo teste `'Prontuário tab redirects to prontuario page'`: navegar para a página do paciente seed, clicar em `patient-tab-records`, aguardar `patient-tab-content-records` visível, clicar em `patient-tab-records-open-prontuario`, e confirmar que `page.url()` termina em `/pacientes/<patientId>/prontuario`.
+- [x] 4.3 Adicionar novo teste curto `'Documentos tab is not rendered'`: navegar para a página do paciente, verificar `expect(page.getByTestId('patient-tab-documents')).toHaveCount(0)`.

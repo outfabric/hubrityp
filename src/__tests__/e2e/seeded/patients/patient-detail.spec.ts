@@ -118,6 +118,30 @@ test.describe('@patients patient detail page', () => {
     await page.waitForURL(/\/pacientes$/);
   });
 
+  test('Prontuario tab redirects to prontuario page', async ({ page }) => {
+    await navigateToFirstPatient(page);
+
+    const recordsTab = page.getByTestId('patient-tab-records');
+    await expect(recordsTab).toBeVisible();
+    await recordsTab.click();
+
+    const recordsContent = page.getByTestId('patient-tab-content-records');
+    await expect(recordsContent).toBeVisible();
+
+    const openProntuarioButton = page.getByTestId('patient-tab-records-open-prontuario');
+    await expect(openProntuarioButton).toBeVisible();
+    await openProntuarioButton.click();
+
+    await page.waitForURL(/\/pacientes\/[a-f0-9-]+\/prontuario\/?$/);
+    expect(page.url()).toMatch(/\/pacientes\/[a-f0-9-]+\/prontuario\/?$/);
+  });
+
+  test('Documentos tab is not rendered', async ({ page }) => {
+    await navigateToFirstPatient(page);
+
+    await expect(page.getByTestId('patient-tab-documents')).toHaveCount(0);
+  });
+
   test('actions menu contains edit, archive, and delete options', async ({ page }) => {
     await navigateToFirstPatient(page);
 
