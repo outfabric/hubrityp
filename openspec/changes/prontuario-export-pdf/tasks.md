@@ -60,14 +60,14 @@
 
 ## 9. Unit Tests
 
-- [ ] 9.1 Create `src/__tests__/unit/modules/medical-records/exports/export-schemas.test.ts` — validates exportFiltersSchema (dateRange validity, sections shape, includePersonalNotes default false, deliveryEmail optional)
-- [ ] 9.2 Create `src/__tests__/unit/modules/medical-records/exports/expiry-calculator.test.ts` — file_size threshold logic (<=10MB -> 24h, >10MB -> 7d)
-- [ ] 9.3 Create `src/__tests__/unit/modules/medical-records/exports/scale-chart-svg.test.ts` — given `[(date, score)]` produces valid `<svg>` string with axes, line, dots; snapshot test for known fixture; handles edge cases (1 point, empty array)
-- [ ] 9.4 Create `src/__tests__/unit/modules/medical-records/exports/sections/cover-page.test.ts` — verifies cover page builder produces expected pdfkit calls with patient/psychologist info
-- [ ] 9.5 Create `src/__tests__/unit/modules/medical-records/exports/sections/evolutions-section.test.ts` — verifies monthly grouping, template-aware rendering for TCC/livre/psicanalise, addendum formatting
-- [ ] 9.6 Create `src/__tests__/unit/modules/medical-records/exports/sections/hypotheses-section.test.ts` — table rendering with CID-10 codes and status badges
-- [ ] 9.7 Create `src/__tests__/unit/modules/medical-records/exports/sections/attachments-section.test.ts` — category summary counting and table row rendering
-- [ ] 9.8 Create `src/__tests__/unit/modules/medical-records/exports/filter-application.test.ts` — dateRange clips evolutions correctly, sections=false skips block, personalNotes default excluded
+- [x] 9.1 Create `src/__tests__/unit/modules/medical-records/exports/export-schemas.test.ts` — validates exportFiltersSchema (dateRange validity, sections shape, includePersonalNotes default false, deliveryEmail optional)
+- [x] 9.2 Create `src/__tests__/unit/modules/medical-records/exports/expiry-calculator.test.ts` — file_size threshold logic (<=10MB -> 24h, >10MB -> 7d)
+- [x] 9.3 Create `src/__tests__/unit/modules/medical-records/exports/scale-chart-svg.test.ts` — given `[(date, score)]` produces valid `<svg>` string with axes, line, dots; snapshot test for known fixture; handles edge cases (1 point, empty array)
+- [x] 9.4 Create `src/__tests__/unit/modules/medical-records/exports/sections/cover-page.test.ts` — verifies cover page builder produces expected pdfkit calls with patient/psychologist info
+- [x] 9.5 Create `src/__tests__/unit/modules/medical-records/exports/sections/evolutions-section.test.ts` — verifies monthly grouping, template-aware rendering for TCC/livre/psicanalise, addendum formatting
+- [x] 9.6 Create `src/__tests__/unit/modules/medical-records/exports/sections/hypotheses-section.test.ts` — table rendering with CID-10 codes and status badges
+- [x] 9.7 Create `src/__tests__/unit/modules/medical-records/exports/sections/attachments-section.test.ts` — category summary counting and table row rendering
+- [x] 9.8 Create `src/__tests__/unit/modules/medical-records/exports/filter-application.test.ts` — dateRange clips evolutions correctly, sections=false skips block, personalNotes default excluded
 
 ## 10. Integration Tests
 
