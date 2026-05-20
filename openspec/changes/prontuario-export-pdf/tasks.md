@@ -71,14 +71,14 @@
 
 ## 10. Integration Tests
 
-- [ ] 10.1 Create `src/__tests__/integration/medical-records/exports/request-export.int.test.ts` — requestProntuarioExport creates row + audit_log entry + asserts Inngest event emitted with correct payload
-- [ ] 10.2 Create `src/__tests__/integration/medical-records/exports/rls-isolation.int.test.ts` — psicólogo B cannot SELECT/INSERT/sign-url psicólogo A's exports (negative auth test)
-- [ ] 10.3 Create `src/__tests__/integration/medical-records/exports/export-job.int.test.ts` — mock Inngest run with seeded patient data: job produces non-empty PDF buffer, status transitions pending->processing->ready, storage_path set, expires_at set correctly based on file_size
-- [ ] 10.4 Create `src/__tests__/integration/medical-records/exports/personal-notes-exclusion.int.test.ts` — includePersonalNotes=false: known personal notes content NOT present in produced PDF text; includePersonalNotes=true: content IS present
-- [ ] 10.5 Create `src/__tests__/integration/medical-records/exports/signed-url.int.test.ts` — getExportSignedUrl during status≠ready -> rejected; after expires_at -> rejected; for another user -> rejected
-- [ ] 10.6 Create `src/__tests__/integration/medical-records/exports/expire-cron.int.test.ts` — cron transitions ready->expired rows and optionally cleans Storage
-- [ ] 10.7 Create `src/__tests__/integration/medical-records/exports/audit-entries.int.test.ts` — verifies both request and completion audit_log entries with correct action and metadata
-- [ ] 10.8 Create `src/__tests__/integration/medical-records/exports/email-delivery.int.test.ts` — email delivery path triggered when mocked file_size >10MB; not triggered when <=10MB
+- [x] 10.1 Create `src/__tests__/integration/medical-records/exports/request-export.int.test.ts` — requestProntuarioExport creates row + audit_log entry + asserts Inngest event emitted with correct payload
+- [x] 10.2 Create `src/__tests__/integration/medical-records/exports/rls-isolation.int.test.ts` — psicólogo B cannot SELECT/INSERT/sign-url psicólogo A's exports (negative auth test)
+- [x] 10.3 Create `src/__tests__/integration/medical-records/exports/export-job.int.test.ts` — mock Inngest run with seeded patient data: job produces non-empty PDF buffer, status transitions pending->processing->ready, storage_path set, expires_at set correctly based on file_size
+- [x] 10.4 Create `src/__tests__/integration/medical-records/exports/personal-notes-exclusion.int.test.ts` — includePersonalNotes=false: known personal notes content NOT present in produced PDF text; includePersonalNotes=true: content IS present
+- [x] 10.5 Create `src/__tests__/integration/medical-records/exports/signed-url.int.test.ts` — getExportSignedUrl during status≠ready -> rejected; after expires_at -> rejected; for another user -> rejected
+- [x] 10.6 Create `src/__tests__/integration/medical-records/exports/expire-cron.int.test.ts` — cron transitions ready->expired rows and optionally cleans Storage
+- [x] 10.7 Create `src/__tests__/integration/medical-records/exports/audit-entries.int.test.ts` — verifies both request and completion audit_log entries with correct action and metadata
+- [x] 10.8 Create `src/__tests__/integration/medical-records/exports/email-delivery.int.test.ts` — email delivery path triggered when mocked file_size >10MB; not triggered when <=10MB
 
 ## 11. E2E Tests
 

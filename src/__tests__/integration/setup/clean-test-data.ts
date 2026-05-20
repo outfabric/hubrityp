@@ -9,10 +9,12 @@ import {
   evolutionVersions,
   evolutions,
   personalNotes,
+  prontuarioExports,
   scaleApplications,
   treatmentPlanVersions,
   treatmentPlans,
 } from '@/shared/db/schema/medical-records/tables';
+import { notifications } from '@/shared/db/schema/notifications/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 
 import { runAsService } from './run-as-service';
@@ -44,6 +46,7 @@ import { runAsService } from './run-as-service';
 export async function cleanTestData(): Promise<void> {
   await runAsService(async (db) => {
     // 1. Medical-records tables (children of patients + sessions + evolutions)
+    await db.delete(prontuarioExports);
     await db.delete(clinicalDocuments);
     await db.delete(evolutionAttachments);
     await db.delete(personalNotes);
@@ -54,6 +57,9 @@ export async function cleanTestData(): Promise<void> {
     await db.delete(evolutionVersions);
     await db.delete(evolutions);
     await db.delete(auditLog);
+
+    // 1b. Notifications (children of auth.users, no FK to patients)
+    await db.delete(notifications);
 
     // 2. Agenda tables (children of patients)
     await db.delete(sessionHistory);
