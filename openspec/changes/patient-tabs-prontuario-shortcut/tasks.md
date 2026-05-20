@@ -16,20 +16,21 @@
 
 ## 3. Testes unitários
 
+Escopo: somente os três deltas desta change — (a) remoção da aba "Documentos", (b) ícone de "Financeiro" → `Receipt`, (c) aba "Prontuário" → painel de redirect. Composição/ordem dos triggers sobreviventes, aba default e comportamento placeholder de "Sessões"/"Financeiro" são pré-existentes e NÃO devem ser asseridos aqui.
+
 - [ ] 3.1 Criar `src/__tests__/unit/modules/patients/components/patient-tabs.test.tsx` com setup Vitest + React Testing Library, importando `PatientTabs` e mockando `next/link` somente se necessário.
-- [ ] 3.2 Adicionar teste: renderiza, na ordem esperada, os triggers "Visao geral", "Historico de sessoes", "Prontuario", "Anamnese", "Financeiro" — e NENHUM trigger "Documentos".
-- [ ] 3.3 Adicionar teste: o elemento com `data-testid="patient-tab-documents"` NÃO existe no DOM, e `data-testid="patient-tab-content-documents"` também não.
-- [ ] 3.4 Adicionar teste: o trigger "Financeiro" (`patient-tab-financial`) contém um SVG com classes/atributos que comprovam o ícone `Receipt` (ex.: `lucide-receipt`), e não contém o ícone `Wallet`.
-- [ ] 3.5 Adicionar teste: ao clicar em "Prontuario" (`patient-tab-records`), aparece `patient-tab-content-records` com título "Prontuario", descrição mencionando "prontuario", e um link/botão `patient-tab-records-open-prontuario` cujo `href` é `/pacientes/<patientId>/prontuario` (usar `patientId` arbitrário, ex.: `"abc-123"`).
-- [ ] 3.6 Adicionar teste: ao clicar em "Historico de sessoes" (`patient-tab-sessions`) e em "Financeiro" (`patient-tab-financial`), o placeholder com texto "Em breve" (`patient-tab-placeholder-sessions` / `patient-tab-placeholder-financial`) é exibido.
-- [ ] 3.7 Adicionar teste: a aba default é "Visao geral" (o conteúdo `patient-tab-content-overview` está visível sem clique inicial).
-- [ ] 3.8 Rodar `npm run test:unit -- patient-tabs` e garantir verde.
+- [ ] 3.2 Adicionar teste para o delta (a): nenhum elemento com `data-testid="patient-tab-documents"` existe no DOM, e nenhum `data-testid="patient-tab-content-documents"` também.
+- [ ] 3.3 Adicionar teste para o delta (b): o trigger "Financeiro" (`patient-tab-financial`) contém um SVG do ícone `Receipt` (ex.: classe `lucide-receipt`) e NÃO contém o ícone `Wallet` (`lucide-wallet`). O teste foca exclusivamente no ícone — não reafirma o texto da aba nem o placeholder "Em breve".
+- [ ] 3.4 Adicionar teste para o delta (c): ao clicar em `patient-tab-records`, `patient-tab-content-records` fica visível, contém o título "Prontuario" e um link/botão `patient-tab-records-open-prontuario` cujo `href` é `/pacientes/<patientId>/prontuario` (usar `patientId` arbitrário, ex.: `"abc-123"`).
+- [ ] 3.5 Rodar `npm run test:unit -- patient-tabs` e garantir verde.
 
 ## 4. Testes E2E
 
-- [ ] 4.1 Em `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`, conferir que o teste existente `placeholder tabs show "Em breve" message` (linha ~88) continua válido — ele cobre apenas `sessions` e `financial`, então sem mudanças aqui. Se houver outra asserção a `patient-tab-documents*` em qualquer lugar do arquivo, removê-la.
-- [ ] 4.2 Adicionar novo teste `'Prontuário tab redirects to prontuario page'`: navegar para a página do paciente seed, clicar em `patient-tab-records`, aguardar `patient-tab-content-records` visível, verificar a presença do link `patient-tab-records-open-prontuario`, clicar nele, e confirmar que `page.url()` termina em `/pacientes/<patientId>/prontuario`.
-- [ ] 4.3 Adicionar (mesmo arquivo) asserção curta `'Documentos tab is not rendered'`: navegar para a página do paciente, verificar `expect(page.getByTestId('patient-tab-documents')).toHaveCount(0)`.
+Escopo: cobrir o novo fluxo de redirect da aba "Prontuário" (delta c) e a ausência da aba "Documentos" (delta a). O teste já existente `placeholder tabs show "Em breve" message` cobre apenas `sessions` e `financial` — NÃO o tocaremos (continua válido sem alteração). O delta do ícone Financeiro (b) é coberto suficientemente em unit (item 3.3), sem precisar de E2E adicional.
+
+- [ ] 4.1 Em `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`, fazer uma busca por `patient-tab-documents` no arquivo; remover qualquer asserção encontrada (não há nenhuma esperada hoje, mas confirmar).
+- [ ] 4.2 Adicionar novo teste `'Prontuário tab redirects to prontuario page'`: navegar para a página do paciente seed, clicar em `patient-tab-records`, aguardar `patient-tab-content-records` visível, clicar em `patient-tab-records-open-prontuario`, e confirmar que `page.url()` termina em `/pacientes/<patientId>/prontuario`.
+- [ ] 4.3 Adicionar novo teste curto `'Documentos tab is not rendered'`: navegar para a página do paciente, verificar `expect(page.getByTestId('patient-tab-documents')).toHaveCount(0)`.
 - [ ] 4.4 Rodar `npm run test:e2e:seeded -- patient-detail` localmente (Docker Compose up + Playwright seeded suite). Garantir verde.
 
 ## 5. Validação final

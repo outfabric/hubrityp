@@ -7,8 +7,8 @@ A funcionalidade de prontuário foi entregue ao longo de sete changes arquivadas
 - A aba "Prontuário" deixa de ser um placeholder "Em breve" e passa a renderizar um painel de redirect (ícone + título "Prontuario" + descrição curta + botão "Abrir prontuario") que aponta para `/pacientes/[id]/prontuario`, espelhando o padrão já usado pela aba "Documentos".
 - **BREAKING (UX)**: A aba "Documentos" é removida do `PatientTabs`. Documentos clínicos (declarações, atestados, laudos, etc.) continuam acessíveis via a página dedicada do prontuário (`/pacientes/[id]/prontuario/documentos`), apenas deixam de ter entrada própria no painel de abas do paciente.
 - O ícone da aba "Financeiro" muda de `Wallet` (carteira) para `Receipt` (recibo) — alinhado ao contexto fiscal brasileiro (psicólogo emite recibo da sessão para o paciente abater no IR).
-- Cobertura de testes E2E em `patient-detail.spec.ts` é atualizada: remover asserções que mencionam a aba "Documentos"; cobrir o novo fluxo de "Prontuário" (clicar na aba → ver painel de redirect → clicar no botão → URL ser `/pacientes/[id]/prontuario`).
-- Cobertura de testes unitários do `PatientTabs` é criada/ampliada para fixar a composição final do painel (abas presentes, ícone de "Financeiro", presença do painel e do botão de "Prontuário", ausência da aba "Documentos").
+- Cobertura de testes E2E em `patient-detail.spec.ts` ganha dois casos novos amarrados aos deltas: (i) "Prontuário" → clica na aba, vê painel, clica no botão, URL termina em `/pacientes/[id]/prontuario`; (ii) "Documentos" → `toHaveCount(0)` no testid da aba. O teste já existente `placeholder tabs show "Em breve" message` permanece inalterado (cobre apenas `sessions` e `financial`).
+- Cobertura unitária do `PatientTabs` é criada (arquivo novo) com **um teste por delta**: ausência da aba "Documentos", ícone `Receipt` na aba "Financeiro", e clique em "Prontuário" → painel + link para `/pacientes/[id]/prontuario`. Comportamento pré-existente (ordem dos triggers, aba default, placeholder das outras abas) NÃO é reafirmado aqui — fica no escopo do E2E que já existe.
 
 ## Capabilities
 

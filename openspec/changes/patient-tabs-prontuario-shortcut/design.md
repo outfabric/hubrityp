@@ -49,11 +49,21 @@ Curto, factual, sem promessas vazias. Espelha o tom já usado em "Documentos cli
 - Botão de abertura: `patient-tab-records-open-prontuario` (novo). Segue o padrão `patient-tab-documents-open-prontuario` do commit `d09d5c4`.
 - Não há `data-testid` da aba "Documentos" a manter — testes que referenciam `patient-tab-documents*` devem ser deletados.
 
-**6. Estratégia de testes.**
+**6. Estratégia de testes — escopo restrito aos deltas.**
 
-- **Unit (Vitest + RTL)** — `src/__tests__/unit/modules/patients/components/patient-tabs.test.tsx` (criar se não existir): cobertura de pura composição/render. Testa: (a) abas renderizadas e a ordem, (b) ausência de "Documentos" no DOM, (c) ícone da aba "Financeiro" é `Receipt`, (d) clicar em "Prontuario" mostra painel com botão cujo `href` é `/pacientes/<id>/prontuario`, (e) abas placeholder ("Histórico de sessões", "Financeiro") mostram "Em breve". Nenhum mock de Supabase / DB / network — componente é puro client-side.
-- **E2E (Playwright + seeded)** — `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`: remover qualquer asserção a `patient-tab-documents*` e adicionar fluxo: navegar para `/pacientes/<seeded-id>`, clicar em `patient-tab-records`, verificar painel + botão, clicar no botão e confirmar URL `/pacientes/<seeded-id>/prontuario`.
-- **Integration**: nenhuma. Não há boundary I/O envolvido (sem Server Action, sem Route Handler, sem mudança em RLS) — Vitest unit + Playwright E2E cobrem tudo o que importa.
+Princípio: cada teste novo deve estar amarrado a um dos três deltas desta change. Composição/ordem dos triggers sobreviventes, aba default ("Visão geral"), conteúdo de "Visão geral" e "Anamnese", e o placeholder "Em breve" das abas "Sessões"/"Financeiro" são **pré-existentes** e já têm cobertura no E2E `patient-detail.spec.ts` linha ~88. Não vamos duplicar essa cobertura aqui.
+
+- **Unit (Vitest + RTL)** — `src/__tests__/unit/modules/patients/components/patient-tabs.test.tsx` (criar; não existe hoje). Três testes, um por delta:
+  - (a) ausência de `patient-tab-documents` e `patient-tab-content-documents` no DOM (delta: remoção da aba "Documentos");
+  - (b) `patient-tab-financial` contém o SVG `Receipt` e não contém `Wallet` (delta: troca de ícone);
+  - (c) clicar em `patient-tab-records` exibe `patient-tab-content-records` com botão `patient-tab-records-open-prontuario` cujo `href` aponta para `/pacientes/<patientId>/prontuario` (delta: conversão para painel de redirect).
+  - Nenhum mock de Supabase / DB / network — componente é puro client-side.
+- **E2E (Playwright + seeded)** — `src/__tests__/e2e/seeded/patients/patient-detail.spec.ts`. Dois testes novos, um por delta com impacto end-to-end:
+  - "Prontuário tab redirects to prontuario page" — clicar na aba, ver painel, clicar no botão, confirmar URL final. (Delta c.)
+  - "Documentos tab is not rendered" — `toHaveCount(0)` no `patient-tab-documents`. (Delta a.)
+  - O delta b (ícone) é cosmético e já é coberto suficientemente no unit; não precisa de E2E redundante.
+  - O teste pré-existente `placeholder tabs show "Em breve" message` (linha ~88) cobre apenas `sessions` e `financial` — fica inalterado.
+- **Integration**: nenhuma. Não há boundary I/O envolvido (sem Server Action, sem Route Handler, sem mudança em RLS).
 
 **7. Backward compatibility.**
 
