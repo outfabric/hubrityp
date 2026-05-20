@@ -261,6 +261,22 @@ export {
   type DocumentFull,
 } from './server/clinical-documents';
 
+// ---- Prontuario Export Server Actions ----------------------------------------
+export {
+  requestProntuarioExportImpl,
+  listProntuarioExportsImpl,
+  getExportSignedUrlImpl,
+  type RequestExportResult,
+  type ListExportsResult,
+  type GetExportSignedUrlResult,
+  type ExportSummary,
+} from './server/exports';
+
+// ---- Export Modal + Panel + List Components (Client Components) --------------
+export { ExportModal, type ExportModalProps } from './components/export-modal';
+export { ExportPanel } from './components/export-panel';
+export { ExportsList } from './components/exports-list';
+
 // ---- Clinical Document Schemas ----------------------------------------------
 export {
   createDocumentInputSchema,

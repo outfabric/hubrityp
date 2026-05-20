@@ -1,9 +1,10 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
   checkActiveConsentForPatientImpl,
+  ExportPanel,
   getEvolutionsByPatientImpl,
   logProntuarioAccessImpl,
   type EvolutionSummary,
@@ -13,6 +14,7 @@ import { getPatientImpl } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
+import { requestProntuarioExport } from './actions';
 import { EvolutionsList } from './evolucoes/_components/evolutions-list';
 
 // ---------------------------------------------------------------------------
@@ -75,13 +77,24 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
         </Link>
       </div>
 
-      {/* Page title */}
-      <h1
-        className="text-text-primary mb-6 text-[28px] leading-[1.25] font-semibold"
-        data-testid="prontuario-page-title"
-      >
-        Prontuario
-      </h1>
+      {/* Page title + export actions */}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1
+          className="text-text-primary text-[28px] leading-[1.25] font-semibold"
+          data-testid="prontuario-page-title"
+        >
+          Prontuario
+        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/pacientes/${patientId}/prontuario/exportacoes`}>
+            <Button variant="ghost" size="sm" data-testid="prontuario-exports-link">
+              <History className="h-4 w-4" aria-hidden="true" />
+              Ver exportacoes
+            </Button>
+          </Link>
+          <ExportPanel patientId={patientId} requestExport={requestProntuarioExport} />
+        </div>
+      </div>
 
       {/* Tabs shell — Evolucoes tab active by default */}
       <ProntuarioTabs patientId={patientId} hasActiveConsent={hasActiveConsent}>

@@ -8,7 +8,9 @@
 
 import { serve } from 'inngest/next';
 
+import { expireProntuarioExportsCron } from '@/modules/medical-records/inngest/expire-exports';
 import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
+import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/export-pdf';
 import { generateDocumentPdf } from '@/modules/medical-records/inngest/generate-document-pdf';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
@@ -39,5 +41,7 @@ export const { GET, POST, PUT } = serve({
     remindMissingEvolution,
     expireRemoteTokens,
     generateDocumentPdf,
+    prontuarioExportPdfFunction,
+    expireProntuarioExportsCron,
   ],
 });

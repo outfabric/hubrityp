@@ -151,6 +151,20 @@ export const personalNotesPolicies = [
      WITH CHECK (auth.uid() = user_id);`,
 ] as const;
 
+// Owner-scoped RLS for `prontuario_exports`. SELECT/INSERT only.
+// NO UPDATE policy — status transitions are managed exclusively by
+// service-role (Inngest export job, expiry cron).
+// NO DELETE policy — exports expire naturally; cleanup is via service-role cron.
+export const prontuarioExportsPolicies = [
+  `ALTER TABLE prontuario_exports ENABLE ROW LEVEL SECURITY;`,
+  `CREATE POLICY "owner can select prontuario_exports" ON prontuario_exports
+     FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);`,
+  `CREATE POLICY "owner can insert prontuario_exports" ON prontuario_exports
+     FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);`,
+] as const;
+
 // Owner-scoped RLS for `clinical_documents`. SELECT/INSERT/UPDATE only.
 // NO DELETE policy — Lei 13.787/2018 mandates 20-year clinical record
 // retention.

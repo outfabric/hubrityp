@@ -14,15 +14,18 @@ import type {
   FinalizeDocumentResult,
   GetAttachmentSignedUrlResult,
   GetDocumentPdfUrlResult,
+  GetExportSignedUrlResult,
   GetPersonalNotesResult,
   GetTreatmentPlanResult,
   HypothesisStatus,
   ListAttachmentsResult,
   ListDocumentsByPatientResult,
+  ListExportsResult,
   ListHypothesesResult,
   ListScalesForPatientResult,
   ListTreatmentPlanVersionsResult,
   RemovePersonalNotesPasswordResult,
+  RequestExportResult,
   SetPersonalNotesPasswordResult,
   SubmitScaleResponsesResult,
   UpdateDocumentResult,
@@ -41,14 +44,17 @@ import {
   getAttachmentSignedUrlImpl,
   getDocumentDetailImpl,
   getDocumentPdfUrlImpl,
+  getExportSignedUrlImpl,
   getPersonalNotesImpl,
   getTreatmentPlanImpl,
   listAttachmentsImpl,
   listDocumentsByPatientImpl,
   listHypothesesByPatientImpl,
+  listProntuarioExportsImpl,
   listScalesForPatient as listScalesForPatientImpl,
   listTreatmentPlanVersionsImpl,
   removePersonalNotesPasswordImpl,
+  requestProntuarioExportImpl,
   searchCid10Impl,
   setPersonalNotesPasswordImpl,
   submitScaleResponsesImpl,
@@ -291,4 +297,43 @@ export async function getDocumentPdfUrl(input: {
 }): Promise<GetDocumentPdfUrlResult> {
   const supabase = await createServerClient();
   return getDocumentPdfUrlImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Prontuario Export
+// ---------------------------------------------------------------------------
+
+export async function requestProntuarioExport(input: {
+  patientId: string;
+  filters: {
+    dateRange: { from: string | null; to: string | null };
+    sections: {
+      anamnese: boolean;
+      evolucoes: boolean;
+      hipoteses: boolean;
+      planoTerapeutico: boolean;
+      escalas: boolean;
+      documentos: boolean;
+      anexosIndex: boolean;
+    };
+    includePersonalNotes: boolean;
+    deliveryEmail?: string;
+  };
+}): Promise<RequestExportResult> {
+  const supabase = await createServerClient();
+  return requestProntuarioExportImpl(supabase, input);
+}
+
+export async function listProntuarioExports(input: {
+  patientId?: string;
+}): Promise<ListExportsResult> {
+  const supabase = await createServerClient();
+  return listProntuarioExportsImpl(supabase, input);
+}
+
+export async function getExportSignedUrl(input: {
+  exportId: string;
+}): Promise<GetExportSignedUrlResult> {
+  const supabase = await createServerClient();
+  return getExportSignedUrlImpl(supabase, input);
 }

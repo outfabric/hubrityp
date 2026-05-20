@@ -471,3 +471,48 @@ export const clinicalDocuments = pgTable(
 
 export type ClinicalDocument = typeof clinicalDocuments.$inferSelect;
 export type NewClinicalDocument = typeof clinicalDocuments.$inferInsert;
+
+// `prontuario_exports` tracks asynchronous PDF export requests for a
+// patient's full prontuario. Each row represents a single export job that
+// progresses through a state machine: pending → processing → ready | failed
+// → expired. The Inngest job updates status via service-role; authenticated
+// users can only SELECT their own rows and INSERT new requests.
+//
+// RLS policies enforce owner-scoped access via `user_id = auth.uid()`.
+// NO UPDATE/DELETE policy for authenticated users — status transitions are
+// managed exclusively by service-role (Inngest job, expiry cron).
+// CHECK constraint on `status` is added in the migration SQL.
+export const prontuarioExports = pgTable(
+  'prontuario_exports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // FK to `auth.users`. Cross-schema reference emitted manually in migration.
+    userId: uuid('user_id').notNull(),
+
+    // FK to `patients(id)`. Emitted manually in migration.
+    patientId: uuid('patient_id').notNull(),
+
+    // CHECK constraint in migration: status IN ('pending','processing','ready','failed','expired')
+    status: text('status').notNull().default('pending'),
+
+    filters: jsonb('filters').notNull(), // ExportFiltersSchema
+
+    storagePath: text('storage_path'), // Set on completion
+    fileSize: bigint('file_size', { mode: 'number' }), // Bytes, set on completion
+    errorMessage: text('error_message'), // Set on failure (sanitized, no PII)
+
+    expiresAt: timestamp('expires_at', { withTimezone: true }), // Set on completion
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('idx_prontuario_exports_user_created').on(table.userId, table.createdAt),
+    index('idx_prontuario_exports_status_expires').on(table.status, table.expiresAt),
+  ],
+);
+
+export type ProntuarioExport = typeof prontuarioExports.$inferSelect;
+export type NewProntuarioExport = typeof prontuarioExports.$inferInsert;

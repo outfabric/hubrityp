@@ -169,6 +169,13 @@
       "when": 1779124805450,
       "tag": "0023_magical_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779229070495,
+      "tag": "0024_swift_puff_adder",
+      "breakpoints": true
     }
   ]
 }
