@@ -5,13 +5,13 @@
 
 ## 2. Source change — `PatientTabs`
 
-- [ ] 2.1 Em `src/modules/patients/components/patient-tabs.tsx`, remover `Wallet` do import de `lucide-react` e adicionar (ou manter) `Receipt` e `FileText`.
-- [ ] 2.2 No array `TABS`, remover a entry de `value: 'documents'`.
-- [ ] 2.3 No array `TABS`, alterar a entry de `value: 'financial'` para usar o ícone `<Receipt …/>` (substituindo `<Wallet …/>`).
-- [ ] 2.4 No array `TABS`, na entry de `value: 'records'`, mudar `placeholder: true` para `placeholder: false` para que o loop de placeholders não a alcance.
-- [ ] 2.5 Remover o bloco `<TabsContent value="documents">` inteiro (painel atual de "Documentos clinicos" com botão "Abrir prontuario").
-- [ ] 2.6 Adicionar um novo `<TabsContent value="records" data-testid="patient-tab-content-records">` espelhando o padrão do antigo painel de "Documentos": ícone `FileText`, título "Prontuario", texto curto mencionando evolucoes/hipoteses/escalas/plano/documentos, e botão (`Button asChild` + `Link`) com `data-testid="patient-tab-records-open-prontuario"` apontando para `/pacientes/${patientId}/prontuario`.
-- [ ] 2.7 Conferir que o loop final `TABS.filter((tab) => tab.placeholder).map(...)` agora cobre apenas `sessions` e `financial` (nenhum trigger órfão sem `<TabsContent>`).
+- [x] 2.1 Em `src/modules/patients/components/patient-tabs.tsx`, remover `Wallet` do import de `lucide-react` e adicionar (ou manter) `Receipt` e `FileText`.
+- [x] 2.2 No array `TABS`, remover a entry de `value: 'documents'`.
+- [x] 2.3 No array `TABS`, alterar a entry de `value: 'financial'` para usar o ícone `<Receipt …/>` (substituindo `<Wallet …/>`).
+- [x] 2.4 No array `TABS`, na entry de `value: 'records'`, mudar `placeholder: true` para `placeholder: false` para que o loop de placeholders não a alcance.
+- [x] 2.5 Remover o bloco `<TabsContent value="documents">` inteiro (painel atual de "Documentos clinicos" com botão "Abrir prontuario").
+- [x] 2.6 Adicionar um novo `<TabsContent value="records" data-testid="patient-tab-content-records">` espelhando o padrão do antigo painel de "Documentos": ícone `FileText`, título "Prontuario", texto curto mencionando evolucoes/hipoteses/escalas/plano/documentos, e botão (`Button asChild` + `Link`) com `data-testid="patient-tab-records-open-prontuario"` apontando para `/pacientes/${patientId}/prontuario`.
+- [x] 2.7 Conferir que o loop final `TABS.filter((tab) => tab.placeholder).map(...)` agora cobre apenas `sessions` e `financial` (nenhum trigger órfão sem `<TabsContent>`).
 
 ## 3. Testes unitários
 

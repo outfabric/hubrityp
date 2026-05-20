@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, ClipboardList, FileText, Receipt, Wallet } from 'lucide-react';
+import { Calendar, ClipboardList, FileText, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -36,7 +36,7 @@ const TABS: TabDefinition[] = [
     value: 'records',
     label: 'Prontuario',
     icon: <FileText className="h-4 w-4" aria-hidden="true" />,
-    placeholder: true,
+    placeholder: false,
   },
   {
     value: 'anamnesis',
@@ -45,15 +45,9 @@ const TABS: TabDefinition[] = [
     placeholder: false,
   },
   {
-    value: 'documents',
-    label: 'Documentos',
-    icon: <Receipt className="h-4 w-4" aria-hidden="true" />,
-    placeholder: false,
-  },
-  {
     value: 'financial',
     label: 'Financeiro',
-    icon: <Wallet className="h-4 w-4" aria-hidden="true" />,
+    icon: <Receipt className="h-4 w-4" aria-hidden="true" />,
     placeholder: true,
   },
 ];
@@ -97,16 +91,16 @@ export function PatientTabs({ patientId, overviewContent, anamnesisContent }: Pa
         {anamnesisContent}
       </TabsContent>
 
-      {/* Active tab: documents — redirect panel pointing to the prontuario */}
-      <TabsContent value="documents" data-testid="patient-tab-content-documents">
+      {/* Active tab: records — redirect panel pointing to the prontuario */}
+      <TabsContent value="records" data-testid="patient-tab-content-records">
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <FileText className="text-text-tertiary mb-3 h-8 w-8" aria-hidden="true" />
-          <h3 className="text-text-primary mb-1 text-base font-semibold">Documentos clinicos</h3>
+          <h3 className="text-text-primary mb-1 text-base font-semibold">Prontuario</h3>
           <p className="text-text-secondary mb-4 max-w-sm text-sm">
-            Os documentos clinicos (declaracoes, atestados, laudos e outros) estao disponiveis no
-            prontuario do paciente.
+            Evolucoes, hipoteses diagnosticas, escalas, plano terapeutico e documentos clinicos
+            estao disponiveis na pagina dedicada do prontuario.
           </p>
-          <Button asChild data-testid="patient-tab-documents-open-prontuario">
+          <Button asChild data-testid="patient-tab-records-open-prontuario">
             <Link href={`/pacientes/${patientId}/prontuario`}>Abrir prontuario</Link>
           </Button>
         </div>
