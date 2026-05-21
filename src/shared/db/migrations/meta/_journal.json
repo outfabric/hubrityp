@@ -176,6 +176,20 @@
       "when": 1779229070495,
       "tag": "0024_swift_puff_adder",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1779353076578,
+      "tag": "0025_left_meteorite",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1779439476578,
+      "tag": "0026_add_user_id_indexes",
+      "breakpoints": true
     }
   ]
 }

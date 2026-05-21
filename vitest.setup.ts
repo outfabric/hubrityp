@@ -36,6 +36,11 @@ process.env.DATABASE_URL ??= 'postgresql://postgres:postgres@127.0.0.1:54322/pos
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://127.0.0.1:54321';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'unit-test-anon-key';
 process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'unit-test-service-key';
+// Stream SDK — dummy values so the Zod env validation passes when a test
+// transitively imports `serverEnv` or `clientEnv`.
+process.env.NEXT_PUBLIC_STREAM_API_KEY ??= 'unit-test-stream-public-key';
+process.env.STREAM_API_KEY ??= 'unit-test-stream-api-key';
+process.env.STREAM_API_SECRET ??= 'unit-test-stream-api-secret';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino
 // pipeline (Edge runtime can't load pino's transport), so silencing pino

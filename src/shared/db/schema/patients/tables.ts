@@ -84,6 +84,12 @@ export const patients = pgTable(
     // Override phone for WhatsApp reminders (falls back to `phone` when null).
     reminderPhone: varchar('reminder_phone', { length: 20 }),
 
+    // --- Recording consent (telepsicologia) ---
+    // Timestamp when the patient signed recording consent (null = never signed).
+    recordingConsentSignedAt: timestamp('recording_consent_signed_at', { withTimezone: true }),
+    // Timestamp when the patient revoked recording consent (null = not revoked).
+    recordingConsentRevokedAt: timestamp('recording_consent_revoked_at', { withTimezone: true }),
+
     // --- Couple linking (for future `patient-guardians-and-couples` change) ---
     coupleId: uuid('couple_id'),
 

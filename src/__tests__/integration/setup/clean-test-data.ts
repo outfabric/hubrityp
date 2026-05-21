@@ -16,6 +16,11 @@ import {
 } from '@/shared/db/schema/medical-records/tables';
 import { notifications } from '@/shared/db/schema/notifications/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
+import {
+  videoRecordings,
+  videoRooms,
+  videoSessionLogs,
+} from '@/shared/db/schema/telepsicologia/tables';
 
 import { runAsService } from './run-as-service';
 
@@ -23,7 +28,7 @@ import { runAsService } from './run-as-service';
  * Deletes test data from the shared Testcontainers database in correct FK
  * dependency order. Handles the full chain:
  *
- *   clinical_documents → evolution_attachments → personal_notes → scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → session_history → sessions → patients → auth.users
+ *   clinical_documents → evolution_attachments → personal_notes → scale_applications → treatment_plan_versions → treatment_plans → diagnostic_hypotheses → evolution_versions → evolutions → audit_log → video_recordings → video_session_logs → video_rooms → session_history → sessions → patients → auth.users
  *
  * The `evolutions` table references both `patients(id)` and `sessions(id)`,
  * so it must be cleared before either parent. `evolution_versions` references
@@ -60,6 +65,11 @@ export async function cleanTestData(): Promise<void> {
 
     // 1b. Notifications (children of auth.users, no FK to patients)
     await db.delete(notifications);
+
+    // 1c. Telepsicologia tables (children of sessions via FK)
+    await db.delete(videoRecordings);
+    await db.delete(videoSessionLogs);
+    await db.delete(videoRooms);
 
     // 2. Agenda tables (children of patients)
     await db.delete(sessionHistory);

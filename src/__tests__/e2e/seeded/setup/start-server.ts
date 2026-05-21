@@ -112,6 +112,11 @@ async function main(): Promise<void> {
       NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key',
       SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-key',
+      // Stream SDK — dummy values so the Zod env validation in
+      // `src/shared/env/` passes at module-evaluation time.
+      NEXT_PUBLIC_STREAM_API_KEY: 'e2e-stream-public-key',
+      STREAM_API_KEY: 'e2e-stream-api-key',
+      STREAM_API_SECRET: 'e2e-stream-api-secret',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },
