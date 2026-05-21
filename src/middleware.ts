@@ -129,6 +129,7 @@ function classifyPath(pathname: string): PathClass {
     '/caixa-de-entrada',
     '/configuracoes',
     '/dashboard',
+    '/sessao',
   ] as const;
   for (const prefix of APP_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {

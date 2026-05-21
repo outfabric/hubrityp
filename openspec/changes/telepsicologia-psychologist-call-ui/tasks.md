@@ -1,7 +1,7 @@
 ## 1. Middleware gating — add `/sessao` prefix
 
-- [ ] 1.1 In `src/middleware.ts`, add `'/sessao'` to the `APP_PREFIXES` array inside `classifyPath()`, so all `/sessao/*` routes are classified as `'app'` and gated by the auth decision table
-- [ ] 1.2 **Integration test:** Create `src/__tests__/integration/middleware/sessao-route-gating.int.test.ts` — negative-auth test: anonymous GET to `/sessao/fake-uuid/video` returns redirect to `/login`. Authenticated request passes through. Follow existing middleware integration test patterns
+- [x] 1.1 In `src/middleware.ts`, add `'/sessao'` to the `APP_PREFIXES` array inside `classifyPath()`, so all `/sessao/*` routes are classified as `'app'` and gated by the auth decision table
+- [x] 1.2 **Integration test:** Create `src/__tests__/integration/middleware/sessao-route-gating.int.test.ts` — negative-auth test: anonymous GET to `/sessao/fake-uuid/video` returns redirect to `/login`. Authenticated request passes through. Follow existing middleware integration test patterns
 
 ## 2. Server Actions — admitPatient + endVideoSession
 
