@@ -34,7 +34,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 - Áudio/vídeo de qualidade (HD se conexão permitir)
 - Compartilhamento de tela (psicólogo)
 - Chat textual durante a sessão
-- Indicador de qualidade de conexão
 - Sala virtual de espera (paciente entra antes, fica em espera até psicólogo admitir)
 - Detecção de fim de sessão (auto-encerramento após 5 min sem ninguém)
 - Áudio gravado para transcrição (PRD 10) — efêmero, não persistido por padrão
@@ -82,8 +81,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 **RF-09.06.** Paciente clica no link → entra em sala de espera com:
 - Nome do psicólogo
 - Mensagem: "Aguarde, [Psicólogo] vai admitir você em breve"
-- Verificação de câmera/microfone (preview)
-- Permite ajustar dispositivos antes de entrar
 
 **RF-09.07.** Sala fica disponível **10 minutos antes** do horário. Antes disso, paciente vê: "Sua sessão é às [hora]. Volte 10 minutos antes."
 
@@ -104,7 +101,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 - Sala vira read-only (paciente é desconectado com aviso)
 - Sessão é marcada como `done`
 - Modal "Registrar evolução agora?" com link rápido para PRD 05
-- Modal "Gerar cobrança?" com link rápido para PRD 06
 
 ### 5.5. Tela do paciente
 
@@ -153,16 +149,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 
 **RF-09.25.** Tokens são únicos por sessão; expirar imediatamente após sessão `done`.
 
-### 5.9. Diagnóstico técnico pré-sessão
-
-**RF-09.26.** Tela de teste de equipamento (acessível pelo paciente antes da primeira sessão):
-- Teste de microfone (visualizar barra de áudio)
-- Teste de câmera (preview)
-- Teste de conexão (latência, banda)
-- Recomendação de navegador (Chrome ou Edge mais estáveis)
-
-**RF-09.27.** Link de "Testar agora" no email/WhatsApp 1 dia antes da primeira sessão online.
-
 ### 5.10. Histórico
 
 **RF-09.28.** Sessões `done` em modalidade online registram:
@@ -170,10 +156,9 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 - Hora real de fim
 - Duração efetiva
 - Houve gravação? (boolean)
-- Qualidade média da conexão
 - Houve compartilhamento de tela? (boolean)
 
-**RF-09.29.** Estatísticas em Dashboard: % sessões online no mês, problemas técnicos reportados.
+**RF-09.29.** Estatísticas em Dashboard: % sessões online no mês.
 
 ## 6. Requisitos não-funcionais
 
@@ -184,8 +169,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 **RNF-09.03.** Disponibilidade: 99,9% (depende do provedor — escolher provedor com SLA documentado).
 
 **RNF-09.04.** Criptografia: ponta-a-ponta (E2E) sempre que provedor suportar.
-
-**RNF-09.05.** Acessibilidade: legendas automáticas (closed captions) — opcional v2.
 
 **RNF-09.06.** Compatibilidade de navegadores: Chrome 90+, Edge 90+, Firefox 88+, Safari 14+. Sem app.
 
@@ -224,11 +207,8 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 | Browser não suportado | Página mostra "Use Chrome, Edge, Firefox ou Safari recente" com links para download |
 | Casal: ambos no mesmo computador (uma webcam só) | Permitido — sistema vê 1 stream de vídeo, identidade é declarada |
 | Sessão dura mais que 50 min | Sala continua até 1h após início; psicólogo pode estender manualmente em "Adicionar 15 min" |
-| Eco / feedback de áudio | Provedor cancela com supressão; sistema sugere usar fone |
 | Paciente quer mostrar documento (laudo, exame) | Compartilhamento de tela do paciente NÃO permitido por padrão; psicólogo pode permitir caso a caso |
-| Sessão de paciente com deficiência auditiva | Chat textual ativo + legendas automáticas (v2) |
 | Tentativa de Zoom-bombing (link vazado) | Token único por paciente; ainda assim, sala de espera é primeira barreira (psicólogo decide admitir) |
-| Conexão com VPN do paciente fora do BR | Sistema mostra alerta ao psicólogo (geo-IP estimado); cabe ao psi decidir e respeitar Res. CFP |
 | Gravação interrompida (queda no meio) | Salvar parcial; processar trecho gravado |
 
 ## 9. Critérios de aceitação
@@ -246,7 +226,6 @@ Oferecer videochamada integrada ao sistema, com sala única por sessão, criada 
 - [ ] Token expirado mostra mensagem clara
 - [ ] Casal: 2 pacientes entram na mesma sala
 - [ ] Modo só-áudio funciona (câmera off)
-- [ ] Teste de equipamento pré-sessão mostra mic/câmera
 - [ ] Após sessão `done`, tentar entrar pelo link mostra "encerrada"
 - [ ] Gravação só ativável com termo assinado
 - [ ] Logs de sessão (metadata) registrados; conteúdo NÃO persiste
