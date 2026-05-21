@@ -201,6 +201,11 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_URL: status.API_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: status.ANON_KEY,
       SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY,
+      // Stream SDK — dummy values so the Zod env validation in
+      // `src/shared/env/` passes at module-evaluation time.
+      NEXT_PUBLIC_STREAM_API_KEY: 'e2e-real-stream-public-key',
+      STREAM_API_KEY: 'e2e-real-stream-api-key',
+      STREAM_API_SECRET: 'e2e-real-stream-api-secret',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },
