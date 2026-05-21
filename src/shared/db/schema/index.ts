@@ -8,3 +8,4 @@ export * from './notifications/tables';
 export * from './patients/tables';
 export * from './whatsapp/tables';
 export * from './medical-records/tables';
+export * from './telepsicologia/tables';
