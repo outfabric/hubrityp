@@ -3,3 +3,4 @@
 - [Patient CRUD patterns](project_patient_crud_patterns.md) -- schema, Server Action delegation, RLS, form wizard, test structure for the patients module
 - [Scales module patterns](project_scales_module_patterns.md) -- public token route, service-role justification, severity keyword mapping bug, classifyPath, WHOQOL JSON divergence
 - [Clinical documents patterns](project_clinical_documents_patterns.md) -- RLS finalized-row guard, Inngest PDF job steps, dangerouslySetInnerHTML/DOMPurify requirement, negative-auth E2E gap pattern
+- [Telepsicologia module patterns](project_telepsicologia_module_patterns.md) -- Stream.io video module: VideoRoom type collision (Drizzle vs Zod), missing transaction in createVideoRoom, missing user_id index on log tables, edge.ts safety, test mocking patterns
