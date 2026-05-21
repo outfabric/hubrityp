@@ -11,6 +11,7 @@ function omit<T extends Record<string, unknown>, K extends keyof T>(obj: T, key:
 const validClient = {
   NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
+  NEXT_PUBLIC_STREAM_API_KEY: 'stream-public-key',
 };
 
 const validServer = {
@@ -18,6 +19,8 @@ const validServer = {
   DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
   SUPABASE_SERVICE_ROLE_KEY: 'service-key',
   LOG_LEVEL: 'info',
+  STREAM_API_KEY: 'stream-api-key',
+  STREAM_API_SECRET: 'stream-api-secret',
 };
 
 describe('clientEnvSchema', () => {

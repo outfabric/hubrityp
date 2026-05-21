@@ -9,6 +9,7 @@ export type LogLevel = (typeof logLevels)[number];
 export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  NEXT_PUBLIC_STREAM_API_KEY: z.string().min(1),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -41,6 +42,13 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Estimated cost per WhatsApp template message in BRL.
   // Used for cost estimation display only — not for billing.
   TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL: z.coerce.number().default(0.1),
+  // Stream — video/chat API for telepsychology sessions.
+  // `STREAM_API_KEY` is the server-side API key (same value as the public key
+  // but consumed server-side to instantiate the Node SDK and mint tokens).
+  // `STREAM_API_SECRET` is the secret used to sign user tokens — NEVER expose
+  // to the client.
+  STREAM_API_KEY: z.string().min(1),
+  STREAM_API_SECRET: z.string().min(1),
   // Inngest — chaves provisionadas automaticamente pela Vercel Marketplace
   // Integration em production/preview. Em dev local ficam vazias e o SDK
   // usa o Dev Server local (http://inngest:8288 via docker compose).

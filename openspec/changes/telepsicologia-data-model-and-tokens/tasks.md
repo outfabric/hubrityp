@@ -1,8 +1,8 @@
 ## 1. Dependencies and env vars
 
-- [ ] 1.1 Install Stream SDKs: `npm install @stream-io/node-sdk @stream-io/video-react-sdk`
-- [ ] 1.2 Add env vars to `src/shared/env/schemas.ts` — extend `serverEnvSchema` with `STREAM_API_KEY` (z.string().min(1)) and `STREAM_API_SECRET` (z.string().min(1)). Extend `clientEnvSchema` with `NEXT_PUBLIC_STREAM_API_KEY` (z.string().min(1)). Add all three to `.env.example`
-- [ ] 1.3 **Unit test:** Create `src/__tests__/unit/shared/env/stream-env-vars.test.ts` — verify `serverEnvSchema` rejects missing `STREAM_API_KEY`/`STREAM_API_SECRET`, verify `clientEnvSchema` rejects missing `NEXT_PUBLIC_STREAM_API_KEY`
+- [x] 1.1 Install Stream SDKs: `npm install @stream-io/node-sdk @stream-io/video-react-sdk`
+- [x] 1.2 Add env vars to `src/shared/env/schemas.ts` — extend `serverEnvSchema` with `STREAM_API_KEY` (z.string().min(1)) and `STREAM_API_SECRET` (z.string().min(1)). Extend `clientEnvSchema` with `NEXT_PUBLIC_STREAM_API_KEY` (z.string().min(1)). Add all three to `.env.example`
+- [x] 1.3 **Unit test:** Create `src/__tests__/unit/shared/env/stream-env-vars.test.ts` — verify `serverEnvSchema` rejects missing `STREAM_API_KEY`/`STREAM_API_SECRET`, verify `clientEnvSchema` rejects missing `NEXT_PUBLIC_STREAM_API_KEY`
 
 ## 2. Database schema — video_rooms + video_session_logs + video_recordings
 
