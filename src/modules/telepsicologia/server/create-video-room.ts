@@ -131,9 +131,7 @@ export async function createVideoRoomImpl(
     const availableFrom = new Date(
       session.startAt.getTime() - ROOM_AVAILABLE_BEFORE_MINUTES * 60 * 1000,
     );
-    const expiresAt = new Date(
-      session.endAt.getTime() + ROOM_EXPIRES_AFTER_HOURS * 60 * 60 * 1000,
-    );
+    const expiresAt = new Date(session.endAt.getTime() + ROOM_EXPIRES_AFTER_HOURS * 60 * 60 * 1000);
 
     // Determine max participants based on patient type (couple = 3, else 2)
     let maxParticipants = 2;

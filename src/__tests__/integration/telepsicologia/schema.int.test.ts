@@ -108,9 +108,7 @@ describe('telepsicologia tables — RLS enabled', () => {
     'RLS is enabled on %s',
     async (tableName) => {
       const result = await runAsService(async (db) => {
-        return db.execute(
-          dsql`SELECT relrowsecurity FROM pg_class WHERE relname = ${tableName}`,
-        );
+        return db.execute(dsql`SELECT relrowsecurity FROM pg_class WHERE relname = ${tableName}`);
       });
       expect(result[0]!.relrowsecurity).toBe(true);
     },
@@ -279,10 +277,7 @@ describe('video_session_logs — CHECK constraints', () => {
     }
 
     const rows = await runAsService(async (db) => {
-      return db
-        .select()
-        .from(videoSessionLogs)
-        .where(eq(videoSessionLogs.sessionId, sessionId));
+      return db.select().from(videoSessionLogs).where(eq(videoSessionLogs.sessionId, sessionId));
     });
     expect(rows).toHaveLength(16);
   });
@@ -730,10 +725,7 @@ describe('RLS policy coverage — telepsicologia in migrations', () => {
       });
 
       let hasPolicy = false;
-      const pattern = new RegExp(
-        `CREATE\\s+POLICY\\b[^;]+\\bON\\s+["\`]?${tableName}["\`]?`,
-        'gi',
-      );
+      const pattern = new RegExp(`CREATE\\s+POLICY\\b[^;]+\\bON\\s+["\`]?${tableName}["\`]?`, 'gi');
 
       for (const file of files) {
         const source = await readFile(file, 'utf8');

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  videoRoomInputSchema,
-  videoTokenInputSchema,
-} from '@/modules/telepsicologia/lib/schemas';
+import { videoRoomInputSchema, videoTokenInputSchema } from '@/modules/telepsicologia/lib/schemas';
 
 // ---------------------------------------------------------------------------
 // videoRoomInputSchema
