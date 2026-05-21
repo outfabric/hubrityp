@@ -19,10 +19,10 @@
 
 ## 3. Zod schemas and branded types
 
-- [ ] 3.1 Create `src/modules/telepsicologia/lib/schemas.ts` — Zod schemas: `videoRoomInputSchema` (session_id: z.string().uuid()), `videoTokenInputSchema` (room_id: z.string().uuid()), `videoRoomSchema` (full row shape for type inference). Export types via z.infer
-- [ ] 3.2 Create `src/modules/telepsicologia/lib/video-url.ts` — pure function `generatePatientVideoUrl(baseUrl: string, token: string): string` that returns `${baseUrl}/v/${token}`. Validate token is 64-char hex
-- [ ] 3.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/lib/schemas.test.ts` — test: valid input accepted, invalid UUID rejected, missing fields rejected
-- [ ] 3.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/lib/video-url.test.ts` — test: correct URL format, invalid token (non-hex, wrong length) rejected, baseUrl with trailing slash handled
+- [x] 3.1 Create `src/modules/telepsicologia/lib/schemas.ts` — Zod schemas: `videoRoomInputSchema` (session_id: z.string().uuid()), `videoTokenInputSchema` (room_id: z.string().uuid()), `videoRoomSchema` (full row shape for type inference). Export types via z.infer
+- [x] 3.2 Create `src/modules/telepsicologia/lib/video-url.ts` — pure function `generatePatientVideoUrl(baseUrl: string, token: string): string` that returns `${baseUrl}/v/${token}`. Validate token is 64-char hex
+- [x] 3.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/lib/schemas.test.ts` — test: valid input accepted, invalid UUID rejected, missing fields rejected
+- [x] 3.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/lib/video-url.test.ts` — test: correct URL format, invalid token (non-hex, wrong length) rejected, baseUrl with trailing slash handled
 
 ## 4. Stream client singleton
 
