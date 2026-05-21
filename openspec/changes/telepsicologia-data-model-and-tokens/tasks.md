@@ -38,5 +38,5 @@
 
 ## 6. Module barrel and edge entrypoint
 
-- [ ] 6.1 Create `src/modules/telepsicologia/index.ts` — barrel re-exporting: Server Actions (createVideoRoom, getVideoToken), lib (videoRoomInputSchema, videoTokenInputSchema, generatePatientVideoUrl), types
-- [ ] 6.2 Create `src/modules/telepsicologia/edge.ts` — edge-safe entrypoint exporting only types and pure functions that do NOT import Node-only deps (no Drizzle, no Stream SDK). This is for future middleware consumption when video routes are classified
+- [x] 6.1 Create `src/modules/telepsicologia/index.ts` — barrel re-exporting: Server Actions (createVideoRoom, getVideoToken), lib (videoRoomInputSchema, videoTokenInputSchema, generatePatientVideoUrl), types
+- [x] 6.2 Create `src/modules/telepsicologia/edge.ts` — edge-safe entrypoint exporting only types and pure functions that do NOT import Node-only deps (no Drizzle, no Stream SDK). This is for future middleware consumption when video routes are classified
