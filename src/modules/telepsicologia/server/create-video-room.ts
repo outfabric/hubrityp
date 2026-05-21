@@ -201,6 +201,20 @@ export async function createVideoRoomImpl(
     // 11. Return the created room
     return { ok: true, room: inserted! };
   } catch (err: unknown) {
+    // Unique violation (23505): a concurrent request already inserted the room.
+    // Re-fetch and return it to make the action fully idempotent under race.
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === '23505') {
+      const [existing] = await db
+        .select()
+        .from(videoRooms)
+        .where(and(eq(videoRooms.sessionId, sessionId), eq(videoRooms.userId, userId)))
+        .limit(1);
+
+      if (existing) {
+        return { ok: true, room: existing };
+      }
+    }
+
     const pgError = err as { code?: string };
     logger.error(
       { event: 'create_video_room_failed', errorCode: pgError.code },

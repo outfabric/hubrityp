@@ -41,30 +41,9 @@ export const videoTokenInputSchema = z.object({
 
 export type VideoTokenInput = z.infer<typeof videoTokenInputSchema>;
 
-// ---------------------------------------------------------------------------
-// Full row schema — mirrors the `video_rooms` table columns exactly.
-// Used for type inference when reading rows from the DB.
-// ---------------------------------------------------------------------------
-
-export const videoRoomSchema = z.object({
-  id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  session_id: z.string().uuid(),
-  stream_call_id: z.string().min(1),
-  patient_token: z.string().length(64).regex(/^[0-9a-f]{64}$/),
-  patient_jwt: z.string().min(1),
-  partner_token: z
-    .string()
-    .length(64)
-    .regex(/^[0-9a-f]{64}$/)
-    .nullable(),
-  partner_jwt: z.string().min(1).nullable(),
-  available_from: z.coerce.date(),
-  expires_at: z.coerce.date(),
-  recording_enabled: z.boolean().nullable(),
-  recording_consent_signed: z.boolean().nullable(),
-  status: z.enum(VIDEO_ROOM_STATUSES),
-  created_at: z.coerce.date(),
-});
-
-export type VideoRoom = z.infer<typeof videoRoomSchema>;
+// The canonical `VideoRoom` type is the Drizzle `$inferSelect` type from
+// `@/shared/db/schema/telepsicologia/tables`. It is NOT re-exported from
+// this file to avoid a naming collision (Drizzle uses camelCase, Zod
+// would use snake_case). Consumers that need the `VideoRoom` type should
+// import it from the module barrel (`@/modules/telepsicologia`) or from
+// `@/shared/db/schema/telepsicologia/tables` directly.

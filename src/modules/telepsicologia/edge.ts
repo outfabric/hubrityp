@@ -41,4 +41,6 @@ export {
 } from './lib/schemas';
 
 // ---- Types (erased at runtime — safe for Edge) -------------------------------
-export type { VideoRoom } from './lib/schemas';
+// `VideoRoom` is the Drizzle `$inferSelect` type (camelCase row shape).
+// It is a type-only export, erased at runtime — no Node-only dep reaches Edge.
+export type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';

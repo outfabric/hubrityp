@@ -30,11 +30,12 @@ export {
   type VideoRoomInput,
   videoTokenInputSchema,
   type VideoTokenInput,
-  videoRoomSchema,
-  type VideoRoom,
   VIDEO_ROOM_STATUSES,
   type VideoRoomStatus,
 } from './lib/schemas';
+
+// ---- Types (Drizzle-inferred — canonical row shape) -------------------------
+export type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

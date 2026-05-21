@@ -116,6 +116,9 @@ export const videoSessionLogs = pgTable(
     // Timeline query: "all events for this session, in order".
     index('video_session_logs_session_id_created_at_idx').on(table.sessionId, table.createdAt),
 
+    // RLS performance: SELECT policy filters by auth.uid() = user_id.
+    index('video_session_logs_user_id_idx').on(table.userId),
+
     // Event type CHECK — enforces the 16 valid event types at DB level.
     check(
       'video_session_logs_event_type_check',
@@ -182,6 +185,9 @@ export const videoRecordings = pgTable(
   (table) => [
     // Recording lookup: "all recordings for this session".
     index('video_recordings_session_id_idx').on(table.sessionId),
+
+    // RLS performance: SELECT policy filters by auth.uid() = user_id.
+    index('video_recordings_user_id_idx').on(table.userId),
 
     // Status CHECK — enforces the valid recording lifecycle states at DB level.
     check(

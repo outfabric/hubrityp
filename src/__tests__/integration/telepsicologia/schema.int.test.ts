@@ -428,6 +428,26 @@ describe('telepsicologia tables — indexes', () => {
     });
     expect(result).toHaveLength(1);
   });
+
+  it('video_session_logs has index on (user_id) for RLS performance', async () => {
+    const result = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT indexname FROM pg_indexes
+             WHERE tablename = 'video_session_logs' AND indexname = 'video_session_logs_user_id_idx'`,
+      );
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it('video_recordings has index on (user_id) for RLS performance', async () => {
+    const result = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT indexname FROM pg_indexes
+             WHERE tablename = 'video_recordings' AND indexname = 'video_recordings_user_id_idx'`,
+      );
+    });
+    expect(result).toHaveLength(1);
+  });
 });
 
 // =====================================================================

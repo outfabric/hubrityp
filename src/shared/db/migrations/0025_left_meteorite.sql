@@ -82,6 +82,10 @@ CREATE INDEX "video_rooms_expires_at_idx" ON "video_rooms" USING btree ("expires
 --> statement-breakpoint
 CREATE INDEX "video_session_logs_session_id_created_at_idx" ON "video_session_logs" USING btree ("session_id","created_at");
 --> statement-breakpoint
+CREATE INDEX "video_session_logs_user_id_idx" ON "video_session_logs" USING btree ("user_id");
+--> statement-breakpoint
+CREATE INDEX "video_recordings_user_id_idx" ON "video_recordings" USING btree ("user_id");
+--> statement-breakpoint
 
 -- =====================================================================
 -- 4. FOREIGN KEY CONSTRAINTS
