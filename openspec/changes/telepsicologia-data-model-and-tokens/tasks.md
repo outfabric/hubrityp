@@ -26,8 +26,8 @@
 
 ## 4. Stream client singleton
 
-- [ ] 4.1 Create `src/modules/telepsicologia/server/stream-client.ts` — lazy singleton `getStreamClient()` using `StreamClient` from `@stream-io/node-sdk` initialized with `serverEnv.STREAM_API_KEY` and `serverEnv.STREAM_API_SECRET`. Add `import 'server-only'` guard
-- [ ] 4.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/server/stream-client.test.ts` — mock `@stream-io/node-sdk` and `@/shared/env`, verify: singleton returns same instance on repeated calls, passes correct key/secret from env
+- [x] 4.1 Create `src/modules/telepsicologia/server/stream-client.ts` — lazy singleton `getStreamClient()` using `StreamClient` from `@stream-io/node-sdk` initialized with `serverEnv.STREAM_API_KEY` and `serverEnv.STREAM_API_SECRET`. Add `import 'server-only'` guard
+- [x] 4.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/server/stream-client.test.ts` — mock `@stream-io/node-sdk` and `@/shared/env`, verify: singleton returns same instance on repeated calls, passes correct key/secret from env
 
 ## 5. Server Actions — createVideoRoom + getVideoToken
 
