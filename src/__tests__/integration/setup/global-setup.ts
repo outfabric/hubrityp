@@ -12,6 +12,11 @@ export default async function globalSetup() {
   process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://127.0.0.1:54321';
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'integration-anon-key';
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'integration-service-key';
+  // Stream SDK — dummy values for integration tests that import serverEnv
+  // transitively. The real Stream client is mocked in tests that need it.
+  process.env.NEXT_PUBLIC_STREAM_API_KEY ??= 'integration-stream-public-key';
+  process.env.STREAM_API_KEY ??= 'integration-stream-api-key';
+  process.env.STREAM_API_SECRET ??= 'integration-stream-api-secret';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.
