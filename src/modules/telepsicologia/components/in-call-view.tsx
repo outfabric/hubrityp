@@ -1,10 +1,13 @@
 'use client';
 
 import { SpeakerLayout, useCallStateHooks } from '@stream-io/video-react-sdk';
+import { UserCheck } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 import type { EndVideoSessionResult } from '@/modules/telepsicologia';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 
 import { CallControlBar } from './call-control-bar';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
@@ -32,10 +35,29 @@ export function InCallView({ patient, room, onEndSession, onAdmitPatient }: InCa
   const { useParticipantCount } = useCallStateHooks();
   const participantCount = useParticipantCount();
 
+  const [isAdmitting, setIsAdmitting] = useState(false);
+
   // If there are participants in the call beyond the psychologist (participantCount includes self),
   // and the room is still pending, show the waiting room badge suggesting someone is in the lobby.
   // participantCount = 1 means only the psychologist is in the call.
   const showWaitingBadge = room.status === 'pending' && participantCount <= 1;
+
+  const handleAdmitPatient = useCallback(() => {
+    setIsAdmitting(true);
+    onAdmitPatient(room.id)
+      .then((result) => {
+        if (!result.ok) {
+          // Generic error only — no internal details leaked to the client
+          console.error('Erro ao admitir paciente');
+        }
+      })
+      .catch(() => {
+        console.error('Erro ao admitir paciente');
+      })
+      .finally(() => {
+        setIsAdmitting(false);
+      });
+  }, [onAdmitPatient, room.id]);
 
   return (
     <div className="relative flex h-full flex-col">
@@ -46,12 +68,22 @@ export function InCallView({ patient, room, onEndSession, onAdmitPatient }: InCa
           <ElapsedTime />
         </div>
 
-        {/* Waiting room badge — top-center */}
+        {/* Waiting room badge + admit button — top-center */}
         <div className="pointer-events-auto">
           {showWaitingBadge && (
-            <Badge variant="warning" data-testid="waiting-room-badge">
-              {patient?.fullName ?? 'Paciente'} na sala de espera
-            </Badge>
+            <div className="flex items-center gap-2" data-testid="waiting-room-badge">
+              <Badge variant="warning">{patient?.fullName ?? 'Paciente'} aguardando</Badge>
+              <Button
+                size="sm"
+                onClick={handleAdmitPatient}
+                disabled={isAdmitting}
+                aria-label="Admitir paciente na sessao"
+                data-testid="admit-patient-button"
+              >
+                <UserCheck className="mr-1 h-4 w-4" aria-hidden="true" />
+                {isAdmitting ? 'Admitindo...' : 'Admitir'}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -67,7 +99,7 @@ export function InCallView({ patient, room, onEndSession, onAdmitPatient }: InCa
       </div>
 
       {/* Controls bar — bottom */}
-      <CallControlBar room={room} onEndSession={onEndSession} onAdmitPatient={onAdmitPatient} />
+      <CallControlBar room={room} onEndSession={onEndSession} />
     </div>
   );
 }

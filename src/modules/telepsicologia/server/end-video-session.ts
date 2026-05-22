@@ -107,24 +107,31 @@ export async function endVideoSessionImpl(
       );
     }
 
-    // 6. UPDATE video_rooms SET status='ended'
-    await db
-      .update(videoRooms)
-      .set({ status: 'ended' })
-      .where(and(eq(videoRooms.id, roomId), eq(videoRooms.userId, userId)));
+    // 6-8. UPDATE video_rooms + UPDATE sessions + INSERT video_session_logs
+    // atomically. The Stream `.end()` call (step 5) stays outside the
+    // transaction because it is a remote call that cannot be rolled back.
+    // Wrapping the DB writes prevents partial state (e.g., room marked
+    // ended but clinical session still 'scheduled', or audit log missing).
+    await db.transaction(async (tx) => {
+      // 6. UPDATE video_rooms SET status='ended'
+      await tx
+        .update(videoRooms)
+        .set({ status: 'ended' })
+        .where(and(eq(videoRooms.id, roomId), eq(videoRooms.userId, userId)));
 
-    // 7. UPDATE sessions SET status='done', updated_at=now()
-    //    Scoped by user_id to prevent IDOR.
-    await db
-      .update(sessions)
-      .set({ status: 'done', updatedAt: sql`now()` })
-      .where(and(eq(sessions.id, room.sessionId), eq(sessions.userId, userId)));
+      // 7. UPDATE sessions SET status='done', updated_at=now()
+      //    Scoped by user_id to prevent IDOR.
+      await tx
+        .update(sessions)
+        .set({ status: 'done', updatedAt: sql`now()` })
+        .where(and(eq(sessions.id, room.sessionId), eq(sessions.userId, userId)));
 
-    // 8. INSERT video_session_logs event_type='room_ended'
-    await db.insert(videoSessionLogs).values({
-      sessionId: room.sessionId,
-      userId,
-      eventType: 'room_ended',
+      // 8. INSERT video_session_logs event_type='room_ended'
+      await tx.insert(videoSessionLogs).values({
+        sessionId: room.sessionId,
+        userId,
+        eventType: 'room_ended',
+      });
     });
 
     // 9. Return success

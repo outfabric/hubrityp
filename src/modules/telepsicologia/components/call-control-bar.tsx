@@ -21,7 +21,6 @@ import { EndCallDialog } from './end-call-dialog';
 interface CallControlBarProps {
   room: VideoRoom;
   onEndSession: (roomId: string) => Promise<EndVideoSessionResult>;
-  onAdmitPatient: (roomId: string) => Promise<{ ok: boolean }>;
 }
 
 // ---------------------------------------------------------------------------

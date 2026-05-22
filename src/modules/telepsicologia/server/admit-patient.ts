@@ -94,18 +94,21 @@ export async function admitPatientImpl(
       return { ok: false, error: 'room_not_pending' };
     }
 
-    // 5. UPDATE video_rooms SET status='active'
-    await db
-      .update(videoRooms)
-      .set({ status: 'active' })
-      .where(and(eq(videoRooms.id, roomId), eq(videoRooms.userId, userId)));
+    // 5-6. UPDATE video_rooms + INSERT video_session_logs atomically.
+    // Wrapped in a transaction to prevent partial state (e.g., room marked
+    // active but audit log entry missing) on transient PG errors.
+    await db.transaction(async (tx) => {
+      await tx
+        .update(videoRooms)
+        .set({ status: 'active' })
+        .where(and(eq(videoRooms.id, roomId), eq(videoRooms.userId, userId)));
 
-    // 6. INSERT video_session_logs event_type='patient_joined'
-    await db.insert(videoSessionLogs).values({
-      sessionId: room.sessionId,
-      userId,
-      eventType: 'patient_joined',
-      participantRole: 'patient',
+      await tx.insert(videoSessionLogs).values({
+        sessionId: room.sessionId,
+        userId,
+        eventType: 'patient_joined',
+        participantRole: 'patient',
+      });
     });
 
     // 7. Return success

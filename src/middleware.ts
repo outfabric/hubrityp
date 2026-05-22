@@ -26,7 +26,8 @@ import { createMiddlewareClient } from '@/shared/supabase/middleware';
 //   /auth/link-account          | pass        | pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
 //   /onboarding/complete-profile| ->/login?...| pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
 //   /onboarding/pending         | ->/login?...| ->/onboarding/c-p         | pass                 | ->/dashboard   | ->/forgot-password   | ->/login + signOut
-//   /dashboard*, other (app)    | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
+//   /dashboard*, /sessao*,      | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
+//     other (app)               |             |                          |                      |               |                     |
 //   /auth/callback              | pass        | pass                     | pass                 | pass          | pass                | pass
 //   /, /api/health, public      | pass        | pass                     | pass                 | pass          | pass                | pass
 //
