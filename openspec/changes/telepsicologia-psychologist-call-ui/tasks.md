@@ -28,9 +28,9 @@
 
 ## 5. Agenda integration — "Iniciar video" button
 
-- [ ] 5.1 In the agenda session card/detail component, add an "Iniciar video" button (Button secondary, Video icon from Lucide) for sessions where modality='online' AND status IN ('scheduled', 'confirmed'). Links to `/sessao/[sessionId]/video`. Conditionally visible (only online sessions)
-- [ ] 5.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx` — mock Stream SDK hooks. Tests: camera preview renders, permission error shows inline message, "Entrar na sessao" button calls call.join()
-- [ ] 5.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/end-call-dialog.test.tsx` — mock Server Action. Tests: dialog opens on trigger, cancel closes without action, confirm calls endVideoSession, loading state shown during action
+- [x] 5.1 In the agenda session card/detail component, add an "Iniciar video" button (Button secondary, Video icon from Lucide) for sessions where modality='online' AND status IN ('scheduled', 'confirmed'). Links to `/sessao/[sessionId]/video`. Conditionally visible (only online sessions)
+- [x] 5.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx` — mock Stream SDK hooks. Tests: camera preview renders, permission error shows inline message, "Entrar na sessao" button calls call.join()
+- [x] 5.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/end-call-dialog.test.tsx` — mock Server Action. Tests: dialog opens on trigger, cancel closes without action, confirm calls endVideoSession, loading state shown during action
 
 ## 6. Module barrel update
 
