@@ -21,7 +21,9 @@
 // published through a dedicated entrypoint (`edge.ts`).
 
 // ---- Server Actions (delegated to by the route shells) -----------------------
+export { admitPatientImpl, type AdmitPatientResult } from './server/admit-patient';
 export { createVideoRoomImpl, type CreateVideoRoomResult } from './server/create-video-room';
+export { endVideoSessionImpl, type EndVideoSessionResult } from './server/end-video-session';
 export { getVideoTokenImpl, type GetVideoTokenResult } from './server/get-video-token';
 
 // ---- Zod Schemas -------------------------------------------------------------
