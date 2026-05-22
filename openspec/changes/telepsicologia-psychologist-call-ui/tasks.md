@@ -12,8 +12,8 @@
 
 ## 3. Video call page — Server Component
 
-- [ ] 3.1 Create `src/app/(app)/sessao/[id]/video/page.tsx` — Server Component: (1) load session by id via RLS-scoped Drizzle query (WHERE id = params.id AND user_id from supabase.auth.getUser()), (2) verify session exists and modality='online', (3) load video_rooms row for this session, (4) if no room exists: show "Sala nao criada" with button to create (calls createVideoRoom), (5) if room exists: call getVideoToken() to mint psychologist JWT, (6) pass { streamCallId, token, apiKey: clientEnv.NEXT_PUBLIC_STREAM_API_KEY, session, patient, room } to VideoCallClient client component. Handle errors with redirect or error UI (never expose internal details)
-- [ ] 3.2 Create `src/app/(app)/sessao/[id]/video/layout.tsx` — minimal layout that hides the main sidebar nav during the call. Renders children without the standard dashboard sidebar/header. Includes a back-to-agenda link
+- [x] 3.1 Create `src/app/(app)/sessao/[id]/video/page.tsx` — Server Component: (1) load session by id via RLS-scoped Drizzle query (WHERE id = params.id AND user_id from supabase.auth.getUser()), (2) verify session exists and modality='online', (3) load video_rooms row for this session, (4) if no room exists: show "Sala nao criada" with button to create (calls createVideoRoom), (5) if room exists: call getVideoToken() to mint psychologist JWT, (6) pass { streamCallId, token, apiKey: clientEnv.NEXT_PUBLIC_STREAM_API_KEY, session, patient, room } to VideoCallClient client component. Handle errors with redirect or error UI (never expose internal details)
+- [x] 3.2 Create `src/app/(app)/sessao/[id]/video/layout.tsx` — minimal layout that hides the main sidebar nav during the call. Renders children without the standard dashboard sidebar/header. Includes a back-to-agenda link
 
 ## 4. Video call client component — Stream SDK integration
 
