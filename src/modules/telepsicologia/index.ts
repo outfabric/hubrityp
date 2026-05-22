@@ -39,5 +39,18 @@ export {
 // ---- Types (Drizzle-inferred — canonical row shape) -------------------------
 export type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 
+// ---- Components --------------------------------------------------------------
+export {
+  default as VideoCallClient,
+  type VideoCallClientProps,
+} from './components/video-call-client';
+export { PreCallLobby } from './components/pre-call-lobby';
+export { InCallView } from './components/in-call-view';
+export { CallControlBar } from './components/call-control-bar';
+export { PostCallView } from './components/post-call-view';
+export { EndCallDialog } from './components/end-call-dialog';
+export { ConnectionQualityIndicator } from './components/connection-quality-indicator';
+export { ElapsedTime } from './components/elapsed-time';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

@@ -34,4 +34,4 @@
 
 ## 6. Module barrel update
 
-- [ ] 6.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for new Server Actions (admitPatient, endVideoSession) and components (VideoCallClient, PreCallLobby, InCallView, CallControlBar, PostCallView, EndCallDialog, ConnectionQualityIndicator, ElapsedTime)
+- [x] 6.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for new Server Actions (admitPatient, endVideoSession) and components (VideoCallClient, PreCallLobby, InCallView, CallControlBar, PostCallView, EndCallDialog, ConnectionQualityIndicator, ElapsedTime)
