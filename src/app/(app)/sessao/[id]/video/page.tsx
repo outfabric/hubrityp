@@ -1,16 +1,23 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { notFound, redirect } from 'next/navigation';
 
 import { VideoCallLoader } from '@/modules/telepsicologia/components/video-call-loader';
 import { db } from '@/shared/db/client';
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
+import { evolutions } from '@/shared/db/schema/medical-records/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import { clientEnv } from '@/shared/env/client';
 import { createServerClient } from '@/shared/supabase/server';
 
-import { admitPatient, endVideoSession, getVideoToken } from './actions';
+import {
+  admitPatient,
+  createEvolution,
+  endVideoSession,
+  getVideoToken,
+  updateEvolution,
+} from './actions';
 import { CreateRoomCard } from './create-room-card';
 
 // ---------------------------------------------------------------------------
@@ -89,6 +96,26 @@ export default async function VideoCallPage({ params }: VideoCallPageProps) {
   const patient: { id: string; fullName: string } | null = patientRows[0] ?? null;
   const psychologistName = profile?.fullName ?? 'Psicologo';
 
+  // 6b. Fetch recent evolutions for the prontuario drawer (if patient exists).
+  // Limited to 5 most recent — the drawer shows a summary, not the full list.
+  const recentEvolutions = patient
+    ? await db
+        .select({
+          id: evolutions.id,
+          patientId: evolutions.patientId,
+          sessionId: evolutions.sessionId,
+          templateType: evolutions.templateType,
+          currentVersion: evolutions.currentVersion,
+          createdAt: evolutions.createdAt,
+          updatedAt: evolutions.updatedAt,
+          finalizedAt: evolutions.finalizedAt,
+        })
+        .from(evolutions)
+        .where(and(eq(evolutions.patientId, patient.id), eq(evolutions.userId, userId)))
+        .orderBy(desc(evolutions.createdAt))
+        .limit(5)
+    : [];
+
   // 7. No room: show "create room" UI
   if (!room) {
     return <CreateRoomCard sessionId={sessionId} patientName={patient?.fullName ?? null} />;
@@ -131,6 +158,9 @@ export default async function VideoCallPage({ params }: VideoCallPageProps) {
       room={room}
       onEndSession={endVideoSession}
       onAdmitPatient={admitPatient}
+      recentEvolutions={recentEvolutions}
+      onCreateEvolution={createEvolution}
+      onUpdateEvolution={updateEvolution}
     />
   );
 }

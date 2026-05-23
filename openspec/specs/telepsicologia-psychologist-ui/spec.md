@@ -48,6 +48,20 @@ During an active call, the page SHALL show the patient's video feed as the main 
 - **WHEN** the psychologist joins the call and the patient is connected
 - **THEN** the patient's video fills the main area, the psychologist's video appears in a small PiP, and all control buttons are visible
 
+### Requirement: In-call layout includes screen share display and indicators
+
+The psychologist's in-call view SHALL display a "Voce esta compartilhando sua tela" overlay when screen sharing is active, with a "Parar de compartilhar" button. Stream's SpeakerLayout SHALL handle the automatic layout switch to show the shared screen as the main content.
+
+#### Scenario: Screen share overlay visible during sharing
+
+- **WHEN** the psychologist is sharing their screen
+- **THEN** a "Voce esta compartilhando sua tela" banner and "Parar de compartilhar" button are visible
+
+#### Scenario: Patient sees shared screen
+
+- **WHEN** the psychologist shares their screen
+- **THEN** the patient's main video area switches to the shared screen content
+
 ### Requirement: Waiting room shows patient status and admit button
 
 When a patient is waiting in the lobby, the psychologist SHALL see a "Paciente aguardando" indicator with an "Admitir" button. Clicking "Admitir" SHALL update the room status to 'active' and allow the patient to join the call.

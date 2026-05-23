@@ -51,6 +51,7 @@ export { PostCallView } from './components/post-call-view';
 export { EndCallDialog } from './components/end-call-dialog';
 export { ConnectionQualityIndicator } from './components/connection-quality-indicator';
 export { ElapsedTime } from './components/elapsed-time';
+export { ScreenShareIndicator } from './components/screen-share-indicator';
 export { PatientVideoPage } from './components/patient-video-page';
 
 // patient join flow
@@ -60,6 +61,20 @@ export { WaitingRoomView } from './components/waiting-room-view';
 export { PatientInCallView } from './components/patient-in-call-view';
 export { SessionEndedView } from './components/session-ended-view';
 export { DeviceTest } from './components/device-test';
+
+// in-call chat
+export { ChatDrawer } from './components/chat-drawer';
+export { ChatMessageList } from './components/chat-message-list';
+export { ChatInput } from './components/chat-input';
+export { MAX_CHAT_MESSAGE_LENGTH } from './lib/chat-types';
+export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
+
+// in-call prontuario
+export { ProntuarioCallDrawer } from './components/prontuario-call-drawer';
+export { ProntuarioCallContent } from './components/prontuario-call-content';
+
+// in-call troubleshooting
+export { TroubleshootingPopover } from './components/troubleshooting-popover';
 
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

@@ -8,6 +8,11 @@ import { db } from '@/shared/db/client';
 import { auditLog, evolutions } from '@/shared/db/schema/medical-records/tables';
 import { logger } from '@/shared/lib/logger';
 
+import type { EvolutionSummary } from '../lib/evolution-types';
+
+// Re-export so existing barrel consumers keep working.
+export type { EvolutionSummary };
+
 // ---------------------------------------------------------------------------
 // Input schema
 // ---------------------------------------------------------------------------
@@ -17,21 +22,6 @@ const getEvolutionsByPatientSchema = z.object({
   cursor: z.string().datetime().optional(),
   limit: z.number().int().min(1).max(100).optional().default(20),
 });
-
-// ---------------------------------------------------------------------------
-// Result types
-// ---------------------------------------------------------------------------
-
-export interface EvolutionSummary {
-  id: string;
-  patientId: string;
-  sessionId: string | null;
-  templateType: string;
-  currentVersion: number;
-  createdAt: Date;
-  updatedAt: Date;
-  finalizedAt: Date | null;
-}
 
 export type GetEvolutionsByPatientResult =
   | { ok: true; evolutions: EvolutionSummary[]; nextCursor: string | null }

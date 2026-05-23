@@ -13,6 +13,7 @@ import {
 } from '@stream-io/video-react-sdk';
 import { useEffect, useMemo, useState } from 'react';
 
+import type { CreateEvolutionInput, EvolutionSummary } from '@/modules/medical-records/client';
 import type { EndVideoSessionResult } from '@/modules/telepsicologia';
 import type { Session } from '@/shared/db/schema/agenda/tables';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
@@ -46,6 +47,15 @@ export interface VideoCallClientProps {
   onEndSession: (roomId: string) => Promise<EndVideoSessionResult>;
   /** Server Action: admit a patient into the video room (updates DB status). */
   onAdmitPatient: (roomId: string) => Promise<{ ok: boolean }>;
+  /** Recent evolution summaries for the prontuario drawer (pre-fetched). */
+  recentEvolutions: EvolutionSummary[];
+  /** Server Action: create a new evolution for the patient. */
+  onCreateEvolution: (input: CreateEvolutionInput) => Promise<{ ok: boolean; id?: string }>;
+  /** Server Action: update an existing evolution's content. */
+  onUpdateEvolution: (input: {
+    evolutionId: string;
+    content: Record<string, unknown>;
+  }) => Promise<{ ok: boolean }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +67,22 @@ function CallStateRouter({
   room,
   onEndSession,
   onAdmitPatient,
-}: Pick<VideoCallClientProps, 'patient' | 'room' | 'onEndSession' | 'onAdmitPatient'>) {
+  currentUser,
+  recentEvolutions,
+  onCreateEvolution,
+  onUpdateEvolution,
+}: Pick<
+  VideoCallClientProps,
+  | 'patient'
+  | 'room'
+  | 'onEndSession'
+  | 'onAdmitPatient'
+  | 'recentEvolutions'
+  | 'onCreateEvolution'
+  | 'onUpdateEvolution'
+> & {
+  currentUser: { id: string; name: string };
+}) {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
 
@@ -72,6 +97,10 @@ function CallStateRouter({
         room={room}
         onEndSession={onEndSession}
         onAdmitPatient={onAdmitPatient}
+        currentUser={currentUser}
+        recentEvolutions={recentEvolutions}
+        onCreateEvolution={onCreateEvolution}
+        onUpdateEvolution={onUpdateEvolution}
       />
     );
   }
@@ -96,6 +125,9 @@ export default function VideoCallClient({
   room,
   onEndSession,
   onAdmitPatient,
+  recentEvolutions,
+  onCreateEvolution,
+  onUpdateEvolution,
 }: VideoCallClientProps) {
   const [client, setClient] = useState<StreamVideoClient>();
 
@@ -153,6 +185,10 @@ export default function VideoCallClient({
             room={room}
             onEndSession={onEndSession}
             onAdmitPatient={onAdmitPatient}
+            currentUser={user}
+            recentEvolutions={recentEvolutions}
+            onCreateEvolution={onCreateEvolution}
+            onUpdateEvolution={onUpdateEvolution}
           />
         </StreamCall>
       </StreamVideo>

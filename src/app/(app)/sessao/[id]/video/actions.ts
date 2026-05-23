@@ -8,6 +8,12 @@
 // Server Action RPC stub.
 
 import type {
+  CreateEvolutionInput,
+  CreateEvolutionResult,
+  UpdateEvolutionResult,
+} from '@/modules/medical-records';
+import { createEvolutionImpl, updateEvolutionImpl } from '@/modules/medical-records';
+import type {
   AdmitPatientResult,
   CreateVideoRoomResult,
   EndVideoSessionResult,
@@ -39,4 +45,21 @@ export async function endVideoSession(roomId: string): Promise<EndVideoSessionRe
 export async function admitPatient(roomId: string): Promise<AdmitPatientResult> {
   const supabase = await createServerClient();
   return admitPatientImpl(supabase, { room_id: roomId });
+}
+
+// ---------------------------------------------------------------------------
+// Medical records — evolution CRUD (used by prontuario drawer during call)
+// ---------------------------------------------------------------------------
+
+export async function createEvolution(input: CreateEvolutionInput): Promise<CreateEvolutionResult> {
+  const supabase = await createServerClient();
+  return createEvolutionImpl(supabase, input);
+}
+
+export async function updateEvolution(input: {
+  evolutionId: string;
+  content: Record<string, unknown>;
+}): Promise<UpdateEvolutionResult> {
+  const supabase = await createServerClient();
+  return updateEvolutionImpl(supabase, input);
 }

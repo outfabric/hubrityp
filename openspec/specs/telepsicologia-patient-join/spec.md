@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Patient-facing video session join flow for telepsychology: public token-gated route for patients to join video calls without authentication, time-gating to prevent early access, waiting room with psychologist info, minimal in-call UI, disconnection on session end, Route Handlers for token validation and event logging, browser compatibility check, and couple session partner token support.
+Patient-facing video session join flow for telepsychology: public token-gated route for patients to join video calls without authentication, time-gating to prevent early access, waiting room with psychologist info, in-call UI with chat and troubleshooting, disconnection on session end, Route Handlers for token validation and event logging, browser compatibility check, and couple session partner token support.
 
 ## Requirements
 
@@ -43,8 +43,8 @@ When the patient is in the waiting room (room status='pending'), the page SHALL 
 - **WHEN** the room status changes from 'pending' to 'active' while the patient is waiting
 - **THEN** the patient transitions to the in-call view
 
-### Requirement: Patient in-call UI is clean and minimal
-During an active call, the patient SHALL see the psychologist's video as the main view, their own video as a small PiP, and controls for mic, camera, and "Sair" (leave). The patient SHALL NOT have screen sharing capability.
+### Requirement: Patient in-call view includes chat and troubleshooting
+The patient's in-call view SHALL include a chat drawer toggle button and a "Problema tecnico?" troubleshooting button, in addition to mic, camera, and leave controls.
 
 #### Scenario: Patient sees psychologist video
 - **WHEN** the patient is connected to the call
@@ -53,6 +53,14 @@ During an active call, the patient SHALL see the psychologist's video as the mai
 #### Scenario: Patient cannot share screen
 - **WHEN** the patient views their call controls
 - **THEN** no screen share button is present
+
+#### Scenario: Patient accesses chat during call
+- **WHEN** the patient clicks the chat toggle
+- **THEN** the chat drawer opens, allowing the patient to send and receive messages
+
+#### Scenario: Patient accesses troubleshooting
+- **WHEN** the patient clicks "Problema tecnico?"
+- **THEN** a popover with troubleshooting steps is displayed
 
 ### Requirement: Patient is disconnected when psychologist ends call
 When the psychologist ends the session, the patient SHALL be disconnected and shown a "Sessao encerrada" message with the psychologist's name.

@@ -9,14 +9,19 @@ import {
   StreamCall,
   StreamVideo,
   StreamVideoClient,
+  useCall,
   useCallStateHooks,
 } from '@stream-io/video-react-sdk';
-import { Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
+import { MessageSquare, Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/shared/ui/button';
 
+import type { ChatCustomEventPayload } from '../lib/chat-types';
+
+import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
+import { TroubleshootingPopover } from './troubleshooting-popover';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -81,10 +86,22 @@ function logVideoEvent(videoToken: string, eventType: 'patient_joined' | 'patien
 }
 
 // ---------------------------------------------------------------------------
-// Inner: call controls (simplified patient bar — no screen share, no chat)
+// Inner: call controls (simplified patient bar — no screen share, has chat)
 // ---------------------------------------------------------------------------
 
-function PatientCallControls({ onLeave }: { onLeave: () => void }) {
+function PatientCallControls({
+  onLeave,
+  isChatOpen,
+  onChatToggle,
+  hasUnreadMessages,
+  psychologistName,
+}: {
+  onLeave: () => void;
+  isChatOpen: boolean;
+  onChatToggle: () => void;
+  hasUnreadMessages: boolean;
+  psychologistName: string | null;
+}) {
   const { useMicrophoneState, useCameraState } = useCallStateHooks();
   const { microphone, isMute: isMicMuted } = useMicrophoneState();
   const { camera, isMute: isCameraMuted } = useCameraState();
@@ -131,6 +148,30 @@ function PatientCallControls({ onLeave }: { onLeave: () => void }) {
         )}
       </Button>
 
+      {/* Chat toggle */}
+      <div className="relative">
+        <Button
+          variant={isChatOpen ? 'outline' : 'ghost'}
+          size="icon"
+          aria-label={isChatOpen ? 'Fechar chat' : 'Abrir chat'}
+          onClick={onChatToggle}
+          data-testid="patient-chat-toggle-button"
+        >
+          <MessageSquare className="h-5 w-5" aria-hidden="true" />
+        </Button>
+        {/* Unread dot — danger-500, 8px, top-right corner */}
+        {hasUnreadMessages && !isChatOpen && (
+          <span
+            className="bg-danger-500 absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
+            aria-label="Mensagens nao lidas"
+            data-testid="patient-chat-unread-badge"
+          />
+        )}
+      </div>
+
+      {/* Troubleshooting help — patient view (includes psychologist name) */}
+      <TroubleshootingPopover psychologistName={psychologistName} />
+
       {/* Leave call — danger button */}
       <Button
         variant="destructive"
@@ -149,11 +190,53 @@ function PatientCallControls({ onLeave }: { onLeave: () => void }) {
 // Inner: call state router — observes CallingState to detect call end
 // ---------------------------------------------------------------------------
 
-function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded: () => void }) {
+function PatientCallContent({
+  token,
+  onCallEnded,
+  psychologistName,
+}: {
+  token: string;
+  onCallEnded: () => void;
+  psychologistName: string | null;
+}) {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
+  const call = useCall();
   const hasLoggedJoin = useRef(false);
   const hasLoggedLeave = useRef(false);
+
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+
+  // Track whether drawer is open via ref for the event listener
+  const isChatOpenRef = useRef(isChatOpen);
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
+  // Patient user info for chat — always "Paciente" (no PII)
+  const currentUser = useMemo(() => {
+    if (!call) return { id: 'patient-unknown', name: 'Paciente' };
+    // The call's current user id is set from the JWT
+    return { id: call.currentUserId ?? 'patient-unknown', name: 'Paciente' };
+  }, [call]);
+
+  // Listen for incoming chat messages to set unread indicator
+  useEffect(() => {
+    if (!call) return;
+
+    const unsubscribe = call.on('custom', (event) => {
+      const payload = event.custom as Partial<ChatCustomEventPayload> | undefined;
+      if (!payload || payload.type !== 'chat-message') return;
+
+      // Only mark unread if drawer is closed and message is not from self
+      if (!isChatOpenRef.current && payload.senderId !== currentUser.id) {
+        setHasUnreadMessages(true);
+      }
+    });
+
+    return unsubscribe;
+  }, [call, currentUser.id]);
 
   // Log patient_joined when call is JOINED
   useEffect(() => {
@@ -184,6 +267,15 @@ function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded
     onCallEnded();
   }, [token, onCallEnded]);
 
+  const handleChatToggle = useCallback(() => {
+    setIsChatOpen((prev) => {
+      const next = !prev;
+      // Clear unread when opening the drawer
+      if (next) setHasUnreadMessages(false);
+      return next;
+    });
+  }, []);
+
   if (callingState !== CallingState.JOINED && callingState !== CallingState.JOINING) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -207,7 +299,26 @@ function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded
       </div>
 
       {/* Controls bar — bottom */}
-      <PatientCallControls onLeave={handleLeave} />
+      <PatientCallControls
+        onLeave={handleLeave}
+        isChatOpen={isChatOpen}
+        onChatToggle={handleChatToggle}
+        hasUnreadMessages={hasUnreadMessages}
+        psychologistName={psychologistName}
+      />
+
+      {/* Chat drawer */}
+      {call && (
+        <ChatDrawer
+          open={isChatOpen}
+          onOpenChange={(nextOpen) => {
+            setIsChatOpen(nextOpen);
+            if (nextOpen) setHasUnreadMessages(false);
+          }}
+          call={call}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }
@@ -220,7 +331,7 @@ function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded
 // it matches the claim (see extractUserIdFromJwt).
 //
 // Layout: psychologist video large (~75% viewport), patient PiP
-// bottom-right via SpeakerLayout. Simplified controls (mic, camera, leave).
+// bottom-right via SpeakerLayout. Controls (mic, camera, chat, leave).
 // ConnectionQualityIndicator reused from the psychologist call view.
 // No elapsed time. Logs patient_joined/patient_left via /api/video/log.
 // ---------------------------------------------------------------------------
@@ -229,9 +340,7 @@ export function PatientInCallView({
   streamToken,
   apiKey,
   callId,
-  // Accepted for interface consistency — patient display name in the call
-  // is always "Paciente" (no PII in the video stream).
-  psychologistName: _psychologistName, // eslint-disable-line @typescript-eslint/no-unused-vars
+  psychologistName,
   token,
   onCallEnded,
 }: PatientInCallViewProps) {
@@ -306,7 +415,11 @@ export function PatientInCallView({
     <div className="isolate h-full">
       <StreamVideo client={client}>
         <StreamCall call={call}>
-          <PatientCallContent token={token} onCallEnded={onCallEnded} />
+          <PatientCallContent
+            token={token}
+            onCallEnded={onCallEnded}
+            psychologistName={psychologistName}
+          />
         </StreamCall>
       </StreamVideo>
     </div>

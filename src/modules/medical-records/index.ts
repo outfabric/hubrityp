@@ -303,6 +303,11 @@ export {
   type SectionConfig,
 } from './lib/document-type-config';
 
+// ---- Evolution Components (Client Components) --------------------------------
+export { EvolutionEditor } from './components/evolution-editor';
+export { AutoSaveIndicator } from './components/auto-save-indicator';
+export { TemplateSelector } from './components/template-selector';
+
 // ---- Document Components (Client Components) --------------------------------
 export { DocumentsEmptyState } from './components/documents-empty-state';
 export { DocumentCard, type DocumentCardData } from './components/document-card';
