@@ -13,6 +13,7 @@ import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-rem
 import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/export-pdf';
 import { generateDocumentPdf } from '@/modules/medical-records/inngest/generate-document-pdf';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
+import { autoCreateVideoRoom } from '@/modules/telepsicologia/inngest/auto-create-room';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
 import { inngest } from '@/modules/whatsapp/inngest/client';
 import { confirmationAckSender } from '@/modules/whatsapp/inngest/confirmation-ack-sender';
@@ -43,5 +44,6 @@ export const { GET, POST, PUT } = serve({
     generateDocumentPdf,
     prontuarioExportPdfFunction,
     expireProntuarioExportsCron,
+    autoCreateVideoRoom,
   ],
 });
