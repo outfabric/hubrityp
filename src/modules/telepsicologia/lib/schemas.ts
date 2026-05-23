@@ -41,6 +41,30 @@ export const videoTokenInputSchema = z.object({
 
 export type VideoTokenInput = z.infer<typeof videoTokenInputSchema>;
 
+/**
+ * Input for toggling recording on a video room. The caller provides the
+ * room ID and action; ownership + consent are verified server-side.
+ */
+export const toggleRecordingInputSchema = z.object({
+  room_id: z.string().uuid({ message: 'room_id must be a valid UUID.' }),
+  action: z.enum(['start', 'stop'], {
+    message: "action must be 'start' or 'stop'.",
+  }),
+});
+
+export type ToggleRecordingInput = z.infer<typeof toggleRecordingInputSchema>;
+export type ToggleRecordingAction = ToggleRecordingInput['action'];
+
+/**
+ * Input for extending a video session. The caller provides the room ID;
+ * ownership and status are verified server-side.
+ */
+export const extendSessionInputSchema = z.object({
+  room_id: z.string().uuid({ message: 'room_id must be a valid UUID.' }),
+});
+
+export type ExtendSessionInput = z.infer<typeof extendSessionInputSchema>;
+
 // The canonical `VideoRoom` type is the Drizzle `$inferSelect` type from
 // `@/shared/db/schema/telepsicologia/tables`. It is NOT re-exported from
 // this file to avoid a naming collision (Drizzle uses camelCase, Zod

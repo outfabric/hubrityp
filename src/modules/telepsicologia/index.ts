@@ -29,7 +29,9 @@ export {
   type SessionData as VideoRoomSessionData,
 } from './server/create-video-room-helper';
 export { endVideoSessionImpl, type EndVideoSessionResult } from './server/end-video-session';
+export { extendSessionImpl, type ExtendSessionResult } from './server/extend-session';
 export { getVideoTokenImpl, type GetVideoTokenResult } from './server/get-video-token';
+export { toggleRecordingImpl, type ToggleRecordingResult } from './server/toggle-recording';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
@@ -37,6 +39,11 @@ export {
   type VideoRoomInput,
   videoTokenInputSchema,
   type VideoTokenInput,
+  toggleRecordingInputSchema,
+  type ToggleRecordingInput,
+  type ToggleRecordingAction,
+  extendSessionInputSchema,
+  type ExtendSessionInput,
   VIDEO_ROOM_STATUSES,
   type VideoRoomStatus,
 } from './lib/schemas';
