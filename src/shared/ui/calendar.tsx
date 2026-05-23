@@ -25,16 +25,24 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
       classNames={{
         months: 'flex flex-col sm:flex-row gap-2',
         month: 'flex flex-col gap-4',
+        // The caption label is centred between the nav buttons by
+        // making the caption a flex row that absorbs residual space.
         month_caption: 'flex justify-center pt-1 relative items-center',
         caption_label: 'text-sm font-medium',
-        nav: 'flex items-center gap-1',
+        // Nav uses a normal flex row (no absolute positioning) so the
+        // buttons participate in document flow. This prevents z-index
+        // overlap between nav buttons and the day grid — the original
+        // absolute + z-10 approach made right-edge (Saturday) and
+        // left-edge (Sunday) day cells unclickable when the nav
+        // button box extended into the grid area.
+        nav: 'flex items-center justify-between w-full',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute left-1 z-10 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute right-1 z-10 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100',
         ),
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',

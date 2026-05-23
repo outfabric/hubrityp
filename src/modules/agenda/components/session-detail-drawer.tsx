@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Building2, Calendar, Clock, Pencil, Repeat, Trash2, Video, X } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -587,6 +588,17 @@ export function SessionDetailDrawer({
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {/* Start video button — only for online sessions that can still be joined */}
+              {session.modality === 'online' &&
+                (sessionStatus === 'scheduled' || sessionStatus === 'confirmed') && (
+                  <Button variant="secondary" asChild data-testid="start-video-button">
+                    <Link href={`/sessao/${session.id}/video`}>
+                      <Video className="h-4 w-4" aria-hidden="true" />
+                      Iniciar video
+                    </Link>
+                  </Button>
+                )}
+
               {/* Edit and recurring cancel buttons */}
               <div className="flex items-center justify-end gap-3">
                 <Button
