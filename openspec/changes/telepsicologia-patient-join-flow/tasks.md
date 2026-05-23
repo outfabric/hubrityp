@@ -31,8 +31,8 @@
 
 ## 6. Unit tests
 
-- [ ] 6.1 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/patient-video-page.test.tsx` — mock fetch. Tests: renders too-early view when status='too_early', renders waiting room when status='waiting', renders in-call when status='active', renders ended view when status='ended', handles 404 from API (invalid token), handles network error gracefully
-- [ ] 6.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/browser-check.test.tsx` — mock navigator. Tests: renders children when WebRTC supported, shows incompatible message when not supported
+- [x] 6.1 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/patient-video-page.test.tsx` — mock fetch. Tests: renders too-early view when status='too_early', renders waiting room when status='waiting', renders in-call when status='active', renders ended view when status='ended', handles 404 from API (invalid token), handles network error gracefully
+- [x] 6.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/browser-check.test.tsx` — mock navigator. Tests: renders children when WebRTC supported, shows incompatible message when not supported
 
 ## 7. E2E test
 
