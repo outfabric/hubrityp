@@ -66,6 +66,7 @@ export { DeviceTest } from './components/device-test';
 export { ChatDrawer } from './components/chat-drawer';
 export { ChatMessageList } from './components/chat-message-list';
 export { ChatInput } from './components/chat-input';
+export { MAX_CHAT_MESSAGE_LENGTH } from './lib/chat-types';
 export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
 
 // in-call prontuario

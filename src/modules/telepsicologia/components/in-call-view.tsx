@@ -4,6 +4,7 @@ import { SpeakerLayout, useCall, useCallStateHooks } from '@stream-io/video-reac
 import { UserCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { CreateEvolutionInput, EvolutionSummary } from '@/modules/medical-records/client';
 import type { EndVideoSessionResult } from '@/modules/telepsicologia';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Badge } from '@/shared/ui/badge';
@@ -15,6 +16,7 @@ import { CallControlBar } from './call-control-bar';
 import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
 import { ElapsedTime } from './elapsed-time';
+import { ProntuarioCallDrawer } from './prontuario-call-drawer';
 import { ScreenShareIndicator } from './screen-share-indicator';
 
 // ---------------------------------------------------------------------------
@@ -28,6 +30,15 @@ interface InCallViewProps {
   onAdmitPatient: (roomId: string) => Promise<{ ok: boolean }>;
   /** Authenticated psychologist's user info for chat. */
   currentUser: { id: string; name: string };
+  /** Recent evolution summaries for the prontuario drawer (pre-fetched). */
+  recentEvolutions: EvolutionSummary[];
+  /** Server Action: create a new evolution for the patient. */
+  onCreateEvolution: (input: CreateEvolutionInput) => Promise<{ ok: boolean; id?: string }>;
+  /** Server Action: update an existing evolution's content. */
+  onUpdateEvolution: (input: {
+    evolutionId: string;
+    content: Record<string, unknown>;
+  }) => Promise<{ ok: boolean }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -44,6 +55,9 @@ export function InCallView({
   onEndSession,
   onAdmitPatient,
   currentUser,
+  recentEvolutions,
+  onCreateEvolution,
+  onUpdateEvolution,
 }: InCallViewProps) {
   const { useParticipantCount } = useCallStateHooks();
   const participantCount = useParticipantCount();
@@ -52,6 +66,7 @@ export function InCallView({
   const [isAdmitting, setIsAdmitting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [isProntuarioOpen, setIsProntuarioOpen] = useState(false);
 
   // Track whether drawer is open via ref for the event listener
   const isChatOpenRef = useRef(isChatOpen);
@@ -107,6 +122,10 @@ export function InCallView({
     });
   }, []);
 
+  const handleProntuarioToggle = useCallback(() => {
+    setIsProntuarioOpen((prev) => !prev);
+  }, []);
+
   return (
     <div className="relative flex h-full flex-col">
       {/* Top overlay bar */}
@@ -160,6 +179,9 @@ export function InCallView({
         isChatOpen={isChatOpen}
         onChatToggle={handleChatToggle}
         hasUnreadMessages={hasUnreadMessages}
+        isPsychologist={true}
+        isProntuarioOpen={isProntuarioOpen}
+        onProntuarioToggle={patient ? handleProntuarioToggle : undefined}
       />
 
       {/* Chat drawer */}
@@ -172,6 +194,19 @@ export function InCallView({
           }}
           call={call}
           currentUser={currentUser}
+        />
+      )}
+
+      {/* Prontuario drawer — psychologist only (InCallView is psychologist-only) */}
+      {patient && (
+        <ProntuarioCallDrawer
+          open={isProntuarioOpen}
+          onOpenChange={setIsProntuarioOpen}
+          patientId={patient.id}
+          patientName={patient.fullName}
+          recentEvolutions={recentEvolutions}
+          onCreateEvolution={onCreateEvolution}
+          onUpdateEvolution={onUpdateEvolution}
         />
       )}
     </div>

@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
 
-import type { ChatCustomEventPayload, ChatMessage } from '../lib/chat-types';
+import {
+  type ChatCustomEventPayload,
+  type ChatMessage,
+  MAX_CHAT_MESSAGE_LENGTH,
+} from '../lib/chat-types';
 
 import { ChatInput } from './chat-input';
 import { ChatMessageList } from './chat-message-list';
@@ -63,13 +67,17 @@ export function ChatDrawer({ open, onOpenChange, call, currentUser }: ChatDrawer
 
   const handleSend = useCallback(
     (text: string) => {
+      // Safety cap — defense-in-depth alongside the maxLength on the input element
+      const capped = text.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
+      if (!capped) return;
+
       const id = crypto.randomUUID();
       const timestamp = new Date().toISOString();
 
       const payload: ChatCustomEventPayload = {
         type: 'chat-message',
         id,
-        text,
+        text: capped,
         senderId: currentUser.id,
         senderName: currentUser.name,
         timestamp,
@@ -78,7 +86,7 @@ export function ChatDrawer({ open, onOpenChange, call, currentUser }: ChatDrawer
       // Optimistically add the message to local state
       const localMessage: ChatMessage = {
         id,
-        text,
+        text: capped,
         senderId: currentUser.id,
         senderName: currentUser.name,
         timestamp,

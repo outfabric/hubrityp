@@ -245,4 +245,24 @@ describe('ChatDrawer', () => {
 
     expect(mockSendCustomEvent).not.toHaveBeenCalled();
   });
+
+  it('caps oversized messages at MAX_CHAT_MESSAGE_LENGTH', async () => {
+    const user = userEvent.setup();
+    renderDrawer({ open: true });
+
+    const input = screen.getByPlaceholderText(/mensagem/i);
+    const oversized = 'a'.repeat(3000);
+
+    await user.click(input);
+    // Paste directly — bypasses HTML maxLength which is browser-enforced
+    await user.paste(oversized);
+    await user.click(screen.getByTestId('chat-send-button'));
+
+    await waitFor(() => {
+      expect(mockSendCustomEvent).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = mockSendCustomEvent.mock.calls[0]![0] as { text: string };
+    expect(payload.text.length).toBeLessThanOrEqual(2000);
+  });
 });

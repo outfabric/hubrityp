@@ -7,6 +7,13 @@
  */
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Hard cap on chat message length to prevent oversized Stream custom event payloads. */
+export const MAX_CHAT_MESSAGE_LENGTH = 2_000;
+
+// ---------------------------------------------------------------------------
 // ChatMessage — a single ephemeral message in the call chat
 // ---------------------------------------------------------------------------
 

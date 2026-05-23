@@ -6,6 +6,8 @@ import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 
+import { MAX_CHAT_MESSAGE_LENGTH } from '../lib/chat-types';
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -57,6 +59,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
         aria-label="Mensagem do chat"
         data-testid="chat-input-field"
         autoComplete="off"
+        maxLength={MAX_CHAT_MESSAGE_LENGTH}
       />
       <Button
         variant="ghost"
