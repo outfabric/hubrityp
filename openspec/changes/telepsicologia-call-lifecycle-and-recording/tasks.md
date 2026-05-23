@@ -15,8 +15,8 @@
 
 ## 4. Inngest cron — recording cleanup
 
-- [ ] 4.1 Create `src/modules/telepsicologia/inngest/recording-cleanup.ts` — Inngest cron `0 * * * *` (hourly). Steps: (1) query video_recordings WHERE status IN ('processing', 'transcribed') AND recorded_at < NOW() - INTERVAL '24 hours', (2) for each: UPDATE status='discarded', discarded_at=NOW(), audio_temp_url=NULL, (3) log count of discarded recordings (metadata only, no PII)
-- [ ] 4.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/recording-cleanup.int.test.ts` — tests: recording older than 24h is discarded, recording younger than 24h is skipped, recording with status='idle' is skipped, discarded recording has audio_temp_url set to null
+- [x] 4.1 Create `src/modules/telepsicologia/inngest/recording-cleanup.ts` — Inngest cron `0 * * * *` (hourly). Steps: (1) query video_recordings WHERE status IN ('processing', 'transcribed') AND recorded_at < NOW() - INTERVAL '24 hours', (2) for each: UPDATE status='discarded', discarded_at=NOW(), audio_temp_url=NULL, (3) log count of discarded recordings (metadata only, no PII)
+- [x] 4.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/recording-cleanup.int.test.ts` — tests: recording older than 24h is discarded, recording younger than 24h is skipped, recording with status='idle' is skipped, discarded recording has audio_temp_url set to null
 
 ## 5. Stream webhook handler
 
