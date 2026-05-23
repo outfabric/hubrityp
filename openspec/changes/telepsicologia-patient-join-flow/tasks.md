@@ -40,4 +40,4 @@
 
 ## 8. Module barrel update
 
-- [ ] 8.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for patient components (PatientVideoPage, BrowserCheck, TooEarlyView, WaitingRoomView, PatientInCallView, SessionEndedView, DeviceTest)
+- [x] 8.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for patient components (PatientVideoPage, BrowserCheck, TooEarlyView, WaitingRoomView, PatientInCallView, SessionEndedView, DeviceTest)

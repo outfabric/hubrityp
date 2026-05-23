@@ -53,5 +53,13 @@ export { ConnectionQualityIndicator } from './components/connection-quality-indi
 export { ElapsedTime } from './components/elapsed-time';
 export { PatientVideoPage } from './components/patient-video-page';
 
+// patient join flow
+export { BrowserCheck } from './components/browser-check';
+export { TooEarlyView } from './components/too-early-view';
+export { WaitingRoomView } from './components/waiting-room-view';
+export { PatientInCallView } from './components/patient-in-call-view';
+export { SessionEndedView } from './components/session-ended-view';
+export { DeviceTest } from './components/device-test';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';
