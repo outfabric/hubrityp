@@ -11,7 +11,7 @@ import {
   TEMPLATE_OPTIONS,
   TemplateSelector,
   type TemplateType,
-} from '@/modules/medical-records';
+} from '@/modules/medical-records/client';
 import { Button } from '@/shared/ui/button';
 
 // ---------------------------------------------------------------------------

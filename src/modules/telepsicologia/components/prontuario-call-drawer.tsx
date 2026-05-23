@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
-import type { CreateEvolutionInput, EvolutionSummary } from '@/modules/medical-records';
+import type { CreateEvolutionInput, EvolutionSummary } from '@/modules/medical-records/client';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
 
 import { ProntuarioCallContent } from './prontuario-call-content';
