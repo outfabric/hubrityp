@@ -57,7 +57,10 @@ function CallStateRouter({
   room,
   onEndSession,
   onAdmitPatient,
-}: Pick<VideoCallClientProps, 'patient' | 'room' | 'onEndSession' | 'onAdmitPatient'>) {
+  currentUser,
+}: Pick<VideoCallClientProps, 'patient' | 'room' | 'onEndSession' | 'onAdmitPatient'> & {
+  currentUser: { id: string; name: string };
+}) {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
 
@@ -72,6 +75,7 @@ function CallStateRouter({
         room={room}
         onEndSession={onEndSession}
         onAdmitPatient={onAdmitPatient}
+        currentUser={currentUser}
       />
     );
   }
@@ -153,6 +157,7 @@ export default function VideoCallClient({
             room={room}
             onEndSession={onEndSession}
             onAdmitPatient={onAdmitPatient}
+            currentUser={user}
           />
         </StreamCall>
       </StreamVideo>

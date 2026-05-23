@@ -61,5 +61,11 @@ export { PatientInCallView } from './components/patient-in-call-view';
 export { SessionEndedView } from './components/session-ended-view';
 export { DeviceTest } from './components/device-test';
 
+// in-call chat
+export { ChatDrawer } from './components/chat-drawer';
+export { ChatMessageList } from './components/chat-message-list';
+export { ChatInput } from './components/chat-input';
+export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

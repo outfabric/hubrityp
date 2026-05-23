@@ -21,17 +21,29 @@ import { EndCallDialog } from './end-call-dialog';
 interface CallControlBarProps {
   room: VideoRoom;
   onEndSession: (roomId: string) => Promise<EndVideoSessionResult>;
+  /** Whether the chat drawer is currently open. */
+  isChatOpen: boolean;
+  /** Toggle the chat drawer open/close. */
+  onChatToggle: () => void;
+  /** Whether there are unread chat messages (drawer was closed when they arrived). */
+  hasUnreadMessages: boolean;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 //
-// Bottom controls bar with mic, camera, screen share, chat (placeholder),
+// Bottom controls bar with mic, camera, screen share, chat toggle,
 // and end call button. Uses Stream SDK's built-in toggle buttons for
 // mic/camera/screen share and a custom end call button with confirmation.
 // ---------------------------------------------------------------------------
 
-export function CallControlBar({ room, onEndSession }: CallControlBarProps) {
+export function CallControlBar({
+  room,
+  onEndSession,
+  isChatOpen,
+  onChatToggle,
+  hasUnreadMessages,
+}: CallControlBarProps) {
   const [showEndDialog, setShowEndDialog] = useState(false);
 
   return (
@@ -50,16 +62,26 @@ export function CallControlBar({ room, onEndSession }: CallControlBarProps) {
         {/* Screen share — psychologist only (always shown for the host) */}
         <ScreenShareButton caption="Compartilhar tela" />
 
-        {/* Chat toggle — placeholder for change 4 */}
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Abrir chat"
-          disabled
-          title="Chat (em breve)"
-        >
-          <MessageSquare className="h-5 w-5" aria-hidden="true" />
-        </Button>
+        {/* Chat toggle */}
+        <div className="relative">
+          <Button
+            variant={isChatOpen ? 'outline' : 'ghost'}
+            size="icon"
+            aria-label={isChatOpen ? 'Fechar chat' : 'Abrir chat'}
+            onClick={onChatToggle}
+            data-testid="chat-toggle-button"
+          >
+            <MessageSquare className="h-5 w-5" aria-hidden="true" />
+          </Button>
+          {/* Unread dot — danger-500, 8px, top-right corner */}
+          {hasUnreadMessages && !isChatOpen && (
+            <span
+              className="bg-danger-500 absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
+              aria-label="Mensagens nao lidas"
+              data-testid="chat-unread-badge"
+            />
+          )}
+        </div>
 
         {/* End call — danger button */}
         <Button
