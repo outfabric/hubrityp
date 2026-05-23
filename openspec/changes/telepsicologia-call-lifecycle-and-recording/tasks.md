@@ -51,8 +51,8 @@
 
 ## 10. Inngest serve handler registration
 
-- [ ] 10.1 Update `src/app/api/inngest/route.ts` — register all new Inngest functions: auto-create-room, room-expiry, recording-cleanup
+- [x] 10.1 Update `src/app/api/inngest/route.ts` — register all new Inngest functions: auto-create-room, room-expiry, recording-cleanup
 
 ## 11. Module barrel update
 
-- [ ] 11.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for: toggleRecording, extendSession, getOnlineSessionStats, RecordingControls, captureSessionMetadata, createVideoRoomHelper, Inngest function references
+- [x] 11.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for: toggleRecording, extendSession, getOnlineSessionStats, RecordingControls, captureSessionMetadata, createVideoRoomHelper, Inngest function references

@@ -103,5 +103,10 @@ export { RecordingControls } from './components/recording-controls';
 // in-call troubleshooting
 export { TroubleshootingPopover } from './components/troubleshooting-popover';
 
+// ---- Inngest functions -------------------------------------------------------
+export { autoCreateVideoRoom } from './inngest/auto-create-room';
+export { roomExpiryCron } from './inngest/room-expiry';
+export { recordingCleanupCron } from './inngest/recording-cleanup';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';
