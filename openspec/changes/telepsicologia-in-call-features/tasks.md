@@ -22,9 +22,9 @@
 
 ## 4. Troubleshooting help panel
 
-- [ ] 4.1 Create `src/modules/telepsicologia/components/troubleshooting-popover.tsx` — `'use client'` component. shadcn Popover triggered by HelpCircle icon (ghost button). Max-width 320px. Content: numbered list of troubleshooting steps in body-sm text-secondary. Steps: (1) Verifique mic/camera no navegador, (2) Saia e volte pelo mesmo link, (3) Use Chrome ou Firefox, (4) Contate seu psicologo. For patient view: step 4 includes psychologist name. Static content, no API calls
-- [ ] 4.2 Add troubleshooting button to both psychologist and patient CallControlBar / controls
-- [ ] 4.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/troubleshooting-popover.test.tsx` — tests: popover opens on click, contains troubleshooting steps, closes on Escape
+- [x] 4.1 Create `src/modules/telepsicologia/components/troubleshooting-popover.tsx` — `'use client'` component. shadcn Popover triggered by HelpCircle icon (ghost button). Max-width 320px. Content: numbered list of troubleshooting steps in body-sm text-secondary. Steps: (1) Verifique mic/camera no navegador, (2) Saia e volte pelo mesmo link, (3) Use Chrome ou Firefox, (4) Contate seu psicologo. For patient view: step 4 includes psychologist name. Static content, no API calls
+- [x] 4.2 Add troubleshooting button to both psychologist and patient CallControlBar / controls
+- [x] 4.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/troubleshooting-popover.test.tsx` — tests: popover opens on click, contains troubleshooting steps, closes on Escape
 
 ## 5. Connection quality degradation controls
 

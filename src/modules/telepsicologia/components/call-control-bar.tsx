@@ -13,6 +13,7 @@ import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Button } from '@/shared/ui/button';
 
 import { EndCallDialog } from './end-call-dialog';
+import { TroubleshootingPopover } from './troubleshooting-popover';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -104,6 +105,9 @@ export function CallControlBar({
             <FileText className="h-5 w-5" aria-hidden="true" />
           </Button>
         )}
+
+        {/* Troubleshooting help — psychologist view (no psychologist name) */}
+        <TroubleshootingPopover />
 
         {/* End call — danger button */}
         <Button

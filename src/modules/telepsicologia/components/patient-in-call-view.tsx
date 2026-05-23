@@ -21,6 +21,7 @@ import type { ChatCustomEventPayload } from '../lib/chat-types';
 
 import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
+import { TroubleshootingPopover } from './troubleshooting-popover';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -93,11 +94,13 @@ function PatientCallControls({
   isChatOpen,
   onChatToggle,
   hasUnreadMessages,
+  psychologistName,
 }: {
   onLeave: () => void;
   isChatOpen: boolean;
   onChatToggle: () => void;
   hasUnreadMessages: boolean;
+  psychologistName: string | null;
 }) {
   const { useMicrophoneState, useCameraState } = useCallStateHooks();
   const { microphone, isMute: isMicMuted } = useMicrophoneState();
@@ -166,6 +169,9 @@ function PatientCallControls({
         )}
       </div>
 
+      {/* Troubleshooting help — patient view (includes psychologist name) */}
+      <TroubleshootingPopover psychologistName={psychologistName} />
+
       {/* Leave call — danger button */}
       <Button
         variant="destructive"
@@ -184,7 +190,15 @@ function PatientCallControls({
 // Inner: call state router — observes CallingState to detect call end
 // ---------------------------------------------------------------------------
 
-function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded: () => void }) {
+function PatientCallContent({
+  token,
+  onCallEnded,
+  psychologistName,
+}: {
+  token: string;
+  onCallEnded: () => void;
+  psychologistName: string | null;
+}) {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
   const call = useCall();
@@ -290,6 +304,7 @@ function PatientCallContent({ token, onCallEnded }: { token: string; onCallEnded
         isChatOpen={isChatOpen}
         onChatToggle={handleChatToggle}
         hasUnreadMessages={hasUnreadMessages}
+        psychologistName={psychologistName}
       />
 
       {/* Chat drawer */}
@@ -325,9 +340,7 @@ export function PatientInCallView({
   streamToken,
   apiKey,
   callId,
-  // Accepted for interface consistency — patient display name in the call
-  // is always "Paciente" (no PII in the video stream).
-  psychologistName: _psychologistName, // eslint-disable-line @typescript-eslint/no-unused-vars
+  psychologistName,
   token,
   onCallEnded,
 }: PatientInCallViewProps) {
@@ -402,7 +415,11 @@ export function PatientInCallView({
     <div className="isolate h-full">
       <StreamVideo client={client}>
         <StreamCall call={call}>
-          <PatientCallContent token={token} onCallEnded={onCallEnded} />
+          <PatientCallContent
+            token={token}
+            onCallEnded={onCallEnded}
+            psychologistName={psychologistName}
+          />
         </StreamCall>
       </StreamVideo>
     </div>

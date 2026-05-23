@@ -72,5 +72,8 @@ export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
 export { ProntuarioCallDrawer } from './components/prontuario-call-drawer';
 export { ProntuarioCallContent } from './components/prontuario-call-content';
 
+// in-call troubleshooting
+export { TroubleshootingPopover } from './components/troubleshooting-popover';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';
