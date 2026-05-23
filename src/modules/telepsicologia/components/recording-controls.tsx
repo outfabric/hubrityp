@@ -1,11 +1,14 @@
 'use client';
 
+import { useCall } from '@stream-io/video-react-sdk';
 import { Circle } from 'lucide-react';
 import { useCallback, useState, useTransition } from 'react';
 
 import type { ToggleRecordingResult } from '@/modules/telepsicologia';
 import { Button } from '@/shared/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+
+import type { RecordingStateEventPayload } from '../lib/chat-types';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -48,6 +51,7 @@ export function RecordingControls({
 }: RecordingControlsProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const call = useCall();
 
   const handleToggle = useCallback(() => {
     const action = isRecording ? 'stop' : 'start';
@@ -57,7 +61,23 @@ export function RecordingControls({
       const result = await onToggleRecording({ room_id: roomId, action });
 
       if (result.ok) {
-        onRecordingChange?.(!isRecording);
+        const newRecordingState = !isRecording;
+        onRecordingChange?.(newRecordingState);
+
+        // Broadcast recording state to patient via Stream custom event
+        // so the patient's browser can display the recording banner
+        // (LGPD Art. 9 — real-time notification of recording).
+        if (call) {
+          const payload: RecordingStateEventPayload = {
+            type: 'recording-state-changed',
+            isRecording: newRecordingState,
+          };
+          void call.sendCustomEvent(payload).catch(() => {
+            // Best-effort — the banner is a UX enhancement; recording
+            // consent was already validated server-side before the call
+            // to toggleRecording succeeded.
+          });
+        }
       } else {
         // Surface a generic message — no internal details leaked
         const message =
@@ -67,7 +87,7 @@ export function RecordingControls({
         setError(message);
       }
     });
-  }, [isRecording, onToggleRecording, roomId, onRecordingChange]);
+  }, [isRecording, onToggleRecording, roomId, onRecordingChange, call]);
 
   // State 1: disabled — no consent
   if (!hasConsent) {

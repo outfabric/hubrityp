@@ -23,6 +23,7 @@ vi.mock('@stream-io/video-react-sdk', () => ({
   useCall: () => ({
     leave: vi.fn(),
     on: vi.fn().mockReturnValue(vi.fn()),
+    sendCustomEvent: vi.fn().mockResolvedValue(undefined),
     currentUserId: 'patient-test',
   }),
   useCallStateHooks: () => ({
@@ -358,7 +359,7 @@ describe('PatientInCallView — recording banner', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('patient-recording-banner')).toBeInTheDocument();
-      expect(screen.getByText('Esta sessao esta sendo gravada')).toBeInTheDocument();
+      expect(screen.getByText('Esta sessão está sendo gravada')).toBeInTheDocument();
     });
   });
 
@@ -370,6 +371,6 @@ describe('PatientInCallView — recording banner', () => {
     });
 
     expect(screen.queryByTestId('patient-recording-banner')).not.toBeInTheDocument();
-    expect(screen.queryByText('Esta sessao esta sendo gravada')).not.toBeInTheDocument();
+    expect(screen.queryByText('Esta sessão está sendo gravada')).not.toBeInTheDocument();
   });
 });

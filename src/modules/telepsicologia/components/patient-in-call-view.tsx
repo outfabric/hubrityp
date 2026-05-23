@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 
-import type { ChatCustomEventPayload } from '../lib/chat-types';
+import type { ChatCustomEventPayload, RecordingStateEventPayload } from '../lib/chat-types';
 
 import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
@@ -197,7 +197,7 @@ function PatientCallContent({
   token,
   onCallEnded,
   psychologistName,
-  isRecordingActive = false,
+  isRecordingActive: initialRecordingActive = false,
 }: {
   token: string;
   onCallEnded: () => void;
@@ -212,6 +212,9 @@ function PatientCallContent({
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  // Recording state: initialized from the prop, updated in real-time
+  // via Stream custom events from the psychologist's browser.
+  const [isRecording, setIsRecording] = useState(initialRecordingActive);
 
   // Track whether drawer is open via ref for the event listener
   const isChatOpenRef = useRef(isChatOpen);
@@ -226,17 +229,27 @@ function PatientCallContent({
     return { id: call.currentUserId ?? 'patient-unknown', name: 'Paciente' };
   }, [call]);
 
-  // Listen for incoming chat messages to set unread indicator
+  // Listen for incoming custom events: chat messages + recording state changes
   useEffect(() => {
     if (!call) return;
 
     const unsubscribe = call.on('custom', (event) => {
-      const payload = event.custom as Partial<ChatCustomEventPayload> | undefined;
-      if (!payload || payload.type !== 'chat-message') return;
+      const payload = event.custom as
+        | Partial<ChatCustomEventPayload>
+        | Partial<RecordingStateEventPayload>
+        | undefined;
+      if (!payload || !payload.type) return;
 
-      // Only mark unread if drawer is closed and message is not from self
-      if (!isChatOpenRef.current && payload.senderId !== currentUser.id) {
-        setHasUnreadMessages(true);
+      if (payload.type === 'chat-message') {
+        // Only mark unread if drawer is closed and message is not from self
+        if (!isChatOpenRef.current && payload.senderId !== currentUser.id) {
+          setHasUnreadMessages(true);
+        }
+      } else if (payload.type === 'recording-state-changed') {
+        // Update recording banner in real-time (LGPD Art. 9 compliance)
+        if (typeof payload.isRecording === 'boolean') {
+          setIsRecording(payload.isRecording);
+        }
       }
     });
 
@@ -299,10 +312,10 @@ function PatientCallContent({
       </div>
 
       {/* Recording banner — shown when the psychologist is recording */}
-      {isRecordingActive && (
+      {isRecording && (
         <div className="absolute top-0 right-0 left-0 z-10 flex justify-center pt-14">
           <Alert variant="danger" className="max-w-md" data-testid="patient-recording-banner">
-            <AlertDescription>Esta sessao esta sendo gravada</AlertDescription>
+            <AlertDescription>Esta sessão está sendo gravada</AlertDescription>
           </Alert>
         </div>
       )}

@@ -45,3 +45,21 @@ export interface ChatCustomEventPayload {
   senderName: string;
   timestamp: string;
 }
+
+/**
+ * Custom event payload for broadcasting recording state changes from
+ * the psychologist's browser to the patient's browser. Sent via
+ * `call.sendCustomEvent()` whenever the psychologist starts or stops
+ * recording. The patient listens for this event to display the
+ * "session is being recorded" banner (LGPD Art. 9 compliance).
+ */
+export interface RecordingStateEventPayload {
+  type: 'recording-state-changed';
+  isRecording: boolean;
+}
+
+/**
+ * Union of all custom event payloads sent via Stream call custom events.
+ * Used when discriminating the `event.custom` field in listeners.
+ */
+export type CustomEventPayload = ChatCustomEventPayload | RecordingStateEventPayload;

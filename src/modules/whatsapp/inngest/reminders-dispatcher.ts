@@ -13,7 +13,7 @@
  * The dispatcher never calls Twilio directly — it only enqueues events.
  */
 
-import { and, eq, gte, isNull, lte, ne } from 'drizzle-orm';
+import { and, eq, gte, inArray, isNull, lte, ne } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import { generatePatientVideoUrl } from '@/modules/telepsicologia/lib/video-url';
@@ -272,6 +272,37 @@ export async function fetchVideoLink(
   return generatePatientVideoUrl(appUrl, rows[0]!.patientToken);
 }
 
+/**
+ * Batch-fetches patient video URLs for multiple sessions in a single
+ * `WHERE session_id IN (...)` query, eliminating the N+1 pattern when
+ * dispatching reminders for online sessions.
+ *
+ * @returns Map from sessionId to the patient video URL. Sessions without
+ *   a room (auto-creation not yet fired) are absent from the map.
+ */
+export async function fetchVideoLinksBatch(
+  db: DrizzleDb,
+  sessionIds: string[],
+  appUrl: string | undefined,
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (!appUrl || sessionIds.length === 0) return result;
+
+  const rows = await db
+    .select({
+      sessionId: videoRooms.sessionId,
+      patientToken: videoRooms.patientToken,
+    })
+    .from(videoRooms)
+    .where(inArray(videoRooms.sessionId, sessionIds));
+
+  for (const row of rows) {
+    result.set(row.sessionId, generatePatientVideoUrl(appUrl, row.patientToken));
+  }
+
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // Core dispatcher logic (extracted for testing)
 // ---------------------------------------------------------------------------
@@ -307,6 +338,13 @@ export async function dispatchReminders(deps: DispatcherDeps): Promise<{
 
   for (const psych of psychologists) {
     const sessionCandidates = await fetchSessionCandidates(db, psych.userId, now);
+
+    // Pre-fetch video links for all online sessions in a single query
+    // to avoid N+1 sequential DB round-trips inside the loop.
+    const onlineSessionIds = sessionCandidates
+      .filter((s) => (s.modality ?? 'in_person') === 'online')
+      .map((s) => s.id);
+    const videoLinkMap = await fetchVideoLinksBatch(db, onlineSessionIds, appUrl);
 
     const eventsToSend: ReminderSendFanOutEvent[] = [];
 
@@ -377,12 +415,12 @@ export async function dispatchReminders(deps: DispatcherDeps): Promise<{
 
         const sessionValue = session.amount !== null ? parseFloat(session.amount) : null;
 
-        // Populate video link for online sessions by querying video_rooms.
+        // Look up pre-fetched video link for online sessions.
         // Falls back to null when no room exists yet (auto-creation may
         // not have fired) or when APP_URL is not configured.
         const sessionModality = session.modality ?? 'in_person';
         const videoLink =
-          sessionModality === 'online' ? await fetchVideoLink(db, session.id, appUrl) : null;
+          sessionModality === 'online' ? (videoLinkMap.get(session.id) ?? null) : null;
 
         eventsToSend.push({
           name: 'whatsapp/reminder.send',
