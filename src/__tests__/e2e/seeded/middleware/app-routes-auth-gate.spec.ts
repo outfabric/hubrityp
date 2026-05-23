@@ -71,4 +71,16 @@ test.describe('@middleware prontuario auth gate (negative-auth)', () => {
     expect(url.pathname).toBe('/login');
     expect(url.searchParams.get('redirectTo')).toBe(targetPath);
   });
+
+  test('unauthenticated request to /sessao/[id]/video redirects to /login', async ({ page }) => {
+    const targetPath = '/sessao/00000000-0000-4000-8000-000000000099/video';
+
+    await page.goto(targetPath);
+
+    await page.waitForURL('**/login**', { timeout: 10_000 });
+
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('redirectTo')).toBe(targetPath);
+  });
 });
