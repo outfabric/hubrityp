@@ -1,7 +1,7 @@
 ## 1. Middleware — explicit public classification for `/v`
 
-- [ ] 1.1 In `src/middleware.ts:classifyPath()`, add an explicit `'public'` classification for `/v` prefix (same pattern as `/escala`). Comment: "Public patient video join page — token in URL is the auth credential, not a Supabase session"
-- [ ] 1.2 **Integration test:** Create `src/__tests__/integration/middleware/video-join-public.int.test.ts` — verify: GET `/v/some-token` is classified as public (no redirect to login), unauthenticated access passes through
+- [x] 1.1 In `src/middleware.ts:classifyPath()`, add an explicit `'public'` classification for `/v` prefix (same pattern as `/escala`). Comment: "Public patient video join page — token in URL is the auth credential, not a Supabase session"
+- [x] 1.2 **Integration test:** Create `src/__tests__/integration/middleware/video-join-public.int.test.ts` — verify: GET `/v/some-token` is classified as public (no redirect to login), unauthenticated access passes through
 
 ## 2. Route Handler — token validation (`POST /api/video/join`)
 
