@@ -32,8 +32,8 @@
 
 ## 7. WhatsApp video link integration
 
-- [ ] 7.1 Update `src/modules/whatsapp/lib/reminders/select-template-variables.ts` — when kind includes video link (kind='video' or session.modality='online'), query video_rooms for the session and populate `link_video` variable with `generatePatientVideoUrl(baseUrl, room.patient_token)`. If no room exists yet (auto-creation may not have fired), return empty string for link_video (the reminder sender will skip the video template and fall back to the standard reminder)
-- [ ] 7.2 **Unit test:** Update `src/__tests__/unit/modules/whatsapp/lib/reminders/select-template-variables.test.ts` — add test: when video room exists for online session, link_video is populated with correct URL format. When no room exists, link_video is empty
+- [x] 7.1 Update `src/modules/whatsapp/lib/reminders/select-template-variables.ts` — when kind includes video link (kind='video' or session.modality='online'), query video_rooms for the session and populate `link_video` variable with `generatePatientVideoUrl(baseUrl, room.patient_token)`. If no room exists yet (auto-creation may not have fired), return empty string for link_video (the reminder sender will skip the video template and fall back to the standard reminder)
+- [x] 7.2 **Unit test:** Update `src/__tests__/unit/modules/whatsapp/lib/reminders/select-template-variables.test.ts` — add test: when video room exists for online session, link_video is populated with correct URL format. When no room exists, link_video is empty
 
 ## 8. Post-call metadata capture
 

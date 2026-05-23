@@ -52,6 +52,11 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Secret used to verify webhook signatures from Stream Video.
   // Validated with `crypto.timingSafeEqual` in the webhook handler.
   STREAM_WEBHOOK_SECRET: z.string().min(1),
+  // Public-facing application URL (e.g. https://app.hubrityp.com.br).
+  // Used server-side to build absolute URLs for patient-facing links in
+  // WhatsApp messages (video call links, etc.). Optional because local dev
+  // and CI may not have it — features that need it degrade gracefully.
+  APP_URL: z.string().url().optional(),
   // Inngest — chaves provisionadas automaticamente pela Vercel Marketplace
   // Integration em production/preview. Em dev local ficam vazias e o SDK
   // usa o Dev Server local (http://inngest:8288 via docker compose).
