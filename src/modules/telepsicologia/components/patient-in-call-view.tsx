@@ -15,6 +15,7 @@ import {
 import { MessageSquare, Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 
 import type { ChatCustomEventPayload } from '../lib/chat-types';
@@ -36,6 +37,8 @@ interface PatientInCallViewProps {
   token: string;
   /** Called when the call ends (psychologist ends or patient leaves). */
   onCallEnded: () => void;
+  /** Whether the session is currently being recorded by the psychologist. */
+  isRecordingActive?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -194,10 +197,12 @@ function PatientCallContent({
   token,
   onCallEnded,
   psychologistName,
+  isRecordingActive = false,
 }: {
   token: string;
   onCallEnded: () => void;
   psychologistName: string | null;
+  isRecordingActive?: boolean;
 }) {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
@@ -293,6 +298,15 @@ function PatientCallContent({
         </div>
       </div>
 
+      {/* Recording banner — shown when the psychologist is recording */}
+      {isRecordingActive && (
+        <div className="absolute top-0 right-0 left-0 z-10 flex justify-center pt-14">
+          <Alert variant="danger" className="max-w-md" data-testid="patient-recording-banner">
+            <AlertDescription>Esta sessao esta sendo gravada</AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {/* Main video area — SpeakerLayout: psychologist large, patient PiP */}
       <div className="flex-1 overflow-hidden">
         <SpeakerLayout participantsBarPosition="bottom" mirrorLocalParticipantVideo={true} />
@@ -343,6 +357,7 @@ export function PatientInCallView({
   psychologistName,
   token,
   onCallEnded,
+  isRecordingActive = false,
 }: PatientInCallViewProps) {
   const [client, setClient] = useState<StreamVideoClient>();
 
@@ -419,6 +434,7 @@ export function PatientInCallView({
             token={token}
             onCallEnded={onCallEnded}
             psychologistName={psychologistName}
+            isRecordingActive={isRecordingActive}
           />
         </StreamCall>
       </StreamVideo>

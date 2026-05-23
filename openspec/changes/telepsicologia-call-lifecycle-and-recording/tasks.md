@@ -44,10 +44,10 @@
 
 ## 9. Recording UI controls (psychologist side)
 
-- [ ] 9.1 Create `src/modules/telepsicologia/components/recording-controls.tsx` — `'use client'` component. "Gravar sessao" toggle button in CallControlBar. States: disabled (no consent, tooltip "Paciente nao assinou termo de gravacao"), enabled idle (consent valid, "Iniciar gravacao"), recording (red dot + "Gravando" indicator + "Parar gravacao"). Patient sees banner "Esta sessao esta sendo gravada" (RF-09.20). Calls toggleRecording Server Action. If PRD 10 not implemented yet, show "Em breve" (RF-09.22)
-- [ ] 9.2 Update `src/modules/telepsicologia/components/call-control-bar.tsx` — integrate RecordingControls
-- [ ] 9.3 Update `src/modules/telepsicologia/components/patient-in-call-view.tsx` — show "Esta sessao esta sendo gravada" banner (Alert danger-50 + danger-700 text) when room.recording_enabled=true
-- [ ] 9.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/recording-controls.test.tsx` — mock Server Action. Tests: disabled state when no consent (tooltip visible), start recording calls action, recording indicator visible when recording, stop recording calls action, patient banner visible when recording enabled
+- [x] 9.1 Create `src/modules/telepsicologia/components/recording-controls.tsx` — `'use client'` component. "Gravar sessao" toggle button in CallControlBar. States: disabled (no consent, tooltip "Paciente nao assinou termo de gravacao"), enabled idle (consent valid, "Iniciar gravacao"), recording (red dot + "Gravando" indicator + "Parar gravacao"). Patient sees banner "Esta sessao esta sendo gravada" (RF-09.20). Calls toggleRecording Server Action. If PRD 10 not implemented yet, show "Em breve" (RF-09.22)
+- [x] 9.2 Update `src/modules/telepsicologia/components/call-control-bar.tsx` — integrate RecordingControls
+- [x] 9.3 Update `src/modules/telepsicologia/components/patient-in-call-view.tsx` — show "Esta sessao esta sendo gravada" banner (Alert danger-50 + danger-700 text) when room.recording_enabled=true
+- [x] 9.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/recording-controls.test.tsx` — mock Server Action. Tests: disabled state when no consent (tooltip visible), start recording calls action, recording indicator visible when recording, stop recording calls action, patient banner visible when recording enabled
 
 ## 10. Inngest serve handler registration
 
