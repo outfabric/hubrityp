@@ -1,0 +1,238 @@
+/**
+ * Public Route Handler for patient/partner video room join.
+ *
+ * This endpoint is intentionally public (no Supabase auth required) — the
+ * 64-char hex `token` in the request body is the authorization credential
+ * (256 bits of entropy). The middleware's `classifyPath()` returns the
+ * default `'public'` for `/api/video/*` since it does not match any gated
+ * prefix.
+ *
+ * Security controls:
+ *  - In-memory per-IP rate limiting (10/min) applied BEFORE any database work,
+ *    preventing DoS amplification and brute-force token guessing.
+ *  - POST validates body with Zod before any business logic.
+ *  - Stream JWT is ONLY returned when the room status is 'active' — never
+ *    before the psychologist admits the patient. This prevents pre-admission
+ *    call join.
+ *  - Responses never expose internal IDs (room.id, session.id, user.id),
+ *    patient data, clinical content, or DB details.
+ *  - Not-found tokens return 404 with a generic error code.
+ *  - Ended/expired rooms return 410 to signal the session is over.
+ *
+ * Runtime: Node.js (Drizzle/postgres-js requires Node).
+ */
+import { eq, or } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+import { db } from '@/shared/db/client';
+import { profiles } from '@/shared/db/schema/auth/tables';
+import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
+import { clientEnv } from '@/shared/env/client';
+import { logger } from '@/shared/lib/logger';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// ---------------------------------------------------------------------------
+// Input validation
+// ---------------------------------------------------------------------------
+
+const joinBodySchema = z.object({
+  token: z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]+$/),
+});
+
+// ---------------------------------------------------------------------------
+// In-memory rate limiter
+// ---------------------------------------------------------------------------
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const rateLimitBucket = new Map<string, RateLimitEntry>();
+
+const RATE_LIMIT = { maxRequests: 10, windowMs: 60_000 } as const;
+
+// Lazy cleanup threshold: purge expired entries when the map exceeds this.
+const CLEANUP_THRESHOLD = 1000;
+
+function extractClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const first = forwarded.split(',')[0]?.trim();
+    if (first) return first;
+  }
+
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+
+  return 'unknown';
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+
+  if (rateLimitBucket.size > CLEANUP_THRESHOLD) {
+    for (const [key, entry] of rateLimitBucket) {
+      if (entry.resetAt <= now) {
+        rateLimitBucket.delete(key);
+      }
+    }
+  }
+
+  const existing = rateLimitBucket.get(ip);
+
+  if (!existing || existing.resetAt <= now) {
+    rateLimitBucket.set(ip, { count: 1, resetAt: now + RATE_LIMIT.windowMs });
+    return true;
+  }
+
+  existing.count += 1;
+  return existing.count <= RATE_LIMIT.maxRequests;
+}
+
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
+
+// ---------------------------------------------------------------------------
+// POST /api/video/join
+// ---------------------------------------------------------------------------
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const ip = extractClientIp(request);
+
+  // Rate limit BEFORE any DB work
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'TOO_MANY_REQUESTS' },
+      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': '60' } },
+    );
+  }
+
+  // Parse body
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'INVALID_BODY' }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+
+  // Validate with Zod
+  const parsed = joinBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'INVALID_INPUT' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
+  }
+
+  const { token } = parsed.data;
+
+  try {
+    // Query video_rooms by patient_token or partner_token.
+    //
+    // Uses the app-level Drizzle client (`db`) which connects as the DB owner
+    // and bypasses RLS. Patient is not a Supabase user; the token in the
+    // request body is the authorization credential. Service-role is required
+    // to query video_rooms without RLS.
+    const [room] = await db
+      .select({
+        patientToken: videoRooms.patientToken,
+        partnerToken: videoRooms.partnerToken,
+        patientJwt: videoRooms.patientJwt,
+        partnerJwt: videoRooms.partnerJwt,
+        streamCallId: videoRooms.streamCallId,
+        availableFrom: videoRooms.availableFrom,
+        expiresAt: videoRooms.expiresAt,
+        status: videoRooms.status,
+        userId: videoRooms.userId,
+      })
+      .from(videoRooms)
+      .where(or(eq(videoRooms.patientToken, token), eq(videoRooms.partnerToken, token)))
+      .limit(1);
+
+    // Token not found
+    if (!room) {
+      return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404, headers: NO_STORE_HEADERS });
+    }
+
+    // Determine which token matched to pick the correct JWT
+    const isPatient = room.patientToken === token;
+    const streamToken = isPatient ? room.patientJwt : room.partnerJwt;
+
+    // Load psychologist profile (name, photo) via userId
+    const [profile] = await db
+      .select({
+        fullName: profiles.fullName,
+      })
+      .from(profiles)
+      .where(eq(profiles.userId, room.userId))
+      .limit(1);
+
+    const psychologistName = profile?.fullName ?? null;
+    // No photo/avatar column exists in profiles yet — return null
+    const psychologistPhotoUrl: string | null = null;
+
+    const now = new Date();
+
+    // Status determination — order matters:
+    // 1. Check ended/expired status OR past expiresAt -> 410
+    if (room.status === 'ended' || room.status === 'expired' || now > room.expiresAt) {
+      return NextResponse.json(
+        { error: 'SESSION_ENDED' },
+        { status: 410, headers: NO_STORE_HEADERS },
+      );
+    }
+
+    // 2. Too early — before the available window
+    if (now < room.availableFrom) {
+      return NextResponse.json(
+        {
+          status: 'too_early',
+          sessionStartAt: room.availableFrom.toISOString(),
+          psychologistName,
+          psychologistPhotoUrl,
+        },
+        { status: 200, headers: NO_STORE_HEADERS },
+      );
+    }
+
+    // 3. Active — psychologist has started the session
+    if (room.status === 'active') {
+      return NextResponse.json(
+        {
+          status: 'active',
+          streamToken,
+          apiKey: clientEnv.NEXT_PUBLIC_STREAM_API_KEY,
+          callId: room.streamCallId,
+          psychologistName,
+          psychologistPhotoUrl,
+        },
+        { status: 200, headers: NO_STORE_HEADERS },
+      );
+    }
+
+    // 4. Waiting — within time window, room is pending (psychologist hasn't admitted yet)
+    return NextResponse.json(
+      {
+        status: 'waiting',
+        psychologistName,
+        psychologistPhotoUrl,
+      },
+      { status: 200, headers: NO_STORE_HEADERS },
+    );
+  } catch {
+    logger.error(
+      { event: 'video_join_error', route: '/api/video/join' },
+      'unexpected error in POST /api/video/join',
+    );
+    return NextResponse.json(
+      { error: 'INTERNAL_ERROR' },
+      { status: 500, headers: NO_STORE_HEADERS },
+    );
+  }
+}
