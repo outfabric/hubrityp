@@ -28,8 +28,8 @@
 
 ## 5. Connection quality degradation controls
 
-- [ ] 5.1 Update `src/modules/telepsicologia/components/connection-quality-indicator.tsx` (from change 2) — when quality is 'poor' (red), show Sonner warning toast "Sua conexao esta instavel" with action button "Reduzir qualidade". On action: call `call.camera.setPreferredResolution({ width: 320, height: 240 })` to lower video resolution. Show toast only once per degradation episode (debounce)
-- [ ] 5.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/connection-quality-degradation.test.tsx` — mock Stream hooks + Sonner. Tests: toast shown when quality drops to poor, "Reduzir qualidade" calls resolution change, toast not repeated within 30s
+- [x] 5.1 Update `src/modules/telepsicologia/components/connection-quality-indicator.tsx` (from change 2) — when quality is 'poor' (red), show Sonner warning toast "Sua conexao esta instavel" with action button "Reduzir qualidade". On action: call `call.camera.setPreferredResolution({ width: 320, height: 240 })` to lower video resolution. Show toast only once per degradation episode (debounce)
+- [x] 5.2 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/connection-quality-degradation.test.tsx` — mock Stream hooks + Sonner. Tests: toast shown when quality drops to poor, "Reduzir qualidade" calls resolution change, toast not repeated within 30s
 
 ## 6. Module barrel update
 
