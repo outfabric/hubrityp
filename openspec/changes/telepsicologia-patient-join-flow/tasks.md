@@ -15,9 +15,9 @@
 
 ## 4. Patient video join page — Server Component
 
-- [ ] 4.1 Create `src/app/v/[token]/page.tsx` — Server Component: (1) extract token from params, (2) validate token format (64-char hex), (3) render PatientVideoPage client component passing the token. No data loading here — the client component calls the Route Handler. This is a thin RSC shell for the public page
-- [ ] 4.2 Create `src/app/v/[token]/layout.tsx` — minimal layout: no app shell, no sidebar. Clean page with only the video content. Meta tags for SEO: title "Sessao de video", noindex
-- [ ] 4.3 Create `src/app/v/[token]/not-found.tsx` — custom 404: "Link de sessao invalido. Verifique o link ou entre em contato com seu psicologo."
+- [x] 4.1 Create `src/app/v/[token]/page.tsx` — Server Component: (1) extract token from params, (2) validate token format (64-char hex), (3) render PatientVideoPage client component passing the token. No data loading here — the client component calls the Route Handler. This is a thin RSC shell for the public page
+- [x] 4.2 Create `src/app/v/[token]/layout.tsx` — minimal layout: no app shell, no sidebar. Clean page with only the video content. Meta tags for SEO: title "Sessao de video", noindex
+- [x] 4.3 Create `src/app/v/[token]/not-found.tsx` — custom 404: "Link de sessao invalido. Verifique o link ou entre em contato com seu psicologo."
 
 ## 5. Patient video client components
 
