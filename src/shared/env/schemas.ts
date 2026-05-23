@@ -49,6 +49,9 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // to the client.
   STREAM_API_KEY: z.string().min(1),
   STREAM_API_SECRET: z.string().min(1),
+  // Secret used to verify webhook signatures from Stream Video.
+  // Validated with `crypto.timingSafeEqual` in the webhook handler.
+  STREAM_WEBHOOK_SECRET: z.string().min(1),
   // Inngest — chaves provisionadas automaticamente pela Vercel Marketplace
   // Integration em production/preview. Em dev local ficam vazias e o SDK
   // usa o Dev Server local (http://inngest:8288 via docker compose).

@@ -1,6 +1,6 @@
 ## 1. Env vars and dependencies
 
-- [ ] 1.1 Add `STREAM_WEBHOOK_SECRET` (z.string().min(1)) to `serverEnvSchema` in `src/shared/env/schemas.ts`. Add to `.env.example`
+- [x] 1.1 Add `STREAM_WEBHOOK_SECRET` (z.string().min(1)) to `serverEnvSchema` in `src/shared/env/schemas.ts`. Add to `.env.example`
 
 ## 2. Inngest function — auto-create video room
 

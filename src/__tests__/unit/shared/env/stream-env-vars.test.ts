@@ -21,6 +21,7 @@ const validServer = {
   LOG_LEVEL: 'info',
   STREAM_API_KEY: 'stream-api-key',
   STREAM_API_SECRET: 'stream-api-secret',
+  STREAM_WEBHOOK_SECRET: 'stream-webhook-secret',
 };
 
 describe('clientEnvSchema — Stream env vars', () => {

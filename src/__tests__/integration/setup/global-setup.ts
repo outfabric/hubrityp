@@ -17,6 +17,7 @@ export default async function globalSetup() {
   process.env.NEXT_PUBLIC_STREAM_API_KEY ??= 'integration-stream-public-key';
   process.env.STREAM_API_KEY ??= 'integration-stream-api-key';
   process.env.STREAM_API_SECRET ??= 'integration-stream-api-secret';
+  process.env.STREAM_WEBHOOK_SECRET ??= 'integration-stream-webhook-secret';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.

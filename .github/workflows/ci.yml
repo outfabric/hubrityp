@@ -94,6 +94,7 @@ jobs:
           NEXT_PUBLIC_STREAM_API_KEY: ci-build-stream-public-key
           STREAM_API_KEY: ci-build-stream-api-key
           STREAM_API_SECRET: ci-build-stream-api-secret
+          STREAM_WEBHOOK_SECRET: ci-build-stream-webhook-secret
           LOG_LEVEL: silent
         run: npm run build
 
@@ -160,6 +161,7 @@ jobs:
           NEXT_PUBLIC_STREAM_API_KEY: ci-build-stream-public-key
           STREAM_API_KEY: ci-build-stream-api-key
           STREAM_API_SECRET: ci-build-stream-api-secret
+          STREAM_WEBHOOK_SECRET: ci-build-stream-webhook-secret
           LOG_LEVEL: silent
         run: npm run build
 

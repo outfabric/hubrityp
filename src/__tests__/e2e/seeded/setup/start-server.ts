@@ -117,6 +117,7 @@ async function main(): Promise<void> {
       NEXT_PUBLIC_STREAM_API_KEY: 'e2e-stream-public-key',
       STREAM_API_KEY: 'e2e-stream-api-key',
       STREAM_API_SECRET: 'e2e-stream-api-secret',
+      STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },
