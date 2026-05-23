@@ -171,13 +171,17 @@ describe('endVideoSessionImpl', () => {
     expect(sessionRows).toHaveLength(1);
     expect(sessionRows[0]!.status).toBe('done');
 
-    // Verify log entry was created
+    // Verify log entries were created (room_ended + session_summary from captureSessionMetadata)
     const logs = await runAsService(async (db) => {
       return db.select().from(videoSessionLogs).where(eq(videoSessionLogs.sessionId, sessionId));
     });
-    expect(logs).toHaveLength(1);
-    expect(logs[0]!.eventType).toBe('room_ended');
-    expect(logs[0]!.userId).toBe(userId);
+    expect(logs).toHaveLength(2);
+    const roomEndedLog = logs.find((l) => l.eventType === 'room_ended');
+    const summaryLog = logs.find((l) => l.eventType === 'session_summary');
+    expect(roomEndedLog).toBeDefined();
+    expect(roomEndedLog!.userId).toBe(userId);
+    expect(summaryLog).toBeDefined();
+    expect(summaryLog!.userId).toBe(userId);
   });
 
   it('ends a pending room (not just active)', async () => {
@@ -341,11 +345,11 @@ describe('endVideoSessionImpl', () => {
     const client = fakeSupabaseClient(userA);
     await endVideoSessionImpl(client, { room_id: roomId });
 
-    // User A can see the log via RLS
+    // User A can see the logs via RLS (room_ended + session_summary)
     const logsA = await runAsUser(userA, async (db) => {
       return db.select().from(videoSessionLogs);
     });
-    expect(logsA).toHaveLength(1);
+    expect(logsA).toHaveLength(2);
 
     // User B sees nothing via RLS
     const logsB = await runAsUser(userB, async (db) => {

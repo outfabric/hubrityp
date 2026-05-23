@@ -37,10 +37,10 @@
 
 ## 8. Post-call metadata capture
 
-- [ ] 8.1 Create `src/modules/telepsicologia/server/capture-session-metadata.ts` — helper function called when session transitions to 'done' (from endVideoSession or webhook). Queries video_session_logs for the session, computes: real_start (first therapist_joined), real_end (last room_ended/room_expired), effective_duration, had_recording (boolean), had_screen_share (boolean). Inserts a video_session_logs entry with event_type='session_summary' and metadata containing these fields
-- [ ] 8.2 Update `src/modules/telepsicologia/server/end-video-session.ts` (change 2) — after marking session as done, call captureSessionMetadata
-- [ ] 8.3 Create `src/modules/telepsicologia/server/get-online-session-stats.ts` — Server Action: authenticate, query sessions WHERE status='done' AND modality='online' AND start_at between month start/end, return { onlineCount, totalDoneCount, percentage }. For dashboard display (RF-09.29)
-- [ ] 8.4 **Integration test:** Create `src/__tests__/integration/telepsicologia/session-metadata.int.test.ts` — seed session + logs, call captureSessionMetadata, verify summary log entry with correct computed values
+- [x] 8.1 Create `src/modules/telepsicologia/server/capture-session-metadata.ts` — helper function called when session transitions to 'done' (from endVideoSession or webhook). Queries video_session_logs for the session, computes: real_start (first therapist_joined), real_end (last room_ended/room_expired), effective_duration, had_recording (boolean), had_screen_share (boolean). Inserts a video_session_logs entry with event_type='session_summary' and metadata containing these fields
+- [x] 8.2 Update `src/modules/telepsicologia/server/end-video-session.ts` (change 2) — after marking session as done, call captureSessionMetadata
+- [x] 8.3 Create `src/modules/telepsicologia/server/get-online-session-stats.ts` — Server Action: authenticate, query sessions WHERE status='done' AND modality='online' AND start_at between month start/end, return { onlineCount, totalDoneCount, percentage }. For dashboard display (RF-09.29)
+- [x] 8.4 **Integration test:** Create `src/__tests__/integration/telepsicologia/session-metadata.int.test.ts` — seed session + logs, call captureSessionMetadata, verify summary log entry with correct computed values
 
 ## 9. Recording UI controls (psychologist side)
 

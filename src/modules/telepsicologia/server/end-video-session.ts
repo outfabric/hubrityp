@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 
 import { videoTokenInputSchema } from '@/modules/telepsicologia/lib/schemas';
+import { captureSessionMetadata } from '@/modules/telepsicologia/server/capture-session-metadata';
 import { getStreamClient } from '@/modules/telepsicologia/server/stream-client';
 import { db } from '@/shared/db/client';
 import { sessions } from '@/shared/db/schema/agenda/tables';
@@ -41,7 +42,8 @@ export type EndVideoSessionResult =
  *   6. UPDATE video_rooms SET status='ended'.
  *   7. UPDATE sessions SET status='done', updated_at=now() WHERE id=room.session_id AND user_id=auth.uid().
  *   8. INSERT video_session_logs event_type='room_ended'.
- *   9. Return { ok: true }.
+ *   9. Capture post-call metadata (real start/end, duration, recording/screen share flags).
+ *  10. Return { ok: true }.
  */
 export async function endVideoSessionImpl(
   supabase: SupabaseClient,
@@ -134,7 +136,19 @@ export async function endVideoSessionImpl(
       });
     });
 
-    // 9. Return success
+    // 9. Capture post-call metadata — runs outside the main transaction
+    //    because it is a best-effort enrichment step. If it fails, the
+    //    session is still correctly ended; we log and move on.
+    try {
+      await captureSessionMetadata(db, room.sessionId, userId);
+    } catch {
+      logger.warn(
+        { event: 'capture_metadata_failed', sessionId: room.sessionId.slice(0, 8) },
+        'Post-call metadata capture failed (non-fatal)',
+      );
+    }
+
+    // 10. Return success
     return { ok: true };
   } catch (err: unknown) {
     const pgError = err as { code?: string };
