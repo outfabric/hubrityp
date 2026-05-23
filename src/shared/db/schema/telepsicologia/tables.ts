@@ -70,6 +70,15 @@ export const videoRooms = pgTable(
     // Cron job: expire rooms past their window.
     index('video_rooms_expires_at_idx').on(table.expiresAt),
 
+    // Patient token lookup: public Route Handlers query by patient_token.
+    // Unique because each room gets a fresh randomBytes(32) — enforces
+    // uniqueness at DB level as belt-and-suspenders.
+    uniqueIndex('video_rooms_patient_token_idx').on(table.patientToken),
+
+    // Partner token lookup: public Route Handlers query by partner_token.
+    // Plain index (not unique) because the column is nullable.
+    index('video_rooms_partner_token_idx').on(table.partnerToken),
+
     // Status CHECK — enforces the valid room lifecycle states at DB level.
     check(
       'video_rooms_status_check',

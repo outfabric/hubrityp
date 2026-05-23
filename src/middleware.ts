@@ -144,6 +144,10 @@ function classifyPath(pathname: string): PathClass {
   if (pathname.startsWith('/escala/') || pathname === '/escala') {
     return 'public';
   }
+  // Public patient video join page — token in URL is the auth credential, not a Supabase session
+  if (pathname === '/v' || pathname.startsWith('/v/')) {
+    return 'public';
+  }
   return 'public';
 }
 

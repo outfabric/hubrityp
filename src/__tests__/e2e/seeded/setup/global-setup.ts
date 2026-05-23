@@ -102,6 +102,13 @@ export default async function globalSetup() {
     await sql`DELETE FROM public.reminder_settings WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
 
+    // Telepsicologia tables — delete in FK order (video_session_logs →
+    // video_recordings → video_rooms → sessions). video_rooms has a FK to
+    // sessions, so it must be deleted first.
+    await sql`DELETE FROM public.video_session_logs WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.video_recordings WHERE user_id = ${seed.userId}`;
+    await sql`DELETE FROM public.video_rooms WHERE user_id = ${seed.userId}`;
+
     await sql`DELETE FROM public.session_history WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.sessions WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.locations WHERE user_id = ${seed.userId}`;

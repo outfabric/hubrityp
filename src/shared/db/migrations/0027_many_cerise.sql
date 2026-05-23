@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "video_rooms_patient_token_idx" ON "video_rooms" USING btree ("patient_token");--> statement-breakpoint
+CREATE INDEX "video_rooms_partner_token_idx" ON "video_rooms" USING btree ("partner_token");
