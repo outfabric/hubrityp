@@ -30,6 +30,7 @@ import { profiles } from '@/shared/db/schema/auth/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import { clientEnv } from '@/shared/env/client';
 import { logger } from '@/shared/lib/logger';
+import { createRateLimiter, extractClientIp } from '@/shared/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,55 +47,10 @@ const joinBodySchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// In-memory rate limiter
+// Rate limiter (per IP, 10 requests/min)
 // ---------------------------------------------------------------------------
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-const rateLimitBucket = new Map<string, RateLimitEntry>();
-
-const RATE_LIMIT = { maxRequests: 10, windowMs: 60_000 } as const;
-
-// Lazy cleanup threshold: purge expired entries when the map exceeds this.
-const CLEANUP_THRESHOLD = 1000;
-
-function extractClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) return first;
-  }
-
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp) return realIp.trim();
-
-  return 'unknown';
-}
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-
-  if (rateLimitBucket.size > CLEANUP_THRESHOLD) {
-    for (const [key, entry] of rateLimitBucket) {
-      if (entry.resetAt <= now) {
-        rateLimitBucket.delete(key);
-      }
-    }
-  }
-
-  const existing = rateLimitBucket.get(ip);
-
-  if (!existing || existing.resetAt <= now) {
-    rateLimitBucket.set(ip, { count: 1, resetAt: now + RATE_LIMIT.windowMs });
-    return true;
-  }
-
-  existing.count += 1;
-  return existing.count <= RATE_LIMIT.maxRequests;
-}
+const checkRateLimit = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
 

@@ -10,8 +10,8 @@
 
 ## 3. Route Handler — patient event logging (`POST /api/video/log`)
 
-- [ ] 3.1 Create `src/app/api/video/log/route.ts` — POST Route Handler: (1) validate body with Zod ({ token: z.string().length(64).regex(/^[a-f0-9]+$/), event_type: z.enum(['patient_joined','patient_left','partner_joined','partner_left','connection_drop','reconnected']), metadata: z.record(z.string()).optional() }), (2) service-role Supabase to look up video_rooms by token, (3) if not found or room ended: return 404, (4) INSERT into video_session_logs with user_id from room, session_id from room, event_type, participant_role derived from which token matched, metadata (no PII), (5) return 200. Rate-limit: max 10 calls per token per minute
-- [ ] 3.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/video-log-handler.int.test.ts` — valid token + valid event_type inserts log row, invalid token returns 404, invalid event_type returns 400, ended room returns 404
+- [x] 3.1 Create `src/app/api/video/log/route.ts` — POST Route Handler: (1) validate body with Zod ({ token: z.string().length(64).regex(/^[a-f0-9]+$/), event_type: z.enum(['patient_joined','patient_left','partner_joined','partner_left','connection_drop','reconnected']), metadata: z.record(z.string()).optional() }), (2) service-role Supabase to look up video_rooms by token, (3) if not found or room ended: return 404, (4) INSERT into video_session_logs with user_id from room, session_id from room, event_type, participant_role derived from which token matched, metadata (no PII), (5) return 200. Rate-limit: max 10 calls per token per minute
+- [x] 3.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/video-log-handler.int.test.ts` — valid token + valid event_type inserts log row, invalid token returns 404, invalid event_type returns 400, ended room returns 404
 
 ## 4. Patient video join page — Server Component
 
