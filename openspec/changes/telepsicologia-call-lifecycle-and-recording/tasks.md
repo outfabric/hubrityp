@@ -20,8 +20,8 @@
 
 ## 5. Stream webhook handler
 
-- [ ] 5.1 Create `src/app/api/webhooks/stream/video/route.ts` — POST Route Handler: (1) read raw body, (2) validate signature using STREAM_WEBHOOK_SECRET + crypto.timingSafeEqual (consult Stream docs for exact algorithm at implementation time), (3) parse payload, (4) route by event type: call.session_ended -> update room status + log, call.session_participant_joined -> log, call.session_participant_left -> log, call.recording_started -> update recording status, call.recording_stopped -> update recording status. (5) Return 200. Use service-role for DB writes (justified: webhook from external service). Never log payload content (may contain participant info)
-- [ ] 5.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/stream-webhook.int.test.ts` — tests: valid signature + call.session_ended updates room status, valid signature + participant_joined inserts log, invalid signature returns 403, malformed payload returns 400, duplicate event is idempotent
+- [x] 5.1 Create `src/app/api/webhooks/stream/video/route.ts` — POST Route Handler: (1) read raw body, (2) validate signature using STREAM_WEBHOOK_SECRET + crypto.timingSafeEqual (consult Stream docs for exact algorithm at implementation time), (3) parse payload, (4) route by event type: call.session_ended -> update room status + log, call.session_participant_joined -> log, call.session_participant_left -> log, call.recording_started -> update recording status, call.recording_stopped -> update recording status. (5) Return 200. Use service-role for DB writes (justified: webhook from external service). Never log payload content (may contain participant info)
+- [x] 5.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/stream-webhook.int.test.ts` — tests: valid signature + call.session_ended updates room status, valid signature + participant_joined inserts log, invalid signature returns 403, malformed payload returns 400, duplicate event is idempotent
 
 ## 6. Server Actions — toggleRecording + extendSession
 
