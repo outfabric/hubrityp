@@ -48,7 +48,10 @@ const logBodySchema = z.object({
     'connection_drop',
     'reconnected',
   ]),
-  metadata: z.record(z.string(), z.string()).optional(),
+  metadata: z
+    .record(z.string().max(64), z.string().max(512))
+    .refine((r) => Object.keys(r).length <= 20, { message: 'Too many metadata keys' })
+    .optional(),
 });
 
 // ---------------------------------------------------------------------------

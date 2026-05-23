@@ -115,6 +115,20 @@ function makeRequest(body: unknown): NextRequest {
   });
 }
 
+/**
+ * Constructs a NextRequest with a fixed IP (for rate-limit testing).
+ */
+function makeRequestWithIp(body: unknown, ip: string): NextRequest {
+  return new NextRequest('http://localhost/api/video/log', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': ip,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
@@ -406,5 +420,84 @@ describe('POST /api/video/log', () => {
       }),
     );
     expect(res400.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  // -------------------------------------------------------------------------
+  // Rate limiting
+  // -------------------------------------------------------------------------
+
+  it('returns 429 with Retry-After header after exceeding rate limit', async () => {
+    const { POST } = await import('@/app/api/video/log/route');
+    // The log handler rate-limits per token (10/min). Use a fixed token
+    // that does not exist — the rate limiter fires before the DB query.
+    const token = 'f'.repeat(64);
+    const fixedIp = '10.99.99.99';
+
+    // Exhaust the 10-request bucket
+    for (let i = 0; i < 10; i++) {
+      await POST(makeRequestWithIp({ token, event_type: 'patient_joined' }, fixedIp));
+    }
+
+    // 11th request should be rate-limited
+    const res = await POST(makeRequestWithIp({ token, event_type: 'patient_joined' }, fixedIp));
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('60');
+  });
+
+  // -------------------------------------------------------------------------
+  // Metadata bounds (storage DoS prevention)
+  // -------------------------------------------------------------------------
+
+  it('returns 400 when metadata has more than 20 keys', async () => {
+    const { POST } = await import('@/app/api/video/log/route');
+
+    const metadata: Record<string, string> = {};
+    for (let i = 0; i < 21; i++) {
+      metadata[`key${i}`] = 'value';
+    }
+
+    const response = await POST(
+      makeRequest({
+        token: 'a'.repeat(64),
+        event_type: 'patient_joined',
+        metadata,
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('INVALID_INPUT');
+  });
+
+  it('returns 400 when a metadata value exceeds 512 characters', async () => {
+    const { POST } = await import('@/app/api/video/log/route');
+
+    const response = await POST(
+      makeRequest({
+        token: 'a'.repeat(64),
+        event_type: 'patient_joined',
+        metadata: { device: 'x'.repeat(513) },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('INVALID_INPUT');
+  });
+
+  it('returns 400 when a metadata key exceeds 64 characters', async () => {
+    const { POST } = await import('@/app/api/video/log/route');
+
+    const response = await POST(
+      makeRequest({
+        token: 'a'.repeat(64),
+        event_type: 'patient_joined',
+        metadata: { ['k'.repeat(65)]: 'value' },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('INVALID_INPUT');
   });
 });

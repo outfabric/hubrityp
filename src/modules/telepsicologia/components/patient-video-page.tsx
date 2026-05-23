@@ -113,7 +113,7 @@ export function PatientVideoPage({ token }: PatientVideoPageProps) {
               status: 'too_early',
               psychologistName: data.psychologistName ?? null,
               psychologistPhotoUrl: data.psychologistPhotoUrl ?? null,
-              sessionStartAt: data.sessionStartAt!,
+              sessionStartAt: data.sessionStartAt ?? new Date().toISOString(),
             });
             break;
 

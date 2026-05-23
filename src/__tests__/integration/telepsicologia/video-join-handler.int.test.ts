@@ -117,6 +117,20 @@ function makeRequest(body: unknown): NextRequest {
   });
 }
 
+/**
+ * Constructs a NextRequest with a fixed IP (for rate-limit testing).
+ */
+function makeRequestWithIp(body: unknown, ip: string): NextRequest {
+  return new NextRequest('http://localhost/api/video/join', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': ip,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
@@ -438,5 +452,26 @@ describe('POST /api/video/join', () => {
     // 400 response
     const res400 = await POST(makeRequest({ token: 'short' }));
     expect(res400.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  // -------------------------------------------------------------------------
+  // Rate limiting
+  // -------------------------------------------------------------------------
+
+  it('returns 429 with Retry-After header after exceeding rate limit', async () => {
+    const { POST } = await import('@/app/api/video/join/route');
+    // The join handler rate-limits per IP (10/min). Use a fixed IP.
+    const fixedIp = '10.88.88.88';
+    const token = '0'.repeat(64);
+
+    // Exhaust the 10-request bucket
+    for (let i = 0; i < 10; i++) {
+      await POST(makeRequestWithIp({ token }, fixedIp));
+    }
+
+    // 11th request should be rate-limited
+    const res = await POST(makeRequestWithIp({ token }, fixedIp));
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).toBe('60');
   });
 });

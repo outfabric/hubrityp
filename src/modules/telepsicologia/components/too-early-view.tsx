@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { Clock } from 'lucide-react';
 import { useState } from 'react';
 
+import { getInitials } from '@/modules/telepsicologia/lib/initials';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -20,20 +21,6 @@ interface TooEarlyViewProps {
   psychologistPhotoUrl: string | null;
   /** ISO 8601 string from the API response. */
   sessionStartAt: string;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Extract up to two initials from a name (e.g. "Maria Silva" -> "MS"). */
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join('');
 }
 
 // ---------------------------------------------------------------------------

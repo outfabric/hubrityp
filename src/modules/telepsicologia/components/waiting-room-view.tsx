@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getInitials } from '@/modules/telepsicologia/lib/initials';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -17,19 +18,6 @@ interface WaitingRoomViewProps {
   token: string;
   /** Called when the API returns status 'active' with call credentials. */
   onActive: (data: { streamToken: string; apiKey: string; callId: string }) => void;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join('');
 }
 
 // ---------------------------------------------------------------------------

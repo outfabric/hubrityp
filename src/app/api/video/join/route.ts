@@ -121,6 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const streamToken = isPatient ? room.patientJwt : room.partnerJwt;
 
     // Load psychologist profile (name, photo) via userId
+    // TODO(photo): add avatarUrl to SELECT once profiles.avatarUrl exists
     const [profile] = await db
       .select({
         fullName: profiles.fullName,
