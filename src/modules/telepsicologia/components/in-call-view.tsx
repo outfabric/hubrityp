@@ -15,6 +15,7 @@ import { CallControlBar } from './call-control-bar';
 import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
 import { ElapsedTime } from './elapsed-time';
+import { ScreenShareIndicator } from './screen-share-indicator';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -140,7 +141,14 @@ export function InCallView({
         </div>
       </div>
 
-      {/* Main video area — SpeakerLayout handles PiP for local participant */}
+      {/* Screen share indicator — bottom of overlay stack, above video */}
+      <div className="pointer-events-none absolute right-0 bottom-auto left-0 z-10 flex justify-center pt-16">
+        <ScreenShareIndicator />
+      </div>
+
+      {/* Main video area — SpeakerLayout handles PiP for local participant
+          and automatically switches to show the shared screen as the
+          dominant video for both psychologist and patient views. */}
       <div className="flex-1 overflow-hidden">
         <SpeakerLayout participantsBarPosition="bottom" mirrorLocalParticipantVideo={true} />
       </div>

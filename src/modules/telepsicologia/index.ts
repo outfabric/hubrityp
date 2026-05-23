@@ -51,6 +51,7 @@ export { PostCallView } from './components/post-call-view';
 export { EndCallDialog } from './components/end-call-dialog';
 export { ConnectionQualityIndicator } from './components/connection-quality-indicator';
 export { ElapsedTime } from './components/elapsed-time';
+export { ScreenShareIndicator } from './components/screen-share-indicator';
 export { PatientVideoPage } from './components/patient-video-page';
 
 // patient join flow

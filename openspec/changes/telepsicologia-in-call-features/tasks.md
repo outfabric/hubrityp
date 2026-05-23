@@ -9,9 +9,9 @@
 
 ## 2. Screen share enhancements
 
-- [ ] 2.1 Create `src/modules/telepsicologia/components/screen-share-indicator.tsx` — `'use client'` component. When psychologist is sharing: overlay banner "Voce esta compartilhando sua tela" + "Parar de compartilhar" button (danger-500 text). Uses Stream's `useCallStateHooks().useScreenShareState()` or equivalent hook
-- [ ] 2.2 Update `src/modules/telepsicologia/components/in-call-view.tsx` — add ScreenShareIndicator overlay when sharing is active. Verify that Stream's SpeakerLayout correctly switches to show shared screen as main content for both psychologist and patient views
-- [ ] 2.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/screen-share-indicator.test.tsx` — mock Stream hooks. Tests: indicator visible when sharing, hidden when not sharing, "Parar" button calls correct Stream method
+- [x] 2.1 Create `src/modules/telepsicologia/components/screen-share-indicator.tsx` — `'use client'` component. When psychologist is sharing: overlay banner "Voce esta compartilhando sua tela" + "Parar de compartilhar" button (danger-500 text). Uses Stream's `useCallStateHooks().useScreenShareState()` or equivalent hook
+- [x] 2.2 Update `src/modules/telepsicologia/components/in-call-view.tsx` — add ScreenShareIndicator overlay when sharing is active. Verify that Stream's SpeakerLayout correctly switches to show shared screen as main content for both psychologist and patient views
+- [x] 2.3 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/screen-share-indicator.test.tsx` — mock Stream hooks. Tests: indicator visible when sharing, hidden when not sharing, "Parar" button calls correct Stream method
 
 ## 3. Prontuario side drawer
 
