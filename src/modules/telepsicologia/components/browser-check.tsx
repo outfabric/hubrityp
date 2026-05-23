@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, Chrome, Globe } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 
@@ -20,23 +20,32 @@ interface BrowserCheckProps {
 // support `navigator.mediaDevices` or `RTCPeerConnection`, the video client
 // must never be imported/instantiated — this component renders a fallback
 // message with download links instead.
+//
+// Renders children optimistically during SSR (assume supported) to avoid
+// hydration mismatch. A useEffect runs the real check client-side and swaps
+// to the fallback only when the browser is confirmed unsupported.
 // ---------------------------------------------------------------------------
 
 export function BrowserCheck({ children }: BrowserCheckProps) {
-  // Server-side rendering: `navigator` / `window` do not exist.
-  // The component is `'use client'` and only runs in the browser, but
-  // during SSR the check would throw. Guard with `typeof window`.
-  if (typeof window === 'undefined') {
-    // During SSR, render nothing — the client hydration will run the check.
-    return null;
-  }
+  // Optimistic default: assume supported so SSR and initial client render agree.
+  const [supported, setSupported] = useState(true);
 
-  const isSupported =
-    typeof navigator !== 'undefined' &&
-    typeof navigator.mediaDevices !== 'undefined' &&
-    typeof window.RTCPeerConnection !== 'undefined';
+  useEffect(() => {
+    const isSupported =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.mediaDevices !== 'undefined' &&
+      typeof window.RTCPeerConnection !== 'undefined';
 
-  if (isSupported) {
+    if (!isSupported) {
+      // Deferred to avoid synchronous setState inside effect (React Compiler rule)
+      const id = requestAnimationFrame(() => {
+        setSupported(false);
+      });
+      return () => cancelAnimationFrame(id);
+    }
+  }, []);
+
+  if (supported) {
     return <>{children}</>;
   }
 
@@ -50,11 +59,13 @@ export function BrowserCheck({ children }: BrowserCheckProps) {
           >
             <AlertCircle className="text-danger-500 h-6 w-6" />
           </div>
-          <CardTitle>Navegador incompativel</CardTitle>
+          <CardTitle>
+            <h1>Navegador incompatível</h1>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-text-secondary text-[15px]">
-            Seu navegador nao e compativel com videochamadas. Use Chrome, Edge, Firefox ou Safari
+            Seu navegador não é compatível com videochamadas. Use Chrome, Edge, Firefox ou Safari
             recente.
           </p>
 

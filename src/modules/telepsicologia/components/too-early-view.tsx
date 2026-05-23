@@ -40,7 +40,7 @@ export function TooEarlyView({
 }: TooEarlyViewProps) {
   const [showDeviceTest, setShowDeviceTest] = useState(false);
 
-  const displayName = psychologistName ?? 'Psicologo';
+  const displayName = psychologistName ?? 'Psicólogo';
   const startDate = new Date(sessionStartAt);
 
   // Format: "23 de maio de 2026 as 14:30"
@@ -61,7 +61,9 @@ export function TooEarlyView({
             </AvatarFallback>
           </Avatar>
 
-          <CardTitle>{displayName}</CardTitle>
+          <CardTitle>
+            <h1>{displayName}</h1>
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4 text-center">
@@ -69,12 +71,12 @@ export function TooEarlyView({
           <div className="flex items-center justify-center gap-2">
             <Clock className="text-text-tertiary h-4 w-4" aria-hidden="true" />
             <p className="text-text-secondary text-[15px]">
-              {formattedDate} as {formattedTime}
+              {formattedDate} às {formattedTime}
             </p>
           </div>
 
           <p className="text-text-secondary text-[15px]">
-            Sua sessao ainda nao esta disponivel. Volte 10 minutos antes do horario agendado.
+            Sua sessão ainda não está disponível. Volte 10 minutos antes do horário agendado.
           </p>
 
           {/* Device test toggle */}
@@ -83,9 +85,9 @@ export function TooEarlyView({
               variant="outline"
               size="sm"
               onClick={() => setShowDeviceTest(true)}
-              aria-label="Testar camera e microfone"
+              aria-label="Testar câmera e microfone"
             >
-              Testar camera e microfone
+              Testar câmera e microfone
             </Button>
           ) : (
             <div className="pt-2">

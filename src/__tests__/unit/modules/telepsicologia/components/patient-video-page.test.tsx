@@ -184,10 +184,30 @@ describe('PatientVideoPage', () => {
   it('renders SessionEndedView when API returns 410 (session ended)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(mockFetchResponse(410, { error: 'SESSION_ENDED' })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          mockFetchResponse(410, { error: 'SESSION_ENDED', psychologistName: 'Dr. Ended' }),
+        ),
     );
 
     render(<PatientVideoPage token="tok-gone" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('session-ended-view')).toBeInTheDocument();
+    });
+
+    // The psychologistName from the 410 body should be passed to the view
+    expect(screen.getByText('Dr. Ended')).toBeInTheDocument();
+  });
+
+  it('renders SessionEndedView with null name when 410 body omits psychologistName', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(mockFetchResponse(410, { error: 'SESSION_ENDED' })),
+    );
+
+    render(<PatientVideoPage token="tok-gone-no-name" />);
 
     await waitFor(() => {
       expect(screen.getByTestId('session-ended-view')).toBeInTheDocument();
@@ -203,7 +223,7 @@ describe('PatientVideoPage', () => {
     render(<PatientVideoPage token="tok-invalid" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Link invalido ou sessao nao encontrada.')).toBeInTheDocument();
+      expect(screen.getByText('Link inválido ou sessão não encontrada.')).toBeInTheDocument();
     });
   });
 
@@ -217,7 +237,7 @@ describe('PatientVideoPage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Erro ao carregar a sessao. Tente novamente em alguns instantes.'),
+        screen.getByText('Erro ao carregar a sessão. Tente novamente em alguns instantes.'),
       ).toBeInTheDocument();
     });
   });
@@ -229,7 +249,7 @@ describe('PatientVideoPage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Erro de conexao. Verifique sua internet e tente novamente.'),
+        screen.getByText('Erro de conexão. Verifique sua internet e tente novamente.'),
       ).toBeInTheDocument();
     });
   });

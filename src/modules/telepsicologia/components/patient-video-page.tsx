@@ -78,19 +78,30 @@ export function PatientVideoPage({ token }: PatientVideoPageProps) {
         if (cancelled) return;
 
         if (res.status === 404) {
-          setState({ status: 'error', message: 'Link invalido ou sessao nao encontrada.' });
+          setState({
+            status: 'error',
+            message: 'Link inválido ou sessão não encontrada.',
+          });
           return;
         }
 
         if (res.status === 410) {
-          setState({ status: 'ended', psychologistName: null });
+          // The 410 body may include psychologistName for a personalised ended message.
+          const endedData = (await res.json()) as {
+            error: string;
+            psychologistName?: string | null;
+          };
+          setState({
+            status: 'ended',
+            psychologistName: endedData.psychologistName ?? null,
+          });
           return;
         }
 
         if (!res.ok) {
           setState({
             status: 'error',
-            message: 'Erro ao carregar a sessao. Tente novamente em alguns instantes.',
+            message: 'Erro ao carregar a sessão. Tente novamente em alguns instantes.',
           });
           return;
         }
@@ -146,7 +157,7 @@ export function PatientVideoPage({ token }: PatientVideoPageProps) {
         if (cancelled) return;
         setState({
           status: 'error',
-          message: 'Erro de conexao. Verifique sua internet e tente novamente.',
+          message: 'Erro de conexão. Verifique sua internet e tente novamente.',
         });
       }
     }

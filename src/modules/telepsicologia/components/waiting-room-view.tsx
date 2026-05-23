@@ -43,7 +43,7 @@ export function WaitingRoomView({
   const [pollError, setPollError] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const displayName = psychologistName ?? 'Psicologo';
+  const displayName = psychologistName ?? 'Psicólogo';
 
   // Stable poll function — captured in the interval
   const poll = useCallback(async () => {
@@ -114,7 +114,9 @@ export function WaitingRoomView({
             </AvatarFallback>
           </Avatar>
 
-          <CardTitle>{displayName}</CardTitle>
+          <CardTitle>
+            <h1>{displayName}</h1>
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4 text-center">
@@ -129,14 +131,14 @@ export function WaitingRoomView({
               }}
             />
             <p className="text-text-secondary text-[15px]">
-              Aguarde, {displayName} vai admitir voce em breve
+              Aguarde, {displayName} vai admitir você em breve
             </p>
           </div>
 
           {/* Network error indicator */}
           {pollError && (
             <p className="text-warning-700 text-xs" role="status">
-              Dificuldade de conexao. Tentando novamente...
+              Dificuldade de conexão. Tentando novamente...
             </p>
           )}
 

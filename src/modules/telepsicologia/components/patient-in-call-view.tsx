@@ -122,7 +122,7 @@ function PatientCallControls({ onLeave }: { onLeave: () => void }) {
         variant={isCameraMuted ? 'outline' : 'ghost'}
         size="icon"
         onClick={handleToggleCamera}
-        aria-label={isCameraMuted ? 'Ligar camera' : 'Desligar camera'}
+        aria-label={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
       >
         {isCameraMuted ? (
           <VideoOff className="h-5 w-5" aria-hidden="true" />
@@ -136,7 +136,7 @@ function PatientCallControls({ onLeave }: { onLeave: () => void }) {
         variant="destructive"
         size="icon"
         onClick={onLeave}
-        aria-label="Sair da sessao"
+        aria-label="Sair da sessão"
         data-testid="patient-leave-button"
       >
         <PhoneOff className="h-5 w-5" aria-hidden="true" />
@@ -297,7 +297,7 @@ export function PatientInCallView({
   if (!client || !call) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-text-secondary text-sm">Conectando ao servidor de video...</p>
+        <p className="text-text-secondary text-sm">Conectando ao servidor de vídeo...</p>
       </div>
     );
   }

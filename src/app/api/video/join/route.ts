@@ -138,9 +138,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Status determination — order matters:
     // 1. Check ended/expired status OR past expiresAt -> 410
+    //    Include psychologistName so the client can show a personalised ended
+    //    message ("Fale com [Psicólogo] se precisar reagendar"). The token
+    //    already authorises knowledge of the patient's own therapist; no
+    //    internal IDs or patient data are exposed.
     if (room.status === 'ended' || room.status === 'expired' || now > room.expiresAt) {
       return NextResponse.json(
-        { error: 'SESSION_ENDED' },
+        { error: 'SESSION_ENDED', psychologistName },
         { status: 410, headers: NO_STORE_HEADERS },
       );
     }

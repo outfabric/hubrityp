@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -18,6 +18,11 @@ afterEach(() => {
 
 // ---------------------------------------------------------------------------
 // Tests
+//
+// BrowserCheck renders children optimistically (assume supported) during SSR
+// and initial render. A useEffect checks WebRTC capabilities and swaps to the
+// fallback only when the browser is confirmed unsupported. Tests that assert
+// the unsupported state must await the effect via waitFor.
 // ---------------------------------------------------------------------------
 
 describe('BrowserCheck', () => {
@@ -40,10 +45,10 @@ describe('BrowserCheck', () => {
     expect(screen.getByText('Hello from video')).toBeInTheDocument();
 
     // The incompatible fallback must NOT be rendered
-    expect(screen.queryByText('Navegador incompativel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Navegador incompatível')).not.toBeInTheDocument();
   });
 
-  it('shows incompatible message when navigator.mediaDevices is undefined', () => {
+  it('shows incompatible message when navigator.mediaDevices is undefined', async () => {
     // Remove mediaDevices from navigator
     vi.stubGlobal('navigator', {
       ...navigator,
@@ -57,19 +62,21 @@ describe('BrowserCheck', () => {
       </BrowserCheck>,
     );
 
-    // Children must NOT be rendered
-    expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
+    // After the useEffect runs, the fallback message appears
+    await waitFor(() => {
+      expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
+    });
 
-    // Incompatible message must be shown
-    expect(screen.getByText('Navegador incompativel')).toBeInTheDocument();
+    // Incompatible message must be shown with correct accents
+    expect(screen.getByText('Navegador incompatível')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Seu navegador nao e compativel com videochamadas. Use Chrome, Edge, Firefox ou Safari recente.',
+        'Seu navegador não é compatível com videochamadas. Use Chrome, Edge, Firefox ou Safari recente.',
       ),
     ).toBeInTheDocument();
   });
 
-  it('shows incompatible message when RTCPeerConnection is undefined', () => {
+  it('shows incompatible message when RTCPeerConnection is undefined', async () => {
     vi.stubGlobal('navigator', {
       ...navigator,
       mediaDevices: { getUserMedia: vi.fn() },
@@ -83,11 +90,13 @@ describe('BrowserCheck', () => {
       </BrowserCheck>,
     );
 
-    expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
-    expect(screen.getByText('Navegador incompativel')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Navegador incompatível')).toBeInTheDocument();
   });
 
-  it('shows incompatible message when both mediaDevices and RTCPeerConnection are undefined', () => {
+  it('shows incompatible message when both mediaDevices and RTCPeerConnection are undefined', async () => {
     vi.stubGlobal('navigator', {
       ...navigator,
       mediaDevices: undefined,
@@ -100,11 +109,13 @@ describe('BrowserCheck', () => {
       </BrowserCheck>,
     );
 
-    expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
-    expect(screen.getByText('Navegador incompativel')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByTestId('child-content')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Navegador incompatível')).toBeInTheDocument();
   });
 
-  it('shows download links for Chrome and Firefox in the incompatible fallback', () => {
+  it('shows download links for Chrome and Firefox in the incompatible fallback', async () => {
     vi.stubGlobal('navigator', {
       ...navigator,
       mediaDevices: undefined,
@@ -117,8 +128,12 @@ describe('BrowserCheck', () => {
       </BrowserCheck>,
     );
 
+    // Wait for the effect to flip the state
+    await waitFor(() => {
+      expect(screen.getByLabelText('Baixar Google Chrome')).toBeInTheDocument();
+    });
+
     const chromeLink = screen.getByLabelText('Baixar Google Chrome');
-    expect(chromeLink).toBeInTheDocument();
     expect(chromeLink).toHaveAttribute('href', 'https://www.google.com/chrome/');
     expect(chromeLink).toHaveAttribute('target', '_blank');
     expect(chromeLink).toHaveAttribute('rel', 'noopener noreferrer');

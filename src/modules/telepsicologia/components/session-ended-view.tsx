@@ -22,7 +22,7 @@ interface SessionEndedViewProps {
 // ---------------------------------------------------------------------------
 
 export function SessionEndedView({ psychologistName }: SessionEndedViewProps) {
-  const displayName = psychologistName ?? 'seu psicologo';
+  const displayName = psychologistName ?? 'seu psicólogo';
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -34,7 +34,9 @@ export function SessionEndedView({ psychologistName }: SessionEndedViewProps) {
           >
             <CheckCircle2 className="text-brand-600 h-6 w-6" />
           </div>
-          <CardTitle>Sessao encerrada</CardTitle>
+          <CardTitle>
+            <h1>Sessão encerrada</h1>
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-text-secondary text-[15px]">

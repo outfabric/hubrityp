@@ -82,7 +82,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
         }
 
         setPermissionError(
-          'Nao foi possivel acessar camera ou microfone. Verifique as permissoes do navegador.',
+          'Não foi possível acessar câmera ou microfone. Verifique as permissões do navegador.',
         );
       }
     }
@@ -162,7 +162,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
   if (compact) {
     return (
       <div className="flex items-center justify-center gap-4">
-        <div className="flex items-center gap-1.5" aria-label="Status da camera">
+        <div className="flex items-center gap-1.5" aria-label="Status da câmera">
           {cameraOk ? (
             <Video className="text-success-500 h-4 w-4" aria-hidden="true" />
           ) : cameraOk === false ? (
@@ -171,7 +171,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
             <Video className="text-text-tertiary h-4 w-4" aria-hidden="true" />
           )}
           <span className="text-text-secondary text-xs">
-            {cameraOk === null ? 'Verificando...' : cameraOk ? 'Camera OK' : 'Camera indisponivel'}
+            {cameraOk === null ? 'Verificando...' : cameraOk ? 'Câmera OK' : 'Câmera indisponível'}
           </span>
         </div>
 
@@ -184,7 +184,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
             <Mic className="text-text-tertiary h-4 w-4" aria-hidden="true" />
           )}
           <span className="text-text-secondary text-xs">
-            {micOk === null ? 'Verificando...' : micOk ? 'Microfone OK' : 'Microfone indisponivel'}
+            {micOk === null ? 'Verificando...' : micOk ? 'Microfone OK' : 'Microfone indisponível'}
           </span>
         </div>
       </div>
@@ -198,7 +198,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
         {!cameraOn || cameraOk === false ? (
           <div className="flex h-full items-center justify-center">
             <VideoOff className="text-text-tertiary h-12 w-12" aria-hidden="true" />
-            <span className="sr-only">Camera desligada</span>
+            <span className="sr-only">Câmera desligada</span>
           </div>
         ) : (
           <video
@@ -207,7 +207,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
             playsInline
             muted
             className="h-full w-full object-cover"
-            aria-label="Previa da camera"
+            aria-label="Prévia da câmera"
           />
         )}
       </div>
@@ -233,7 +233,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
           <div
             className="bg-surface-muted h-2 w-24 overflow-hidden rounded-full"
             role="meter"
-            aria-label="Nivel do microfone"
+            aria-label="Nível do microfone"
             aria-valuenow={micLevel}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -250,7 +250,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
           size="icon"
           onClick={toggleCamera}
           disabled={cameraOk === false}
-          aria-label={cameraOn ? 'Desligar camera' : 'Ligar camera'}
+          aria-label={cameraOn ? 'Desligar câmera' : 'Ligar câmera'}
         >
           {cameraOn ? (
             <Video className="h-5 w-5" aria-hidden="true" />
@@ -267,7 +267,7 @@ export function DeviceTest({ compact = false }: DeviceTestProps) {
           <div className="space-y-1">
             <p className="text-danger-700 text-sm">{permissionError}</p>
             <p className="text-text-tertiary text-xs">
-              Verifique as configuracoes do navegador e permita o acesso a camera e microfone para
+              Verifique as configurações do navegador e permita o acesso à câmera e microfone para
               este site.
             </p>
           </div>

@@ -211,7 +211,7 @@ describe('POST /api/video/join', () => {
   // Ended / expired rooms -> 410
   // -------------------------------------------------------------------------
 
-  it('returns 410 for room with status ended', async () => {
+  it('returns 410 for room with status ended (includes psychologistName)', async () => {
     const userId = randomUUID();
     const patientToken = 'c'.repeat(64);
     await seedAuthUser(userId);
@@ -225,15 +225,16 @@ describe('POST /api/video/join', () => {
     const response = await POST(makeRequest({ token: patientToken }));
 
     expect(response.status).toBe(410);
-    const body = (await response.json()) as { error: string };
+    const body = (await response.json()) as { error: string; psychologistName: string };
     expect(body.error).toBe('SESSION_ENDED');
+    expect(body.psychologistName).toBe('Dr. Test');
   });
 
-  it('returns 410 for room with status expired', async () => {
+  it('returns 410 for room with status expired (includes psychologistName)', async () => {
     const userId = randomUUID();
     const patientToken = 'd'.repeat(64);
     await seedAuthUser(userId);
-    await seedProfile(userId, 'Dr. Test');
+    await seedProfile(userId, 'Dr. Expired');
     await seedVideoRoom(userId, {
       status: 'expired',
       patientToken,
@@ -243,8 +244,9 @@ describe('POST /api/video/join', () => {
     const response = await POST(makeRequest({ token: patientToken }));
 
     expect(response.status).toBe(410);
-    const body = (await response.json()) as { error: string };
+    const body = (await response.json()) as { error: string; psychologistName: string };
     expect(body.error).toBe('SESSION_ENDED');
+    expect(body.psychologistName).toBe('Dr. Expired');
   });
 
   it('returns 410 when now > expiresAt even if status is pending', async () => {
@@ -264,8 +266,9 @@ describe('POST /api/video/join', () => {
     const response = await POST(makeRequest({ token: patientToken }));
 
     expect(response.status).toBe(410);
-    const body = (await response.json()) as { error: string };
+    const body = (await response.json()) as { error: string; psychologistName: string };
     expect(body.error).toBe('SESSION_ENDED');
+    expect(body.psychologistName).toBe('Dr. Test');
   });
 
   // -------------------------------------------------------------------------

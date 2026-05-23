@@ -55,102 +55,117 @@ const PATIENT_JWT = buildFakePatientJwt();
 const STREAM_CALL_ID = 'e2e-test-call-id';
 
 // ---------------------------------------------------------------------------
-// Test suite
+// Helpers — seed and cleanup for the transition test
+// ---------------------------------------------------------------------------
+
+/**
+ * Seed the video room, session, and patient rows needed by the waiting-room
+ * transition test. Isolated in a helper so only the test that needs the data
+ * calls it — preventing parallel `beforeEach` from resetting the room status
+ * mid-poll (the root cause of the full-suite flake).
+ */
+async function seedVideoRoom(): Promise<void> {
+  const seed = await readSeedState();
+  const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
+  try {
+    // Clean up any leftover rows from a previous run
+    await sql`DELETE FROM public.video_session_logs WHERE session_id = ${TEST_SESSION_ID}`;
+    await sql`DELETE FROM public.video_recordings WHERE session_id = ${TEST_SESSION_ID}`;
+    await sql`DELETE FROM public.video_rooms WHERE session_id = ${TEST_SESSION_ID}`;
+    await sql`DELETE FROM public.session_history WHERE session_id = ${TEST_SESSION_ID}`;
+    await sql`DELETE FROM public.sessions WHERE id = ${TEST_SESSION_ID}`;
+    await sql`DELETE FROM public.consent_terms WHERE patient_id = ${TEST_PATIENT_ID}`;
+    await sql`DELETE FROM public.patients WHERE id = ${TEST_PATIENT_ID}`;
+
+    // Seed the test patient
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status)
+      VALUES (
+        ${TEST_PATIENT_ID},
+        ${SEED_USER_ID},
+        'Paciente Teste Video',
+        'individual',
+        'active'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        full_name = EXCLUDED.full_name,
+        status = EXCLUDED.status;
+    `;
+
+    // Seed the test session (online, status=scheduled, future start)
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, is_blocking
+      )
+      VALUES (
+        ${TEST_SESSION_ID},
+        ${SEED_USER_ID},
+        ${TEST_PATIENT_ID},
+        now() + interval '30 minutes',
+        now() + interval '1 hour 20 minutes',
+        50,
+        'scheduled',
+        false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at         = EXCLUDED.start_at,
+        end_at           = EXCLUDED.end_at,
+        duration_minutes = EXCLUDED.duration_minutes,
+        status           = EXCLUDED.status;
+    `;
+
+    // Seed the video room — available window straddles NOW so the patient
+    // lands in the 'waiting' state (pending + within window).
+    // availableFrom: 5 minutes ago, expiresAt: 2 hours from now.
+    await sql`
+      INSERT INTO public.video_rooms (
+        id, user_id, session_id, stream_call_id,
+        patient_token, patient_jwt,
+        available_from, expires_at, status
+      )
+      VALUES (
+        ${TEST_VIDEO_ROOM_ID},
+        ${SEED_USER_ID},
+        ${TEST_SESSION_ID},
+        ${STREAM_CALL_ID},
+        ${PATIENT_TOKEN},
+        ${PATIENT_JWT},
+        now() - interval '5 minutes',
+        now() + interval '2 hours',
+        'pending'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        stream_call_id = EXCLUDED.stream_call_id,
+        patient_token  = EXCLUDED.patient_token,
+        patient_jwt    = EXCLUDED.patient_jwt,
+        available_from = EXCLUDED.available_from,
+        expires_at     = EXCLUDED.expires_at,
+        status         = EXCLUDED.status;
+    `;
+  } finally {
+    await sql.end();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Waiting-room transition test (needs DB state)
 // ---------------------------------------------------------------------------
 
 test.describe('@telepsicologia patient video join flow', () => {
   // No storageState — this is a public page (token is the credential)
 
-  // Generous timeout: the test waits for a poll cycle (up to ~15s)
+  // Generous timeout: the test waits for multiple poll cycles (10s each)
   test.setTimeout(60_000);
 
-  // Seed and cleanup before each test
-  test.beforeEach(async () => {
-    const seed = await readSeedState();
-    const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
-    try {
-      // Clean up any leftover video_rooms and test session/patient
-      await sql`DELETE FROM public.video_session_logs WHERE session_id = ${TEST_SESSION_ID}`;
-      await sql`DELETE FROM public.video_recordings WHERE session_id = ${TEST_SESSION_ID}`;
-      await sql`DELETE FROM public.video_rooms WHERE session_id = ${TEST_SESSION_ID}`;
-      await sql`DELETE FROM public.session_history WHERE session_id = ${TEST_SESSION_ID}`;
-      await sql`DELETE FROM public.sessions WHERE id = ${TEST_SESSION_ID}`;
-      await sql`DELETE FROM public.consent_terms WHERE patient_id = ${TEST_PATIENT_ID}`;
-      await sql`DELETE FROM public.patients WHERE id = ${TEST_PATIENT_ID}`;
-
-      // Seed the test patient
-      await sql`
-        INSERT INTO public.patients (id, user_id, full_name, patient_type, status)
-        VALUES (
-          ${TEST_PATIENT_ID},
-          ${SEED_USER_ID},
-          'Paciente Teste Video',
-          'individual',
-          'active'
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          full_name = EXCLUDED.full_name,
-          status = EXCLUDED.status;
-      `;
-
-      // Seed the test session (online, status=scheduled, future start)
-      await sql`
-        INSERT INTO public.sessions (
-          id, user_id, patient_id,
-          start_at, end_at, duration_minutes,
-          status, is_blocking
-        )
-        VALUES (
-          ${TEST_SESSION_ID},
-          ${SEED_USER_ID},
-          ${TEST_PATIENT_ID},
-          now() + interval '30 minutes',
-          now() + interval '1 hour 20 minutes',
-          50,
-          'scheduled',
-          false
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          start_at         = EXCLUDED.start_at,
-          end_at           = EXCLUDED.end_at,
-          duration_minutes = EXCLUDED.duration_minutes,
-          status           = EXCLUDED.status;
-      `;
-
-      // Seed the video room — available window straddles NOW so the patient
-      // lands in the 'waiting' state (pending + within window).
-      // availableFrom: 5 minutes ago, expiresAt: 2 hours from now.
-      await sql`
-        INSERT INTO public.video_rooms (
-          id, user_id, session_id, stream_call_id,
-          patient_token, patient_jwt,
-          available_from, expires_at, status
-        )
-        VALUES (
-          ${TEST_VIDEO_ROOM_ID},
-          ${SEED_USER_ID},
-          ${TEST_SESSION_ID},
-          ${STREAM_CALL_ID},
-          ${PATIENT_TOKEN},
-          ${PATIENT_JWT},
-          now() - interval '5 minutes',
-          now() + interval '2 hours',
-          'pending'
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          stream_call_id = EXCLUDED.stream_call_id,
-          patient_token  = EXCLUDED.patient_token,
-          patient_jwt    = EXCLUDED.patient_jwt,
-          available_from = EXCLUDED.available_from,
-          expires_at     = EXCLUDED.expires_at,
-          status         = EXCLUDED.status;
-      `;
-    } finally {
-      await sql.end();
-    }
-  });
-
   test('patient sees waiting room, then transitions to in-call after admit', async ({ page }) => {
+    // Seed the video room for THIS test only. Other tests in this file do not
+    // need DB state and run in separate describe blocks to avoid the parallel
+    // beforeEach race: a concurrent beforeEach that re-inserts with
+    // status='pending' would overwrite the 'active' UPDATE mid-poll.
+    await seedVideoRoom();
+
     // Intercept ALL Stream SDK network calls so the headless browser never
     // hits the real Stream.io API. The Stream SDK makes requests to
     // `*.stream-io-api.com` and `*.getstream.io` domains.
@@ -188,8 +203,8 @@ test.describe('@telepsicologia patient video join flow', () => {
     // <div>, not a heading, so we target the exact text.
     await expect(page.getByText('Seed User', { exact: true })).toBeVisible({ timeout: 15_000 });
 
-    // Verify the "Aguarde" waiting message
-    await expect(page.getByText(/Aguarde.*vai admitir voce em breve/)).toBeVisible();
+    // Verify the "Aguarde" waiting message (accented Portuguese)
+    await expect(page.getByText(/Aguarde.*vai admitir você em breve/)).toBeVisible();
 
     // -----------------------------------------------------------------------
     // Simulate psychologist admitting the patient: UPDATE status to 'active'
@@ -221,11 +236,11 @@ test.describe('@telepsicologia patient video join flow', () => {
     // room state (the "Aguarde" text disappears) which proves the
     // waiting->active DB poll worked correctly.
     await expect(async () => {
-      await expect(page.getByText(/Aguarde.*vai admitir voce em breve/)).toBeHidden();
+      await expect(page.getByText(/Aguarde.*vai admitir você em breve/)).toBeHidden();
     }).toPass({ timeout: 25_000 });
 
     // [STREAM-MOCK] The in-call view renders one of two states:
-    //   a) "Conectando ao servidor de video..." (SDK init pending/failed)
+    //   a) "Conectando ao servidor de vídeo..." (SDK init pending/failed)
     //   b) "Conectando..." (inside StreamCall, CallingState != JOINED)
     //   c) Full call chrome with controls toolbar
     //
@@ -248,7 +263,7 @@ test.describe('@telepsicologia patient video join flow', () => {
         .isVisible()
         .catch(() => false);
       const leaveButtonVisible = await page
-        .getByRole('button', { name: /Sair da sessao/i })
+        .getByRole('button', { name: /Sair da sessão/i })
         .isVisible()
         .catch(() => false);
 
@@ -259,12 +274,24 @@ test.describe('@telepsicologia patient video join flow', () => {
       ).toBeTruthy();
     }).toPass({ timeout: 10_000 });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Error-state tests (no DB seeding needed — stateless assertions)
+//
+// Separated from the transition test above to prevent the parallel
+// `beforeEach` race condition. These tests do not use the seeded video room
+// and must never trigger re-insertion of the room row.
+// ---------------------------------------------------------------------------
+
+test.describe('@telepsicologia patient video join error states', () => {
+  test.setTimeout(30_000);
 
   test('shows error message for invalid token format', async ({ page }) => {
     // Invalid token (not 64-char hex) triggers notFound() in the RSC shell
     await page.goto('/v/invalid-token');
 
-    // The not-found page uses accented Portuguese: "Link de sessão inválido"
+    // The not-found page (server-rendered) uses correct accented Portuguese
     await expect(page.getByText('Link de sessão inválido')).toBeVisible({ timeout: 10_000 });
   });
 
@@ -274,8 +301,8 @@ test.describe('@telepsicologia patient video join flow', () => {
 
     await page.goto(`/v/${unknownToken}`);
 
-    // The page mounts, POSTs to /api/video/join, gets 404, shows error
-    await expect(page.getByText(/Link invalido|sessao nao encontrada/i)).toBeVisible({
+    // The page mounts, POSTs to /api/video/join, gets 404, shows error (accented)
+    await expect(page.getByText(/Link inválido|sessão não encontrada/i)).toBeVisible({
       timeout: 10_000,
     });
   });
