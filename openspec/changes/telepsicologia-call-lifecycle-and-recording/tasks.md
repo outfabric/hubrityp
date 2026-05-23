@@ -10,8 +10,8 @@
 
 ## 3. Inngest cron — room expiry
 
-- [ ] 3.1 Create `src/modules/telepsicologia/inngest/room-expiry.ts` — Inngest cron `*/15 * * * *` TZ=America/Sao_Paulo. Steps: (1) query video_rooms WHERE status IN ('pending', 'active') AND expires_at < NOW(), (2) for each: end Stream call (try/catch), UPDATE status='expired', INSERT video_session_logs event_type='room_expired'. (3) Also check for "5 min empty" rooms: query video_rooms WHERE status='active', then check video_session_logs for rooms where last event is *_left with no subsequent *_joined and created_at > 5 min ago -> expire these too
-- [ ] 3.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/room-expiry.int.test.ts` — mock Stream SDK. Tests: expired room gets status='expired' + log entry, active room not yet expired is skipped, empty-for-5min room is expired, already-ended room is skipped
+- [x] 3.1 Create `src/modules/telepsicologia/inngest/room-expiry.ts` — Inngest cron `*/15 * * * *` TZ=America/Sao_Paulo. Steps: (1) query video_rooms WHERE status IN ('pending', 'active') AND expires_at < NOW(), (2) for each: end Stream call (try/catch), UPDATE status='expired', INSERT video_session_logs event_type='room_expired'. (3) Also check for "5 min empty" rooms: query video_rooms WHERE status='active', then check video_session_logs for rooms where last event is *_left with no subsequent *_joined and created_at > 5 min ago -> expire these too
+- [x] 3.2 **Integration test:** Create `src/__tests__/integration/telepsicologia/room-expiry.int.test.ts` — mock Stream SDK. Tests: expired room gets status='expired' + log entry, active room not yet expired is skipped, empty-for-5min room is expired, already-ended room is skipped
 
 ## 4. Inngest cron — recording cleanup
 
