@@ -36,7 +36,7 @@
 
 ## 7. E2E test
 
-- [ ] 7.1 **E2E test:** Create `src/__tests__/e2e/seeded/telepsicologia/patient-join-flow.spec.ts` — seed: psychologist + patient + online session + video_room with patient_token. Mock Stream SDK via page.route() to intercept Stream API calls. Flow: navigate to /v/[token], verify waiting room renders with psychologist name, simulate room status change to 'active' (update DB directly), verify in-call UI renders with controls (mic, camera, leave). Mark Stream-dependent assertions clearly for mock review
+- [x] 7.1 **E2E test:** Create `src/__tests__/e2e/seeded/telepsicologia/patient-join-flow.spec.ts` — seed: psychologist + patient + online session + video_room with patient_token. Mock Stream SDK via page.route() to intercept Stream API calls. Flow: navigate to /v/[token], verify waiting room renders with psychologist name, simulate room status change to 'active' (update DB directly), verify in-call UI renders with controls (mic, camera, leave). Mark Stream-dependent assertions clearly for mock review
 
 ## 8. Module barrel update
 
