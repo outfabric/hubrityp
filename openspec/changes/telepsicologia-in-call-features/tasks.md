@@ -33,4 +33,4 @@
 
 ## 6. Module barrel update
 
-- [ ] 6.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for: ChatDrawer, ChatMessageList, ChatInput, ScreenShareIndicator, ProntuarioCallDrawer, TroubleshootingPopover
+- [x] 6.1 Update `src/modules/telepsicologia/index.ts` — add re-exports for: ChatDrawer, ChatMessageList, ChatInput, ScreenShareIndicator, ProntuarioCallDrawer, TroubleshootingPopover
