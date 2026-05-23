@@ -5,7 +5,7 @@ import {
   ToggleAudioPublishingButton,
   ToggleVideoPublishingButton,
 } from '@stream-io/video-react-sdk';
-import { MessageSquare, PhoneOff } from 'lucide-react';
+import { FileText, MessageSquare, PhoneOff } from 'lucide-react';
 import { useState } from 'react';
 
 import type { EndVideoSessionResult } from '@/modules/telepsicologia';
@@ -27,6 +27,12 @@ interface CallControlBarProps {
   onChatToggle: () => void;
   /** Whether there are unread chat messages (drawer was closed when they arrived). */
   hasUnreadMessages: boolean;
+  /** Whether the current user is a psychologist (controls prontuario button visibility). */
+  isPsychologist?: boolean;
+  /** Whether the prontuario drawer is currently open. */
+  isProntuarioOpen?: boolean;
+  /** Toggle the prontuario drawer open/close. Psychologist-only. */
+  onProntuarioToggle?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,6 +49,9 @@ export function CallControlBar({
   isChatOpen,
   onChatToggle,
   hasUnreadMessages,
+  isPsychologist = false,
+  isProntuarioOpen = false,
+  onProntuarioToggle,
 }: CallControlBarProps) {
   const [showEndDialog, setShowEndDialog] = useState(false);
 
@@ -82,6 +91,19 @@ export function CallControlBar({
             />
           )}
         </div>
+
+        {/* Prontuario toggle — psychologist only */}
+        {isPsychologist && onProntuarioToggle && (
+          <Button
+            variant={isProntuarioOpen ? 'outline' : 'ghost'}
+            size="icon"
+            aria-label={isProntuarioOpen ? 'Fechar prontuario' : 'Abrir prontuario'}
+            onClick={onProntuarioToggle}
+            data-testid="prontuario-toggle-button"
+          >
+            <FileText className="h-5 w-5" aria-hidden="true" />
+          </Button>
+        )}
 
         {/* End call — danger button */}
         <Button

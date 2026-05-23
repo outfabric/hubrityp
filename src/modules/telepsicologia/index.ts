@@ -68,5 +68,9 @@ export { ChatMessageList } from './components/chat-message-list';
 export { ChatInput } from './components/chat-input';
 export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
 
+// in-call prontuario
+export { ProntuarioCallDrawer } from './components/prontuario-call-drawer';
+export { ProntuarioCallContent } from './components/prontuario-call-content';
+
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

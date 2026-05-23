@@ -15,10 +15,10 @@
 
 ## 3. Prontuario side drawer
 
-- [ ] 3.1 Create `src/modules/telepsicologia/components/prontuario-call-drawer.tsx` — `'use client'` component. shadcn Sheet side="right" (desktop 480px, mobile full). Header "Prontuario de [Paciente]" h4 + close button. Content: Suspense boundary wrapping a Server Component that loads recent evolutions and a quick evolution form for the patient. Auto-save on evolution edits (10s debounce). Link at bottom "Abrir prontuario completo" -> /pacientes/[patientId]/prontuario
-- [ ] 3.2 Create `src/modules/telepsicologia/components/prontuario-call-content.tsx` — Server Component loaded inside the drawer's Suspense boundary. Fetches recent evolutions (last 5) and renders a simplified evolution creation form. Uses existing prontuario module Server Actions for CRUD. RLS-scoped (psychologist is authenticated)
-- [ ] 3.3 Update `src/modules/telepsicologia/components/call-control-bar.tsx` — add prontuario toggle button (FileText icon, ghost variant) for psychologist only. Hidden from patient view. Opens ProntuarioCallDrawer
-- [ ] 3.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/prontuario-call-drawer.test.tsx` — mock Suspense content. Tests: drawer opens/closes, header shows patient name, "Abrir prontuario completo" link has correct href
+- [x] 3.1 Create `src/modules/telepsicologia/components/prontuario-call-drawer.tsx` — `'use client'` component. shadcn Sheet side="right" (desktop 480px, mobile full). Header "Prontuario de [Paciente]" h4 + close button. Content: Suspense boundary wrapping a Server Component that loads recent evolutions and a quick evolution form for the patient. Auto-save on evolution edits (10s debounce). Link at bottom "Abrir prontuario completo" -> /pacientes/[patientId]/prontuario
+- [x] 3.2 Create `src/modules/telepsicologia/components/prontuario-call-content.tsx` — Server Component loaded inside the drawer's Suspense boundary. Fetches recent evolutions (last 5) and renders a simplified evolution creation form. Uses existing prontuario module Server Actions for CRUD. RLS-scoped (psychologist is authenticated)
+- [x] 3.3 Update `src/modules/telepsicologia/components/call-control-bar.tsx` — add prontuario toggle button (FileText icon, ghost variant) for psychologist only. Hidden from patient view. Opens ProntuarioCallDrawer
+- [x] 3.4 **Unit test:** Create `src/__tests__/unit/modules/telepsicologia/components/prontuario-call-drawer.test.tsx` — mock Suspense content. Tests: drawer opens/closes, header shows patient name, "Abrir prontuario completo" link has correct href
 
 ## 4. Troubleshooting help panel
 
