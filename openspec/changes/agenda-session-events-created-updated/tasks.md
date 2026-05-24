@@ -1,6 +1,6 @@
 ## 1. Inngest Client Setup
 
-- [ ] 1.1 Create `src/modules/agenda/inngest/client.ts` — re-export the shared Inngest client from `@/modules/whatsapp/inngest/client`, following the same pattern as `src/modules/telepsicologia/inngest/client.ts`
+- [x] 1.1 Create `src/modules/agenda/inngest/client.ts` — re-export the shared Inngest client from `@/modules/whatsapp/inngest/client`, following the same pattern as `src/modules/telepsicologia/inngest/client.ts`
 
 ## 2. Wire session.created Event
 
