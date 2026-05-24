@@ -18,8 +18,8 @@
 
 ## 5. Unit Tests
 
-- [ ] 5.1 Create `src/__tests__/unit/modules/agenda/server/create-session-events.test.ts` — mock `@/modules/agenda/inngest/client`, `@/shared/db/client` (with transaction support), and `supabase.auth.getUser()`. Test: (a) successful create calls `inngest.send()` with correct event name and Zod-valid payload, (b) `inngest.send()` failure does not cause operation to fail (returns `{ ok: true }`), (c) failure logs structured error via `logger.error()`
-- [ ] 5.2 Create `src/__tests__/unit/modules/agenda/server/update-session-events.test.ts` — same mock setup. Test: (a) successful update calls `inngest.send()` with correct event name and payload including `previousModality: existing.modality`, (b) fire-and-forget on failure, (c) `previousModality` reflects value from existing session not from input, (d) `status` uses `existing.status`
+- [x] 5.1 Create `src/__tests__/unit/modules/agenda/server/create-session-events.test.ts` — mock `@/modules/agenda/inngest/client`, `@/shared/db/client` (with transaction support), and `supabase.auth.getUser()`. Test: (a) successful create calls `inngest.send()` with correct event name and Zod-valid payload, (b) `inngest.send()` failure does not cause operation to fail (returns `{ ok: true }`), (c) failure logs structured error via `logger.error()`
+- [x] 5.2 Create `src/__tests__/unit/modules/agenda/server/update-session-events.test.ts` — same mock setup. Test: (a) successful update calls `inngest.send()` with correct event name and payload including `previousModality: existing.modality`, (b) fire-and-forget on failure, (c) `previousModality` reflects value from existing session not from input, (d) `status` uses `existing.status`
 
 ## 6. Integration Tests
 
