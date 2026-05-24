@@ -9,8 +9,8 @@
 
 ## 3. Wire session.updated Event
 
-- [ ] 3.1 In `src/modules/agenda/server/update-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionUpdatedEventSchema` (from `@/modules/agenda/lib/session-events`)
-- [ ] 3.2 In `updateSessionImpl`, after the transaction commits (line ~274) and before `return { ok: true }`, add fire-and-forget `inngest.send()` wrapped in try/catch: validate payload with `sessionUpdatedEventSchema.parse()`, include `previousModality: existing.modality` and `status: existing.status`, log error on failure with `{ event: 'inngest_send_failed', eventName: 'agenda/session.updated', sessionId }`
+- [x] 3.1 In `src/modules/agenda/server/update-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionUpdatedEventSchema` (from `@/modules/agenda/lib/session-events`)
+- [x] 3.2 In `updateSessionImpl`, after the transaction commits (line ~274) and before `return { ok: true }`, add fire-and-forget `inngest.send()` wrapped in try/catch: validate payload with `sessionUpdatedEventSchema.parse()`, include `previousModality: existing.modality` and `status: existing.status`, log error on failure with `{ event: 'inngest_send_failed', eventName: 'agenda/session.updated', sessionId }`
 
 ## 4. Barrel Exports
 
