@@ -4,8 +4,8 @@
 
 ## 2. Wire session.created Event
 
-- [ ] 2.1 In `src/modules/agenda/server/create-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionCreatedEventSchema` (from `@/modules/agenda/lib/session-events`)
-- [ ] 2.2 In `createSessionImpl`, after the transaction commits (line ~186) and before `return { ok: true, sessionId: inserted.id }`, add fire-and-forget `inngest.send()` wrapped in try/catch: validate payload with `sessionCreatedEventSchema.parse()`, send with event name `'agenda/session.created'`, log error on failure with `{ event: 'inngest_send_failed', eventName: 'agenda/session.created', sessionId: inserted.id }`
+- [x] 2.1 In `src/modules/agenda/server/create-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionCreatedEventSchema` (from `@/modules/agenda/lib/session-events`)
+- [x] 2.2 In `createSessionImpl`, after the transaction commits (line ~186) and before `return { ok: true, sessionId: inserted.id }`, add fire-and-forget `inngest.send()` wrapped in try/catch: validate payload with `sessionCreatedEventSchema.parse()`, send with event name `'agenda/session.created'`, log error on failure with `{ event: 'inngest_send_failed', eventName: 'agenda/session.created', sessionId: inserted.id }`
 
 ## 3. Wire session.updated Event
 

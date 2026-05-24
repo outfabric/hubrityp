@@ -3,8 +3,10 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, gte, isNull, lte, notInArray } from 'drizzle-orm';
 
+import { inngest } from '@/modules/agenda/inngest/client';
 import { calculateEndTime, isInPast } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
+import { sessionCreatedEventSchema } from '@/modules/agenda/lib/session-events';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory, locations } from '@/shared/db/schema/agenda/tables';
@@ -184,6 +186,36 @@ export async function createSessionImpl(
 
       return [sessionRow!];
     });
+
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    try {
+      const payload = sessionCreatedEventSchema.parse({
+        sessionId: inserted.id,
+        userId,
+        patientId: data.patient_id ?? null,
+        modality: data.modality ?? null,
+        status: 'scheduled',
+        startAt,
+        endAt,
+      });
+
+      await inngest.send({
+        name: 'agenda/session.created',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.created',
+          sessionId: inserted.id,
+          error: errMsg,
+        },
+        'failed to send agenda/session.created event',
+      );
+    }
 
     return { ok: true, sessionId: inserted.id };
   } catch (err: unknown) {
