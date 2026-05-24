@@ -101,6 +101,10 @@ export { generateConfirmationToken, isTokenExpired } from './lib/confirmation-to
 
 // ---- Lib — Inngest session event schemas ------------------------------------
 export {
+  sessionCreatedEventSchema,
+  type SessionCreatedEvent,
+  sessionUpdatedEventSchema,
+  type SessionUpdatedEvent,
   sessionConfirmedEventSchema,
   type SessionConfirmedEvent,
   sessionCancelledEventSchema,

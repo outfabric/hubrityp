@@ -14,7 +14,7 @@
 
 ## 4. Barrel Exports
 
-- [ ] 4.1 Update `src/modules/agenda/index.ts` to export `sessionCreatedEventSchema`, `SessionCreatedEvent`, `sessionUpdatedEventSchema`, and `SessionUpdatedEvent` from `./lib/session-events` (add to the existing session-events export block that currently only exports lifecycle event schemas)
+- [x] 4.1 Update `src/modules/agenda/index.ts` to export `sessionCreatedEventSchema`, `SessionCreatedEvent`, `sessionUpdatedEventSchema`, and `SessionUpdatedEvent` from `./lib/session-events` (add to the existing session-events export block that currently only exports lifecycle event schemas)
 
 ## 5. Unit Tests
 
