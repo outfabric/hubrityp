@@ -23,4 +23,4 @@
 
 ## 6. Integration Tests
 
-- [ ] 6.1 Create `src/__tests__/integration/agenda/session-events.int.test.ts` — run against real Postgres with Drizzle migrations. Mock `inngest.send()` at the module level. Test: (a) create session with modality 'online' emits `agenda/session.created` with correct payload, (b) update session from 'in_person' to 'online' emits `agenda/session.updated` with `previousModality: 'in_person'`, (c) create blocking slot (no patient) emits event with `patientId: null`, (d) update keeping same modality has matching `previousModality`
+- [x] 6.1 Create `src/__tests__/integration/agenda/session-events.int.test.ts` — run against real Postgres with Drizzle migrations. Mock `inngest.send()` at the module level. Test: (a) create session with modality 'online' emits `agenda/session.created` with correct payload, (b) update session from 'in_person' to 'online' emits `agenda/session.updated` with `previousModality: 'in_person'`, (c) create blocking slot (no patient) emits event with `patientId: null`, (d) update keeping same modality has matching `previousModality`
