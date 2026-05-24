@@ -8,11 +8,12 @@ import {
 import { FileText, MessageSquare, PhoneOff } from 'lucide-react';
 import { useState } from 'react';
 
-import type { EndVideoSessionResult } from '@/modules/telepsicologia';
+import type { EndVideoSessionResult, ToggleRecordingResult } from '@/modules/telepsicologia';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Button } from '@/shared/ui/button';
 
 import { EndCallDialog } from './end-call-dialog';
+import { RecordingControls } from './recording-controls';
 import { TroubleshootingPopover } from './troubleshooting-popover';
 
 // ---------------------------------------------------------------------------
@@ -34,6 +35,17 @@ interface CallControlBarProps {
   isProntuarioOpen?: boolean;
   /** Toggle the prontuario drawer open/close. Psychologist-only. */
   onProntuarioToggle?: () => void;
+  /** Whether the patient has valid recording consent. Psychologist-only. */
+  hasRecordingConsent?: boolean;
+  /** Whether the room is currently recording. Psychologist-only. */
+  isRecording?: boolean;
+  /** Server Action that toggles recording start/stop. Psychologist-only. */
+  onToggleRecording?: (input: {
+    room_id: string;
+    action: 'start' | 'stop';
+  }) => Promise<ToggleRecordingResult>;
+  /** Callback fired after a successful recording state change. */
+  onRecordingChange?: (isRecording: boolean) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -53,6 +65,10 @@ export function CallControlBar({
   isPsychologist = false,
   isProntuarioOpen = false,
   onProntuarioToggle,
+  hasRecordingConsent = false,
+  isRecording = false,
+  onToggleRecording,
+  onRecordingChange,
 }: CallControlBarProps) {
   const [showEndDialog, setShowEndDialog] = useState(false);
 
@@ -104,6 +120,17 @@ export function CallControlBar({
           >
             <FileText className="h-5 w-5" aria-hidden="true" />
           </Button>
+        )}
+
+        {/* Recording controls — psychologist only */}
+        {isPsychologist && onToggleRecording && (
+          <RecordingControls
+            roomId={room.id}
+            hasConsent={hasRecordingConsent}
+            isRecording={isRecording}
+            onToggleRecording={onToggleRecording}
+            onRecordingChange={onRecordingChange}
+          />
         )}
 
         {/* Troubleshooting help — psychologist view (no psychologist name) */}

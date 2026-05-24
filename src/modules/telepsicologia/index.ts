@@ -22,9 +22,28 @@
 
 // ---- Server Actions (delegated to by the route shells) -----------------------
 export { admitPatientImpl, type AdmitPatientResult } from './server/admit-patient';
+export {
+  captureSessionMetadata,
+  type CaptureSessionMetadataResult,
+  type SessionMetadata,
+} from './server/capture-session-metadata';
 export { createVideoRoomImpl, type CreateVideoRoomResult } from './server/create-video-room';
+export {
+  createVideoRoomHelper,
+  type CreateVideoRoomHelperResult,
+  type SessionData as VideoRoomSessionData,
+} from './server/create-video-room-helper';
 export { endVideoSessionImpl, type EndVideoSessionResult } from './server/end-video-session';
+export { extendSessionImpl, type ExtendSessionResult } from './server/extend-session';
+export {
+  getOnlineSessionStatsImpl,
+  type GetOnlineSessionStatsResult,
+  type OnlineSessionStats,
+  onlineSessionStatsInputSchema,
+  type OnlineSessionStatsInput,
+} from './server/get-online-session-stats';
 export { getVideoTokenImpl, type GetVideoTokenResult } from './server/get-video-token';
+export { toggleRecordingImpl, type ToggleRecordingResult } from './server/toggle-recording';
 
 // ---- Zod Schemas -------------------------------------------------------------
 export {
@@ -32,6 +51,11 @@ export {
   type VideoRoomInput,
   videoTokenInputSchema,
   type VideoTokenInput,
+  toggleRecordingInputSchema,
+  type ToggleRecordingInput,
+  type ToggleRecordingAction,
+  extendSessionInputSchema,
+  type ExtendSessionInput,
   VIDEO_ROOM_STATUSES,
   type VideoRoomStatus,
 } from './lib/schemas';
@@ -73,8 +97,16 @@ export type { ChatMessage, ChatCustomEventPayload } from './lib/chat-types';
 export { ProntuarioCallDrawer } from './components/prontuario-call-drawer';
 export { ProntuarioCallContent } from './components/prontuario-call-content';
 
+// in-call recording
+export { RecordingControls } from './components/recording-controls';
+
 // in-call troubleshooting
 export { TroubleshootingPopover } from './components/troubleshooting-popover';
+
+// ---- Inngest functions -------------------------------------------------------
+export { autoCreateVideoRoom } from './inngest/auto-create-room';
+export { roomExpiryCron } from './inngest/room-expiry';
+export { recordingCleanupCron } from './inngest/recording-cleanup';
 
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';

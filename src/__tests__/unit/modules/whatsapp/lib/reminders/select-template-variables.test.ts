@@ -274,6 +274,55 @@ describe('selectTemplateVariables — modality filtering', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Video link URL format (populated from video_rooms integration)
+// ---------------------------------------------------------------------------
+
+describe('selectTemplateVariables — video link URL format', () => {
+  it('populates link_video with correct patient video URL format when videoLink is provided', () => {
+    const patientVideoUrl =
+      'https://app.hubrityp.com.br/v/a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+    const session = defaultSession({ modality: 'online', videoLink: patientVideoUrl });
+    const result = selectTemplateVariables(
+      session,
+      defaultPatient(),
+      defaultPsychologist(),
+      null,
+      'video',
+    );
+
+    expect(result).toHaveProperty('link_video', patientVideoUrl);
+    // Verify the URL follows the expected /v/<token> pattern
+    expect(result.link_video).toMatch(/^https:\/\/.+\/v\/[0-9a-f]{64}$/);
+  });
+
+  it('omits link_video when videoLink is null (no video room exists yet)', () => {
+    const session = defaultSession({ modality: 'online', videoLink: null });
+    const result = selectTemplateVariables(
+      session,
+      defaultPatient(),
+      defaultPsychologist(),
+      null,
+      'video',
+    );
+
+    expect(result).not.toHaveProperty('link_video');
+  });
+
+  it('omits link_video when videoLink is undefined (no video room exists yet)', () => {
+    const session = defaultSession({ modality: 'online', videoLink: undefined });
+    const result = selectTemplateVariables(
+      session,
+      defaultPatient(),
+      defaultPsychologist(),
+      null,
+      'video',
+    );
+
+    expect(result).not.toHaveProperty('link_video');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Unknown kind
 // ---------------------------------------------------------------------------
 

@@ -6,11 +6,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   dispatchReminders,
   type DispatcherDeps,
+  fetchVideoLink,
+  fetchVideoLinksBatch,
   type ReminderSendFanOutEvent,
 } from '@/modules/whatsapp/inngest/reminders-dispatcher';
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
+import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import {
   messageTemplates,
   reminderSettings,
@@ -146,6 +149,7 @@ afterEach(async () => {
     await db.delete(messageTemplates);
     await db.delete(reminderSettings);
     await db.delete(whatsappAccounts);
+    await db.delete(videoRooms);
     await db.delete(sessions);
     await db.delete(patients);
     await db.execute(dsql`DELETE FROM profiles WHERE email LIKE 'test-%@example.com'`);
@@ -457,6 +461,121 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
 
     const kinds = emittedEvents.map((e) => e.data.kind).sort();
     expect(kinds).toEqual(['early', 'final']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchVideoLink / fetchVideoLinksBatch
+// ---------------------------------------------------------------------------
+
+describe('fetchVideoLink()', () => {
+  it('returns the correct patient video URL when a video_rooms row exists', async () => {
+    const userId = randomUUID();
+    const sessionId = randomUUID();
+    const patientToken = 'a'.repeat(64);
+    const appUrl = 'https://app.hubrityp.com.br';
+
+    await seedAuthUser(userId);
+    await seedProfile(userId);
+    await seedSession(userId, sessionId, new Date('2026-06-15T14:00:00Z'));
+
+    await runAsService(async (db) => {
+      await db.insert(videoRooms).values({
+        userId,
+        sessionId,
+        streamCallId: `session-${sessionId}`,
+        patientToken,
+        patientJwt: 'fake-jwt-for-test',
+        availableFrom: new Date('2026-06-15T13:00:00Z'),
+        expiresAt: new Date('2026-06-15T16:00:00Z'),
+        status: 'pending',
+      });
+    });
+
+    const db = await getServiceDb();
+    const result = await fetchVideoLink(db, sessionId, appUrl);
+
+    expect(result).toBe(`${appUrl}/v/${patientToken}`);
+  });
+
+  it('returns null when no video room exists for the session', async () => {
+    const db = await getServiceDb();
+    const result = await fetchVideoLink(db, randomUUID(), 'https://app.hubrityp.com.br');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when appUrl is undefined', async () => {
+    const db = await getServiceDb();
+    const result = await fetchVideoLink(db, randomUUID(), undefined);
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('fetchVideoLinksBatch()', () => {
+  it('returns a Map with video URLs for all sessions that have rooms', async () => {
+    const userId = randomUUID();
+    const session1 = randomUUID();
+    const session2 = randomUUID();
+    const session3 = randomUUID();
+    const token1 = 'b'.repeat(64);
+    const token2 = 'c'.repeat(64);
+    const appUrl = 'https://app.hubrityp.com.br';
+
+    await seedAuthUser(userId);
+    await seedProfile(userId);
+    await seedSession(userId, session1, new Date('2026-06-15T14:00:00Z'));
+    await seedSession(userId, session2, new Date('2026-06-15T15:00:00Z'));
+    await seedSession(userId, session3, new Date('2026-06-15T16:00:00Z'));
+
+    await runAsService(async (db) => {
+      await db.insert(videoRooms).values([
+        {
+          userId,
+          sessionId: session1,
+          streamCallId: `session-${session1}`,
+          patientToken: token1,
+          patientJwt: 'fake-jwt-1',
+          availableFrom: new Date('2026-06-15T13:00:00Z'),
+          expiresAt: new Date('2026-06-15T16:00:00Z'),
+          status: 'active',
+        },
+        {
+          userId,
+          sessionId: session2,
+          streamCallId: `session-${session2}`,
+          patientToken: token2,
+          patientJwt: 'fake-jwt-2',
+          availableFrom: new Date('2026-06-15T14:00:00Z'),
+          expiresAt: new Date('2026-06-15T17:00:00Z'),
+          status: 'pending',
+        },
+      ]);
+    });
+
+    const db = await getServiceDb();
+    // session3 has no room — should be absent from the map
+    const result = await fetchVideoLinksBatch(db, [session1, session2, session3], appUrl);
+
+    expect(result.size).toBe(2);
+    expect(result.get(session1)).toBe(`${appUrl}/v/${token1}`);
+    expect(result.get(session2)).toBe(`${appUrl}/v/${token2}`);
+    expect(result.has(session3)).toBe(false);
+  });
+
+  it('returns an empty Map when sessionIds array is empty', async () => {
+    const db = await getServiceDb();
+    const result = await fetchVideoLinksBatch(db, [], 'https://app.hubrityp.com.br');
+
+    expect(result.size).toBe(0);
+  });
+
+  it('returns an empty Map when appUrl is undefined', async () => {
+    const db = await getServiceDb();
+    const result = await fetchVideoLinksBatch(db, [randomUUID()], undefined);
+
+    expect(result.size).toBe(0);
   });
 });
 

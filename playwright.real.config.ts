@@ -206,6 +206,7 @@ export default defineConfig({
       NEXT_PUBLIC_STREAM_API_KEY: 'e2e-real-stream-public-key',
       STREAM_API_KEY: 'e2e-real-stream-api-key',
       STREAM_API_SECRET: 'e2e-real-stream-api-secret',
+      STREAM_WEBHOOK_SECRET: 'e2e-real-stream-webhook-secret',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

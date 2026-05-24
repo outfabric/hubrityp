@@ -22,6 +22,32 @@ const dateField = z.coerce.date();
 // Event schemas (per design.md Decision #5)
 // ---------------------------------------------------------------------------
 
+/** `agenda/session.created` — a new session is created. */
+export const sessionCreatedEventSchema = z.object({
+  sessionId: uuidField,
+  userId: uuidField,
+  patientId: uuidField.nullable(),
+  modality: z.string().nullable(),
+  status: z.string(),
+  startAt: dateField,
+  endAt: dateField,
+});
+export type SessionCreatedEvent = z.infer<typeof sessionCreatedEventSchema>;
+
+/** `agenda/session.updated` — an existing session is updated. */
+export const sessionUpdatedEventSchema = z.object({
+  sessionId: uuidField,
+  userId: uuidField,
+  patientId: uuidField.nullable(),
+  modality: z.string().nullable(),
+  status: z.string(),
+  startAt: dateField,
+  endAt: dateField,
+  /** Previous modality before the update — used to detect online->in_person transitions. */
+  previousModality: z.string().nullable().optional(),
+});
+export type SessionUpdatedEvent = z.infer<typeof sessionUpdatedEventSchema>;
+
 /** `agenda/session.confirmed` — patient or therapist confirms attendance. */
 export const sessionConfirmedEventSchema = z.object({
   sessionId: uuidField,

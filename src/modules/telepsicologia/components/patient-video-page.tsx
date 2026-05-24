@@ -256,6 +256,7 @@ function renderContent(
           psychologistName={state.psychologistName}
           token={token}
           onCallEnded={onCallEnded}
+          isRecordingActive={false}
         />
       );
 

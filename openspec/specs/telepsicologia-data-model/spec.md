@@ -27,7 +27,11 @@ The system SHALL maintain a `video_session_logs` table with RLS enabled. Each ro
 - **THEN** the database rejects the insert
 
 ### Requirement: Video recordings table tracks ephemeral recording lifecycle
-The system SHALL maintain a `video_recordings` table with RLS enabled. Each row SHALL track recording status (idle, recording, processing, transcribed, discarded), Stream recording ID, duration, temporary audio URL (expires in 24h), and optional transcription_id FK. RLS policies SHALL allow SELECT/INSERT/UPDATE only (no DELETE) scoped by `user_id = auth.uid()`.
+The system SHALL maintain a `video_recordings` table with RLS enabled. Each row SHALL track recording status (idle, recording, processing, transcribed, discarded), Stream recording ID, duration, temporary audio URL (expires in 24h), and optional transcription_id FK. The status CHECK constraint SHALL include the statuses 'idle', 'recording', 'processing', 'transcribed', 'discarded'. Recordings with status 'processing' or 'transcribed' and recorded_at older than 24 hours SHALL be eligible for cleanup. RLS policies SHALL allow SELECT/INSERT/UPDATE only (no DELETE) scoped by `user_id = auth.uid()`.
+
+#### Scenario: Recording transitions through full lifecycle
+- **WHEN** a recording starts, is processed, transcribed, and then cleaned up
+- **THEN** the status transitions: idle -> recording -> processing -> transcribed -> discarded
 
 #### Scenario: Recording status transitions through lifecycle
 - **WHEN** a recording starts, is processed, and then discarded
