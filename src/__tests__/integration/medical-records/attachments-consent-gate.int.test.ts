@@ -53,8 +53,10 @@ async function seedActiveConsent(userId: string, patientId: string): Promise<voi
       id: randomUUID(),
       patientId,
       userId,
+      kind: 'general',
       termText: 'Consent term text for testing',
       signatureToken: token,
+      revocationTakesEffectImmediately: false,
       signedAt: new Date(),
     });
   });
@@ -70,8 +72,10 @@ async function seedRevokedConsent(userId: string, patientId: string): Promise<vo
       id: randomUUID(),
       patientId,
       userId,
+      kind: 'general',
       termText: 'Revoked consent term text for testing',
       signatureToken: token,
+      revocationTakesEffectImmediately: false,
       signedAt: new Date(Date.now() - 86_400_000), // signed yesterday
       revokedAt: new Date(), // revoked now
     });
@@ -196,8 +200,10 @@ describe('audio upload consent gate', () => {
         id: randomUUID(),
         patientId,
         userId,
+        kind: 'general',
         termText: 'Unsigned consent term',
         signatureToken: token,
+        revocationTakesEffectImmediately: false,
         // signedAt is null by default — consent not yet signed
       });
     });

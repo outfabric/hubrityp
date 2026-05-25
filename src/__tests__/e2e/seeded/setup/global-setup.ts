@@ -398,17 +398,21 @@ export default async function globalSetup() {
 
     // Unsigned consent term — patient can sign this one
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately)
       VALUES (
         ${ct.unsigned.id},
         ${ct.unsigned.patientId},
         ${seed.userId},
+        'general',
         ${ct.unsigned.termText},
-        ${ct.unsigned.signatureToken}
+        ${ct.unsigned.signatureToken},
+        false
       )
       ON CONFLICT (id) DO UPDATE SET
         term_text       = EXCLUDED.term_text,
         signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at       = NULL,
         signed_ip       = NULL,
         signed_user_agent = NULL,
@@ -417,13 +421,15 @@ export default async function globalSetup() {
 
     // Already-signed consent term — used to test "already signed" state
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent)
       VALUES (
         ${ct.alreadySigned.id},
         ${ct.alreadySigned.patientId},
         ${seed.userId},
+        'general',
         ${ct.alreadySigned.termText},
         ${ct.alreadySigned.signatureToken},
+        false,
         now(),
         '127.0.0.1',
         'e2e-seed-agent'
@@ -431,6 +437,8 @@ export default async function globalSetup() {
       ON CONFLICT (id) DO UPDATE SET
         term_text       = EXCLUDED.term_text,
         signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at       = EXCLUDED.signed_at,
         signed_ip       = EXCLUDED.signed_ip,
         signed_user_agent = EXCLUDED.signed_user_agent,
@@ -446,13 +454,15 @@ export default async function globalSetup() {
 
     // Revoked consent term — used to test the "revoked" badge state
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent, revoked_at)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent, revoked_at)
       VALUES (
         ${ct.revoked.id},
         ${ct.revoked.patientId},
         ${seed.userId},
+        'general',
         ${ct.revoked.termText},
         ${ct.revoked.signatureToken},
+        false,
         now() - interval '7 days',
         '127.0.0.1',
         'e2e-seed-agent',
@@ -461,6 +471,8 @@ export default async function globalSetup() {
       ON CONFLICT (id) DO UPDATE SET
         term_text         = EXCLUDED.term_text,
         signature_token   = EXCLUDED.signature_token,
+        kind              = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at         = EXCLUDED.signed_at,
         signed_ip         = EXCLUDED.signed_ip,
         signed_user_agent = EXCLUDED.signed_user_agent,

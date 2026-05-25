@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -221,8 +223,22 @@ export const consentTerms = pgTable(
     // FK to `auth.users`. Cross-schema reference emitted manually in migration.
     userId: uuid('user_id').notNull(),
 
+    // --- Kind discriminator ---
+    // Distinguishes general consent terms from AI-recording consent terms.
+    // CHECK in migration: ('general', 'ai_recording').
+    kind: text('kind').notNull(),
+
     // --- Term content ---
     termText: text('term_text').notNull(),
+
+    // --- Template snapshot (JSONB) ---
+    // Stores the consent template text at the time of generation so the
+    // signed document is immutable even if the template changes later.
+    templateSnapshot: jsonb('template_snapshot'),
+
+    // --- Template version ---
+    // Tracks which version of the consent template was used.
+    templateVersion: integer('template_version').notNull().default(1),
 
     // --- Signature token (64-char hex, UNIQUE — set in migration) ---
     signatureToken: varchar('signature_token', { length: 64 }).notNull(),
@@ -237,6 +253,11 @@ export const consentTerms = pgTable(
 
     // --- Revocation ---
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    // Whether revocation takes effect immediately (true for ai_recording)
+    // or at the end of the current treatment cycle (false for general).
+    revocationTakesEffectImmediately: boolean('revocation_takes_effect_immediately').notNull(),
+    // Free-text reason the patient or psychologist gave for revoking consent.
+    revocationReason: text('revocation_reason'),
 
     // --- Timestamps ---
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -249,6 +270,18 @@ export const consentTerms = pgTable(
     // UNIQUE constraint on signature_token is enforced in the migration SQL
     // (Drizzle will generate this from the `unique()` call).
     unique('consent_terms_signature_token_unique').on(table.signatureToken),
+
+    // Operational index for the consent lookup helper: find active consent by
+    // user + patient + kind, filtering on revoked_at.
+    index('idx_consent_terms_user_patient_kind_revoked').on(
+      table.userId,
+      table.patientId,
+      table.kind,
+      table.revokedAt,
+    ),
+
+    // CHECK: only known kind values are allowed.
+    check('consent_terms_kind_check', sql`${table.kind} IN ('general', 'ai_recording')`),
   ],
 );
 
