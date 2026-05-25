@@ -8,6 +8,7 @@
  * calculations match what the browser sees.
  */
 
+import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
 const SAO_PAULO_TZ = 'America/Sao_Paulo';
@@ -39,4 +40,18 @@ export function tomorrowInBrt(): Date {
   // Add 1 day by manipulating the date component directly, avoiding
   // addDays() which works on timestamps and can drift across DST boundaries.
   return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0, 0);
+}
+
+/**
+ * Returns the ISO date string (yyyy-MM-dd) for the given Date.
+ *
+ * This matches the `data-day` attribute that react-day-picker v10 renders on
+ * each `<td>` in the calendar grid. Using this attribute to locate day cells
+ * is immune to the "outside day ambiguity" bug: when `showOutsideDays` is
+ * true the grid shows days from adjacent months whose text-content day number
+ * matches the target, causing `.filter({ hasText })` + `.first()` to pick the
+ * wrong cell.
+ */
+export function isoDate(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
 }

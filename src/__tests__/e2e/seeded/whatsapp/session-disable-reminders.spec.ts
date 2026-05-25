@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { format } from 'date-fns';
 
-import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
+import { isoDate, nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -28,6 +28,7 @@ test.describe('@whatsapp session disable reminders', () => {
   test('creates a session with reminders disabled checkbox checked', async ({ page }) => {
     const tomorrow = tomorrowInBrt();
     const tomorrowDay = format(tomorrow, 'd');
+    const tomorrowIso = isoDate(tomorrow);
 
     // Navigate to the agenda page
     await page.goto('/agenda');
@@ -61,10 +62,10 @@ test.describe('@whatsapp session disable reminders', () => {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
-    const dayButton = calendarPopover
-      .locator('table button')
-      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
-      .first();
+    // Click the day button for tomorrow using the data-day attribute to avoid
+    // the outside-day ambiguity (showOutsideDays shows adjacent-month days
+    // with matching day numbers).
+    const dayButton = calendarPopover.locator(`td[data-day="${tomorrowIso}"] button`);
     await dayButton.click();
 
     // Select start time: 18:00 (avoids collision with other seeded sessions)
