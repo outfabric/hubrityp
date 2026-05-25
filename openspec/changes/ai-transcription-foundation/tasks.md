@@ -1,10 +1,10 @@
 ## 1. Env config
 
-- [ ] 1.1 In `src/shared/env/schemas.ts`, add to the server schema: `GEMINI_API_KEY: z.string().min(1)`, `GEMINI_MODEL_TRANSCRIPTION: z.string().regex(/^(gemini|gemma)-/).default('gemini-3.5-flash')`, `GEMINI_MODEL_NOTE: z.string().regex(/^(gemini|gemma)-/).default('gemini-3.5-flash')`, `AI_TRANSCRIPTION_BUCKET: z.string().default('ai-transcription-audio')`, `AI_TRANSCRIPTION_AUDIO_TTL_HOURS: z.coerce.number().int().min(24).max(168).default(24)`, `AI_TRANSCRIPTION_MAX_AUDIO_MB: z.coerce.number().int().min(1).max(500).default(200)`. Do NOT add any to the client schema.
-- [ ] 1.2 Update `src/shared/env/index.ts` to surface the new fields on `serverEnv`. Confirm `clientEnv` exports do NOT include them.
-- [ ] 1.3 Update `.env.example` with the six new variables, using descriptive placeholders (e.g., `GEMINI_API_KEY=<obtain at https://aistudio.google.com/apikey>`). Do NOT commit a real key.
-- [ ] 1.4 Add `GEMINI_API_KEY=<fake-for-test>` to the local docker compose env file used by `docker compose up` (only the test default key, never real).
-- [ ] 1.5 Unit test `src/__tests__/unit/shared/env/ai-transcription-env.test.ts`: (a) absence of `GEMINI_API_KEY` causes `parse` to throw with the field name in the message; (b) defaults apply for the five optional fields; (c) `AI_TRANSCRIPTION_AUDIO_TTL_HOURS=12` is rejected; (d) `clientEnv` schema does NOT contain `GEMINI_API_KEY`.
+- [x] 1.1 In `src/shared/env/schemas.ts`, add to the server schema: `GEMINI_API_KEY: z.string().min(1)`, `GEMINI_MODEL_TRANSCRIPTION: z.string().regex(/^(gemini|gemma)-/).default('gemini-3.5-flash')`, `GEMINI_MODEL_NOTE: z.string().regex(/^(gemini|gemma)-/).default('gemini-3.5-flash')`, `AI_TRANSCRIPTION_BUCKET: z.string().default('ai-transcription-audio')`, `AI_TRANSCRIPTION_AUDIO_TTL_HOURS: z.coerce.number().int().min(24).max(168).default(24)`, `AI_TRANSCRIPTION_MAX_AUDIO_MB: z.coerce.number().int().min(1).max(500).default(200)`. Do NOT add any to the client schema.
+- [x] 1.2 Update `src/shared/env/index.ts` to surface the new fields on `serverEnv`. Confirm `clientEnv` exports do NOT include them.
+- [x] 1.3 Update `.env.example` with the six new variables, using descriptive placeholders (e.g., `GEMINI_API_KEY=<obtain at https://aistudio.google.com/apikey>`). Do NOT commit a real key.
+- [x] 1.4 Add `GEMINI_API_KEY=<fake-for-test>` to the local docker compose env file used by `docker compose up` (only the test default key, never real).
+- [x] 1.5 Unit test `src/__tests__/unit/shared/env/ai-transcription-env.test.ts`: (a) absence of `GEMINI_API_KEY` causes `parse` to throw with the field name in the message; (b) defaults apply for the five optional fields; (c) `AI_TRANSCRIPTION_AUDIO_TTL_HOURS=12` is rejected; (d) `clientEnv` schema does NOT contain `GEMINI_API_KEY`.
 
 ## 2. Drizzle schema and policies
 

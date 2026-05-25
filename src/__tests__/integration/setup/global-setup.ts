@@ -18,6 +18,8 @@ export default async function globalSetup() {
   process.env.STREAM_API_KEY ??= 'integration-stream-api-key';
   process.env.STREAM_API_SECRET ??= 'integration-stream-api-secret';
   process.env.STREAM_WEBHOOK_SECRET ??= 'integration-stream-webhook-secret';
+  // Gemini AI transcription — dummy key for integration tests.
+  process.env.GEMINI_API_KEY ??= 'integration-gemini-api-key';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.

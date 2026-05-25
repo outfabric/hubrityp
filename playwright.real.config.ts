@@ -207,6 +207,8 @@ export default defineConfig({
       STREAM_API_KEY: 'e2e-real-stream-api-key',
       STREAM_API_SECRET: 'e2e-real-stream-api-secret',
       STREAM_WEBHOOK_SECRET: 'e2e-real-stream-webhook-secret',
+      // Gemini AI transcription — dummy key so env validation passes.
+      GEMINI_API_KEY: 'e2e-real-gemini-api-key',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

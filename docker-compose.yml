@@ -39,6 +39,9 @@ services:
       # Signed Storage URLs are rewritten from the internal hostname to this
       # origin before being returned to the browser (CSP also permits it).
       SUPABASE_PUBLIC_URL: http://localhost:54321
+      # Gemini API key — fake default for local dev. Replace with a real key
+      # when testing AI transcription features end-to-end.
+      GEMINI_API_KEY: fake-gemini-key-for-local-dev
       # Tell the Inngest SDK to send events to the Dev Server container.
       # So funciona quando o profile `inngest` esta ativo (o host `inngest`
       # nao existe sem ele). Sem o Dev Server, o app boota normalmente —

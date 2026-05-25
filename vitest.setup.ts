@@ -42,6 +42,9 @@ process.env.NEXT_PUBLIC_STREAM_API_KEY ??= 'unit-test-stream-public-key';
 process.env.STREAM_API_KEY ??= 'unit-test-stream-api-key';
 process.env.STREAM_API_SECRET ??= 'unit-test-stream-api-secret';
 process.env.STREAM_WEBHOOK_SECRET ??= 'unit-test-stream-webhook-secret';
+// Gemini AI transcription — dummy key so env validation passes when a test
+// transitively imports `serverEnv`. The five optional fields have defaults.
+process.env.GEMINI_API_KEY ??= 'unit-test-gemini-api-key';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino
 // pipeline (Edge runtime can't load pino's transport), so silencing pino

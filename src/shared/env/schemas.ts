@@ -65,6 +65,25 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Override do origem usado no sync com a cloud Inngest (apenas se
   // o domínio publico for diferente do que a Vercel detecta).
   INNGEST_SERVE_ORIGIN: z.string().url().optional(),
+  // Gemini — AI transcription and clinical note generation.
+  // Required: the API key used to authenticate with the Gemini API.
+  GEMINI_API_KEY: z.string().min(1),
+  // Model used for audio transcription. Must start with "gemini" or "gemma".
+  GEMINI_MODEL_TRANSCRIPTION: z
+    .string()
+    .regex(/^(gemini|gemma)-/)
+    .default('gemini-3.5-flash'),
+  // Model used for clinical note generation from transcripts.
+  GEMINI_MODEL_NOTE: z
+    .string()
+    .regex(/^(gemini|gemma)-/)
+    .default('gemini-3.5-flash'),
+  // Supabase Storage bucket for audio uploads pending transcription.
+  AI_TRANSCRIPTION_BUCKET: z.string().default('ai-transcription-audio'),
+  // Hours before uploaded audio files are auto-deleted (24-168, default 24).
+  AI_TRANSCRIPTION_AUDIO_TTL_HOURS: z.coerce.number().int().min(24).max(168).default(24),
+  // Maximum audio file size in MB accepted for transcription (1-500, default 200).
+  AI_TRANSCRIPTION_MAX_AUDIO_MB: z.coerce.number().int().min(1).max(500).default(200),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

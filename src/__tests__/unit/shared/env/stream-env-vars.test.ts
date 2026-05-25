@@ -22,6 +22,7 @@ const validServer = {
   STREAM_API_KEY: 'stream-api-key',
   STREAM_API_SECRET: 'stream-api-secret',
   STREAM_WEBHOOK_SECRET: 'stream-webhook-secret',
+  GEMINI_API_KEY: 'gemini-api-key',
 };
 
 describe('clientEnvSchema — Stream env vars', () => {
