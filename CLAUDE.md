@@ -29,6 +29,11 @@ hubrityp/
 │   │
 │   ├── modules/                        # Domain code — one folder per capability
 │   │   ├── agenda/                     # calendar + scheduling
+│   │   ├── ai-transcription/           # AI-powered session transcription (Gemini)
+│   │   │   ├── lib/                    # branded types, Zod schemas, pseudonymization, logger
+│   │   │   ├── server/                 # Server Action implementations
+│   │   │   ├── edge.ts                 # edge-safe PUBLIC API
+│   │   │   └── index.ts                # module PUBLIC API (barrel)
 │   │   ├── auth/                       # session, sign-in, sign-out
 │   │   ├── health/                     # liveness/readiness helpers
 │   │   ├── notifications/              # transactional notifications (server-only)
@@ -51,8 +56,8 @@ hubrityp/
 │   ├── shared/                         # Cross-module infra — MUST NOT import from modules/
 │   │   ├── db/
 │   │   │   ├── client.ts               # Drizzle Postgres client
-│   │   │   ├── schema/                 # one folder per domain (agenda, auth, health, notifications,
-│   │   │   │                           #   patients, whatsapp) — each with tables.ts + policies.ts +
+│   │   │   ├── schema/                 # one folder per domain (agenda, ai-transcription, auth, health,
+│   │   │   │                           #   notifications, patients, whatsapp) — each with tables.ts + policies.ts +
 │   │   │   │                           #   index.ts; schema/index.ts re-exports the union
 │   │   │   └── migrations/{,meta/}     # drizzle-kit output
 │   │   ├── env/                        # Zod-validated env: index.ts (server), client.ts, schemas.ts
@@ -93,7 +98,7 @@ hubrityp/
 
 These conventions matter as much as the tree itself. Violating them tends to produce subtle bugs (edge runtime crashes, broken auth gating, RLS leaks, circular imports) — read before adding a new file outside an existing pattern.
 
-1. **Module shape.** A module under `src/modules/<domain>/` exposes its public surface via `index.ts` (a barrel) and keeps internals in `components/`, `lib/` (Zod schemas, validators, branded types, mappers), and `server/` (Server Action implementations — no `'use server'` directives on these files; the directive belongs at the call site). Variants seen in the repo: `health/` is barrel-only; `notifications/` is server-only; `whatsapp/` adds an `inngest/` folder for queued jobs and splits `server/` into `adapters/`, `inbox/`, `reminders/`.
+1. **Module shape.** A module under `src/modules/<domain>/` exposes its public surface via `index.ts` (a barrel) and keeps internals in `components/`, `lib/` (Zod schemas, validators, branded types, mappers), and `server/` (Server Action implementations — no `'use server'` directives on these files; the directive belongs at the call site). Variants seen in the repo: `health/` is barrel-only; `notifications/` is server-only; `ai-transcription/` exposes `lib/` (branded types, Zod schemas, pseudonymization helper) and `server/`; `whatsapp/` adds an `inngest/` folder for queued jobs and splits `server/` into `adapters/`, `inbox/`, `reminders/`.
 
 2. **Module public API.** External consumers import **only** from `@/modules/<domain>`, never from internal paths like `@/modules/<domain>/server/...`. The barrel is what we promise to keep stable; everything else is private.
 

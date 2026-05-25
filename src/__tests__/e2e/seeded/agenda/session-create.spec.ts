@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { format } from 'date-fns';
 
-import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
+import { isoDate, nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -33,7 +32,7 @@ test.describe('@agenda session creation', () => {
     // Use tomorrow in BRT to guarantee the date is always in the future
     // and aligned with the browser's timezone (America/Sao_Paulo).
     const tomorrow = tomorrowInBrt();
-    const tomorrowDay = format(tomorrow, 'd');
+    const tomorrowIso = isoDate(tomorrow);
 
     // Navigate to the agenda page
     await page.goto('/agenda');
@@ -82,12 +81,11 @@ test.describe('@agenda session creation', () => {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
-    // Click the day button for tomorrow. In react-day-picker v9, each day
-    // cell renders a <button> inside a <td>.
-    const dayButton = calendarPopover
-      .locator('table button')
-      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
-      .first();
+    // Click the day button for tomorrow. In react-day-picker v10, each day
+    // cell is a <td data-day="yyyy-MM-dd"> containing a <button>. Selecting
+    // by `data-day` is immune to the outside-day ambiguity that occurs when
+    // showOutsideDays is true and adjacent months share the same day number.
+    const dayButton = calendarPopover.locator(`td[data-day="${tomorrowIso}"] button`);
     await dayButton.click();
 
     // Select start time: 14:00

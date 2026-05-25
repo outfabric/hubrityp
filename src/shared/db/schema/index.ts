@@ -9,3 +9,4 @@ export * from './patients/tables';
 export * from './whatsapp/tables';
 export * from './medical-records/tables';
 export * from './telepsicologia/tables';
+export * from './ai-transcription/tables';

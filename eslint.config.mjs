@@ -124,6 +124,71 @@ const config = [
       ],
     },
   },
+  // ── ai-transcription module: restrict direct pino / @google/genai imports ──
+  // Only lib/logger.ts may import pino; only the future gemini-client.ts may
+  // import @google/genai.  These two overrides are carved out below.
+  {
+    files: ['src/modules/ai-transcription/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'pino',
+              message:
+                'Import the module logger from @/modules/ai-transcription (lib/logger.ts) instead of pino directly.',
+            },
+            {
+              name: 'pino-pretty',
+              message:
+                'Import the module logger from @/modules/ai-transcription (lib/logger.ts) instead of pino-pretty directly.',
+            },
+            {
+              name: '@google/genai',
+              message:
+                'Import the Gemini client from the dedicated gemini-client.ts wrapper instead of @google/genai directly.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['../../*'],
+              message: 'Use the @/ path alias instead of deep relative imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Allow lib/logger.ts to import pino (it IS the logger boundary).
+  {
+    files: ['src/modules/ai-transcription/lib/logger.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'pino-pretty',
+              message:
+                'Import the module logger from @/modules/ai-transcription (lib/logger.ts) instead of pino-pretty directly.',
+            },
+            {
+              name: '@google/genai',
+              message:
+                'Import the Gemini client from the dedicated gemini-client.ts wrapper instead of @google/genai directly.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['../../*'],
+              message: 'Use the @/ path alias instead of deep relative imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettierConfig,
 ];
 

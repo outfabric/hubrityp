@@ -5,7 +5,7 @@
 // so the `process.env.*` reads below are replaced with literal strings in the
 // client bundle. The ESLint exemption for this file in `eslint.config.mjs`
 // permits the direct reads.
-import { clientEnvSchema, type ClientEnv } from './schemas';
+import { clientEnvSchema, type ClientEnv } from './client-schema';
 
 const parsed = clientEnvSchema.safeParse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

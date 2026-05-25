@@ -118,6 +118,8 @@ async function main(): Promise<void> {
       STREAM_API_KEY: 'e2e-stream-api-key',
       STREAM_API_SECRET: 'e2e-stream-api-secret',
       STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
+      // Gemini AI transcription — dummy key so env validation passes.
+      GEMINI_API_KEY: 'e2e-gemini-api-key',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

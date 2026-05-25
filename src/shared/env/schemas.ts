@@ -1,18 +1,14 @@
 import { z } from 'zod';
 
+// Re-export the client-only schema from its isolated file so existing imports
+// from `./schemas` keep working. The split prevents the bundler from pulling
+// server-env property names (DATABASE_URL, GEMINI_API_KEY, etc.) into the
+// client chunk when `client.ts` imports `clientEnvSchema`.
+export { clientEnvSchema, type ClientEnv } from './client-schema';
+import { clientEnvSchema } from './client-schema';
+
 const logLevels = ['debug', 'info', 'warn', 'error', 'silent'] as const;
 export type LogLevel = (typeof logLevels)[number];
-
-// `clientEnvSchema` covers only `NEXT_PUBLIC_*` keys (statically inlined into
-// the browser bundle by Next). It is the schema a client component would
-// import via a future `src/shared/env/client.ts` shim.
-export const clientEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  NEXT_PUBLIC_STREAM_API_KEY: z.string().min(1),
-});
-
-export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
 const nodeEnvs = ['development', 'production', 'test'] as const;
 export type NodeEnv = (typeof nodeEnvs)[number];
@@ -65,6 +61,25 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Override do origem usado no sync com a cloud Inngest (apenas se
   // o domínio publico for diferente do que a Vercel detecta).
   INNGEST_SERVE_ORIGIN: z.string().url().optional(),
+  // Gemini — AI transcription and clinical note generation.
+  // Required: the API key used to authenticate with the Gemini API.
+  GEMINI_API_KEY: z.string().min(1),
+  // Model used for audio transcription. Must start with "gemini" or "gemma".
+  GEMINI_MODEL_TRANSCRIPTION: z
+    .string()
+    .regex(/^(gemini|gemma)-/)
+    .default('gemini-3.5-flash'),
+  // Model used for clinical note generation from transcripts.
+  GEMINI_MODEL_NOTE: z
+    .string()
+    .regex(/^(gemini|gemma)-/)
+    .default('gemini-3.5-flash'),
+  // Supabase Storage bucket for audio uploads pending transcription.
+  AI_TRANSCRIPTION_BUCKET: z.string().default('ai-transcription-audio'),
+  // Hours before uploaded audio files are auto-deleted (24-168, default 24).
+  AI_TRANSCRIPTION_AUDIO_TTL_HOURS: z.coerce.number().int().min(24).max(168).default(24),
+  // Maximum audio file size in MB accepted for transcription (1-500, default 200).
+  AI_TRANSCRIPTION_MAX_AUDIO_MB: z.coerce.number().int().min(1).max(500).default(200),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

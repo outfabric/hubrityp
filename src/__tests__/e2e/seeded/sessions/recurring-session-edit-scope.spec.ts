@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addWeeks, format } from 'date-fns';
+import { addWeeks } from 'date-fns';
 
-import { nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
+import { isoDate, nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
@@ -38,7 +38,7 @@ test.describe('@sessions recurring session edit scope', () => {
     // Use tomorrow in BRT to guarantee the date is always in the future
     // and aligned with the browser's timezone (America/Sao_Paulo).
     const tomorrow = tomorrowInBrt();
-    const tomorrowDay = format(tomorrow, 'd');
+    const tomorrowIso = isoDate(tomorrow);
     const tomorrowDayOfWeek = tomorrow.getDay();
 
     // End date: 3 weeks after tomorrow (4 total sessions)
@@ -83,10 +83,10 @@ test.describe('@sessions recurring session edit scope', () => {
       await calendarPopover.locator('button[name="next-month"]').click();
     }
 
-    const dayButton = calendarPopover
-      .locator('table button')
-      .filter({ hasText: new RegExp(`^${tomorrowDay}$`) })
-      .first();
+    // Click the day button for tomorrow using the data-day attribute to avoid
+    // the outside-day ambiguity (showOutsideDays shows adjacent-month days
+    // with matching day numbers).
+    const dayButton = calendarPopover.locator(`td[data-day="${tomorrowIso}"] button`);
     await dayButton.click();
 
     // Set start time: 16:00 (unique to avoid conflicts)
@@ -132,11 +132,9 @@ test.describe('@sessions recurring session edit scope', () => {
       currentViewMonth = (currentViewMonth + 1) % 12;
     }
 
-    const endDateDay = format(endDate, 'd');
-    const endDayButton = endDateCalendar
-      .locator('table button')
-      .filter({ hasText: new RegExp(`^${endDateDay}$`) })
-      .first();
+    // Click the end date day using the data-day attribute to avoid
+    // the outside-day ambiguity.
+    const endDayButton = endDateCalendar.locator(`td[data-day="${isoDate(endDate)}"] button`);
     await endDayButton.click();
 
     // Submit — handle potential conflict warning on test retries.
