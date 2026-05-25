@@ -1,0 +1,74 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AI_CONSENT_TEMPLATE_V1 > (e) snapshot of the full template structure matches (deliberate update required on change) 1`] = `
+{
+  "sections": [
+    {
+      "body": "Profissional responsável: {{psychologistName}}, inscrito(a) no Conselho Regional de Psicologia sob o número {{psychologistCrp}}.
+
+Paciente: {{patientName}}.",
+      "heading": "Identificação",
+    },
+    {
+      "body": "A gravação da sessão de atendimento psicológico será realizada exclusivamente para processamento por inteligência artificial (IA), com a finalidade de gerar uma evolução clínica estruturada destinada ao prontuário eletrônico do paciente. A nota gerada pela IA é um rascunho que será revisado e validado pelo psicólogo responsável antes de ser incorporada ao prontuário.",
+      "heading": "Finalidade",
+    },
+    {
+      "body": "O tratamento dos dados pessoais e sensíveis decorrentes da gravação e transcrição fundamenta-se nas seguintes bases legais da Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD):
+
+- Art. 7º, inciso II — execução de contrato ou de procedimentos preliminares relacionados a contrato do qual seja parte o titular, a pedido do titular dos dados;
+- Art. 11 — tratamento de dados pessoais sensíveis de saúde, realizado exclusivamente para a tutela da saúde do titular, em procedimento realizado por profissional de saúde habilitado;
+- Art. 6º — observância aos princípios de finalidade, adequação, necessidade, livre acesso, qualidade dos dados, transparência, segurança, prevenção, não discriminação e responsabilização.",
+      "heading": "Bases legais (LGPD)",
+    },
+    {
+      "body": "Controlador: o psicólogo identificado neste termo, responsável pelas decisões referentes ao tratamento dos dados.
+
+Operador: Google Gemini API, utilizada como ferramenta de processamento de linguagem natural para transcrição e geração da nota clínica. O operador atua sob contrato de operador de dados, em conformidade com as cláusulas de proteção de dados aplicáveis.
+
+Categorias de dados tratados: áudio da sessão, transcrição textual gerada a partir do áudio e nota clínica estruturada.
+
+Transferência de dados: os dados de áudio e transcrição são transmitidos aos servidores do Google sob contrato de operador. Nenhum dado é retido pelo operador além do estritamente necessário para o processamento.",
+      "heading": "Operação de tratamento",
+    },
+    {
+      "body": "O áudio da sessão será descartado no prazo máximo de 24 horas após o processamento, salvo em caso de falha técnica que exija extensão temporária desse prazo.
+
+A transcrição textual intermediária não é retida após a geração da nota clínica.
+
+A nota clínica estruturada, após revisão e validação pelo psicólogo, será incorporada ao prontuário eletrônico do paciente e ficará sob guarda do psicólogo pelo prazo mínimo de 20 (vinte) anos, conforme disposto na Lei nº 13.787/2018.",
+      "heading": "Retenção",
+    },
+    {
+      "body": "Em conformidade com o art. 18 da LGPD, o paciente tem direito a:
+
+- Confirmação da existência de tratamento de dados;
+- Acesso aos dados pessoais tratados;
+- Correção de dados incompletos, inexatos ou desatualizados;
+- Anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade;
+- Portabilidade dos dados a outro fornecedor de serviço;
+- Eliminação dos dados pessoais tratados com o consentimento do titular;
+- Revogação do consentimento a qualquer momento, mediante manifestação expressa.",
+      "heading": "Direitos do titular",
+    },
+    {
+      "body": "O paciente pode revogar este consentimento a qualquer momento, com efeito imediato sobre gravações futuras. A revogação não afeta a legalidade do tratamento realizado anteriormente com base no consentimento.
+
+As notas clínicas já geradas e incorporadas ao prontuário permanecerão sob guarda do psicólogo em conformidade com a obrigação legal de manutenção do prontuário (Lei nº 13.787/2018).
+
+Para solicitar a revogação, o paciente deve comunicar o psicólogo responsável, que efetuará o registro imediato no sistema.",
+      "heading": "Revogação",
+    },
+    {
+      "body": "O paciente deve estar ciente dos seguintes riscos associados ao uso de inteligência artificial:
+
+- Alucinação da IA: a nota clínica gerada é um rascunho e pode conter imprecisões, omissões ou informações incorretas. O psicólogo responsável revisará e corrigirá a nota antes de incorporá-la ao prontuário, sendo o único responsável pelo conteúdo final.
+
+- Falhas técnicas: eventuais falhas no processamento ou na infraestrutura podem estender temporariamente o prazo de descarte do áudio além das 24 horas previstas. Nesses casos, medidas técnicas serão adotadas para minimizar o período de retenção adicional.",
+      "heading": "Riscos",
+    },
+  ],
+  "title": "Termo de Consentimento para Gravação e Transcrição por Inteligência Artificial",
+  "version": 1,
+}
+`;

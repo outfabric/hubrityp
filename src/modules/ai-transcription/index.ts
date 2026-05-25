@@ -29,6 +29,13 @@ export {
   type RiskAlert,
 } from './lib/schemas';
 
+// ---- Consent template -------------------------------------------------------
+export {
+  AI_CONSENT_TEMPLATE_V1,
+  type AiConsentTemplate,
+  type ConsentTemplateSection,
+} from './lib/consent-template';
+
 // ---- Pure helpers -----------------------------------------------------------
 export { pseudonymizeTranscript } from './lib/pseudonymize';
 

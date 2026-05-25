@@ -8,9 +8,9 @@
 
 ## 2. AI consent template
 
-- [ ] 2.1 Create `src/modules/ai-transcription/lib/consent-template.ts` exporting `AI_CONSENT_TEMPLATE_V1` with all 8 sections required by the spec, in pt-BR, plain text (no HTML in fields — render-time component handles markup safely). Each section is `{ heading: string; body: string }`.
-- [ ] 2.2 Unit test `src/__tests__/unit/modules/ai-transcription/lib/consent-template.test.ts`: (a) all 8 section headings exist; (b) body of "Bases legais" mentions LGPD art. 7, art. 11; (c) body of "Retenção" mentions 24h; (d) body of "Revogação" mentions efeito imediato; (e) snapshot test pinning the exact text (to detect accidental edits) — store JSON of the structure as `.snap` and require deliberate update.
-- [ ] 2.3 Add a PR description checklist item: "Texto de `AI_CONSENT_TEMPLATE_V1` revisado por responsável legal antes do merge." (No code change; documented in the change PR template.)
+- [x] 2.1 Create `src/modules/ai-transcription/lib/consent-template.ts` exporting `AI_CONSENT_TEMPLATE_V1` with all 8 sections required by the spec, in pt-BR, plain text (no HTML in fields — render-time component handles markup safely). Each section is `{ heading: string; body: string }`.
+- [x] 2.2 Unit test `src/__tests__/unit/modules/ai-transcription/lib/consent-template.test.ts`: (a) all 8 section headings exist; (b) body of "Bases legais" mentions LGPD art. 7, art. 11; (c) body of "Retenção" mentions 24h; (d) body of "Revogação" mentions efeito imediato; (e) snapshot test pinning the exact text (to detect accidental edits) — store JSON of the structure as `.snap` and require deliberate update.
+- [x] 2.3 Add a PR description checklist item: "Texto de `AI_CONSENT_TEMPLATE_V1` revisado por responsável legal antes do merge." (No code change; documented in the change PR template.)
 
 ## 3. Consent helper (single authority)
 
