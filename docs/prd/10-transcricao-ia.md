@@ -141,8 +141,6 @@ Saída em JSON com chaves: humor_inicial, humor_final, pauta, conteudo_trabalhad
 - Transcrição textual também é descartada (mantém apenas nota estruturada gerada)
 - Logs de processamento são mantidos sem o conteúdo (timestamp, duração, status)
 
-**RF-10.14.** Configuração opcional: "Manter áudio por 30 dias para minha referência". Requer consentimento extra do paciente.
-
 ### 5.6. Tela de revisão da nota
 
 **RF-10.15.** Após processamento, psicólogo abre modal/tela com:
@@ -218,7 +216,7 @@ Saída em JSON com chaves: humor_inicial, humor_final, pauta, conteudo_trabalhad
 
 **RN-10.02.** Psicólogo é o **controlador** dos dados; provedor de IA é **operador** (LGPD art. 5º). Sistema documenta isso na onboarding e expõe contratos.
 
-**RN-10.03.** Áudio descartado em 24h por padrão. Manter mais tempo exige consentimento adicional.
+**RN-10.03.** Áudio descartado em 24h por padrão.
 
 **RN-10.04.** Nota gerada por IA é RASCUNHO. Salvar no prontuário é ato deliberado do psicólogo. Audit log registra.
 
