@@ -36,8 +36,8 @@
 
 ## 4. ESLint hardening
 
-- [ ] 4.1 In `eslint.config.mjs`, add a `no-restricted-imports` rule scoped to files under `src/modules/ai-transcription/**` that forbids direct imports of `pino`, `pino-pretty`, and `@google/genai` outside the explicitly allowed files (`lib/logger.ts` may import pino; the future `gemini-client.ts` will be the only file allowed to import `@google/genai`, but for now no file in this change imports it).
-- [ ] 4.2 Confirm `npm run lint` is green after the rule addition. The existing rule that forbids direct `process.env` access stays in force.
+- [x] 4.1 In `eslint.config.mjs`, add a `no-restricted-imports` rule scoped to files under `src/modules/ai-transcription/**` that forbids direct imports of `pino`, `pino-pretty`, and `@google/genai` outside the explicitly allowed files (`lib/logger.ts` may import pino; the future `gemini-client.ts` will be the only file allowed to import `@google/genai`, but for now no file in this change imports it).
+- [x] 4.2 Confirm `npm run lint` is green after the rule addition. The existing rule that forbids direct `process.env` access stays in force.
 
 ## 5. Documentation
 
