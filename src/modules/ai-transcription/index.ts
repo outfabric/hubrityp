@@ -39,6 +39,10 @@ export {
 // ---- Pure helpers -----------------------------------------------------------
 export { pseudonymizeTranscript } from './lib/pseudonymize';
 
+// ---- Consent helper ---------------------------------------------------------
+export { assertAiConsentActive, type AssertAiConsentResult } from './lib/consent';
+export type { AssertAiConsentDeps } from './lib/consent';
+
 // ---- Logger -----------------------------------------------------------------
 export { createTranscriptionLogger } from './lib/logger';
 
