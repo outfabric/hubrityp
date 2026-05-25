@@ -46,5 +46,5 @@
 
 ## 6. Sanity check
 
-- [ ] 6.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration` end-to-end. All green.
-- [ ] 6.2 Verify the production build does not leak `GEMINI_API_KEY`: `npm run build` then `grep -r "GEMINI_API_KEY" .next/static 2>/dev/null` returns zero matches. Document the command in the change PR description.
+- [x] 6.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration` end-to-end. All green.
+- [x] 6.2 Verify the production build does not leak `GEMINI_API_KEY`: `npm run build` then `grep -r "GEMINI_API_KEY" .next/static 2>/dev/null` returns zero matches. Document the command in the change PR description.

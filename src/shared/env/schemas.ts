@@ -1,18 +1,14 @@
 import { z } from 'zod';
 
+// Re-export the client-only schema from its isolated file so existing imports
+// from `./schemas` keep working. The split prevents the bundler from pulling
+// server-env property names (DATABASE_URL, GEMINI_API_KEY, etc.) into the
+// client chunk when `client.ts` imports `clientEnvSchema`.
+export { clientEnvSchema, type ClientEnv } from './client-schema';
+import { clientEnvSchema } from './client-schema';
+
 const logLevels = ['debug', 'info', 'warn', 'error', 'silent'] as const;
 export type LogLevel = (typeof logLevels)[number];
-
-// `clientEnvSchema` covers only `NEXT_PUBLIC_*` keys (statically inlined into
-// the browser bundle by Next). It is the schema a client component would
-// import via a future `src/shared/env/client.ts` shim.
-export const clientEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  NEXT_PUBLIC_STREAM_API_KEY: z.string().min(1),
-});
-
-export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
 const nodeEnvs = ['development', 'production', 'test'] as const;
 export type NodeEnv = (typeof nodeEnvs)[number];
