@@ -41,8 +41,8 @@
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `CLAUDE.md` "Folder conventions" section #1 to list `ai-transcription` as a new module (one-line mention next to `whatsapp/`, `medical-records/`, `telepsicologia/`).
-- [ ] 5.2 Update the project folder tree in `CLAUDE.md` to include `src/modules/ai-transcription/` and `src/shared/db/schema/ai-transcription/`.
+- [x] 5.1 Update `CLAUDE.md` "Folder conventions" section #1 to list `ai-transcription` as a new module (one-line mention next to `whatsapp/`, `medical-records/`, `telepsicologia/`).
+- [x] 5.2 Update the project folder tree in `CLAUDE.md` to include `src/modules/ai-transcription/` and `src/shared/db/schema/ai-transcription/`.
 
 ## 6. Sanity check
 
