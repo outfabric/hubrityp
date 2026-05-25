@@ -61,6 +61,9 @@ export {
   type ConsentByTokenData,
 } from './server/get-consent-by-token';
 export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { generateAiConsentTermImpl } from './server/generate-ai-consent';
+export { revokeAiConsentTermImpl } from './server/revoke-ai-consent';
+export { getAiConsentStatusImpl } from './server/get-ai-consent-status';
 export { exportPatientPdfImpl, type ExportPatientPdfResult } from './server/export-patient-pdf';
 export {
   checkCsvDuplicatesImpl,
@@ -80,6 +83,19 @@ export {
 } from './lib/default-consent-template';
 
 // ---- Zod Schemas -------------------------------------------------------------
+export {
+  GenerateAiConsentInputSchema,
+  RevokeAiConsentInputSchema,
+  GetAiConsentStatusInputSchema,
+  PatientIdSchema,
+  type GenerateAiConsentInput,
+  type RevokeAiConsentInput,
+  type GetAiConsentStatusInput,
+  type GenerateAiConsentResult,
+  type RevokeAiConsentResult,
+  type GetAiConsentStatusResult,
+  type AiConsentStatusView,
+} from './lib/ai-consent-schemas';
 export {
   createPatientSchema,
   updatePatientSchema,
