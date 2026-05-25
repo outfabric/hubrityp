@@ -32,9 +32,9 @@
 
 ## 5. Integration tests — Server Actions end-to-end
 
-- [ ] 5.1 Create `src/__tests__/integration/ai-transcription/generate-ai-consent.int.test.ts` (Testcontainers + real Drizzle). Cover the same scenarios as the unit test but against real DB. Negative auth test: invoke the Server Action with `auth.uid()` of psychologist B against a patient of A; assert `NOT_FOUND` and ZERO new rows in `consent_terms`.
-- [ ] 5.2 Create `src/__tests__/integration/ai-transcription/revoke-ai-consent.int.test.ts`: revoke a real term; assert subsequent `assertAiConsentActive` returns `revoked`; assert Inngest event was dispatched (mock the Inngest client at module level and verify call args). Cross-tenant: B cannot revoke A's term.
-- [ ] 5.3 Create `src/__tests__/integration/ai-transcription/get-ai-consent-status.int.test.ts`: seed all four states; assert returned views match DB; cross-tenant assertion.
+- [x] 5.1 Create `src/__tests__/integration/ai-transcription/generate-ai-consent.int.test.ts` (Testcontainers + real Drizzle). Cover the same scenarios as the unit test but against real DB. Negative auth test: invoke the Server Action with `auth.uid()` of psychologist B against a patient of A; assert `NOT_FOUND` and ZERO new rows in `consent_terms`.
+- [x] 5.2 Create `src/__tests__/integration/ai-transcription/revoke-ai-consent.int.test.ts`: revoke a real term; assert subsequent `assertAiConsentActive` returns `revoked`; assert Inngest event was dispatched (mock the Inngest client at module level and verify call args). Cross-tenant: B cannot revoke A's term.
+- [x] 5.3 Create `src/__tests__/integration/ai-transcription/get-ai-consent-status.int.test.ts`: seed all four states; assert returned views match DB; cross-tenant assertion.
 
 ## 6. Public `/termo/[token]` route extension
 
