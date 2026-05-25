@@ -1,7 +1,7 @@
 ---
 name: "fullstack-developer"
 description: "Use this agent when you need to implement, refactor, or debug full-stack features in a Next.js project on the HubrityP stack (TypeScript, Supabase, Drizzle ORM, Tailwind, shadcn/ui, Inngest, etc.). That includes building UI components, Server Actions, API Routes, database schemas/migrations, external integrations, and any cross-cutting concern that spans frontend and backend. Security (auth gating, RLS, LGPD, prevention of injection/IDOR/PII leak) is a non-negotiable criterion for every piece of code produced — the agent treats every new route, action, and table as potentially exposed until proven otherwise."
-model: claude-opus-4-7[1m]
+model: claude-opus-4-6
 color: yellow
 memory: project
 ---
