@@ -1,8 +1,8 @@
 ## 1. Dependencies and rate limiting infra
 
-- [ ] 1.1 Add `file-type` to `dependencies` in `package.json`. Run `npm install`.
-- [ ] 1.2 Investigate whether the codebase already has a rate-limit helper (`grep -r "rateLimit\|ratelimit" src/shared/`). If absent, create `src/shared/lib/rate-limit/postgres.ts` exporting `enforceRateLimit({ key, max, windowSeconds }): Promise<{ allowed: boolean; remaining: number; resetAt: Date }>` backed by a new `rate_limits` table (small: `key text pk, window_start timestamptz, count int`) — INSERT with `ON CONFLICT DO UPDATE` math. Migration via Drizzle.
-- [ ] 1.3 Integration test `src/__tests__/integration/shared/rate-limit.int.test.ts`: (a) under the limit, returns `allowed:true`; (b) at the limit, returns `allowed:false`; (c) after the window rolls over, allows again; (d) concurrent requests do not under-count (verify atomically via real Postgres).
+- [x] 1.1 Add `file-type` to `dependencies` in `package.json`. Run `npm install`.
+- [x] 1.2 Investigate whether the codebase already has a rate-limit helper (`grep -r "rateLimit\|ratelimit" src/shared/`). If absent, create `src/shared/lib/rate-limit/postgres.ts` exporting `enforceRateLimit({ key, max, windowSeconds }): Promise<{ allowed: boolean; remaining: number; resetAt: Date }>` backed by a new `rate_limits` table (small: `key text pk, window_start timestamptz, count int`) — INSERT with `ON CONFLICT DO UPDATE` math. Migration via Drizzle.
+- [x] 1.3 Integration test `src/__tests__/integration/shared/rate-limit.int.test.ts`: (a) under the limit, returns `allowed:true`; (b) at the limit, returns `allowed:false`; (c) after the window rolls over, allows again; (d) concurrent requests do not under-count (verify atomically via real Postgres).
 
 ## 2. MIME magic-number validator
 

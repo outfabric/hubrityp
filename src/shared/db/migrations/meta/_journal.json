@@ -211,6 +211,13 @@
       "when": 1779747201837,
       "tag": "0029_messy_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1779834552888,
+      "tag": "0030_amused_black_tarantula",
+      "breakpoints": true
     }
   ]
 }
