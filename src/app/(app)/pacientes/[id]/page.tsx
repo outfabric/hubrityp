@@ -10,6 +10,7 @@ import {
   getPatientPhotoUrlImpl,
   listGuardiansImpl,
 } from '@/modules/patients';
+import { AiConsentPanel } from '@/modules/patients/components/ai-consent-panel';
 import { AnamnesisTab } from '@/modules/patients/components/anamnesis-tab';
 import { PatientDetailHeader } from '@/modules/patients/components/patient-detail-header';
 import { PatientOverviewTab } from '@/modules/patients/components/patient-overview-tab';
@@ -22,9 +23,12 @@ import {
   archivePatient,
   deletePatient,
   exportPatientPdf,
+  generateAiConsent,
   generateConsent,
+  getAiConsentStatus,
   listGuardians,
   removeGuardian,
+  revokeAiConsent,
   revokeConsent,
   unarchivePatient,
   unlinkCouple,
@@ -107,6 +111,16 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         revokeConsentAction={revokeConsent}
         exportPdfAction={exportPatientPdf}
       />
+
+      {/* AI Consent */}
+      <div className="mt-8">
+        <AiConsentPanel
+          patientId={id}
+          getStatusAction={getAiConsentStatus}
+          generateAction={generateAiConsent}
+          revokeAction={revokeAiConsent}
+        />
+      </div>
 
       {/* Tabs */}
       <div className="mt-8">

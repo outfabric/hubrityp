@@ -13,11 +13,14 @@ import type {
   ArchivePatientResult,
   DeletePatientResult,
   ExportPatientPdfResult,
+  GenerateAiConsentResult,
   GenerateConsentResult,
+  GetAiConsentStatusResult,
   GetPatientPhotoUrlResult,
   GetPatientResult,
   ListGuardiansResult,
   RemoveGuardianResult,
+  RevokeAiConsentResult,
   RevokeConsentResult,
   UnarchivePatientResult,
   UnlinkCoupleResult,
@@ -30,11 +33,14 @@ import {
   archivePatientImpl,
   deletePatientImpl,
   exportPatientPdfImpl,
+  generateAiConsentTermImpl,
   generateConsentImpl,
+  getAiConsentStatusImpl,
   getPatientImpl,
   getPatientPhotoUrlImpl,
   listGuardiansImpl,
   removeGuardianImpl,
+  revokeAiConsentTermImpl,
   revokeConsentImpl,
   unarchivePatientImpl,
   unlinkCoupleImpl,
@@ -126,4 +132,26 @@ export async function exportPatientPdf(
 ): Promise<ExportPatientPdfResult> {
   const supabase = await createServerClient();
   return exportPatientPdfImpl(supabase, patientId, includeClinicalData);
+}
+
+// ---------------------------------------------------------------------------
+// AI Consent Server Actions
+// ---------------------------------------------------------------------------
+
+export async function getAiConsentStatus(patientId: string): Promise<GetAiConsentStatusResult> {
+  const supabase = await createServerClient();
+  return getAiConsentStatusImpl(supabase, { patientId });
+}
+
+export async function generateAiConsent(patientId: string): Promise<GenerateAiConsentResult> {
+  const supabase = await createServerClient();
+  return generateAiConsentTermImpl(supabase, { patientId });
+}
+
+export async function revokeAiConsent(
+  patientId: string,
+  reason: string | null,
+): Promise<RevokeAiConsentResult> {
+  const supabase = await createServerClient();
+  return revokeAiConsentTermImpl(supabase, { patientId, reason });
 }

@@ -27,10 +27,24 @@ export {
   type GeneratedNote,
   RiskAlertSchema,
   type RiskAlert,
+  AiConsentTemplateSchema,
+  ConsentTemplateSectionSchema,
+  type AiConsentTemplateSnapshot,
 } from './lib/schemas';
+
+// ---- Consent template -------------------------------------------------------
+export {
+  AI_CONSENT_TEMPLATE_V1,
+  type AiConsentTemplate,
+  type ConsentTemplateSection,
+} from './lib/consent-template';
 
 // ---- Pure helpers -----------------------------------------------------------
 export { pseudonymizeTranscript } from './lib/pseudonymize';
+
+// ---- Consent helper ---------------------------------------------------------
+export { assertAiConsentActive, type AssertAiConsentResult } from './lib/consent';
+export type { AssertAiConsentDeps } from './lib/consent';
 
 // ---- Logger -----------------------------------------------------------------
 export { createTranscriptionLogger } from './lib/logger';

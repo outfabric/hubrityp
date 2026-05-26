@@ -234,13 +234,15 @@ test.describe('@prontuario attachments tab', () => {
     // (same source as the server action's checkActiveConsent), NOT from the
     // denormalized patients.consent_signed_at column.
     await db.sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent)
       VALUES (
         gen_random_uuid(),
         ${patientId},
         ${SEED_USER_ID},
+        'general',
         'Consentimento para gravacao de sessoes',
         ${'9'.repeat(64)},
+        false,
         now(),
         '127.0.0.1',
         'e2e-agent'

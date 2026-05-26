@@ -102,6 +102,30 @@ export const SEED_CONSENT_TERMS = {
   },
 } as const;
 
+/**
+ * Seed AI consent terms for the AI transcription consent E2E tests.
+ *
+ * The token uses base64url encoding (43 chars for 32 bytes) — NOT hex.
+ * We use a deterministic, manually-crafted base64url string for test
+ * repeatability. It must be exactly 43 chars of [A-Za-z0-9_-].
+ */
+export const SEED_AI_CONSENT_TERMS = {
+  /** Unsigned AI consent term — the happy-path test will sign this one. */
+  unsigned: {
+    id: '00000000-0000-4000-8000-000000000040',
+    patientId: SEED_PATIENTS.activeWithPhone.id,
+    // 43-char base64url token (deterministic for test assertions)
+    // 43 chars = 32 bytes in base64url (ceil(32*4/3) = 43)
+    signatureToken: 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtU01',
+  },
+  /** Already-signed AI consent term — used to test the "already signed" state. */
+  alreadySigned: {
+    id: '00000000-0000-4000-8000-000000000041',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    signatureToken: 'XxYyZz00112233445566778899AaBbCcDdEeFfGgH01',
+  },
+} as const;
+
 export type SeedState = {
   // Stable UUID seeded into `auth.users` by `global-setup.ts`. Tests can
   // assert that the dashboard greeting matches `email`, so changes here

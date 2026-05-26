@@ -91,11 +91,20 @@ describe('consent_terms table — schema verification', () => {
         expect.objectContaining({ name: 'signed_ip', type: 'text', nullable: 'YES' }),
         expect.objectContaining({ name: 'signed_user_agent', type: 'text', nullable: 'YES' }),
         expect.objectContaining({ name: 'signed_pdf_path', type: 'text', nullable: 'YES' }),
+        expect.objectContaining({ name: 'kind', type: 'text', nullable: 'NO' }),
+        expect.objectContaining({ name: 'template_snapshot', type: 'jsonb', nullable: 'YES' }),
+        expect.objectContaining({ name: 'template_version', type: 'integer', nullable: 'NO' }),
         expect.objectContaining({
           name: 'revoked_at',
           type: 'timestamp with time zone',
           nullable: 'YES',
         }),
+        expect.objectContaining({
+          name: 'revocation_takes_effect_immediately',
+          type: 'boolean',
+          nullable: 'NO',
+        }),
+        expect.objectContaining({ name: 'revocation_reason', type: 'text', nullable: 'YES' }),
         expect.objectContaining({
           name: 'created_at',
           type: 'timestamp with time zone',
@@ -104,7 +113,7 @@ describe('consent_terms table — schema verification', () => {
       ]),
     );
 
-    expect(columns).toHaveLength(11);
+    expect(columns).toHaveLength(16);
   });
 
   it('accepts inserts via service role', async () => {
@@ -120,7 +129,9 @@ describe('consent_terms table — schema verification', () => {
         id: consentId,
         patientId,
         userId,
+        kind: 'general',
         termText: 'Eu autorizo o tratamento dos meus dados pessoais...',
+        revocationTakesEffectImmediately: false,
         signatureToken: token,
       });
     });
@@ -154,7 +165,9 @@ describe('consent_terms table — UNIQUE constraint on signature_token', () => {
         id: randomUUID(),
         patientId,
         userId,
+        kind: 'general',
         termText: 'First term',
+        revocationTakesEffectImmediately: false,
         signatureToken: token,
       });
     });
@@ -165,7 +178,9 @@ describe('consent_terms table — UNIQUE constraint on signature_token', () => {
           id: randomUUID(),
           patientId,
           userId,
+          kind: 'general',
           termText: 'Duplicate token term',
+          revocationTakesEffectImmediately: false,
           signatureToken: token,
         });
       }),
@@ -184,14 +199,18 @@ describe('consent_terms table — UNIQUE constraint on signature_token', () => {
           id: randomUUID(),
           patientId,
           userId,
+          kind: 'general',
           termText: 'Term v1',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         },
         {
           id: randomUUID(),
           patientId,
           userId,
+          kind: 'general',
           termText: 'Term v2',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         },
       ]);
@@ -217,7 +236,9 @@ describe('consent_terms table — FK cascade', () => {
         id: randomUUID(),
         patientId,
         userId,
+        kind: 'general',
         termText: 'Will be cascaded',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -251,7 +272,9 @@ describe('consent_terms table — FK cascade', () => {
           id: randomUUID(),
           patientId: fakePatientId,
           userId,
+          kind: 'general',
           termText: 'Orphan consent term',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         });
       }),
@@ -301,7 +324,9 @@ describe('consent_terms table — RLS policies', () => {
         id: consentId,
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'Consent term of A',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -327,7 +352,9 @@ describe('consent_terms table — RLS policies', () => {
         id: randomUUID(),
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'Private consent term',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -350,7 +377,9 @@ describe('consent_terms table — RLS policies', () => {
         id: randomUUID(),
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'New consent term',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -376,7 +405,9 @@ describe('consent_terms table — RLS policies', () => {
           id: randomUUID(),
           patientId,
           userId: userB,
+          kind: 'general',
           termText: 'Hijack attempt',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         });
       }),
@@ -395,7 +426,9 @@ describe('consent_terms table — RLS policies', () => {
         id: consentId,
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'Original term',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -428,7 +461,9 @@ describe('consent_terms table — RLS policies', () => {
         id: consentId,
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'Original term',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -460,7 +495,9 @@ describe('consent_terms table — RLS policies', () => {
         id: consentId,
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'To be deleted',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -490,7 +527,9 @@ describe('consent_terms table — RLS policies', () => {
         id: consentId,
         patientId,
         userId: userA,
+        kind: 'general',
         termText: 'Protected consent term',
+        revocationTakesEffectImmediately: false,
         signatureToken: generateToken(),
       });
     });
@@ -522,14 +561,18 @@ describe('consent_terms table — RLS policies', () => {
           id: randomUUID(),
           patientId: patientA,
           userId: userA,
+          kind: 'general',
           termText: 'Consent A',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         },
         {
           id: randomUUID(),
           patientId: patientB,
           userId: userB,
+          kind: 'general',
           termText: 'Consent B',
+          revocationTakesEffectImmediately: false,
           signatureToken: generateToken(),
         },
       ]);

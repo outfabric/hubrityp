@@ -120,6 +120,8 @@ async function main(): Promise<void> {
       STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
       // Gemini AI transcription — dummy key so env validation passes.
       GEMINI_API_KEY: 'e2e-gemini-api-key',
+      // Signature hash salt — used for hashing IP/user-agent in consent signing.
+      SIGNATURE_HASH_SALT: 'e2e-test-signature-hash-salt-minimum-32-chars',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

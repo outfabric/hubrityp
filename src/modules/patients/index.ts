@@ -61,6 +61,15 @@ export {
   type ConsentByTokenData,
 } from './server/get-consent-by-token';
 export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
+export { generateAiConsentTermImpl } from './server/generate-ai-consent';
+export { revokeAiConsentTermImpl } from './server/revoke-ai-consent';
+export { getAiConsentStatusImpl } from './server/get-ai-consent-status';
+export {
+  getAiConsentByTokenImpl,
+  type GetAiConsentByTokenResult,
+  type AiConsentByTokenData,
+} from './server/get-ai-consent-by-token';
+export { signAiConsentImpl, type SignAiConsentResult } from './server/sign-ai-consent';
 export { exportPatientPdfImpl, type ExportPatientPdfResult } from './server/export-patient-pdf';
 export {
   checkCsvDuplicatesImpl,
@@ -80,6 +89,19 @@ export {
 } from './lib/default-consent-template';
 
 // ---- Zod Schemas -------------------------------------------------------------
+export {
+  GenerateAiConsentInputSchema,
+  RevokeAiConsentInputSchema,
+  GetAiConsentStatusInputSchema,
+  PatientIdSchema,
+  type GenerateAiConsentInput,
+  type RevokeAiConsentInput,
+  type GetAiConsentStatusInput,
+  type GenerateAiConsentResult,
+  type RevokeAiConsentResult,
+  type GetAiConsentStatusResult,
+  type AiConsentStatusView,
+} from './lib/ai-consent-schemas';
 export {
   createPatientSchema,
   updatePatientSchema,
@@ -162,6 +184,7 @@ export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
+export { AiConsentPanel } from './components/ai-consent-panel';
 export { ConsentSignForm } from './components/consent-sign-form';
 export { CsvUpload, type CsvParseResult } from './components/csv-upload';
 export { CsvColumnMapper, type ColumnMapping } from './components/csv-column-mapper';

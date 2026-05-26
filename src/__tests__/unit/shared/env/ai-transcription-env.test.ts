@@ -23,6 +23,7 @@ const validServer = {
   STREAM_API_SECRET: 'stream-api-secret',
   STREAM_WEBHOOK_SECRET: 'stream-webhook-secret',
   GEMINI_API_KEY: 'gemini-api-key',
+  SIGNATURE_HASH_SALT: 'test-signature-hash-salt-minimum-32-chars',
 };
 
 describe('serverEnvSchema — AI transcription env vars', () => {

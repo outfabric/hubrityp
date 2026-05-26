@@ -3,7 +3,13 @@ import postgres from 'postgres';
 
 import { healthPings } from '@/shared/db/schema/health/tables';
 
-import { readSeedState, SEED_CONSENT_TERMS, SEED_PATIENTS, SEED_SESSIONS } from './seed-state';
+import {
+  readSeedState,
+  SEED_AI_CONSENT_TERMS,
+  SEED_CONSENT_TERMS,
+  SEED_PATIENTS,
+  SEED_SESSIONS,
+} from './seed-state';
 
 // Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
 // Playwright's `runner/tasks.ts::createGlobalSetupTasks`), so by the time
@@ -398,17 +404,21 @@ export default async function globalSetup() {
 
     // Unsigned consent term — patient can sign this one
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately)
       VALUES (
         ${ct.unsigned.id},
         ${ct.unsigned.patientId},
         ${seed.userId},
+        'general',
         ${ct.unsigned.termText},
-        ${ct.unsigned.signatureToken}
+        ${ct.unsigned.signatureToken},
+        false
       )
       ON CONFLICT (id) DO UPDATE SET
         term_text       = EXCLUDED.term_text,
         signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at       = NULL,
         signed_ip       = NULL,
         signed_user_agent = NULL,
@@ -417,13 +427,15 @@ export default async function globalSetup() {
 
     // Already-signed consent term — used to test "already signed" state
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent)
       VALUES (
         ${ct.alreadySigned.id},
         ${ct.alreadySigned.patientId},
         ${seed.userId},
+        'general',
         ${ct.alreadySigned.termText},
         ${ct.alreadySigned.signatureToken},
+        false,
         now(),
         '127.0.0.1',
         'e2e-seed-agent'
@@ -431,6 +443,8 @@ export default async function globalSetup() {
       ON CONFLICT (id) DO UPDATE SET
         term_text       = EXCLUDED.term_text,
         signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at       = EXCLUDED.signed_at,
         signed_ip       = EXCLUDED.signed_ip,
         signed_user_agent = EXCLUDED.signed_user_agent,
@@ -446,13 +460,15 @@ export default async function globalSetup() {
 
     // Revoked consent term — used to test the "revoked" badge state
     await sql`
-      INSERT INTO public.consent_terms (id, patient_id, user_id, term_text, signature_token, signed_at, signed_ip, signed_user_agent, revoked_at)
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent, revoked_at)
       VALUES (
         ${ct.revoked.id},
         ${ct.revoked.patientId},
         ${seed.userId},
+        'general',
         ${ct.revoked.termText},
         ${ct.revoked.signatureToken},
+        false,
         now() - interval '7 days',
         '127.0.0.1',
         'e2e-seed-agent',
@@ -461,6 +477,8 @@ export default async function globalSetup() {
       ON CONFLICT (id) DO UPDATE SET
         term_text         = EXCLUDED.term_text,
         signature_token   = EXCLUDED.signature_token,
+        kind              = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
         signed_at         = EXCLUDED.signed_at,
         signed_ip         = EXCLUDED.signed_ip,
         signed_user_agent = EXCLUDED.signed_user_agent,
@@ -473,6 +491,117 @@ export default async function globalSetup() {
       SET consent_signed_at = NULL,
           consent_revoked_at = now()
       WHERE id = ${ct.revoked.patientId};
+    `;
+
+    // Seed AI consent terms for the AI transcription consent E2E tests.
+    // These use base64url tokens (43 chars) and `kind = 'ai_recording'`.
+    const act = SEED_AI_CONSENT_TERMS;
+
+    // The template snapshot is stored as JSONB and must match the
+    // AiConsentTemplateSchema shape validated on read.
+    const aiTemplateSnapshot = JSON.stringify({
+      version: 1,
+      title: 'Termo de Consentimento para Gravacao e Transcricao por Inteligencia Artificial',
+      sections: [
+        {
+          heading: 'Identificacao',
+          body: `Profissional responsavel: Seed User, inscrito(a) no Conselho Regional de Psicologia sob o numero 00000-S/SP.\n\nPaciente: ${SEED_PATIENTS.activeWithPhone.fullName}.`,
+        },
+        {
+          heading: 'Finalidade',
+          body: 'A gravacao da sessao de atendimento psicologico sera realizada exclusivamente para processamento por inteligencia artificial (IA).',
+        },
+        {
+          heading: 'Bases legais',
+          body: 'O tratamento dos dados pessoais e sensiveis decorrentes da gravacao e transcricao fundamenta-se nas seguintes bases legais da LGPD.',
+        },
+        {
+          heading: 'Operacao de tratamento',
+          body: 'Controlador: o psicologo identificado neste termo.',
+        },
+        {
+          heading: 'Retencao',
+          body: 'O audio da sessao sera descartado no prazo maximo de 24 horas apos o processamento.',
+        },
+        {
+          heading: 'Direitos do titular',
+          body: 'Em conformidade com o art. 18 da LGPD, o paciente tem direito a confirmacao.',
+        },
+        {
+          heading: 'Revogacao',
+          body: 'O paciente pode revogar este consentimento a qualquer momento.',
+        },
+        {
+          heading: 'Riscos',
+          body: 'O paciente deve estar ciente dos seguintes riscos associados ao uso de inteligencia artificial.',
+        },
+      ],
+    });
+
+    // Unsigned AI consent term — patient can sign this one
+    await sql`
+      INSERT INTO public.consent_terms (
+        id, patient_id, user_id, kind, term_text,
+        signature_token, revocation_takes_effect_immediately,
+        template_version, template_snapshot
+      )
+      VALUES (
+        ${act.unsigned.id},
+        ${act.unsigned.patientId},
+        ${seed.userId},
+        'ai_recording',
+        'Termo de Consentimento para Gravacao e Transcricao por Inteligencia Artificial',
+        ${act.unsigned.signatureToken},
+        true,
+        1,
+        ${aiTemplateSnapshot}::jsonb
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        term_text       = EXCLUDED.term_text,
+        signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
+        template_version = EXCLUDED.template_version,
+        template_snapshot = EXCLUDED.template_snapshot,
+        signed_at       = NULL,
+        signed_ip       = NULL,
+        signed_user_agent = NULL,
+        revoked_at      = NULL;
+    `;
+
+    // Already-signed AI consent term — used to test "already signed" state
+    await sql`
+      INSERT INTO public.consent_terms (
+        id, patient_id, user_id, kind, term_text,
+        signature_token, revocation_takes_effect_immediately,
+        template_version, template_snapshot,
+        signed_at, signed_ip, signed_user_agent
+      )
+      VALUES (
+        ${act.alreadySigned.id},
+        ${act.alreadySigned.patientId},
+        ${seed.userId},
+        'ai_recording',
+        'Termo de Consentimento para Gravacao e Transcricao por Inteligencia Artificial',
+        ${act.alreadySigned.signatureToken},
+        true,
+        1,
+        ${aiTemplateSnapshot}::jsonb,
+        now(),
+        'e2e-hashed-ip',
+        'e2e-hashed-ua'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        term_text       = EXCLUDED.term_text,
+        signature_token = EXCLUDED.signature_token,
+        kind            = EXCLUDED.kind,
+        revocation_takes_effect_immediately = EXCLUDED.revocation_takes_effect_immediately,
+        template_version = EXCLUDED.template_version,
+        template_snapshot = EXCLUDED.template_snapshot,
+        signed_at       = EXCLUDED.signed_at,
+        signed_ip       = EXCLUDED.signed_ip,
+        signed_user_agent = EXCLUDED.signed_user_agent,
+        revoked_at      = NULL;
     `;
   } finally {
     await sql.end();

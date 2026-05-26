@@ -109,8 +109,10 @@ export async function generateConsentImpl(
       .values({
         patientId,
         userId,
+        kind: 'general',
         termText,
         signatureToken: token,
+        revocationTakesEffectImmediately: false,
       })
       .returning({ id: consentTerms.id });
 

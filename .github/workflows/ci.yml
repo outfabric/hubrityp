@@ -96,6 +96,7 @@ jobs:
           STREAM_API_SECRET: ci-build-stream-api-secret
           STREAM_WEBHOOK_SECRET: ci-build-stream-webhook-secret
           GEMINI_API_KEY: ci-build-gemini-api-key
+          SIGNATURE_HASH_SALT: ci-build-signature-hash-salt-minimum-32-chars
           LOG_LEVEL: silent
         run: npm run build
 
@@ -164,6 +165,7 @@ jobs:
           STREAM_API_SECRET: ci-build-stream-api-secret
           STREAM_WEBHOOK_SECRET: ci-build-stream-webhook-secret
           GEMINI_API_KEY: ci-build-gemini-api-key
+          SIGNATURE_HASH_SALT: ci-build-signature-hash-salt-minimum-32-chars
           LOG_LEVEL: silent
         run: npm run build
 

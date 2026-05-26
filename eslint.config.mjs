@@ -4,7 +4,10 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
 import prettierConfig from 'eslint-config-prettier';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+
+const require = createRequire(import.meta.url);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -187,6 +190,27 @@ const config = [
           ],
         },
       ],
+    },
+  },
+  // ── ai-transcription consent guardrail (custom rule) ──────────────────────
+  // Any file in `server/**` or `inngest/**` that imports `aiTranscriptions`
+  // (the Drizzle table for audio data) MUST also import `assertAiConsentActive`
+  // to verify the patient's AI consent before touching the data. See design
+  // decision D6 in openspec/changes/ai-transcription-consent/design.md.
+  {
+    files: [
+      'src/modules/ai-transcription/server/**/*.{ts,tsx}',
+      'src/modules/ai-transcription/inngest/**/*.{ts,tsx}',
+    ],
+    plugins: {
+      'ai-transcription-consent': {
+        rules: {
+          'require-assert-ai-consent': require('./eslint-rules/require-assert-ai-consent.cjs'),
+        },
+      },
+    },
+    rules: {
+      'ai-transcription-consent/require-assert-ai-consent': 'error',
     },
   },
   prettierConfig,
