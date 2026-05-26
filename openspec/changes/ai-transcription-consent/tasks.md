@@ -56,12 +56,12 @@
 
 ## 8. Inngest event + stub consumer
 
-- [ ] 8.1 Create `src/modules/ai-transcription/inngest/events.ts` exporting `consentRevokedEventSchema` (Zod) and a TypeScript type `ConsentRevokedEvent = z.infer<typeof consentRevokedEventSchema>`.
-- [ ] 8.2 Create `src/modules/ai-transcription/inngest/client.ts` exporting `inngest = new Inngest({ id: 'ai-transcription' })`. Mirror the pattern of `src/modules/agenda/inngest/client.ts`.
-- [ ] 8.3 Create `src/modules/ai-transcription/inngest/on-consent-revoked-stub.ts`: defines `onConsentRevokedStub` via `inngest.createFunction({ id: 'on-consent-revoked-stub', triggers: { event: 'ai-transcription/consent.revoked' } }, async ({ event, step }) => { logger.info({ event: 'ai-transcription/consent.revoked.received', termId, userId, patientId }, 'received'); })`. NO `reason` in the log line.
-- [ ] 8.4 Register the function in `src/app/api/inngest/route.ts` — add to the `functions` array.
-- [ ] 8.5 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/events.test.ts`: (a) `consentRevokedEventSchema.parse` accepts a valid payload; (b) rejects missing `termId`; (c) rejects `reason` > 500 chars; (d) coerces ISO string to Date.
-- [ ] 8.6 Integration test `src/__tests__/integration/ai-transcription/consent-revoked-event.int.test.ts`: dispatch a valid event via the Inngest dev server; assert `onConsentRevokedStub` runs; capture log; assert log contains the three IDs and does NOT contain `reason`.
+- [x] 8.1 Create `src/modules/ai-transcription/inngest/events.ts` exporting `consentRevokedEventSchema` (Zod) and a TypeScript type `ConsentRevokedEvent = z.infer<typeof consentRevokedEventSchema>`.
+- [x] 8.2 Create `src/modules/ai-transcription/inngest/client.ts` exporting `inngest = new Inngest({ id: 'ai-transcription' })`. Mirror the pattern of `src/modules/agenda/inngest/client.ts`.
+- [x] 8.3 Create `src/modules/ai-transcription/inngest/on-consent-revoked-stub.ts`: defines `onConsentRevokedStub` via `inngest.createFunction({ id: 'on-consent-revoked-stub', triggers: { event: 'ai-transcription/consent.revoked' } }, async ({ event, step }) => { logger.info({ event: 'ai-transcription/consent.revoked.received', termId, userId, patientId }, 'received'); })`. NO `reason` in the log line.
+- [x] 8.4 Register the function in `src/app/api/inngest/route.ts` — add to the `functions` array.
+- [x] 8.5 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/events.test.ts`: (a) `consentRevokedEventSchema.parse` accepts a valid payload; (b) rejects missing `termId`; (c) rejects `reason` > 500 chars; (d) coerces ISO string to Date.
+- [x] 8.6 Integration test `src/__tests__/integration/ai-transcription/consent-revoked-event.int.test.ts`: dispatch a valid event via the Inngest dev server; assert `onConsentRevokedStub` runs; capture log; assert log contains the three IDs and does NOT contain `reason`.
 
 ## 9. ESLint guardrail for future server code
 

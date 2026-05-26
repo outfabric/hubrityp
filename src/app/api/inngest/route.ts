@@ -8,6 +8,7 @@
 
 import { serve } from 'inngest/next';
 
+import { onConsentRevokedStub } from '@/modules/ai-transcription/inngest/on-consent-revoked-stub';
 import { expireProntuarioExportsCron } from '@/modules/medical-records/inngest/expire-exports';
 import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
 import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/export-pdf';
@@ -31,6 +32,7 @@ import { webhookStopHandler } from '@/modules/whatsapp/inngest/webhook-stop-hand
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
+    onConsentRevokedStub,
     remindersDispatcher,
     reminderSender,
     confirmationAckSender,
