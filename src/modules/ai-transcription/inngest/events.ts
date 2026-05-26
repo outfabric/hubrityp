@@ -35,6 +35,23 @@ export const consentRevokedEventSchema = z.object({
 });
 export type ConsentRevokedEvent = z.infer<typeof consentRevokedEventSchema>;
 
+/**
+ * `ai-transcription/audio.uploaded` — audio is validated and ready for processing.
+ *
+ * Emitted fire-and-forget by `confirmAudioUploadImpl` (manual upload path)
+ * and by `ingestStreamRecording` (video session path). Downstream consumers
+ * (stub for now, real processor in `ai-transcription-gemini-processing`)
+ * transition the row to `transcribing` and kick off the Gemini pipeline.
+ */
+export const audioUploadedEventSchema = z.object({
+  transcriptionId: uuidField,
+  userId: uuidField,
+  patientId: uuidField,
+  source: z.enum(['manual_upload', 'video_session']),
+});
+export type AudioUploadedEvent = z.infer<typeof audioUploadedEventSchema>;
+
 export const AI_TRANSCRIPTION_EVENTS = {
   CONSENT_REVOKED: 'ai-transcription/consent.revoked',
+  AUDIO_UPLOADED: 'ai-transcription/audio.uploaded',
 } as const;

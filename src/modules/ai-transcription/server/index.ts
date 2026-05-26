@@ -8,3 +8,5 @@ export {
   requestAudioUploadUrlImpl,
   type RequestAudioUploadUrlResult,
 } from './request-audio-upload-url';
+
+export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './confirm-audio-upload';

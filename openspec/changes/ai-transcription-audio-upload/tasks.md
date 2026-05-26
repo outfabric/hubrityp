@@ -19,11 +19,11 @@
 
 ## 4. Server Action: `confirmAudioUpload`
 
-- [ ] 4.1 Create `src/modules/ai-transcription/server/confirm-audio-upload.ts`. Flow per spec: getUser → safeParse → ownership → re-check consent → download first 8KB → magic-number validate → getMetadata for size → update row → dispatch event.
-- [ ] 4.2 Define `audioUploadedEventSchema` in `src/modules/ai-transcription/inngest/events.ts` (extending the file created in `ai-transcription-consent`). Wrap `inngest.send` with try/catch; validate with Zod before send.
-- [ ] 4.3 Update `src/modules/ai-transcription/server/index.ts` to export `confirmAudioUpload`.
-- [ ] 4.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/confirm-audio-upload.test.ts` — mock auth, Drizzle, Storage, consent, rate. Cover all spec scenarios: happy; magic mismatch (assert row.status='failed', error_code='invalid_mime', NO event); consent revoked between (assert error_code='consent_revoked_during_upload'); double-confirm idempotency; IDOR.
-- [ ] 4.5 Integration test `src/__tests__/integration/ai-transcription/confirm-audio-upload.int.test.ts`: actual upload to a test bucket; assert real magic-number detection; assert event dispatched (capture via Inngest test mode); cross-tenant assertion.
+- [x] 4.1 Create `src/modules/ai-transcription/server/confirm-audio-upload.ts`. Flow per spec: getUser → safeParse → ownership → re-check consent → download first 8KB → magic-number validate → getMetadata for size → update row → dispatch event.
+- [x] 4.2 Define `audioUploadedEventSchema` in `src/modules/ai-transcription/inngest/events.ts` (extending the file created in `ai-transcription-consent`). Wrap `inngest.send` with try/catch; validate with Zod before send.
+- [x] 4.3 Update `src/modules/ai-transcription/server/index.ts` to export `confirmAudioUpload`.
+- [x] 4.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/confirm-audio-upload.test.ts` — mock auth, Drizzle, Storage, consent, rate. Cover all spec scenarios: happy; magic mismatch (assert row.status='failed', error_code='invalid_mime', NO event); consent revoked between (assert error_code='consent_revoked_during_upload'); double-confirm idempotency; IDOR.
+- [x] 4.5 Integration test `src/__tests__/integration/ai-transcription/confirm-audio-upload.int.test.ts`: actual upload to a test bucket; assert real magic-number detection; assert event dispatched (capture via Inngest test mode); cross-tenant assertion.
 
 ## 5. Inngest event schemas + audio-uploaded stub
 

@@ -68,3 +68,21 @@ export const RequestAudioUploadUrlInputSchema = z.object({
 });
 
 export type RequestAudioUploadUrlInput = z.infer<typeof RequestAudioUploadUrlInputSchema>;
+
+// ---------------------------------------------------------------------------
+// Confirm input schema
+// ---------------------------------------------------------------------------
+
+/**
+ * Zod schema for `confirmAudioUpload` input.
+ *
+ * - `transcriptionId`: required, must be a valid UUID.
+ * - `audioDurationSeconds`: nullable — best-effort duration from client;
+ *   validated as a non-negative integer when provided.
+ */
+export const ConfirmAudioUploadInputSchema = z.object({
+  transcriptionId: z.string().uuid(),
+  audioDurationSeconds: z.number().int().nonnegative().nullable(),
+});
+
+export type ConfirmAudioUploadInput = z.infer<typeof ConfirmAudioUploadInputSchema>;

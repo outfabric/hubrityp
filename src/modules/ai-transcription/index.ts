@@ -53,6 +53,8 @@ export { createTranscriptionLogger } from './lib/logger';
 export {
   RequestAudioUploadUrlInputSchema,
   type RequestAudioUploadUrlInput,
+  ConfirmAudioUploadInputSchema,
+  type ConfirmAudioUploadInput,
   ALLOWED_AUDIO_CONTENT_TYPES,
   type AllowedAudioContentType,
   CONTENT_TYPE_TO_EXT,
@@ -62,3 +64,4 @@ export {
 
 // ---- Server -----------------------------------------------------------------
 export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
+export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';
