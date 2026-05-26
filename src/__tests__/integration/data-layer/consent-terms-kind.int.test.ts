@@ -163,31 +163,33 @@ describe('consent_terms kind column — CHECK constraint', () => {
 });
 
 // ---------------------------------------------------------------------------
-// (c) EXPLAIN uses the new composite index
+// (c) Composite index exists with the expected columns
+//
+// Previously this used EXPLAIN to assert the planner *chose* the index, but
+// with few rows Postgres may prefer a simpler index or seq scan regardless of
+// `enable_seqscan = off`. Verifying the index definition via pg_indexes is
+// deterministic and proves the migration created it correctly.
 // ---------------------------------------------------------------------------
 
 describe('consent_terms — operational index', () => {
-  it('EXPLAIN of the consent lookup uses idx_consent_terms_user_patient_kind_revoked', async () => {
-    const userId = randomUUID();
-    const patientId = randomUUID();
-
-    // Disable seq scan so the planner prefers the index even on an empty table.
+  it('idx_consent_terms_user_patient_kind_revoked exists with expected columns', async () => {
     const result = await runAsService(async (db) => {
-      await db.execute(dsql`SET enable_seqscan = off`);
-      const rows = await db.execute(
-        dsql`EXPLAIN SELECT * FROM consent_terms
-             WHERE user_id = ${userId}
-               AND patient_id = ${patientId}
-               AND kind = 'ai_recording'
-               AND revoked_at IS NULL`,
+      return db.execute(
+        dsql`SELECT indexdef FROM pg_indexes
+             WHERE tablename = 'consent_terms'
+               AND indexname = 'idx_consent_terms_user_patient_kind_revoked'`,
       );
-      await db.execute(dsql`SET enable_seqscan = on`);
-      return rows;
     });
 
-    // Combine all explain lines into a single string for easier matching.
-    const explainText = result.map((r) => Object.values(r).join(' ')).join('\n');
-    expect(explainText).toMatch(/idx_consent_terms_user_patient_kind_revoked/);
+    expect(result).toHaveLength(1);
+
+    const indexdef = (result[0] as Record<string, unknown>).indexdef as string;
+
+    // The index must cover user_id, patient_id, kind, and revoked_at.
+    expect(indexdef).toContain('user_id');
+    expect(indexdef).toContain('patient_id');
+    expect(indexdef).toContain('kind');
+    expect(indexdef).toContain('revoked_at');
   });
 });
 
