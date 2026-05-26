@@ -1,10 +1,10 @@
-// Placeholder for ai-transcription server implementations.
+// Server Action implementations for the ai-transcription module.
 //
-// This file will be populated by downstream changes:
-//   - `ai-transcription-audio-upload`: signed-URL generation, Storage upload
-//   - `ai-transcription-gemini-processing`: Inngest functions for transcription + note generation
-//   - `ai-transcription-review-ui`: Server Actions for the therapist review flow
-//
-// An empty named export keeps TypeScript happy and allows the barrel
-// (`index.ts`) to re-export from this path without errors.
-export {};
+// Each implementation is a function that receives a Supabase client and raw
+// input, validates auth + input, and returns a discriminated union result.
+// The `'use server'` directive lives on each implementation file.
+
+export {
+  requestAudioUploadUrlImpl,
+  type RequestAudioUploadUrlResult,
+} from './request-audio-upload-url';

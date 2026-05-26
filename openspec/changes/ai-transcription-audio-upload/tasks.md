@@ -11,11 +11,11 @@
 
 ## 3. Server Action: `requestAudioUploadUrl`
 
-- [ ] 3.1 Create `src/modules/ai-transcription/lib/audio-input-schemas.ts` exporting `RequestAudioUploadUrlInputSchema = z.object({ patientId: PatientIdSchema, sessionId: SessionIdSchema.nullable(), contentType: z.enum([...]), sizeBytes: z.number().int().positive() })`.
-- [ ] 3.2 Create `src/modules/ai-transcription/server/request-audio-upload-url.ts`. Wrap implementation in a `'use server'`-callable function exported from the module barrel. Flow per the spec: getUser → safeParse → ownership → consent → contentType allowlist → size limit → rate limit → INSERT row → createSignedUploadUrl → return.
-- [ ] 3.3 Export from `src/modules/ai-transcription/server/index.ts` and from the module barrel.
-- [ ] 3.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/request-audio-upload-url.test.ts` — mock auth, Drizzle, consent helper, Storage SDK, rate-limit. Cover: anonymous; IDOR; consent inactive; content type rejected; size exceeded; rate-limited; happy path (assert row inserted with status='pending' and URL TTL ≤ 5 min); ensure `objectKey` regex matches the spec.
-- [ ] 3.5 Integration test `src/__tests__/integration/ai-transcription/request-audio-upload-url.int.test.ts` (Testcontainers + Drizzle + a mocked Storage SDK at module level): assert the row exists post-call; assert calling 7 times in 60s returns RATE_LIMITED on the 7th; cross-tenant assertion (B requesting URL for A's patient → NOT_FOUND, zero rows inserted).
+- [x] 3.1 Create `src/modules/ai-transcription/lib/audio-input-schemas.ts` exporting `RequestAudioUploadUrlInputSchema = z.object({ patientId: PatientIdSchema, sessionId: SessionIdSchema.nullable(), contentType: z.enum([...]), sizeBytes: z.number().int().positive() })`.
+- [x] 3.2 Create `src/modules/ai-transcription/server/request-audio-upload-url.ts`. Wrap implementation in a `'use server'`-callable function exported from the module barrel. Flow per the spec: getUser → safeParse → ownership → consent → contentType allowlist → size limit → rate limit → INSERT row → createSignedUploadUrl → return.
+- [x] 3.3 Export from `src/modules/ai-transcription/server/index.ts` and from the module barrel.
+- [x] 3.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/request-audio-upload-url.test.ts` — mock auth, Drizzle, consent helper, Storage SDK, rate-limit. Cover: anonymous; IDOR; consent inactive; content type rejected; size exceeded; rate-limited; happy path (assert row inserted with status='pending' and URL TTL ≤ 5 min); ensure `objectKey` regex matches the spec.
+- [x] 3.5 Integration test `src/__tests__/integration/ai-transcription/request-audio-upload-url.int.test.ts` (Testcontainers + Drizzle + a mocked Storage SDK at module level): assert the row exists post-call; assert calling 7 times in 60s returns RATE_LIMITED on the 7th; cross-tenant assertion (B requesting URL for A's patient → NOT_FOUND, zero rows inserted).
 
 ## 4. Server Action: `confirmAudioUpload`
 
