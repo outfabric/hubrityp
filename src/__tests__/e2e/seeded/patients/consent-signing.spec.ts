@@ -8,8 +8,8 @@ import { readSeedState, SEED_CONSENT_TERMS } from '../setup/seed-state';
  *
  * Tests the full consent signing flow on the public `/termo/:token` page:
  *   1. Valid token: read term, accept checkbox, sign, verify success
- *   2. Invalid token: verify "Termo não encontrado" message
- *   3. Already signed token: verify "Este termo já foi assinado" message
+ *   2. Invalid token: verify "Termo nao encontrado" message
+ *   3. Already signed token: verify "Este termo ja foi assinado" message
  *
  * Prerequisites:
  *   - Seeded consent_terms rows in global-setup.ts (unsigned + already-signed)
@@ -84,7 +84,7 @@ test.describe.serial('@patients consent signing page', () => {
 
     const notFound = page.getByTestId('consent-not-found');
     await expect(notFound).toBeVisible();
-    await expect(notFound).toContainText('Termo não encontrado');
+    await expect(notFound).toContainText('Termo nao encontrado');
   });
 
   test('shows already-signed message for signed token', async ({ page }) => {
@@ -94,7 +94,7 @@ test.describe.serial('@patients consent signing page', () => {
 
     const alreadySigned = page.getByTestId('consent-already-signed');
     await expect(alreadySigned).toBeVisible();
-    await expect(alreadySigned).toContainText('Este termo já foi assinado');
+    await expect(alreadySigned).toContainText('Este termo ja foi assinado');
   });
 
   test('refuse button shows refusal message', async ({ page }) => {

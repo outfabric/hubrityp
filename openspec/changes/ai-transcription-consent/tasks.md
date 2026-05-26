@@ -70,6 +70,6 @@
 
 ## 10. Sanity
 
-- [ ] 10.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded` end-to-end. All green.
-- [ ] 10.2 Manually verify in the running app: create a patient, click "Gerar termo", copy the link, open in incognito, sign, return to psychologist view and confirm `active` state. Then revoke and confirm `revoked` state.
-- [ ] 10.3 Update the change-folder PR description with: (a) summary of new env var `SIGNATURE_HASH_SALT`; (b) note that legal sign-off on `AI_CONSENT_TEMPLATE_V1` is required.
+- [x] 10.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded` end-to-end. All green.
+- [x] 10.2 Manually verify in the running app: create a patient, click "Gerar termo", copy the link, open in incognito, sign, return to psychologist view and confirm `active` state. Then revoke and confirm `revoked` state.
+- [x] 10.3 Update the change-folder PR description with: (a) summary of new env var `SIGNATURE_HASH_SALT`; (b) note that legal sign-off on `AI_CONSENT_TEMPLATE_V1` is required.
