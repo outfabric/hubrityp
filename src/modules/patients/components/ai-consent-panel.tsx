@@ -285,7 +285,7 @@ function AiConsentPanelInner({
               <p className="text-text-secondary text-[13px]">
                 Aguardando assinatura — expira em {formatDate(consentStatus.expiresAt)}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   ref={linkInputRef}
                   readOnly
@@ -294,24 +294,26 @@ function AiConsentPanelInner({
                   aria-label="Link do termo de consentimento"
                   data-testid="ai-consent-link-input"
                 />
-                <Button
-                  variant="secondary"
-                  onClick={handleCopyLink}
-                  aria-label="Copiar link do termo"
-                  data-testid="ai-consent-copy-btn"
-                >
-                  <Copy className="h-4 w-4" aria-hidden="true" />
-                  Copiar link
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleResend}
-                  aria-label="Reenviar termo por e-mail"
-                  data-testid="ai-consent-resend-btn"
-                >
-                  <Mail className="h-4 w-4" aria-hidden="true" />
-                  Reenviar
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={handleCopyLink}
+                    aria-label="Copiar link do termo"
+                    data-testid="ai-consent-copy-btn"
+                  >
+                    <Copy className="h-4 w-4" aria-hidden="true" />
+                    Copiar link
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={handleResend}
+                    aria-label="Reenviar termo por e-mail"
+                    data-testid="ai-consent-resend-btn"
+                  >
+                    <Mail className="h-4 w-4" aria-hidden="true" />
+                    Reenviar
+                  </Button>
+                </div>
               </div>
             </div>
           )}

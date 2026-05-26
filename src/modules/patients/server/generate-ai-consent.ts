@@ -3,7 +3,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, gte, isNotNull, isNull, or } from 'drizzle-orm';
 
 import { AI_CONSENT_TEMPLATE_V1 } from '@/modules/ai-transcription/lib/consent-template';
 import { db } from '@/shared/db/client';
@@ -84,8 +84,11 @@ export async function generateAiConsentTermImpl(
   }
 
   // 4. Check for existing pending or active ai_recording term
-  //    Pending: signed_at IS NULL AND revoked_at IS NULL
   //    Active:  signed_at IS NOT NULL AND revoked_at IS NULL
+  //    Pending: signed_at IS NULL AND revoked_at IS NULL AND not expired
+  //    Expired unsigned terms (created_at + 7 days < now) are treated as 'none'
+  //    by getAiConsentStatusImpl and must NOT block new generation here.
+  const expiryThreshold = new Date(Date.now() - TOKEN_EXPIRY_MS);
   const [existingTerm] = await db
     .select({ id: consentTerms.id })
     .from(consentTerms)
@@ -95,6 +98,9 @@ export async function generateAiConsentTermImpl(
         eq(consentTerms.userId, userId),
         eq(consentTerms.kind, 'ai_recording'),
         isNull(consentTerms.revokedAt),
+        // Exclude expired unsigned terms: keep only signed terms OR
+        // unsigned terms whose creation date is within the expiry window.
+        or(isNotNull(consentTerms.signedAt), gte(consentTerms.createdAt, expiryThreshold)),
       ),
     )
     .limit(1);

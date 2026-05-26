@@ -43,6 +43,9 @@ services:
       # when testing AI transcription features end-to-end.
       GEMINI_API_KEY: fake-gemini-key-for-local-dev
       SIGNATURE_HASH_SALT: local-dev-signature-hash-salt-minimum-32-chars
+      STREAM_API_KEY: dummy_stream_key_for_local_dev
+      STREAM_API_SECRET: dummy_stream_secret_for_local_dev
+      STREAM_WEBHOOK_SECRET: dummy_stream_webhook_secret_for_local_dev
       # Tell the Inngest SDK to send events to the Dev Server container.
       # So funciona quando o profile `inngest` esta ativo (o host `inngest`
       # nao existe sem ele). Sem o Dev Server, o app boota normalmente —

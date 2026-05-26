@@ -152,6 +152,22 @@ describe('generateAiConsentTermImpl', () => {
     });
   });
 
+  describe('expired unsigned terms', () => {
+    it('allows new generation when previous unsigned term has expired', async () => {
+      // First select: patient found; Second select: no active/pending term
+      // (expired unsigned terms are excluded by the query itself)
+      selectResults = [[{ id: MOCK_PATIENT_ID }], []];
+
+      const supabase = createMockSupabase();
+      const result = await generateAiConsentTermImpl(supabase, { patientId: MOCK_PATIENT_ID });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.publicUrl).toMatch(/^\/termo\/.+$/);
+      }
+    });
+  });
+
   describe('success path', () => {
     it('allows new generation when previous term was revoked (no non-revoked term)', async () => {
       // First select: patient found; Second select: no non-revoked term
