@@ -65,8 +65,8 @@
 
 ## 9. ESLint guardrail for future server code
 
-- [ ] 9.1 Add to `eslint.config.mjs` a `no-restricted-imports` rule scoped to `src/modules/ai-transcription/server/**` and `src/modules/ai-transcription/inngest/**`: forbid importing `aiTranscriptions` (the Drizzle table) unless the SAME file also imports `assertAiConsentActive`. Implement via a custom rule under `eslint-rules/require-assert-ai-consent.cjs` or, if simpler, a `forbid-import-without-pair` pattern with an explanatory error message. (If a custom rule is overkill, fall back to: a `// @consent-gated` comment that a unit test scans for.) Document the chosen mechanism in this change's PR description.
-- [ ] 9.2 Unit test `src/__tests__/unit/eslint-rules/require-assert-ai-consent.test.ts`: feed two fixture files (one with both imports, one missing `assertAiConsentActive`) and assert the lint passes/fails appropriately.
+- [x] 9.1 Add to `eslint.config.mjs` a `no-restricted-imports` rule scoped to `src/modules/ai-transcription/server/**` and `src/modules/ai-transcription/inngest/**`: forbid importing `aiTranscriptions` (the Drizzle table) unless the SAME file also imports `assertAiConsentActive`. Implement via a custom rule under `eslint-rules/require-assert-ai-consent.cjs` or, if simpler, a `forbid-import-without-pair` pattern with an explanatory error message. (If a custom rule is overkill, fall back to: a `// @consent-gated` comment that a unit test scans for.) Document the chosen mechanism in this change's PR description.
+- [x] 9.2 Unit test `src/__tests__/unit/eslint-rules/require-assert-ai-consent.test.ts`: feed two fixture files (one with both imports, one missing `assertAiConsentActive`) and assert the lint passes/fails appropriately.
 
 ## 10. Sanity
 
