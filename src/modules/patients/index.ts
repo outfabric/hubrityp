@@ -184,6 +184,7 @@ export { PatientCoupleSection } from './components/patient-couple-section';
 export { PatientGuardiansSection } from './components/patient-guardians-section';
 export { TiptapEditor } from './components/tiptap-editor';
 export { AnamnesisTab } from './components/anamnesis-tab';
+export { AiConsentPanel } from './components/ai-consent-panel';
 export { ConsentSignForm } from './components/consent-sign-form';
 export { CsvUpload, type CsvParseResult } from './components/csv-upload';
 export { CsvColumnMapper, type ColumnMapping } from './components/csv-column-mapper';

@@ -48,11 +48,11 @@
 
 ## 7. `AiConsentPanel` UI
 
-- [ ] 7.1 Create `src/modules/patients/components/ai-consent-panel.tsx`. Use `Card`, `Badge`, `Button` (variants per spec), `AlertDialog` (for destructive revoke). Icons via `lucide-react` (`Sparkles`, `Copy`, `Mail`, `Lock`). State driven by `getAiConsentStatus` via TanStack Query (`useQuery` keyed by `['ai-consent', patientId]`). Mutations (`generate`, `revoke`) via `useMutation` with optimistic update + revert on error + `Sonner` toast.
-- [ ] 7.2 Use Sálvia tokens only (`brand-500`, `success-500`, `warning-500`, `danger-500`). No hardcoded hex. Dark mode tested in parallel. Spacing per design rules (`Card` padding `space-6` desktop / `space-4` mobile). Microcopy follows the glossary ("Termo", "Vigente", "Revogar", "Paciente").
-- [ ] 7.3 Embed `<AiConsentPanel patientId={patient.id} />` in `src/app/(app)/pacientes/[id]/page.tsx`, in a logical section near other patient documents.
-- [ ] 7.4 Unit test `src/__tests__/unit/modules/patients/components/ai-consent-panel.test.tsx` (RTL + MSW for Server Action mocking): one test per state (`none`, `pending`, `active`, `revoked`); assert badges, copy, buttons; assert revoke confirmation requires typing `"REVOGAR"`; assert TanStack Query revalidates after mutation; assert toast appears.
-- [ ] 7.5 Accessibility test in the same file: keyboard nav (Tab traverses panel; Enter triggers primary button; Escape closes AlertDialog); `aria-label` on icon-only buttons; contrast assertion via axe-core (already in test setup).
+- [x] 7.1 Create `src/modules/patients/components/ai-consent-panel.tsx`. Use `Card`, `Badge`, `Button` (variants per spec), `AlertDialog` (for destructive revoke). Icons via `lucide-react` (`Sparkles`, `Copy`, `Mail`, `Lock`). State driven by `getAiConsentStatus` via TanStack Query (`useQuery` keyed by `['ai-consent', patientId]`). Mutations (`generate`, `revoke`) via `useMutation` with optimistic update + revert on error + `Sonner` toast.
+- [x] 7.2 Use Sálvia tokens only (`brand-500`, `success-500`, `warning-500`, `danger-500`). No hardcoded hex. Dark mode tested in parallel. Spacing per design rules (`Card` padding `space-6` desktop / `space-4` mobile). Microcopy follows the glossary ("Termo", "Vigente", "Revogar", "Paciente").
+- [x] 7.3 Embed `<AiConsentPanel patientId={patient.id} />` in `src/app/(app)/pacientes/[id]/page.tsx`, in a logical section near other patient documents.
+- [x] 7.4 Unit test `src/__tests__/unit/modules/patients/components/ai-consent-panel.test.tsx` (RTL + MSW for Server Action mocking): one test per state (`none`, `pending`, `active`, `revoked`); assert badges, copy, buttons; assert revoke confirmation requires typing `"REVOGAR"`; assert TanStack Query revalidates after mutation; assert toast appears.
+- [x] 7.5 Accessibility test in the same file: keyboard nav (Tab traverses panel; Enter triggers primary button; Escape closes AlertDialog); `aria-label` on icon-only buttons; contrast assertion via axe-core (already in test setup).
 
 ## 8. Inngest event + stub consumer
 
