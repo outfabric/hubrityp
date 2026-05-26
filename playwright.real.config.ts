@@ -209,6 +209,8 @@ export default defineConfig({
       STREAM_WEBHOOK_SECRET: 'e2e-real-stream-webhook-secret',
       // Gemini AI transcription — dummy key so env validation passes.
       GEMINI_API_KEY: 'e2e-real-gemini-api-key',
+      // Signature hash salt — used for hashing IP/user-agent in consent signing.
+      SIGNATURE_HASH_SALT: 'e2e-real-signature-hash-salt-minimum-32-chars',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

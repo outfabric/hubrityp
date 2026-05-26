@@ -1,32 +1,56 @@
 'use server';
 
-// Thin route shell for the public consent signing Server Action.
+// Thin route shell for public consent signing Server Actions.
 //
-// The actual implementation lives in `src/modules/patients/server/sign-consent.ts`
-// (re-exported from `@/modules/patients`). This file MUST stay thin and carry
-// the `'use server'` directive — every export of a `'use server'` file MUST
-// be an async function.
+// The actual implementations live in the `patients` module:
+//   - General consent: `src/modules/patients/server/sign-consent.ts`
+//   - AI consent: `src/modules/patients/server/sign-ai-consent.ts`
 //
-// This action runs WITHOUT authentication — the signature token is the
+// This file MUST stay thin and carry the `'use server'` directive -- every
+// export of a `'use server'` file MUST be an async function.
+//
+// Both actions run WITHOUT authentication -- the signature token is the
 // authorization credential. IP and user-agent are extracted from request
 // headers to record signing metadata for legal audit trail.
-//
-// TODO: Add rate limiting at the edge/middleware level (keyed by IP) to
-// prevent DoS via repeated signing attempts. The 256-bit token provides
-// unguessability, but each call triggers expensive operations (PDF gen,
-// Storage upload, multiple DB writes). This is tracked as a known limitation
-// until infrastructure-level rate limiting is in place.
 
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
+import { signAiConsentImpl, signConsentImpl } from '@/modules/patients';
 import type { SignConsentResult } from '@/modules/patients';
-import { signConsentImpl } from '@/modules/patients';
+import type { SignAiConsentResult } from '@/modules/patients';
 
-/** Validates the token is a 64-char hex string (256-bit signature token). */
+// ---------------------------------------------------------------------------
+// Input validation schemas
+// ---------------------------------------------------------------------------
+
+/** General consent: 64-char hex string (256-bit signature token). */
 const signConsentInput = z.object({
   token: z.string().regex(/^[0-9a-f]{64}$/, 'Invalid consent token'),
 });
+
+/** AI consent: 43-char base64url string (256-bit token, base64url encoded). */
+const signAiConsentInput = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Invalid consent token'),
+});
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+async function extractSigningMetadata(): Promise<{
+  ip: string;
+  userAgent: string;
+}> {
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const userAgent = headersList.get('user-agent') ?? 'unknown';
+  return { ip, userAgent };
+}
+
+// ---------------------------------------------------------------------------
+// General consent signing action
+// ---------------------------------------------------------------------------
 
 export async function signConsent(token: string): Promise<SignConsentResult> {
   // Validate token format at the Server Action boundary (defense-in-depth;
@@ -37,9 +61,22 @@ export async function signConsent(token: string): Promise<SignConsentResult> {
     return { ok: false, error: 'not_found' };
   }
 
-  const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const userAgent = headersList.get('user-agent') ?? 'unknown';
+  const { ip, userAgent } = await extractSigningMetadata();
 
   return signConsentImpl(parsed.data.token, ip, userAgent);
+}
+
+// ---------------------------------------------------------------------------
+// AI consent signing action
+// ---------------------------------------------------------------------------
+
+export async function signAiConsent(token: string): Promise<SignAiConsentResult> {
+  const parsed = signAiConsentInput.safeParse({ token });
+  if (!parsed.success) {
+    return { ok: false, error: 'not_found' };
+  }
+
+  const { ip, userAgent } = await extractSigningMetadata();
+
+  return signAiConsentImpl(parsed.data.token, ip, userAgent);
 }

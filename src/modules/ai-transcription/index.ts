@@ -27,6 +27,9 @@ export {
   type GeneratedNote,
   RiskAlertSchema,
   type RiskAlert,
+  AiConsentTemplateSchema,
+  ConsentTemplateSectionSchema,
+  type AiConsentTemplateSnapshot,
 } from './lib/schemas';
 
 // ---- Consent template -------------------------------------------------------

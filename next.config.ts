@@ -96,6 +96,18 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      {
+        // Patient consent signing pages handle sensitive token-gated content.
+        // Override the global Referrer-Policy with `no-referrer` to prevent
+        // the token from leaking via the Referer header on outbound navigation.
+        source: '/termo/:token*',
+        headers: [
+          {
+            key: 'Referrer-Policy',
+            value: 'no-referrer',
+          },
+        ],
+      },
     ]);
   },
 };

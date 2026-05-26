@@ -45,6 +45,8 @@ process.env.STREAM_WEBHOOK_SECRET ??= 'unit-test-stream-webhook-secret';
 // Gemini AI transcription — dummy key so env validation passes when a test
 // transitively imports `serverEnv`. The five optional fields have defaults.
 process.env.GEMINI_API_KEY ??= 'unit-test-gemini-api-key';
+// Signature hash salt — used for hashing IP/user-agent in consent signing.
+process.env.SIGNATURE_HASH_SALT ??= 'unit-test-signature-hash-salt-minimum-32-chars';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino
 // pipeline (Edge runtime can't load pino's transport), so silencing pino

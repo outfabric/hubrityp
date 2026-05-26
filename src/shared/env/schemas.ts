@@ -80,6 +80,10 @@ export const serverEnvSchema = clientEnvSchema.extend({
   AI_TRANSCRIPTION_AUDIO_TTL_HOURS: z.coerce.number().int().min(24).max(168).default(24),
   // Maximum audio file size in MB accepted for transcription (1-500, default 200).
   AI_TRANSCRIPTION_MAX_AUDIO_MB: z.coerce.number().int().min(1).max(500).default(200),
+  // Salt used to hash IP and user-agent when recording consent term signatures.
+  // The hash provides a legally defensible audit trail without storing PII.
+  // REQUIRED in production; min 32 chars for adequate entropy.
+  SIGNATURE_HASH_SALT: z.string().min(32),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

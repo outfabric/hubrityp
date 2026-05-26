@@ -30,6 +30,28 @@ export const RiskSensitivitySchema = z.enum(['low', 'medium', 'high']);
 export type RiskSensitivity = z.infer<typeof RiskSensitivitySchema>;
 
 // ---------------------------------------------------------------------------
+// Consent template snapshot (stored in JSONB at generation time)
+// ---------------------------------------------------------------------------
+
+/** A single section of the consent template (heading + body). */
+export const ConsentTemplateSectionSchema = z.object({
+  heading: z.string(),
+  body: z.string(),
+});
+
+/**
+ * Full shape of the versioned consent template, used to validate the
+ * `template_snapshot` JSONB column on read. This ensures that even if
+ * someone tampers with the stored JSON, the renderer only sees a known shape.
+ */
+export const AiConsentTemplateSchema = z.object({
+  version: z.number().int().positive(),
+  title: z.string(),
+  sections: z.array(ConsentTemplateSectionSchema).min(1),
+});
+export type AiConsentTemplateSnapshot = z.infer<typeof AiConsentTemplateSchema>;
+
+// ---------------------------------------------------------------------------
 // Structured payloads
 // ---------------------------------------------------------------------------
 

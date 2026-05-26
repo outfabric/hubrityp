@@ -64,6 +64,12 @@ export { signConsentImpl, type SignConsentResult } from './server/sign-consent';
 export { generateAiConsentTermImpl } from './server/generate-ai-consent';
 export { revokeAiConsentTermImpl } from './server/revoke-ai-consent';
 export { getAiConsentStatusImpl } from './server/get-ai-consent-status';
+export {
+  getAiConsentByTokenImpl,
+  type GetAiConsentByTokenResult,
+  type AiConsentByTokenData,
+} from './server/get-ai-consent-by-token';
+export { signAiConsentImpl, type SignAiConsentResult } from './server/sign-ai-consent';
 export { exportPatientPdfImpl, type ExportPatientPdfResult } from './server/export-patient-pdf';
 export {
   checkCsvDuplicatesImpl,
