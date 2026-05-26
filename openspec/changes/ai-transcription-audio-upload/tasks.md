@@ -6,8 +6,8 @@
 
 ## 2. MIME magic-number validator
 
-- [ ] 2.1 Create `src/modules/ai-transcription/server/validators/mime.ts` exporting `validateAudioMagicNumbers(buffer, declaredContentType)`. Uses `fileTypeFromBuffer` from `file-type`. Normalize `audio/x-wav` ↔ `audio/wav` etc. Allowlist exactly the 5 MIMEs.
-- [ ] 2.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/validators/mime.test.ts`: feed real fixture buffers (commit small ones to the repo or generate via test setup): (a) MP3 → ok; (b) WAV → ok; (c) M4A → ok; (d) WebM → ok; (e) MP3 disguised as `audio/wav` declared → mismatch; (f) PE/EXE bytes declared as `audio/mpeg` → mismatch; (g) random 64-byte buffer → undetected.
+- [x] 2.1 Create `src/modules/ai-transcription/server/validators/mime.ts` exporting `validateAudioMagicNumbers(buffer, declaredContentType)`. Uses `fileTypeFromBuffer` from `file-type`. Normalize `audio/x-wav` ↔ `audio/wav` etc. Allowlist exactly the 5 MIMEs.
+- [x] 2.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/validators/mime.test.ts`: feed real fixture buffers (commit small ones to the repo or generate via test setup): (a) MP3 → ok; (b) WAV → ok; (c) M4A → ok; (d) WebM → ok; (e) MP3 disguised as `audio/wav` declared → mismatch; (f) PE/EXE bytes declared as `audio/mpeg` → mismatch; (g) random 64-byte buffer → undetected.
 
 ## 3. Server Action: `requestAudioUploadUrl`
 
