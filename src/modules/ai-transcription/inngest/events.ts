@@ -9,6 +9,8 @@
 
 import { z } from 'zod';
 
+import { TranscriptionIdSchema } from '../lib/branded-types';
+
 // ---------------------------------------------------------------------------
 // Shared field schemas
 // ---------------------------------------------------------------------------
@@ -44,14 +46,33 @@ export type ConsentRevokedEvent = z.infer<typeof consentRevokedEventSchema>;
  * transition the row to `transcribing` and kick off the Gemini pipeline.
  */
 export const audioUploadedEventSchema = z.object({
-  transcriptionId: uuidField,
+  transcriptionId: TranscriptionIdSchema,
   userId: uuidField,
   patientId: uuidField,
   source: z.enum(['manual_upload', 'video_session']),
 });
 export type AudioUploadedEvent = z.infer<typeof audioUploadedEventSchema>;
 
+/**
+ * `ai-transcription/recording.completed` — a Stream video recording is ready.
+ *
+ * Emitted by the telepsicologia webhook handler when a call recording
+ * finishes. The `ingestStreamRecording` Inngest function consumes this
+ * event, downloads the recording from `streamRecordingUrl`, uploads it to
+ * Supabase Storage, creates a transcription row, and fires
+ * `ai-transcription/audio.uploaded` to start the Gemini pipeline.
+ */
+export const recordingCompletedEventSchema = z.object({
+  userId: uuidField,
+  patientId: uuidField,
+  sessionId: uuidField.nullable(),
+  streamRecordingUrl: z.string().url(),
+  streamCallId: z.string().min(1),
+});
+export type RecordingCompletedEvent = z.infer<typeof recordingCompletedEventSchema>;
+
 export const AI_TRANSCRIPTION_EVENTS = {
   CONSENT_REVOKED: 'ai-transcription/consent.revoked',
   AUDIO_UPLOADED: 'ai-transcription/audio.uploaded',
+  RECORDING_COMPLETED: 'ai-transcription/recording.completed',
 } as const;

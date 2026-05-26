@@ -27,10 +27,10 @@
 
 ## 5. Inngest event schemas + audio-uploaded stub
 
-- [ ] 5.1 In `src/modules/ai-transcription/inngest/events.ts`, add `audioUploadedEventSchema` and `recordingCompletedEventSchema` per spec. Export TS types via `z.infer`.
-- [ ] 5.2 Create `src/modules/ai-transcription/inngest/on-audio-uploaded-stub.ts` defining `onAudioUploadedStub` that only logs `{ event: 'ai-transcription/audio.uploaded.received', transcriptionId, userId }`.
-- [ ] 5.3 Register `onAudioUploadedStub` (and the upcoming `ingestStreamRecording`) in `src/app/api/inngest/route.ts`.
-- [ ] 5.4 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/events.test.ts` (extends the file from the consent change): assert both new schemas accept valid payloads and reject malformed ones (missing fields, invalid URL, invalid UUID).
+- [x] 5.1 In `src/modules/ai-transcription/inngest/events.ts`, add `audioUploadedEventSchema` and `recordingCompletedEventSchema` per spec. Export TS types via `z.infer`.
+- [x] 5.2 Create `src/modules/ai-transcription/inngest/on-audio-uploaded-stub.ts` defining `onAudioUploadedStub` that only logs `{ event: 'ai-transcription/audio.uploaded.received', transcriptionId, userId }`.
+- [x] 5.3 Register `onAudioUploadedStub` (and the upcoming `ingestStreamRecording`) in `src/app/api/inngest/route.ts`.
+- [x] 5.4 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/events.test.ts` (extends the file from the consent change): assert both new schemas accept valid payloads and reject malformed ones (missing fields, invalid URL, invalid UUID).
 
 ## 6. Inngest function: `ingestStreamRecording`
 
