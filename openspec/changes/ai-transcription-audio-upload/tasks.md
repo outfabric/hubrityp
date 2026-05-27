@@ -49,10 +49,10 @@
 
 ## 8. Update `recording-cleanup` to emit `recording.completed`
 
-- [ ] 8.1 Read `src/modules/telepsicologia/inngest/recording-cleanup.ts` end-to-end. Identify the point where Stream signals completion (likely after polling/`status='ready'`).
-- [ ] 8.2 At that point, validate payload with `recordingCompletedEventSchema.parse`, dispatch `ai-transcription/recording.completed` via fire-and-forget. Idempotency: only dispatch when the local row transitions to a terminal state — guarded by an existing column (e.g., `processed_ingest_dispatched_at` could be added if necessary, or detect via existing state). Choose the cheapest correct approach and document in code.
-- [ ] 8.3 Unit test `src/__tests__/unit/modules/telepsicologia/inngest/recording-cleanup-emit.test.ts`: dispatched once per terminal transition; not dispatched on retries after dispatch; emit failure does not break cleanup.
-- [ ] 8.4 Integration test `src/__tests__/integration/telepsicologia/recording-cleanup-emit.int.test.ts` — uses local Inngest dev runtime; verifies the event reaches the queue.
+- [x] 8.1 Read `src/modules/telepsicologia/inngest/recording-cleanup.ts` end-to-end. Identify the point where Stream signals completion (likely after polling/`status='ready'`).
+- [x] 8.2 At that point, validate payload with `recordingCompletedEventSchema.parse`, dispatch `ai-transcription/recording.completed` via fire-and-forget. Idempotency: only dispatch when the local row transitions to a terminal state — guarded by an existing column (e.g., `processed_ingest_dispatched_at` could be added if necessary, or detect via existing state). Choose the cheapest correct approach and document in code.
+- [x] 8.3 Unit test `src/__tests__/unit/modules/telepsicologia/inngest/recording-cleanup-emit.test.ts`: dispatched once per terminal transition; not dispatched on retries after dispatch; emit failure does not break cleanup.
+- [x] 8.4 Integration test `src/__tests__/integration/telepsicologia/recording-cleanup-emit.int.test.ts` — uses local Inngest dev runtime; verifies the event reaches the queue.
 
 ## 9. UI — `AudioUploadSheet`
 
