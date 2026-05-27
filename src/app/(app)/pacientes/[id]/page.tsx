@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { AudioUploadButton } from '@/modules/ai-transcription/components/audio-upload-button';
 import {
   getAnamnesisImpl,
   getConsentStatusImpl,
@@ -21,6 +22,7 @@ import { Button } from '@/shared/ui/button';
 import {
   addGuardian,
   archivePatient,
+  confirmAudioUpload,
   deletePatient,
   exportPatientPdf,
   generateAiConsent,
@@ -28,6 +30,7 @@ import {
   getAiConsentStatus,
   listGuardians,
   removeGuardian,
+  requestAudioUploadUrl,
   revokeAiConsent,
   revokeConsent,
   unarchivePatient,
@@ -112,13 +115,19 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         exportPdfAction={exportPatientPdf}
       />
 
-      {/* AI Consent */}
-      <div className="mt-8">
+      {/* AI Consent + Audio Upload */}
+      <div className="mt-8 flex flex-col gap-4">
         <AiConsentPanel
           patientId={id}
           getStatusAction={getAiConsentStatus}
           generateAction={generateAiConsent}
           revokeAction={revokeAiConsent}
+        />
+        <AudioUploadButton
+          patientId={id}
+          getConsentStatusAction={getAiConsentStatus}
+          requestUploadUrlAction={requestAudioUploadUrl}
+          confirmUploadAction={confirmAudioUpload}
         />
       </div>
 

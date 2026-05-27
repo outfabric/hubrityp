@@ -56,11 +56,11 @@
 
 ## 9. UI — `AudioUploadSheet`
 
-- [ ] 9.1 Create `src/modules/ai-transcription/components/audio-upload-sheet.tsx` per spec. Use shadcn `Sheet`, `Alert`, `Button`, `Progress`, `Input` (file). Microcopy in pt-BR per Sálvia glossary.
-- [ ] 9.2 Create a small `audio-upload-button.tsx` entry component that opens the sheet — embedded in `pacientes/[id]/page.tsx` next to the consent panel, AND on the session detail page (where applicable).
-- [ ] 9.3 Use TanStack Query: `useQuery(['ai-consent', patientId])` to drive the gate; `useMutation` for `requestAudioUploadUrl` and `confirmAudioUpload`. Optimistic UI for the "uploading" state. Sonner toasts for success/failure with humanized pt-BR messages.
-- [ ] 9.4 Use `XMLHttpRequest` for the PUT to capture `upload.onprogress`. Wrap in a Promise. Update progress bar state. On error: call `confirmAudioUpload` is SKIPPED (no row update via this endpoint — the row's `status` remains `pending` and the discard cron will catch it; document this in code).
-- [ ] 9.5 Unit test `src/__tests__/unit/modules/ai-transcription/components/audio-upload-sheet.test.tsx`: (a) consent inactive → no dropzone, warning rendered; (b) consent active → dropzone visible; (c) selecting a file shows metadata; (d) confirm calls the actions in the right order; (e) PUT failure → error toast; (f) success → success toast and sheet closes; (g) keyboard nav passes axe-core.
+- [x] 9.1 Create `src/modules/ai-transcription/components/audio-upload-sheet.tsx` per spec. Use shadcn `Sheet`, `Alert`, `Button`, `Progress`, `Input` (file). Microcopy in pt-BR per Sálvia glossary.
+- [x] 9.2 Create a small `audio-upload-button.tsx` entry component that opens the sheet — embedded in `pacientes/[id]/page.tsx` next to the consent panel, AND on the session detail page (where applicable).
+- [x] 9.3 Use TanStack Query: `useQuery(['ai-consent', patientId])` to drive the gate; `useMutation` for `requestAudioUploadUrl` and `confirmAudioUpload`. Optimistic UI for the "uploading" state. Sonner toasts for success/failure with humanized pt-BR messages.
+- [x] 9.4 Use `XMLHttpRequest` for the PUT to capture `upload.onprogress`. Wrap in a Promise. Update progress bar state. On error: call `confirmAudioUpload` is SKIPPED (no row update via this endpoint — the row's `status` remains `pending` and the discard cron will catch it; document this in code).
+- [x] 9.5 Unit test `src/__tests__/unit/modules/ai-transcription/components/audio-upload-sheet.test.tsx`: (a) consent inactive → no dropzone, warning rendered; (b) consent active → dropzone visible; (c) selecting a file shows metadata; (d) confirm calls the actions in the right order; (e) PUT failure → error toast; (f) success → success toast and sheet closes; (g) keyboard nav passes axe-core.
 
 ## 10. End-to-end and security tests
 

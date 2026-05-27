@@ -9,6 +9,11 @@
 // be an async function; types cannot be re-exported from here.
 
 import type {
+  ConfirmAudioUploadResult,
+  RequestAudioUploadUrlResult,
+} from '@/modules/ai-transcription';
+import { confirmAudioUploadImpl, requestAudioUploadUrlImpl } from '@/modules/ai-transcription';
+import type {
   AddGuardianResult,
   ArchivePatientResult,
   DeletePatientResult,
@@ -154,4 +159,26 @@ export async function revokeAiConsent(
 ): Promise<RevokeAiConsentResult> {
   const supabase = await createServerClient();
   return revokeAiConsentTermImpl(supabase, { patientId, reason });
+}
+
+// ---------------------------------------------------------------------------
+// Audio Upload Server Actions
+// ---------------------------------------------------------------------------
+
+export async function requestAudioUploadUrl(input: {
+  patientId: string;
+  sessionId: string | null;
+  contentType: string;
+  sizeBytes: number;
+}): Promise<RequestAudioUploadUrlResult> {
+  const supabase = await createServerClient();
+  return requestAudioUploadUrlImpl(supabase, input);
+}
+
+export async function confirmAudioUpload(input: {
+  transcriptionId: string;
+  audioDurationSeconds: number | null;
+}): Promise<ConfirmAudioUploadResult> {
+  const supabase = await createServerClient();
+  return confirmAudioUploadImpl(supabase, input);
 }
