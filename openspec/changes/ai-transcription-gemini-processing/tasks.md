@@ -39,9 +39,9 @@
 
 ## 7. Cron: `discardOldAudios`
 
-- [ ] 7.1 Create `src/modules/ai-transcription/inngest/discard-old-audios.ts` with `inngest.createFunction({ id: 'discard-old-audios', triggers: { cron: '0 * * * *' } }, ...)`. Implement the query and the per-row deletion per spec. Use service-role for Storage delete (justify in comment).
-- [ ] 7.2 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/discard-old-audios.test.ts` — mock Drizzle/Storage. Cover: 24h threshold default; per-user `keep_audio_hours` honored; Storage delete failure on one row does not block others; row already discarded skipped.
-- [ ] 7.3 Integration test `src/__tests__/integration/ai-transcription/discard-old-audios.int.test.ts` — real Testcontainer Postgres + a mocked Storage that records deletes. Seed rows at varying ages and per-user settings. Run the cron tick. Assert: rows older than the user's threshold are discarded; younger rows untouched; `EXPLAIN` of the query uses the partial index.
+- [x] 7.1 Create `src/modules/ai-transcription/inngest/discard-old-audios.ts` with `inngest.createFunction({ id: 'discard-old-audios', triggers: { cron: '0 * * * *' } }, ...)`. Implement the query and the per-row deletion per spec. Use service-role for Storage delete (justify in comment).
+- [x] 7.2 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/discard-old-audios.test.ts` — mock Drizzle/Storage. Cover: 24h threshold default; per-user `keep_audio_hours` honored; Storage delete failure on one row does not block others; row already discarded skipped.
+- [x] 7.3 Integration test `src/__tests__/integration/ai-transcription/discard-old-audios.int.test.ts` — real Testcontainer Postgres + a mocked Storage that records deletes. Seed rows at varying ages and per-user settings. Run the cron tick. Assert: rows older than the user's threshold are discarded; younger rows untouched; `EXPLAIN` of the query uses the partial index.
 
 ## 8. Cron: `purgeFailedAudios`
 
