@@ -504,6 +504,17 @@ async function handleRequest(
       await readBody(req);
     }
 
+    // createSignedUploadUrl POSTs to /storage/v1/object/upload/sign/<bucket>/<path>.
+    // The SDK reads `data.url` (a relative path) and builds a full URL from it.
+    // The returned URL must contain a `token` query parameter.
+    if (method === 'POST' && path.includes('/object/upload/sign/')) {
+      const mockToken = 'mock-upload-signed-token';
+      respondJson(res, 200, {
+        url: `${path.replace('/storage/v1', '')}?token=${mockToken}`,
+      });
+      return;
+    }
+
     // createSignedUrl POSTs to /storage/v1/object/sign/<bucket>/<path>.
     // The SDK reads `data.signedURL` (a relative path) and prepends the base URL.
     // We return a mock signedURL that the SDK can compose into a full URL.
@@ -512,6 +523,26 @@ async function handleRequest(
       respondJson(res, 200, {
         signedURL: `${path.replace('/storage/v1', '')}?token=${mockToken}`,
       });
+      return;
+    }
+
+    // download() GETs /storage/v1/object/<bucket>/<path>. Return a synthesized
+    // valid MP3 buffer for audio files so `confirmAudioUpload`'s magic-number
+    // validation passes. Without this, `discoverUploadedObject` gets no data
+    // and returns NOT_FOUND.
+    if (method === 'GET' && path.match(/^\/storage\/v1\/object\/[^/]+\/.+/)) {
+      const objectPath = path.replace(/^\/storage\/v1\/object\//, '').replace(/\?.*$/, '');
+
+      if (/\.(mp3|m4a|wav|webm)(\?.*)?$/.test(objectPath)) {
+        const fakeMp3 = buildMinimalMp3(1024);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.end(fakeMp3);
+        return;
+      }
+
+      // Unknown object — return 404 so SDK's download returns null data.
+      respondJson(res, 404, { error: 'Object not found' });
       return;
     }
 
@@ -555,6 +586,29 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+/**
+ * Builds a minimal buffer that passes MP3 magic-number validation.
+ * Starts with an ID3v2 tag header followed by an MPEG sync word.
+ */
+function buildMinimalMp3(size: number): Buffer {
+  const buf = Buffer.alloc(size);
+  // ID3v2 header
+  buf.write('ID3', 0);
+  buf[3] = 0x04; // version major
+  buf[4] = 0x00; // version minor
+  buf[5] = 0x00; // flags
+  buf[6] = 0x00; // synchsafe size
+  buf[7] = 0x00;
+  buf[8] = 0x00;
+  buf[9] = 0x00;
+  // MPEG sync word at offset 10
+  buf[10] = 0xff;
+  buf[11] = 0xfb;
+  buf[12] = 0x90;
+  buf[13] = 0x00;
+  return buf;
 }
 
 function respondJson(res: ServerResponse, status: number, body: unknown): void {

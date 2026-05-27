@@ -120,6 +120,11 @@ async function main(): Promise<void> {
       STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
       // Gemini AI transcription — dummy key so env validation passes.
       GEMINI_API_KEY: 'e2e-gemini-api-key',
+      // Inngest — point the event API to a non-routable address so event
+      // sends fail fast instead of retrying against the production API for
+      // 30+ seconds. This is only needed for Server Actions that
+      // fire-and-forget Inngest events (e.g., confirmAudioUpload).
+      INNGEST_EVENT_API_BASE_URL: 'http://127.0.0.1:1',
       // Signature hash salt — used for hashing IP/user-agent in consent signing.
       SIGNATURE_HASH_SALT: 'e2e-test-signature-hash-salt-minimum-32-chars',
       LOG_LEVEL: 'silent',

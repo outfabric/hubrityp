@@ -96,6 +96,10 @@ export default async function globalSetup() {
     // the DB persists across runs, and leftovers cause spurious failures
     // (duplicate detection, non-empty states, wrong consent badges, etc.).
 
+    // AI transcription rows — stale rows from previous upload-flow tests
+    // would cause assertion mismatches (extra rows, wrong status).
+    await sql`DELETE FROM public.ai_transcriptions WHERE user_id = ${seed.userId}`;
+
     // WhatsApp tables — delete in FK order (conversations → messages →
     // templates → settings → accounts). Stale whatsapp_accounts rows
     // (especially with status='error') from previous runs cause the

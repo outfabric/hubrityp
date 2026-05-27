@@ -64,10 +64,10 @@
 
 ## 10. End-to-end and security tests
 
-- [ ] 10.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/manual-upload-flow.spec.ts`: psychologist logs in → opens patient with active AI term → opens audio sheet → uploads a small valid MP3 fixture → assertion: toast appears, row in `ai_transcriptions` exists with `status='pending'` and `audio_object_key` set. Test in pt-BR locale.
-- [ ] 10.2 E2E negative `src/__tests__/e2e/seeded/ai-transcription/manual-upload-no-consent.spec.ts`: same flow but patient has no active term → sheet shows warning, no dropzone.
-- [ ] 10.3 Integration security test `src/__tests__/integration/ai-transcription/upload-security.int.test.ts`: (a) anonymous request to `requestAudioUploadUrl` rejected; (b) `objectKey` regex check on 10 generated URLs (no PII leak); (c) signed URL TTL expires within 5 minutes (assert by waiting + retrying — keep test short by stubbing time or using a short TTL fixture); (d) cross-tenant IDOR on `confirmAudioUpload` rejected with `NOT_FOUND`.
-- [ ] 10.4 SSRF unit test specifically for `ingestStreamRecording`: feed payloads with `http://127.0.0.1`, `http://169.254.169.254`, `http://[::1]`, `http://10.0.0.1`, plus a malicious public hostname not in the allowlist; assert each is rejected without making a network call.
+- [x] 10.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/manual-upload-flow.spec.ts`: psychologist logs in → opens patient with active AI term → opens audio sheet → uploads a small valid MP3 fixture → assertion: toast appears, row in `ai_transcriptions` exists with `status='pending'` and `audio_object_key` set. Test in pt-BR locale.
+- [x] 10.2 E2E negative `src/__tests__/e2e/seeded/ai-transcription/manual-upload-no-consent.spec.ts`: same flow but patient has no active term → sheet shows warning, no dropzone.
+- [x] 10.3 Integration security test `src/__tests__/integration/ai-transcription/upload-security.int.test.ts`: (a) anonymous request to `requestAudioUploadUrl` rejected; (b) `objectKey` regex check on 10 generated URLs (no PII leak); (c) signed URL TTL expires within 5 minutes (assert by waiting + retrying — keep test short by stubbing time or using a short TTL fixture); (d) cross-tenant IDOR on `confirmAudioUpload` rejected with `NOT_FOUND`.
+- [x] 10.4 SSRF unit test specifically for `ingestStreamRecording`: feed payloads with `http://127.0.0.1`, `http://169.254.169.254`, `http://[::1]`, `http://10.0.0.1`, plus a malicious public hostname not in the allowlist; assert each is rejected without making a network call.
 
 ## 11. Sanity and docs
 
