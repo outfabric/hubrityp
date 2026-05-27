@@ -306,6 +306,13 @@ export const processAudioTranscription = inngest.createFunction(
         throw new NonRetriableError('AUDIO_OBJECT_KEY_MISSING');
       }
 
+      // SSRF safety: the URL used for download is server-generated from
+      // `audio_object_key`, never client input. The key is set by the server
+      // during `confirmAudioUpload` (manual flow) or `ingestStreamRecording`
+      // (video flow) and read from the DB row scoped by userId. The Supabase
+      // Storage SDK constructs the HTTP request internally — no raw URL is
+      // exposed to or controlled by the client.
+
       // Service-role: system job, path is server-generated UUID-based key
       const supabase = createClient(
         clientEnv.NEXT_PUBLIC_SUPABASE_URL,
@@ -688,6 +695,11 @@ export const processAudioTranscription = inngest.createFunction(
         const { getGeminiClient } = await import('../server/gemini-client');
         const ai = getGeminiClient();
 
+        // SSRF safety: `geminiFileName` is the server-owned file name returned
+        // by `ai.files.upload()` in step 4 (send-to-gemini), never user input.
+        // The Gemini SDK `files.delete` method uses the SDK's internal HTTP
+        // client to call the Files API — no raw URL is constructed from external
+        // input.
         await ai.files.delete({ name: geminiFileResult.geminiFileName });
 
         log.info({ event: 'gemini_file_deleted' }, 'Gemini file deleted successfully');

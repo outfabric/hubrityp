@@ -58,9 +58,9 @@
 
 ## 10. SSRF / network safety inside the pipeline
 
-- [ ] 10.1 Confirm `download-audio` only uses internal Storage SDK (no user-controlled URL); add comment explicitly noting "URL is server-generated from `audio_object_key`, never client input".
-- [ ] 10.2 Confirm `delete-gemini-file` uses the Gemini SDK with a server-owned file name (returned by `files.upload`), not user input.
-- [ ] 10.3 Add a unit test that proves the pipeline does NOT execute arbitrary URLs by feeding a malformed row whose `audio_object_key` contains `../`/`%00`/etc. (Storage SDK should reject; we ASSERT it). `src/__tests__/unit/modules/ai-transcription/inngest/path-injection.test.ts`.
+- [x] 10.1 Confirm `download-audio` only uses internal Storage SDK (no user-controlled URL); add comment explicitly noting "URL is server-generated from `audio_object_key`, never client input".
+- [x] 10.2 Confirm `delete-gemini-file` uses the Gemini SDK with a server-owned file name (returned by `files.upload`), not user input.
+- [x] 10.3 Add a unit test that proves the pipeline does NOT execute arbitrary URLs by feeding a malformed row whose `audio_object_key` contains `../`/`%00`/etc. (Storage SDK should reject; we ASSERT it). `src/__tests__/unit/modules/ai-transcription/inngest/path-injection.test.ts`.
 
 ## 11. Pseudonymization end-to-end assertion
 
