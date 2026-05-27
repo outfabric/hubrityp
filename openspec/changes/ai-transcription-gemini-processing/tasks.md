@@ -14,8 +14,8 @@
 
 ## 3. JSON Schema for Gemini
 
-- [ ] 3.1 Create `src/modules/ai-transcription/server/json-schemas/gemini-note.ts`: run `zodToJsonSchema(GeneratedNoteSchema, { name: 'GeneratedNote', $refStrategy: 'none' })` at module load; cache as `GeminiNoteJsonSchema`. Strip the `$schema` key (Gemini doesn't accept it). Boot-time sanity check: throws if `required` does not include `schemaVersion`, `pauta`, `conteudoTrabalhado`, `tarefaCasa`, `palavrasRisco`.
-- [ ] 3.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/json-schemas/gemini-note.test.ts`: shape assertions; conversion is stable across two imports (deep equal); modifying `GeneratedNoteSchema` to drop a required field causes the boot-time check to throw (use a test-only re-import with a mocked schema).
+- [x] 3.1 Create `src/modules/ai-transcription/server/json-schemas/gemini-note.ts`: run `zodToJsonSchema(GeneratedNoteSchema, { name: 'GeneratedNote', $refStrategy: 'none' })` at module load; cache as `GeminiNoteJsonSchema`. Strip the `$schema` key (Gemini doesn't accept it). Boot-time sanity check: throws if `required` does not include `schemaVersion`, `pauta`, `conteudoTrabalhado`, `tarefaCasa`, `palavrasRisco`.
+- [x] 3.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/json-schemas/gemini-note.test.ts`: shape assertions; conversion is stable across two imports (deep equal); modifying `GeneratedNoteSchema` to drop a required field causes the boot-time check to throw (use a test-only re-import with a mocked schema).
 
 ## 4. Prompts (versioned, template-specific)
 
