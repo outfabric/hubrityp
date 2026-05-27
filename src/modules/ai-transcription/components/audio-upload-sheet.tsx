@@ -70,19 +70,19 @@ const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024;
 // ---------------------------------------------------------------------------
 
 const ERROR_MESSAGES: Record<string, string> = {
-  UNAUTHORIZED: 'Voce precisa estar logado para enviar audios.',
-  NOT_FOUND: 'Paciente nao encontrado.',
-  CONSENT_INACTIVE: 'O paciente ainda nao assinou o termo de transcricao por IA.',
-  CONTENT_TYPE_NOT_ALLOWED: 'Tipo de arquivo nao suportado. Envie MP3, M4A, WAV ou WebM.',
+  UNAUTHORIZED: 'Você precisa estar logado para enviar áudios.',
+  NOT_FOUND: 'Paciente não encontrado.',
+  CONSENT_INACTIVE: 'O paciente ainda não assinou o termo de transcrição por IA.',
+  CONTENT_TYPE_NOT_ALLOWED: 'Tipo de arquivo não suportado. Envie MP3, M4A, WAV ou WebM.',
   SIZE_EXCEEDED: 'Tamanho excedido (max. 200MB).',
   RATE_LIMITED: 'Muitas tentativas. Aguarde um minuto e tente novamente.',
-  INVALID_MIME: 'O arquivo enviado nao e um audio valido.',
-  SIZE_MISMATCH: 'O tamanho do arquivo nao corresponde ao declarado.',
-  ALREADY_CONFIRMED: 'Este audio ja foi enviado anteriormente.',
+  INVALID_MIME: 'O arquivo enviado não é um áudio válido.',
+  SIZE_MISMATCH: 'O tamanho do arquivo não corresponde ao declarado.',
+  ALREADY_CONFIRMED: 'Este áudio já foi enviado anteriormente.',
 };
 
 function getErrorMessage(code: string): string {
-  return ERROR_MESSAGES[code] ?? 'Erro ao enviar o audio. Tente novamente.';
+  return ERROR_MESSAGES[code] ?? 'Erro ao enviar o áudio. Tente novamente.';
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +240,7 @@ export function AudioUploadSheet({
     },
     onSuccess: () => {
       setUploadStage('done');
-      toast.success('Audio enviado. A nota ficara pronta em alguns minutos.');
+      toast.success('Áudio enviado. A nota ficará pronta em alguns minutos.');
       // Invalidate consent query so UI reflects any updated state
       void qc.invalidateQueries({ queryKey: [AI_CONSENT_QUERY_KEY, patientId] });
       // Reset and close
@@ -257,7 +257,7 @@ export function AudioUploadSheet({
       if (code) {
         toast.error(getErrorMessage(code));
       } else {
-        toast.error('Erro ao enviar o audio. Tente novamente.');
+        toast.error('Erro ao enviar o áudio. Tente novamente.');
       }
     },
   });
@@ -356,9 +356,9 @@ export function AudioUploadSheet({
         aria-describedby="audio-upload-description"
       >
         <SheetHeader className="px-6 pt-6">
-          <SheetTitle>Enviar audio para transcricao</SheetTitle>
+          <SheetTitle>Enviar áudio para transcrição</SheetTitle>
           <SheetDescription id="audio-upload-description">
-            Envie um arquivo de audio da sessao para gerar a nota clinica automaticamente.
+            Envie um arquivo de áudio da sessão para gerar a nota clínica automaticamente.
           </SheetDescription>
         </SheetHeader>
 
@@ -376,7 +376,7 @@ export function AudioUploadSheet({
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Erro</AlertTitle>
               <AlertDescription>
-                Nao foi possivel verificar o consentimento. Tente novamente.
+                Não foi possível verificar o consentimento. Tente novamente.
               </AlertDescription>
             </Alert>
           )}
@@ -385,10 +385,10 @@ export function AudioUploadSheet({
           {!consentLoading && !consentError && !isConsentActive && consentData && (
             <Alert variant="warning" data-testid="consent-inactive-warning">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Consentimento necessario</AlertTitle>
+              <AlertTitle>Consentimento necessário</AlertTitle>
               <AlertDescription>
-                O paciente ainda nao assinou o termo de transcricao por IA. Gere o termo antes de
-                enviar o audio.
+                O paciente ainda não assinou o termo de transcrição por IA. Gere o termo antes de
+                enviar o áudio.
               </AlertDescription>
             </Alert>
           )}
@@ -402,7 +402,7 @@ export function AudioUploadSheet({
                   data-testid="audio-dropzone"
                   role="button"
                   tabIndex={0}
-                  aria-label="Clique ou arraste um arquivo de audio"
+                  aria-label="Clique ou arraste um arquivo de áudio"
                   className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 transition-colors ${
                     isDragOver
                       ? 'border-info-500 bg-info-50'
@@ -421,7 +421,7 @@ export function AudioUploadSheet({
                 >
                   <Upload className="text-text-tertiary h-8 w-8" aria-hidden="true" />
                   <p className="text-text-secondary text-center text-[13px]">
-                    Arraste o arquivo de audio aqui ou clique para selecionar
+                    Arraste o arquivo de áudio aqui ou clique para selecionar
                   </p>
                   <p className="text-text-tertiary text-center text-[12px]">
                     MP3, M4A, WAV ou WebM (max. 200MB)
@@ -437,7 +437,7 @@ export function AudioUploadSheet({
                 className="hidden"
                 onChange={handleInputChange}
                 data-testid="audio-file-input"
-                aria-label="Selecionar arquivo de audio"
+                aria-label="Selecionar arquivo de áudio"
               />
 
               {/* Selected file metadata */}
@@ -479,7 +479,7 @@ export function AudioUploadSheet({
                   <p className="text-text-secondary text-center text-[12px]">
                     {uploadStage === 'requesting-url' && 'Preparando envio...'}
                     {uploadStage === 'uploading' && `Enviando... ${uploadProgress}%`}
-                    {uploadStage === 'confirming' && 'Validando audio...'}
+                    {uploadStage === 'confirming' && 'Validando áudio...'}
                   </p>
                 </div>
               )}
@@ -499,7 +499,7 @@ export function AudioUploadSheet({
                     disabled={uploadMutation.isPending}
                     data-testid="confirm-upload-btn"
                   >
-                    Enviar audio
+                    Enviar áudio
                   </Button>
                 </div>
               )}

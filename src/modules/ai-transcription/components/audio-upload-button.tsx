@@ -82,7 +82,7 @@ export function AudioUploadButton({
     <QueryClientProvider client={client}>
       <Button variant="secondary" onClick={() => setSheetOpen(true)} data-testid="audio-upload-btn">
         <Upload className="h-4 w-4" aria-hidden="true" />
-        Enviar audio para transcricao
+        Enviar áudio para transcrição
       </Button>
 
       <AudioUploadSheet

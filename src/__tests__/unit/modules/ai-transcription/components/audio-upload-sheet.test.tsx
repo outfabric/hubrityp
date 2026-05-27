@@ -246,7 +246,7 @@ describe('AudioUploadSheet', () => {
       });
 
       expect(
-        screen.getByText(/O paciente ainda nao assinou o termo de transcricao por IA/),
+        screen.getByText(/O paciente ainda não assinou o termo de transcrição por IA/),
       ).toBeInTheDocument();
     });
   });
@@ -422,7 +422,7 @@ describe('AudioUploadSheet', () => {
       // Verify success toast
       await waitFor(() => {
         expect(mockToastSuccess).toHaveBeenCalledWith(
-          'Audio enviado. A nota ficara pronta em alguns minutos.',
+          'Áudio enviado. A nota ficará pronta em alguns minutos.',
         );
       });
 
@@ -456,7 +456,7 @@ describe('AudioUploadSheet', () => {
 
       await waitFor(() => {
         expect(mockToastError).toHaveBeenCalledWith(
-          'O paciente ainda nao assinou o termo de transcricao por IA.',
+          'O paciente ainda não assinou o termo de transcrição por IA.',
         );
       });
     });
@@ -489,7 +489,7 @@ describe('AudioUploadSheet', () => {
       // On PUT failure, confirmAudioUpload is NOT called. The row stays
       // in 'pending' status and the discard cron (24h) will clean it up.
       await waitFor(() => {
-        expect(mockToastError).toHaveBeenCalledWith('Erro ao enviar o audio. Tente novamente.');
+        expect(mockToastError).toHaveBeenCalledWith('Erro ao enviar o áudio. Tente novamente.');
       });
     });
 
@@ -549,13 +549,13 @@ describe('AudioUploadSheet', () => {
         { code: 'SIZE_EXCEEDED', expectedMsg: 'Tamanho excedido (max. 200MB).' },
         {
           code: 'CONTENT_TYPE_NOT_ALLOWED',
-          expectedMsg: 'Tipo de arquivo nao suportado. Envie MP3, M4A, WAV ou WebM.',
+          expectedMsg: 'Tipo de arquivo não suportado. Envie MP3, M4A, WAV ou WebM.',
         },
         {
           code: 'RATE_LIMITED',
           expectedMsg: 'Muitas tentativas. Aguarde um minuto e tente novamente.',
         },
-        { code: 'UNAUTHORIZED', expectedMsg: 'Voce precisa estar logado para enviar audios.' },
+        { code: 'UNAUTHORIZED', expectedMsg: 'Você precisa estar logado para enviar áudios.' },
       ];
 
       for (const { code, expectedMsg } of errorCodes) {
@@ -617,7 +617,7 @@ describe('AudioUploadSheet', () => {
 
       await waitFor(() => {
         expect(mockToastSuccess).toHaveBeenCalledWith(
-          'Audio enviado. A nota ficara pronta em alguns minutos.',
+          'Áudio enviado. A nota ficará pronta em alguns minutos.',
         );
       });
 

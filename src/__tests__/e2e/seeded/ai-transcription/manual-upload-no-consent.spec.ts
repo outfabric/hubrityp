@@ -8,8 +8,8 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  * Tests that the upload sheet correctly blocks uploads when the patient
  * does NOT have an active AI consent term:
  *   1. Authenticated psychologist navigates to the patient detail page
- *   2. Clicks the "Enviar audio para transcricao" button to open the sheet
- *   3. Asserts: warning message is visible ("Consentimento necessario")
+ *   2. Clicks the "Enviar áudio para transcrição" button to open the sheet
+ *   3. Asserts: warning message is visible ("Consentimento necessário")
  *   4. Asserts: dropzone is NOT visible (no file upload possible)
  *
  * Prerequisites:
@@ -50,7 +50,7 @@ test.describe('@ai-transcription manual upload without consent', () => {
     // The consent-inactive warning should be visible
     const warning = page.getByTestId('consent-inactive-warning');
     await expect(warning).toBeVisible({ timeout: 10_000 });
-    await expect(warning).toContainText('Consentimento necessario');
+    await expect(warning).toContainText('Consentimento necessário');
 
     // The dropzone should NOT be present
     const dropzone = page.getByTestId('audio-dropzone');

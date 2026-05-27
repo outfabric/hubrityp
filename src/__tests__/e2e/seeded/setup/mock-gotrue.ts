@@ -23,6 +23,7 @@
 //   `jwt` is built once at start time using a default-good payload so the
 //   80% caller does not also need to import `buildFixedJwt`. Callers that
 //   need to mint additional/custom tokens can still import `buildFixedJwt`.
+import { createHmac } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -666,11 +667,24 @@ export function base64UrlEncode(value: string): string {
   return Buffer.from(value, 'utf8').toString('base64url');
 }
 
-export function buildFixedJwt(payload: Record<string, unknown>): string {
+/**
+ * Build a JWT with a valid HMAC-SHA256 signature.
+ *
+ * `@supabase/auth-js` v2.105+ validates the JWT signature locally (using
+ * the anon key as the HMAC secret) before calling `/auth/v1/user`. A fake
+ * third segment like `'mock-signature'` therefore fails with "signature is
+ * invalid". We use Node's `crypto.createHmac` to produce a genuine
+ * HS256 signature so `setSession` passes the local validation and reaches
+ * the mock GoTrue's `/auth/v1/user` endpoint.
+ *
+ * @param secret - HMAC signing key. Defaults to `'e2e-anon-key'`, matching
+ *   the anon key passed to `createServerClient` in `auth.setup.ts` and to
+ *   `start-server.ts`'s `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+ */
+export function buildFixedJwt(payload: Record<string, unknown>, secret = 'e2e-anon-key'): string {
   const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = base64UrlEncode(JSON.stringify(payload));
-  // The mock does not verify signatures — any non-empty third segment makes
-  // the token syntactically valid for `decodeJWT()` consumers in supabase-js.
-  const signature = 'mock-signature';
-  return `${header}.${body}.${signature}`;
+  const data = `${header}.${body}`;
+  const signature = createHmac('sha256', secret).update(data).digest('base64url');
+  return `${data}.${signature}`;
 }

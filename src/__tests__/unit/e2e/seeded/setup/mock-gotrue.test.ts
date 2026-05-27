@@ -86,13 +86,12 @@ describe('startMockGotrue', () => {
 
     const handle = await start(port);
 
-    // Decode the payload segment and assert the contract claims. We do NOT
-    // verify the signature: `buildFixedJwt` writes the literal string
-    // `mock-signature` as the third segment by design, so cryptographic
-    // verification is meaningless. The honest contract check is "the payload
-    // matches what `buildFixedJwt` would produce for the helper's default".
+    // Decode the payload segment and assert the contract claims. The
+    // signature is a real HMAC-SHA256 over the header.payload using the
+    // default secret ('e2e-anon-key'), so it is a non-empty base64url string.
     const [, payloadSegment, signatureSegment] = handle.jwt.split('.');
-    expect(signatureSegment).toBe('mock-signature');
+    expect(signatureSegment).toBeTruthy();
+    expect(signatureSegment).not.toBe('mock-signature');
 
     const decoded = JSON.parse(Buffer.from(payloadSegment ?? '', 'base64url').toString('utf8')) as {
       sub: string;
@@ -114,14 +113,15 @@ describe('startMockGotrue', () => {
     // Long-lived but not infinite: helper sets `exp` ~30 days out from `iat`.
     expect(decoded.exp).toBeGreaterThan(decoded.iat);
 
-    // Sanity check: a freshly built JWT with the same claims has the same
-    // shape (same header + signature segments). This is what "matches
-    // buildFixedJwt" means in practice.
+    // Sanity check: a freshly built JWT with the same claims produces the
+    // same token (same header, payload, and HMAC signature). This is what
+    // "matches buildFixedJwt" means in practice.
     const rebuilt = buildFixedJwt(decoded);
     const [rebuiltHeader, , rebuiltSignature] = rebuilt.split('.');
     const [actualHeader] = handle.jwt.split('.');
     expect(rebuiltHeader).toBe(actualHeader);
-    expect(rebuiltSignature).toBe('mock-signature');
+    // Same payload + same secret ⇒ same deterministic HMAC signature.
+    expect(rebuiltSignature).toBe(signatureSegment);
   });
 
   it('releases the listening socket on stop() so the same port is re-bindable', async () => {
