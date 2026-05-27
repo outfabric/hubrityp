@@ -34,11 +34,11 @@
 
 ## 6. Inngest function: `ingestStreamRecording`
 
-- [ ] 6.1 Create `src/modules/ai-transcription/inngest/ingest-stream-recording.ts` with steps per spec: `assert-consent`, `create-row`, `download-from-stream`, `upload-to-bucket`, `update-row`, `emit-uploaded`, `instruct-stream-delete`.
-- [ ] 6.2 SSRF guard: define a constant `STREAM_HOST_ALLOWLIST = ['stream-io-cdn.com', '...']` (verify exact hostnames in Stream docs via Context7 or `gemini-api-dev`/Stream docs); the download step uses `new URL(streamRecordingUrl)` and rejects if `url.hostname` not in the allowlist OR if it resolves to a private IP (use a helper `isPublicIPv4(host)`).
-- [ ] 6.3 Service-role Storage client usage for the PUT — wrap in a comment: `// service-role used here: system job, no user input controls the path (path is server-generated)`.
-- [ ] 6.4 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/ingest-stream-recording.test.ts` — mock fetch (the Stream download), Storage, Drizzle, consent helper. Cover: happy path; consent inactive at ingest (row NOT created, no bytes downloaded); SSRF — hostname not in allowlist; SSRF — host resolves to private IP; Stream returns 500 (retried per Inngest); corrupted file (magic-number fails) → row.status='failed'.
-- [ ] 6.5 Integration test `src/__tests__/integration/ai-transcription/ingest-stream-recording.int.test.ts` — uses a local HTTP server simulating Stream's CDN; uses real Testcontainers Postgres and a test bucket; asserts the row, the bucket object, the event.
+- [x] 6.1 Create `src/modules/ai-transcription/inngest/ingest-stream-recording.ts` with steps per spec: `assert-consent`, `create-row`, `download-from-stream`, `upload-to-bucket`, `update-row`, `emit-uploaded`, `instruct-stream-delete`.
+- [x] 6.2 SSRF guard: define a constant `STREAM_HOST_ALLOWLIST = ['stream-io-cdn.com', '...']` (verify exact hostnames in Stream docs via Context7 or `gemini-api-dev`/Stream docs); the download step uses `new URL(streamRecordingUrl)` and rejects if `url.hostname` not in the allowlist OR if it resolves to a private IP (use a helper `isPublicIPv4(host)`).
+- [x] 6.3 Service-role Storage client usage for the PUT — wrap in a comment: `// service-role used here: system job, no user input controls the path (path is server-generated)`.
+- [x] 6.4 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/ingest-stream-recording.test.ts` — mock fetch (the Stream download), Storage, Drizzle, consent helper. Cover: happy path; consent inactive at ingest (row NOT created, no bytes downloaded); SSRF — hostname not in allowlist; SSRF — host resolves to private IP; Stream returns 500 (retried per Inngest); corrupted file (magic-number fails) → row.status='failed'.
+- [x] 6.5 Integration test `src/__tests__/integration/ai-transcription/ingest-stream-recording.int.test.ts` — uses a local HTTP server simulating Stream's CDN; uses real Testcontainers Postgres and a test bucket; asserts the row, the bucket object, the event.
 
 ## 7. Refactor `toggle-recording.ts`
 
