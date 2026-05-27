@@ -35,51 +35,68 @@ test.describe('@whatsapp health banner', () => {
   }) => {
     const seed = await readSeedState();
 
-    // Clean up and seed fresh data for this test
-    await db.sql`DELETE FROM public.reminder_settings WHERE user_id = ${seed.userId}`;
-    await db.sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
+    // Other whatsapp e2e tests run in parallel on different Playwright workers
+    // and may DELETE/INSERT whatsapp_accounts rows for the same user_id between
+    // our INSERT and the server-side render. We use a retry loop (same pattern
+    // as whatsapp-connect.spec.ts) to guarantee the data is present when the
+    // Server Component queries the DB.
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      // Clean up and seed fresh data for this test
+      await db.sql`DELETE FROM public.reminder_settings WHERE user_id = ${seed.userId}`;
+      await db.sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${seed.userId}`;
 
-    // Insert whatsapp_account with status='error'
-    await db.sql`
-      INSERT INTO public.whatsapp_accounts (id, user_id, provider, account_id, phone_number, display_name, status, consent_given_at)
-      VALUES (
-        ${WHATSAPP_ACCOUNT_ID},
-        ${seed.userId},
-        'twilio',
-        'MG00000000000000000000000000000000',
-        '+5511987654321',
-        'Dra. Teste',
-        'error',
-        now()
-      )
-      ON CONFLICT (user_id) DO UPDATE SET
-        status = 'error';
-    `;
+      // Insert whatsapp_account with status='error'
+      await db.sql`
+        INSERT INTO public.whatsapp_accounts (id, user_id, provider, account_id, phone_number, display_name, status, consent_given_at)
+        VALUES (
+          ${WHATSAPP_ACCOUNT_ID},
+          ${seed.userId},
+          'twilio',
+          'MG00000000000000000000000000000000',
+          '+5511987654321',
+          'Dra. Teste',
+          'error',
+          now()
+        )
+        ON CONFLICT (user_id) DO UPDATE SET
+          status = 'error';
+      `;
 
-    // Insert reminder_settings with at least one reminder enabled
-    await db.sql`
-      INSERT INTO public.reminder_settings (user_id, early_reminder_hours, final_reminder_hours, video_link_minutes, send_during_night)
-      VALUES (
-        ${seed.userId},
-        24,
-        2,
-        30,
-        false
-      )
-      ON CONFLICT (user_id) DO UPDATE SET
-        early_reminder_hours = 24,
-        final_reminder_hours = 2;
-    `;
+      // Insert reminder_settings with at least one reminder enabled
+      await db.sql`
+        INSERT INTO public.reminder_settings (user_id, early_reminder_hours, final_reminder_hours, video_link_minutes, send_during_night)
+        VALUES (
+          ${seed.userId},
+          24,
+          2,
+          30,
+          false
+        )
+        ON CONFLICT (user_id) DO UPDATE SET
+          early_reminder_hours = 24,
+          final_reminder_hours = 2;
+      `;
 
-    // Navigate to the dashboard (a different page than other whatsapp tests
-    // use) to get a fresh layout render. The dashboard is a lightweight page
-    // that always renders the (app) layout including the banner.
-    const cacheBust = Date.now();
-    await page.goto(`/dashboard?_=${cacheBust}`, { waitUntil: 'networkidle' });
+      // Navigate to the dashboard (a different page than other whatsapp tests
+      // use) to get a fresh layout render. The dashboard is a lightweight page
+      // that always renders the (app) layout including the banner.
+      const cacheBust = Date.now();
+      await page.goto(`/dashboard?_=${cacheBust}`, { waitUntil: 'networkidle' });
+
+      const banner = page.getByTestId('whatsapp-health-banner');
+      const isVisible = await banner.isVisible().catch(() => false);
+      if (isVisible) break;
+
+      if (attempt === MAX_ATTEMPTS) {
+        // Final attempt — let Playwright's expect produce a clear error.
+        await expect(banner).toBeVisible({ timeout: 15000 });
+      }
+    }
 
     // Verify the health banner appears
     const banner = page.getByTestId('whatsapp-health-banner');
-    await expect(banner).toBeVisible({ timeout: 15000 });
+    await expect(banner).toBeVisible({ timeout: 5000 });
 
     // Verify the banner text
     await expect(banner).toContainText('Sua conexao com WhatsApp expirou');
