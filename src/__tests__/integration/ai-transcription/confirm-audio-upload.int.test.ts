@@ -121,11 +121,11 @@ async function importImpl() {
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a fake MP3 buffer with a valid ID3v2 header.
- * `file-type` recognizes this as `audio/mpeg`.
+ * Creates a small valid MP3-like buffer (ID3v2 header + sync word).
+ * Used for the ranged header download mock.
  */
-function createMp3Buffer(sizeBytes: number = 1024 * 1024): Buffer {
-  const buf = Buffer.alloc(sizeBytes);
+function createMp3HeaderBuffer(): Buffer {
+  const buf = Buffer.alloc(1024);
   // Minimal valid MP3: ID3v2 header followed by a sync word
   buf.write('ID3', 0); // ID3 marker
   buf[3] = 0x04; // ID3 version major
@@ -144,22 +144,53 @@ function createMp3Buffer(sizeBytes: number = 1024 * 1024): Buffer {
   return buf;
 }
 
-function createMockBlob(buffer: Buffer): Blob {
-  return new Blob([new Uint8Array(buffer)]);
+/**
+ * Sets up global `fetch` mock to return the given buffer as a ranged response.
+ */
+function setupMockFetch(buffer: Buffer) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 206,
+      arrayBuffer: () =>
+        Promise.resolve(
+          buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+        ),
+    }),
+  );
 }
 
 function createMockSupabase(
   userId: string,
   overrides?: {
-    downloadResult?: { data: Blob | null; error: unknown };
+    /** Override the list response. When provided, the `transcriptionId` parameter is ignored. */
+    storageListResult?: Array<{ name: string; metadata: { size: number } }> | null;
+    /** Buffer to use for the ranged header download. Defaults to valid MP3. */
+    headerBuffer?: Buffer;
+    /** Audio size reported in list metadata (defaults to 1MB). */
+    audioSizeBytes?: number;
   },
 ) {
-  const defaultBuffer = createMp3Buffer(1024 * 1024);
-  const defaultBlob = createMockBlob(defaultBuffer);
-  const downloadResult = overrides?.downloadResult ?? {
-    data: defaultBlob,
-    error: null,
-  };
+  const audioSize = overrides?.audioSizeBytes ?? 1024 * 1024;
+
+  // Set up global fetch for ranged download
+  const headerBuf = overrides?.headerBuffer ?? createMp3HeaderBuffer();
+  setupMockFetch(headerBuf);
+
+  // The list mock dynamically returns an object matching the search query
+  // (the transcription ID). When a storageListResult override is provided,
+  // it is used as-is (e.g. for "not found" tests).
+  const listMock =
+    overrides?.storageListResult !== undefined
+      ? vi.fn().mockResolvedValue({ data: overrides.storageListResult, error: null })
+      : vi.fn().mockImplementation((_prefix: string, opts?: { search?: string }) => {
+          const search = opts?.search ?? 'unknown';
+          return Promise.resolve({
+            data: [{ name: `${search}.mp3`, metadata: { size: audioSize } }],
+            error: null,
+          });
+        });
 
   return {
     auth: {
@@ -169,7 +200,11 @@ function createMockSupabase(
     },
     storage: {
       from: vi.fn(() => ({
-        download: vi.fn().mockResolvedValue(downloadResult),
+        list: listMock,
+        createSignedUrl: vi.fn().mockResolvedValue({
+          data: { signedUrl: 'https://storage.example.com/signed?token=abc' },
+          error: null,
+        }),
       })),
     },
   } as unknown as Parameters<typeof confirmAudioUploadImpl>[0];
@@ -394,15 +429,13 @@ describe('confirmAudioUpload — integration (real Postgres)', () => {
     await seedActiveConsent(userId, patientId);
     await seedPendingTranscription(userId, patientId, transcriptionId, 1024);
 
-    // Upload a buffer with garbage bytes — not a valid audio format
+    // Ranged header download returns garbage bytes — not a valid audio format
     const garbageBuffer = Buffer.alloc(1024);
     garbageBuffer.fill(0x42); // All 'B' bytes — not a recognized format
 
     const supabase = createMockSupabase(userId, {
-      downloadResult: {
-        data: createMockBlob(garbageBuffer),
-        error: null,
-      },
+      headerBuffer: garbageBuffer,
+      audioSizeBytes: 1024,
     });
 
     const result = await confirmAudioUploadImpl(supabase, {

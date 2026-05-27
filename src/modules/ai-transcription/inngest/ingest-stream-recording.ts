@@ -403,8 +403,6 @@ export const ingestStreamRecording = inngest.createFunction(
         log.info(
           {
             event: 'consent_inactive_at_ingest',
-            userId,
-            patientId,
             reason: result.reason,
           },
           'AI consent not active at ingest time — skipping recording',

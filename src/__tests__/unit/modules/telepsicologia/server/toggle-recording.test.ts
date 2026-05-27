@@ -335,17 +335,21 @@ describe('toggleRecordingImpl — dual consent gate', () => {
     }
     expect(mockStartRecording).not.toHaveBeenCalled();
 
-    // Verify the transitional log was emitted with the right event name
+    // Verify the transitional log was emitted with the right event name.
+    // userId and patientId are intentionally omitted from the log payload
+    // to comply with LGPD data minimisation requirements.
     expect(mockLoggerWarn).toHaveBeenCalledOnce();
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       expect.objectContaining({
         event: 'legacy_present_but_ai_term_missing',
-        userId: USER_ID,
-        patientId: PATIENT_ID,
         aiReason: 'never_signed',
       }),
       expect.any(String),
     );
+    // Confirm PII is NOT present in the log payload
+    const logPayload = mockLoggerWarn.mock.calls[0]![0] as Record<string, unknown>;
+    expect(logPayload).not.toHaveProperty('userId');
+    expect(logPayload).not.toHaveProperty('patientId');
   });
 
   // -------------------------------------------------------------------------

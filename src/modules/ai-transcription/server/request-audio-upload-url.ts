@@ -115,7 +115,7 @@ export async function requestAudioUploadUrlImpl(
     .limit(1);
 
   if (!patient) {
-    log.debug({ event: 'request_upload_url_patient_not_found', patientId });
+    log.debug({ event: 'request_upload_url_patient_not_found' });
     return { ok: false, code: 'NOT_FOUND' };
   }
 
@@ -142,7 +142,7 @@ export async function requestAudioUploadUrlImpl(
   // 5. Assert AI consent is active
   const consentResult = await assertAiConsentActive({ userId, patientId }, { db });
   if (!consentResult.ok) {
-    log.debug({ event: 'request_upload_url_consent_inactive', patientId });
+    log.debug({ event: 'request_upload_url_consent_inactive' });
     return { ok: false, code: 'CONSENT_INACTIVE' };
   }
 

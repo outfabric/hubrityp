@@ -6,10 +6,11 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/shared/db/client';
 import { aiTranscriptions } from '@/shared/db/schema/ai-transcription/tables';
 import { serverEnv } from '@/shared/env';
+import { enforceRateLimit } from '@/shared/lib/rate-limit/postgres';
 
 import { inngest } from '../inngest/client';
 import { AI_TRANSCRIPTION_EVENTS, audioUploadedEventSchema } from '../inngest/events';
-import { ConfirmAudioUploadInputSchema } from '../lib/audio-input-schemas';
+import { CONTENT_TYPE_TO_EXT, ConfirmAudioUploadInputSchema } from '../lib/audio-input-schemas';
 import type { TranscriptionId } from '../lib/branded-types';
 import { assertAiConsentActive } from '../lib/consent';
 import { createTranscriptionLogger } from '../lib/logger';
@@ -30,21 +31,33 @@ export type ConfirmAudioUploadResult =
         | 'CONSENT_INACTIVE'
         | 'INVALID_MIME'
         | 'SIZE_MISMATCH'
-        | 'ALREADY_CONFIRMED';
+        | 'ALREADY_CONFIRMED'
+        | 'RATE_LIMITED';
     };
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** First N bytes to download for magic-number validation. */
+/**
+ * Number of bytes fetched via a ranged download for magic-number validation.
+ * Only this prefix is downloaded — the full file is never loaded into memory.
+ */
 const MAGIC_HEADER_BYTES = 8192;
 
 /** Allowable relative deviation between declared and actual size. */
 const SIZE_TOLERANCE_FRACTION = 0.05;
 
-/** File extensions produced by `requestAudioUploadUrl`. */
-const POSSIBLE_EXTENSIONS = ['mp3', 'm4a', 'wav', 'webm'] as const;
+/** Rate limit: 6 confirm requests per 60-second window per user. */
+const RATE_LIMIT_MAX = 6;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
+
+/**
+ * Unique file extensions derived from `CONTENT_TYPE_TO_EXT` — the single
+ * source of truth for allowed audio formats. Eliminates the need to maintain
+ * a separate list that could drift.
+ */
+const POSSIBLE_EXTENSIONS = [...new Set(Object.values(CONTENT_TYPE_TO_EXT))];
 
 /**
  * Reverse map from file extension to the declared content type used during
@@ -62,24 +75,68 @@ const EXT_TO_CONTENT_TYPE: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Discovers the uploaded object by probing each known extension.
- * Returns the key, extension, and raw Blob if found; null otherwise.
+ * Discovers the uploaded object by listing the user's folder and matching
+ * against known extensions. Uses `supabase.storage.list()` to check existence
+ * and retrieve metadata (including size) WITHOUT downloading the file.
+ *
+ * Returns the key, extension, and actual size if found; null otherwise.
  */
 async function discoverUploadedObject(
   supabase: SupabaseClient,
   bucket: string,
   userId: string,
   transcriptionId: string,
-): Promise<{ objectKey: string; ext: string; blob: Blob } | null> {
-  for (const ext of POSSIBLE_EXTENSIONS) {
-    const candidateKey = `${userId}/${transcriptionId}.${ext}`;
-    const { data } = await supabase.storage.from(bucket).download(candidateKey);
+): Promise<{ objectKey: string; ext: string; actualSizeBytes: number } | null> {
+  // List all objects in the user's folder that match the transcription ID prefix
+  const { data: objects } = await supabase.storage.from(bucket).list(userId, {
+    search: transcriptionId,
+  });
 
-    if (data) {
-      return { objectKey: candidateKey, ext, blob: data };
+  if (!objects || objects.length === 0) return null;
+
+  // Find the first object whose name matches a known extension
+  for (const ext of POSSIBLE_EXTENSIONS) {
+    const expectedName = `${transcriptionId}.${ext}`;
+    const match = objects.find((obj) => obj.name === expectedName);
+    if (match) {
+      const sizeBytes = (match.metadata as Record<string, unknown> | undefined)?.size ?? 0;
+      return {
+        objectKey: `${userId}/${expectedName}`,
+        ext,
+        actualSizeBytes: typeof sizeBytes === 'number' ? sizeBytes : 0,
+      };
     }
   }
+
   return null;
+}
+
+/**
+ * Downloads only the first `MAGIC_HEADER_BYTES` of an object via a ranged
+ * request. Creates a short-lived signed URL and fetches with a `Range` header
+ * to avoid loading the entire file into memory.
+ */
+async function downloadMagicHeader(
+  supabase: SupabaseClient,
+  bucket: string,
+  objectKey: string,
+): Promise<Buffer | null> {
+  // Create a short-lived signed URL (60 seconds is sufficient for the fetch)
+  const { data: urlData } = await supabase.storage.from(bucket).createSignedUrl(objectKey, 60);
+
+  if (!urlData?.signedUrl) return null;
+
+  const response = await fetch(urlData.signedUrl, {
+    headers: {
+      Range: `bytes=0-${MAGIC_HEADER_BYTES - 1}`,
+    },
+  });
+
+  // 200 (full file) or 206 (partial content) are both acceptable
+  if (!response.ok && response.status !== 206) return null;
+
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
 /**
@@ -154,6 +211,20 @@ export async function confirmAudioUploadImpl(
 
   const { transcriptionId, audioDurationSeconds } = parsed.data;
 
+  // 2b. Enforce rate limit (6 confirms / minute / user) — matches
+  // `requestAudioUploadUrl`'s limiter, preventing memory pressure from
+  // concurrent Storage operations.
+  const rateLimitResult = await enforceRateLimit({
+    key: `audio-confirm:${userId}`,
+    max: RATE_LIMIT_MAX,
+    windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+  });
+
+  if (!rateLimitResult.allowed) {
+    log.debug({ event: 'confirm_upload_rate_limited' });
+    return { ok: false, code: 'RATE_LIMITED' };
+  }
+
   // 3. SELECT the row — only rows owned by the caller
   const [row] = await db
     .select({
@@ -191,7 +262,6 @@ export async function confirmAudioUploadImpl(
     log.debug({
       event: 'confirm_upload_consent_revoked',
       transcriptionId,
-      patientId: row.patientId,
     });
 
     await markFailed(transcriptionId, userId, 'consent_revoked_during_upload');
@@ -204,7 +274,7 @@ export async function confirmAudioUploadImpl(
     return { ok: false, code: 'CONSENT_INACTIVE' };
   }
 
-  // 5. Discover the uploaded object
+  // 5. Discover the uploaded object via Storage list (no download)
   const bucket = serverEnv.AI_TRANSCRIPTION_BUCKET;
   const discovered = await discoverUploadedObject(supabase, bucket, userId, transcriptionId);
 
@@ -213,12 +283,15 @@ export async function confirmAudioUploadImpl(
     return { ok: false, code: 'NOT_FOUND' };
   }
 
-  const { objectKey, ext, blob } = discovered;
+  const { objectKey, ext, actualSizeBytes } = discovered;
 
-  // 6. Extract first 8KB for magic-number validation
-  const arrayBuffer = await blob.arrayBuffer();
-  const fullBuffer = Buffer.from(arrayBuffer);
-  const headerBuffer = fullBuffer.subarray(0, MAGIC_HEADER_BYTES);
+  // 6. Download only the first 8KB for magic-number validation (ranged request)
+  const headerBuffer = await downloadMagicHeader(supabase, bucket, objectKey);
+
+  if (!headerBuffer) {
+    log.debug({ event: 'confirm_upload_header_download_failed', transcriptionId });
+    return { ok: false, code: 'NOT_FOUND' };
+  }
 
   // Derive the declared content type from the extension (reverse of the
   // mapping used in `requestAudioUploadUrl` when generating the signed URL).
@@ -241,16 +314,13 @@ export async function confirmAudioUploadImpl(
     return { ok: false, code: 'INVALID_MIME' };
   }
 
-  // 8. Verify object size
-  const actualSize = fullBuffer.length;
+  // 8. Verify object size using metadata from list (no full download needed)
   const maxBytes = serverEnv.AI_TRANSCRIPTION_MAX_AUDIO_MB * 1024 * 1024;
 
-  if (actualSize > maxBytes) {
+  if (actualSizeBytes > maxBytes) {
     log.debug({
       event: 'confirm_upload_size_exceeded',
       transcriptionId,
-      actualSize,
-      maxBytes,
     });
 
     await markFailed(transcriptionId, userId, 'size_exceeded');
@@ -260,14 +330,11 @@ export async function confirmAudioUploadImpl(
   // Check declared vs actual size — ±5% tolerance
   const declaredSize = row.audioSizeBytes;
   if (declaredSize !== null && declaredSize > 0) {
-    const deviation = Math.abs(actualSize - declaredSize) / declaredSize;
+    const deviation = Math.abs(actualSizeBytes - declaredSize) / declaredSize;
     if (deviation > SIZE_TOLERANCE_FRACTION) {
       log.debug({
         event: 'confirm_upload_size_deviation',
         transcriptionId,
-        actualSize,
-        declaredSize,
-        deviation,
       });
 
       await markFailed(transcriptionId, userId, 'size_mismatch');
@@ -280,7 +347,7 @@ export async function confirmAudioUploadImpl(
     .update(aiTranscriptions)
     .set({
       audioObjectKey: objectKey,
-      audioSizeBytes: actualSize,
+      audioSizeBytes: actualSizeBytes,
       audioDurationSeconds: audioDurationSeconds,
       updatedAt: new Date(),
     })

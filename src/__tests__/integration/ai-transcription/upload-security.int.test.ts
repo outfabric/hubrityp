@@ -143,8 +143,12 @@ function createMockSupabase(userId: string) {
           },
           error: null,
         }),
-        download: vi.fn().mockResolvedValue({
-          data: null,
+        list: vi.fn().mockResolvedValue({
+          data: [],
+          error: null,
+        }),
+        createSignedUrl: vi.fn().mockResolvedValue({
+          data: { signedUrl: 'https://storage.example.com/signed?token=abc' },
           error: null,
         }),
       })),
@@ -188,6 +192,20 @@ describe('audio upload security — integration (real Postgres)', () => {
       sessionId: null,
       contentType: 'audio/mpeg',
       sizeBytes: 1024 * 1024,
+    });
+
+    expect(result).toEqual({ ok: false, code: 'UNAUTHORIZED' });
+  });
+
+  // -----------------------------------------------------------------------
+  // (a2) Anonymous request to confirmAudioUpload is rejected
+  // -----------------------------------------------------------------------
+
+  it('rejects confirmAudioUpload when the caller is anonymous', async () => {
+    const supabase = createMockSupabaseAnonymous();
+    const result = await confirmAudioUploadImpl(supabase, {
+      transcriptionId: randomUUID(),
+      audioDurationSeconds: 60,
     });
 
     expect(result).toEqual({ ok: false, code: 'UNAUTHORIZED' });

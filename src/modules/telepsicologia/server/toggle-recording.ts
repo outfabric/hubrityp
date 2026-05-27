@@ -196,8 +196,6 @@ async function handleStartRecording(room: RoomRow, userId: string): Promise<Togg
     logger.warn(
       {
         event: 'legacy_present_but_ai_term_missing',
-        userId,
-        patientId: patientRow.patientId,
         aiReason: aiConsentResult.ok ? undefined : aiConsentResult.reason,
       },
       'legacy consent present but AI consent term missing — recording blocked',

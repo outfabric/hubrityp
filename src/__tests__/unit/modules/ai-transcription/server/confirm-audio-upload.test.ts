@@ -72,6 +72,13 @@ vi.mock('@/modules/ai-transcription/inngest/client', () => ({
   inngest: { send: (...args: unknown[]) => inngestSendMock(...args) as Promise<void> },
 }));
 
+// Mock rate limiter
+vi.mock('@/shared/lib/rate-limit/postgres', () => ({
+  enforceRateLimit: vi.fn(() =>
+    Promise.resolve({ allowed: true, remaining: 5, resetAt: new Date() }),
+  ),
+}));
+
 // Mock serverEnv
 vi.mock('@/shared/env', () => ({
   serverEnv: {
@@ -120,24 +127,56 @@ function createMp3Buffer(sizeBytes: number = 1024): Buffer {
   return buf;
 }
 
-/** Creates a mock Blob from a Buffer. */
-function createMockBlob(buffer: Buffer): Blob {
-  return new Blob([new Uint8Array(buffer)]);
+// Mock global fetch for ranged header download
+function setupMockFetch(buffer: Buffer) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 206,
+      arrayBuffer: () =>
+        Promise.resolve(
+          buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+        ),
+    }),
+  );
 }
 
 function createMockSupabase(overrides?: {
   authenticated?: boolean;
   userId?: string;
-  storageDownloadResult?: { data: Blob | null; error: unknown };
+  /** Override list result. Use [] for "not found". */
+  storageListResult?: Array<{ name: string; metadata: { size: number } }> | null;
+  /** Buffer to return from ranged fetch. Defaults to valid MP3 header. */
+  headerBuffer?: Buffer;
+  /** Size reported in list metadata. Defaults to 1MB. */
+  audioSizeBytes?: number;
 }) {
-  const { authenticated = true, userId = MOCK_USER_ID, storageDownloadResult } = overrides ?? {};
+  const {
+    authenticated = true,
+    userId = MOCK_USER_ID,
+    storageListResult,
+    headerBuffer,
+    audioSizeBytes = 1024 * 1024,
+  } = overrides ?? {};
 
-  // Default: MP3 file found at the first extension probe
-  const defaultBlob = createMockBlob(createMp3Buffer(1024 * 1024));
-  const defaultDownload = storageDownloadResult ?? {
-    data: defaultBlob,
-    error: null,
-  };
+  // Set up global fetch mock for the ranged download
+  const buf = headerBuffer ?? createMp3Buffer(1024);
+  setupMockFetch(buf);
+
+  // The list mock dynamically returns an object matching the search query
+  // (the transcription ID). When a storageListResult override is provided,
+  // it is used as-is.
+  const listMock =
+    storageListResult !== undefined
+      ? vi.fn().mockResolvedValue({ data: storageListResult, error: null })
+      : vi.fn().mockImplementation((_prefix: string, opts?: { search?: string }) => {
+          const search = opts?.search ?? MOCK_TRANSCRIPTION_ID;
+          return Promise.resolve({
+            data: [{ name: `${search}.mp3`, metadata: { size: audioSizeBytes } }],
+            error: null,
+          });
+        });
 
   return {
     auth: {
@@ -147,7 +186,11 @@ function createMockSupabase(overrides?: {
     },
     storage: {
       from: vi.fn(() => ({
-        download: vi.fn().mockResolvedValue(defaultDownload),
+        list: listMock,
+        createSignedUrl: vi.fn().mockResolvedValue({
+          data: { signedUrl: 'https://storage.example.com/signed?token=abc' },
+          error: null,
+        }),
       })),
     },
   } as unknown as Parameters<typeof confirmAudioUploadImpl>[0];
@@ -337,16 +380,13 @@ describe('confirmAudioUploadImpl', () => {
   // -----------------------------------------------------------------------
 
   describe('size validation', () => {
-    it('returns SIZE_MISMATCH when actual size exceeds MAX', async () => {
-      // Create a blob that's larger than the max
-      const hugeBuffer = createMp3Buffer(210 * 1024 * 1024);
+    it('returns SIZE_MISMATCH when actual size (from metadata) exceeds MAX', async () => {
+      // Metadata reports size larger than the max (200MB)
+      const oversizedBytes = 210 * 1024 * 1024;
       const supabase = createMockSupabase({
-        storageDownloadResult: {
-          data: createMockBlob(hugeBuffer),
-          error: null,
-        },
+        audioSizeBytes: oversizedBytes,
       });
-      selectResult = [defaultRow({ audioSizeBytes: 210 * 1024 * 1024 })];
+      selectResult = [defaultRow({ audioSizeBytes: oversizedBytes })];
 
       const result = await confirmAudioUploadImpl(supabase, validInput());
 
@@ -360,13 +400,9 @@ describe('confirmAudioUploadImpl', () => {
     });
 
     it('returns SIZE_MISMATCH when actual size deviates >5% from declared', async () => {
-      // Declared: 1MB, actual: 500KB (50% deviation)
-      const smallBuffer = createMp3Buffer(500 * 1024);
+      // Declared: 1MB, actual metadata: 500KB (50% deviation)
       const supabase = createMockSupabase({
-        storageDownloadResult: {
-          data: createMockBlob(smallBuffer),
-          error: null,
-        },
+        audioSizeBytes: 500 * 1024,
       });
       selectResult = [defaultRow({ audioSizeBytes: 1024 * 1024 })];
 
@@ -387,9 +423,22 @@ describe('confirmAudioUploadImpl', () => {
   // -----------------------------------------------------------------------
 
   describe('object not found', () => {
-    it('returns NOT_FOUND when no object exists at any probed extension', async () => {
+    it('returns NOT_FOUND when no object exists (list returns empty)', async () => {
       const supabase = createMockSupabase({
-        storageDownloadResult: { data: null, error: new Error('Not found') },
+        storageListResult: [],
+      });
+      selectResult = [defaultRow()];
+
+      const result = await confirmAudioUploadImpl(supabase, validInput());
+
+      expect(result).toEqual({ ok: false, code: 'NOT_FOUND' });
+      expect(updateCalls).toHaveLength(0);
+      expect(inngestSendMock).not.toHaveBeenCalled();
+    });
+
+    it('returns NOT_FOUND when no object with a known extension exists', async () => {
+      const supabase = createMockSupabase({
+        storageListResult: [{ name: `${MOCK_TRANSCRIPTION_ID}.ogg`, metadata: { size: 1024 } }],
       });
       selectResult = [defaultRow()];
 
