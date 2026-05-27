@@ -71,6 +71,6 @@
 
 ## 11. Sanity and docs
 
-- [ ] 11.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
-- [ ] 11.2 Update `docs/runbooks/` (or create `docs/runbooks/ai-transcription-upload.md`) with: (a) what to do if a patient has legacy consent but no AI term (the psychologist must generate the AI term); (b) the discard policy (24h) and how to inspect via SQL; (c) error codes glossary.
-- [ ] 11.3 Update the PR description checklist with the security review items: SSRF allowlist verified; rate-limit verified; signed URL TTL verified; magic-number validator covers the 5 allowed MIMEs.
+- [x] 11.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
+- [x] 11.2 Update `docs/runbooks/` (or create `docs/runbooks/ai-transcription-upload.md`) with: (a) what to do if a patient has legacy consent but no AI term (the psychologist must generate the AI term); (b) the discard policy (24h) and how to inspect via SQL; (c) error codes glossary.
+- [x] 11.3 Update the PR description checklist with the security review items: SSRF allowlist verified; rate-limit verified; signed URL TTL verified; magic-number validator covers the 5 allowed MIMEs.
