@@ -1,9 +1,9 @@
 ## 1. Schema delta (cancelled + cost columns)
 
-- [ ] 1.1 In `src/shared/db/schema/ai-transcription/tables.ts`: extend the `status` enum/CHECK to include `cancelled`. Add columns `transcriptionCostUsd: numeric('transcription_cost_usd', { precision: 10, scale: 4 })` and `llmCostUsd: numeric('llm_cost_usd', { precision: 10, scale: 4 })`. Both nullable.
-- [ ] 1.2 Run `npm run db:generate`. Inspect: the migration should have an `ALTER TABLE ai_transcriptions DROP CONSTRAINT ai_transcriptions_status_check; ADD CONSTRAINT ai_transcriptions_status_check CHECK (status IN ('pending','transcribing','generating','ready','reviewed','failed','cancelled'))`, plus the two ADD COLUMN.
-- [ ] 1.3 Run `npm run db:migrate` locally. Confirm idempotency.
-- [ ] 1.4 Integration test `src/__tests__/integration/data-layer/ai-transcription-status-enum.int.test.ts`: (a) UPDATE to `cancelled` accepted; (b) UPDATE to `archived` rejected; (c) cost columns default NULL; (d) cost columns accept decimal values.
+- [x] 1.1 In `src/shared/db/schema/ai-transcription/tables.ts`: extend the `status` enum/CHECK to include `cancelled`. Add columns `transcriptionCostUsd: numeric('transcription_cost_usd', { precision: 10, scale: 4 })` and `llmCostUsd: numeric('llm_cost_usd', { precision: 10, scale: 4 })`. Both nullable.
+- [x] 1.2 Run `npm run db:generate`. Inspect: the migration should have an `ALTER TABLE ai_transcriptions DROP CONSTRAINT ai_transcriptions_status_check; ADD CONSTRAINT ai_transcriptions_status_check CHECK (status IN ('pending','transcribing','generating','ready','reviewed','failed','cancelled'))`, plus the two ADD COLUMN.
+- [x] 1.3 Run `npm run db:migrate` locally. Confirm idempotency.
+- [x] 1.4 Integration test `src/__tests__/integration/data-layer/ai-transcription-status-enum.int.test.ts`: (a) UPDATE to `cancelled` accepted; (b) UPDATE to `archived` rejected; (c) cost columns default NULL; (d) cost columns accept decimal values.
 
 ## 2. Dependencies and Gemini client
 

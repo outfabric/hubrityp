@@ -6,6 +6,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -121,10 +122,14 @@ export const aiTranscriptions = pgTable(
     riskAlerts: jsonb('risk_alerts'),
 
     // --- Status lifecycle ---
-    // CHECK: ('pending','transcribing','generating','ready','reviewed','failed')
+    // CHECK: ('pending','transcribing','generating','ready','reviewed','failed','cancelled')
     status: text('status').notNull().default('pending'),
     errorCode: text('error_code'),
     retryCount: integer('retry_count').notNull().default(0),
+
+    // --- Cost tracking (approximate USD from Gemini API usage metadata) ---
+    transcriptionCostUsd: numeric('transcription_cost_usd', { precision: 10, scale: 4 }),
+    llmCostUsd: numeric('llm_cost_usd', { precision: 10, scale: 4 }),
 
     // --- Review/save tracking ---
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
@@ -158,7 +163,7 @@ export const aiTranscriptions = pgTable(
     ),
     check(
       'ai_transcriptions_status_check',
-      sql`${table.status} IN ('pending', 'transcribing', 'generating', 'ready', 'reviewed', 'failed')`,
+      sql`${table.status} IN ('pending', 'transcribing', 'generating', 'ready', 'reviewed', 'failed', 'cancelled')`,
     ),
   ],
 );
