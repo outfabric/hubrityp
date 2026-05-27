@@ -192,6 +192,35 @@ const config = [
       ],
     },
   },
+  // Allow gemini-client.ts to import @google/genai (it IS the SDK boundary).
+  {
+    files: ['src/modules/ai-transcription/server/gemini-client.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'pino',
+              message:
+                'Import the module logger from @/modules/ai-transcription (lib/logger.ts) instead of pino directly.',
+            },
+            {
+              name: 'pino-pretty',
+              message:
+                'Import the module logger from @/modules/ai-transcription (lib/logger.ts) instead of pino-pretty directly.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['../../*'],
+              message: 'Use the @/ path alias instead of deep relative imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // ── ai-transcription consent guardrail (custom rule) ──────────────────────
   // Any file in `server/**` or `inngest/**` that imports `aiTranscriptions`
   // (the Drizzle table for audio data) MUST also import `assertAiConsentActive`

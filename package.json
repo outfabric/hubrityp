@@ -93,7 +93,8 @@
     "svg-to-pdfkit": "^0.1.8",
     "tailwind-merge": "^2.6.0",
     "twilio": "^6.0.2",
-    "zod": "^4.4.2"
+    "zod": "^4.4.2",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

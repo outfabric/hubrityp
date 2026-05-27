@@ -7,10 +7,10 @@
 
 ## 2. Dependencies and Gemini client
 
-- [ ] 2.1 Add `zod-to-json-schema` to `dependencies`. Run `npm install`.
-- [ ] 2.2 Create `src/modules/ai-transcription/server/gemini-client.ts` with `import 'server-only'` first line. Exports `getGeminiClient()` (singleton, `new GoogleGenAI({ apiKey: serverEnv.GEMINI_API_KEY })`).
-- [ ] 2.3 Update `eslint.config.mjs`: in the existing `no-restricted-imports` rule for `src/modules/ai-transcription/**`, allowlist `server/gemini-client.ts` for `@google/genai`.
-- [ ] 2.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/gemini-client.test.ts`: assert `getGeminiClient()` is a singleton (same reference across two calls); assert importing in a test that emulates 'use client' fails (use a dynamic import with a stubbed `server-only` that throws — done via Vitest module mock).
+- [x] 2.1 Add `zod-to-json-schema` to `dependencies`. Run `npm install`.
+- [x] 2.2 Create `src/modules/ai-transcription/server/gemini-client.ts` with `import 'server-only'` first line. Exports `getGeminiClient()` (singleton, `new GoogleGenAI({ apiKey: serverEnv.GEMINI_API_KEY })`).
+- [x] 2.3 Update `eslint.config.mjs`: in the existing `no-restricted-imports` rule for `src/modules/ai-transcription/**`, allowlist `server/gemini-client.ts` for `@google/genai`.
+- [x] 2.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/gemini-client.test.ts`: assert `getGeminiClient()` is a singleton (same reference across two calls); assert importing in a test that emulates 'use client' fails (use a dynamic import with a stubbed `server-only` that throws — done via Vitest module mock).
 
 ## 3. JSON Schema for Gemini
 
