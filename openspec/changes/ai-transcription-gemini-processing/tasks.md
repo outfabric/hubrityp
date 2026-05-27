@@ -45,9 +45,9 @@
 
 ## 8. Cron: `purgeFailedAudios`
 
-- [ ] 8.1 Create `src/modules/ai-transcription/inngest/purge-failed-audios.ts` similar to above with cron `15 * * * *`. Predicate: `status IN ('failed','cancelled') AND audio_object_key IS NOT NULL AND coalesce(completed_at, updated_at) < now() - INTERVAL '1 hour'`.
-- [ ] 8.2 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/purge-failed-audios.test.ts`: predicate honored; recent failures not purged.
-- [ ] 8.3 Integration test `src/__tests__/integration/ai-transcription/purge-failed-audios.int.test.ts`: rows in both states, assert correct selection.
+- [x] 8.1 Create `src/modules/ai-transcription/inngest/purge-failed-audios.ts` similar to above with cron `15 * * * *`. Predicate: `status IN ('failed','cancelled') AND audio_object_key IS NOT NULL AND coalesce(completed_at, updated_at) < now() - INTERVAL '1 hour'`.
+- [x] 8.2 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/purge-failed-audios.test.ts`: predicate honored; recent failures not purged.
+- [x] 8.3 Integration test `src/__tests__/integration/ai-transcription/purge-failed-audios.int.test.ts`: rows in both states, assert correct selection.
 
 ## 9. Consent revocation handler (real)
 
