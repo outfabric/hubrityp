@@ -9,8 +9,8 @@
 import { serve } from 'inngest/next';
 
 import { ingestStreamRecording } from '@/modules/ai-transcription/inngest/ingest-stream-recording';
-import { onAudioUploadedStub } from '@/modules/ai-transcription/inngest/on-audio-uploaded-stub';
 import { onConsentRevokedStub } from '@/modules/ai-transcription/inngest/on-consent-revoked-stub';
+import { processAudioTranscription } from '@/modules/ai-transcription/inngest/process-audio-transcription';
 import { expireProntuarioExportsCron } from '@/modules/medical-records/inngest/expire-exports';
 import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
 import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/export-pdf';
@@ -35,7 +35,7 @@ export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
     ingestStreamRecording,
-    onAudioUploadedStub,
+    processAudioTranscription,
     onConsentRevokedStub,
     remindersDispatcher,
     reminderSender,

@@ -1,8 +1,19 @@
 import 'server-only';
 
-import { GoogleGenAI } from '@google/genai';
+import {
+  createPartFromUri,
+  GoogleGenAI,
+  HarmBlockThreshold,
+  HarmCategory,
+  type GenerateContentResponse,
+} from '@google/genai';
 
 import { serverEnv } from '@/shared/env';
+
+// Re-export SDK types and functions used by the pipeline, so downstream
+// consumers never need to import @google/genai directly.
+export { createPartFromUri, HarmBlockThreshold, HarmCategory };
+export type { GenerateContentResponse };
 
 // Singleton Gemini SDK client. Instantiated lazily on first call so the module
 // can be imported without side-effects during testing (the env is only read
