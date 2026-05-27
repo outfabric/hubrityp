@@ -42,10 +42,10 @@
 
 ## 7. Refactor `toggle-recording.ts`
 
-- [ ] 7.1 In `src/modules/telepsicologia/server/toggle-recording.ts`, add `assertAiConsentActive` import and a call before `call.startRecording`. Combine with the existing legacy check via AND. Both negative → return `CONSENT_INVALID` error.
-- [ ] 7.2 Update the function's JSDoc to document the dual-gate behavior. Add a comment block explaining the MVP transition strategy and pointing to the OpenSpec change `ai-transcription-consent`.
-- [ ] 7.3 Update existing unit tests `src/__tests__/unit/modules/telepsicologia/server/toggle-recording*.test.ts` (or create one) to cover: (a) both gates pass; (b) legacy fails; (c) ai term fails; (d) both fail.
-- [ ] 7.4 Integration test `src/__tests__/integration/telepsicologia/toggle-recording-dual-gate.int.test.ts`: 4 patient × user combinations of (legacy y/n) × (ai-term y/n); assert only (y, y) calls `call.startRecording` (mocked); assert the others return `CONSENT_INVALID` without touching Stream.
+- [x] 7.1 In `src/modules/telepsicologia/server/toggle-recording.ts`, add `assertAiConsentActive` import and a call before `call.startRecording`. Combine with the existing legacy check via AND. Both negative → return `CONSENT_INVALID` error.
+- [x] 7.2 Update the function's JSDoc to document the dual-gate behavior. Add a comment block explaining the MVP transition strategy and pointing to the OpenSpec change `ai-transcription-consent`.
+- [x] 7.3 Update existing unit tests `src/__tests__/unit/modules/telepsicologia/server/toggle-recording*.test.ts` (or create one) to cover: (a) both gates pass; (b) legacy fails; (c) ai term fails; (d) both fail.
+- [x] 7.4 Integration test `src/__tests__/integration/telepsicologia/toggle-recording-dual-gate.int.test.ts`: 4 patient × user combinations of (legacy y/n) × (ai-term y/n); assert only (y, y) calls `call.startRecording` (mocked); assert the others return `CONSENT_INVALID` without touching Stream.
 
 ## 8. Update `recording-cleanup` to emit `recording.completed`
 

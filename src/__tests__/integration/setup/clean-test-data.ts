@@ -15,7 +15,7 @@ import {
   treatmentPlans,
 } from '@/shared/db/schema/medical-records/tables';
 import { notifications } from '@/shared/db/schema/notifications/tables';
-import { patients } from '@/shared/db/schema/patients/tables';
+import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
 import {
   videoRecordings,
   videoRooms,
@@ -71,11 +71,14 @@ export async function cleanTestData(): Promise<void> {
     await db.delete(videoSessionLogs);
     await db.delete(videoRooms);
 
+    // 1d. Consent terms (children of patients via FK)
+    await db.delete(consentTerms);
+
     // 2. Agenda tables (children of patients)
     await db.delete(sessionHistory);
     await db.delete(sessions);
 
-    // 3. Patients (parent referenced by evolutions + sessions + diagnostic_hypotheses + treatment_plans)
+    // 3. Patients (parent referenced by evolutions + sessions + diagnostic_hypotheses + treatment_plans + consent_terms)
     await db.delete(patients);
 
     // 4. Auth users created by tests (scoped to test-* emails)

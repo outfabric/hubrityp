@@ -1,8 +1,9 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
+import { assertAiConsentActive } from '@/modules/ai-transcription';
 import { toggleRecordingInputSchema } from '@/modules/telepsicologia/lib/schemas';
 import { getStreamClient } from '@/modules/telepsicologia/server/stream-client';
 import { db } from '@/shared/db/client';
@@ -24,8 +25,29 @@ export type ToggleRecordingResult =
   | { ok: false; code: 'UNAUTHENTICATED' }
   | { ok: false; code: 'INVALID_INPUT'; fieldErrors: Record<string, string[]> }
   | { ok: false; code: 'ROOM_NOT_FOUND' }
-  | { ok: false; code: 'CONSENT_REQUIRED' }
+  | { ok: false; code: 'CONSENT_INVALID' }
   | { ok: false; code: 'UNKNOWN'; message: string };
+
+// ---------------------------------------------------------------------------
+// MVP transition strategy — dual consent gate
+// ---------------------------------------------------------------------------
+// This file enforces TWO independent consent checks before allowing a
+// recording to start:
+//
+// 1. Legacy gate: `patients.recording_consent_signed_at IS NOT NULL` AND
+//    `patients.recording_consent_revoked_at IS NULL`. This predicate existed
+//    before the AI-transcription feature and will be removed in a future
+//    cleanup change (`ai-transcription-consent-cleanup`).
+//
+// 2. AI consent gate: `assertAiConsentActive({ userId, patientId })` must
+//    return `ok: true`. This queries `consent_terms` for `kind = 'ai_recording'`.
+//
+// BOTH gates must pass for recording to proceed. If the legacy gate passes
+// but the AI gate fails, the psychologist needs to generate the AI consent
+// term for the patient (see OpenSpec change `ai-transcription-consent`).
+//
+// Design decision: D6 in `openspec/changes/ai-transcription-audio-upload/design.md`.
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // Implementation
@@ -34,19 +56,26 @@ export type ToggleRecordingResult =
 /**
  * Starts or stops recording for a telepsychology video session.
  *
+ * **Dual consent gate (MVP transition):** starting a recording requires BOTH
+ * the legacy patient consent fields AND an active AI consent term. See the
+ * transition strategy comment block above for rationale and cleanup plan.
+ *
  * Flow:
  *   1. Authenticate via supabase.auth.getUser().
  *   2. Validate input (room_id, action: 'start' | 'stop').
  *   3. Verify room ownership (user_id = auth.uid()).
- *   4. If start: check patient recording consent — signed_at IS NOT NULL
- *      AND revoked_at IS NULL. Return CONSENT_REQUIRED if invalid.
- *   5. If start: call Stream startRecording(), UPSERT video_recordings
+ *   4. If start: resolve patientId from room → session → patient.
+ *   5. If start: check BOTH consent gates:
+ *      a. Legacy: signed_at IS NOT NULL AND revoked_at IS NULL.
+ *      b. AI: assertAiConsentActive returns ok: true.
+ *      Return CONSENT_INVALID if either fails.
+ *   6. If start: call Stream startRecording(), UPSERT video_recordings
  *      with status='recording', UPDATE video_rooms SET recording_enabled=true,
  *      INSERT log event_type='recording_started'.
- *   6. If stop: call Stream stopRecording(), UPDATE video_recordings
+ *   7. If stop: call Stream stopRecording(), UPDATE video_recordings
  *      status='processing', UPDATE video_rooms SET recording_enabled=false,
  *      INSERT log event_type='recording_ended'.
- *   7. Return { ok: true }.
+ *   8. Return { ok: true }.
  */
 export async function toggleRecordingImpl(
   supabase: SupabaseClient,
@@ -123,35 +152,63 @@ interface RoomRow {
 }
 
 /**
- * Handles the 'start' action: validates patient consent, calls Stream,
+ * Handles the 'start' action: validates both consent gates, calls Stream,
  * and persists the recording state atomically.
  */
 async function handleStartRecording(room: RoomRow, userId: string): Promise<ToggleRecordingResult> {
-  // 4. Check patient recording consent — join through sessions to patients.
-  //    Consent is valid when recording_consent_signed_at IS NOT NULL
-  //    AND recording_consent_revoked_at IS NULL.
-  const [consentRow] = await db
+  // 4. Resolve patientId and check legacy consent in a single query.
+  //    We select the patient row regardless of consent state so we can
+  //    evaluate each gate independently and log the transitional case.
+  const [patientRow] = await db
     .select({
+      patientId: patients.id,
       recordingConsentSignedAt: patients.recordingConsentSignedAt,
+      recordingConsentRevokedAt: patients.recordingConsentRevokedAt,
     })
     .from(videoRooms)
     .innerJoin(sessions, eq(videoRooms.sessionId, sessions.id))
     .innerJoin(patients, eq(sessions.patientId, patients.id))
-    .where(
-      and(
-        eq(videoRooms.id, room.id),
-        eq(videoRooms.userId, userId),
-        isNotNull(patients.recordingConsentSignedAt),
-        isNull(patients.recordingConsentRevokedAt),
-      ),
-    )
+    .where(and(eq(videoRooms.id, room.id), eq(videoRooms.userId, userId)))
     .limit(1);
 
-  if (!consentRow) {
-    return { ok: false, code: 'CONSENT_REQUIRED' };
+  if (!patientRow) {
+    // Room exists but session/patient link is broken — should not happen
+    // under normal operation but fail closed.
+    return { ok: false, code: 'CONSENT_INVALID' };
   }
 
-  // 5. Call Stream startRecording() — remote call stays outside the
+  // 5a. Legacy gate: recording_consent_signed_at IS NOT NULL
+  //     AND recording_consent_revoked_at IS NULL.
+  const legacyPass =
+    patientRow.recordingConsentSignedAt !== null && patientRow.recordingConsentRevokedAt === null;
+
+  // 5b. AI consent gate: assertAiConsentActive must return ok: true.
+  const aiConsentResult = await assertAiConsentActive(
+    { userId, patientId: patientRow.patientId },
+    { db },
+  );
+  const aiPass = aiConsentResult.ok;
+
+  // Log the transitional case where legacy is satisfied but the AI term
+  // has not been generated yet — helps the psychologist understand why
+  // recording is blocked after the dual-gate rollout.
+  if (legacyPass && !aiPass) {
+    logger.warn(
+      {
+        event: 'legacy_present_but_ai_term_missing',
+        userId,
+        patientId: patientRow.patientId,
+        aiReason: aiConsentResult.ok ? undefined : aiConsentResult.reason,
+      },
+      'legacy consent present but AI consent term missing — recording blocked',
+    );
+  }
+
+  if (!legacyPass || !aiPass) {
+    return { ok: false, code: 'CONSENT_INVALID' };
+  }
+
+  // 6. Call Stream startRecording() — remote call stays outside the
   //    transaction because it cannot be rolled back.
   const streamClient = getStreamClient();
   const call = streamClient.video.call('default', room.streamCallId);
