@@ -26,8 +26,8 @@
 
 ## 5. Pricing module
 
-- [ ] 5.1 Create `src/modules/ai-transcription/lib/pricing.ts` exporting `PRICING_VERSION = 1`, a table mapping model name → `{ inputUsdPerMillionTokens, outputUsdPerMillionTokens }`, and `computeCost({ model, inputTokens, outputTokens }): number | null` (returns null if model unknown).
-- [ ] 5.2 Unit test `src/__tests__/unit/modules/ai-transcription/lib/pricing.test.ts`: known model → correct math; unknown model → null; zero tokens → 0.
+- [x] 5.1 Create `src/modules/ai-transcription/lib/pricing.ts` exporting `PRICING_VERSION = 1`, a table mapping model name → `{ inputUsdPerMillionTokens, outputUsdPerMillionTokens }`, and `computeCost({ model, inputTokens, outputTokens }): number | null` (returns null if model unknown).
+- [x] 5.2 Unit test `src/__tests__/unit/modules/ai-transcription/lib/pricing.test.ts`: known model → correct math; unknown model → null; zero tokens → 0.
 
 ## 6. Main pipeline: `processAudioTranscription` (Inngest function)
 
