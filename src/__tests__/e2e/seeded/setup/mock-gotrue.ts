@@ -23,6 +23,7 @@
 //   `jwt` is built once at start time using a default-good payload so the
 //   80% caller does not also need to import `buildFixedJwt`. Callers that
 //   need to mint additional/custom tokens can still import `buildFixedJwt`.
+import { createHmac } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -504,6 +505,17 @@ async function handleRequest(
       await readBody(req);
     }
 
+    // createSignedUploadUrl POSTs to /storage/v1/object/upload/sign/<bucket>/<path>.
+    // The SDK reads `data.url` (a relative path) and builds a full URL from it.
+    // The returned URL must contain a `token` query parameter.
+    if (method === 'POST' && path.includes('/object/upload/sign/')) {
+      const mockToken = 'mock-upload-signed-token';
+      respondJson(res, 200, {
+        url: `${path.replace('/storage/v1', '')}?token=${mockToken}`,
+      });
+      return;
+    }
+
     // createSignedUrl POSTs to /storage/v1/object/sign/<bucket>/<path>.
     // The SDK reads `data.signedURL` (a relative path) and prepends the base URL.
     // We return a mock signedURL that the SDK can compose into a full URL.
@@ -512,6 +524,26 @@ async function handleRequest(
       respondJson(res, 200, {
         signedURL: `${path.replace('/storage/v1', '')}?token=${mockToken}`,
       });
+      return;
+    }
+
+    // download() GETs /storage/v1/object/<bucket>/<path>. Return a synthesized
+    // valid MP3 buffer for audio files so `confirmAudioUpload`'s magic-number
+    // validation passes. Without this, `discoverUploadedObject` gets no data
+    // and returns NOT_FOUND.
+    if (method === 'GET' && path.match(/^\/storage\/v1\/object\/[^/]+\/.+/)) {
+      const objectPath = path.replace(/^\/storage\/v1\/object\//, '').replace(/\?.*$/, '');
+
+      if (/\.(mp3|m4a|wav|webm)(\?.*)?$/.test(objectPath)) {
+        const fakeMp3 = buildMinimalMp3(1024);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.end(fakeMp3);
+        return;
+      }
+
+      // Unknown object — return 404 so SDK's download returns null data.
+      respondJson(res, 404, { error: 'Object not found' });
       return;
     }
 
@@ -555,6 +587,29 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+/**
+ * Builds a minimal buffer that passes MP3 magic-number validation.
+ * Starts with an ID3v2 tag header followed by an MPEG sync word.
+ */
+function buildMinimalMp3(size: number): Buffer {
+  const buf = Buffer.alloc(size);
+  // ID3v2 header
+  buf.write('ID3', 0);
+  buf[3] = 0x04; // version major
+  buf[4] = 0x00; // version minor
+  buf[5] = 0x00; // flags
+  buf[6] = 0x00; // synchsafe size
+  buf[7] = 0x00;
+  buf[8] = 0x00;
+  buf[9] = 0x00;
+  // MPEG sync word at offset 10
+  buf[10] = 0xff;
+  buf[11] = 0xfb;
+  buf[12] = 0x90;
+  buf[13] = 0x00;
+  return buf;
 }
 
 function respondJson(res: ServerResponse, status: number, body: unknown): void {
@@ -612,11 +667,24 @@ export function base64UrlEncode(value: string): string {
   return Buffer.from(value, 'utf8').toString('base64url');
 }
 
-export function buildFixedJwt(payload: Record<string, unknown>): string {
+/**
+ * Build a JWT with a valid HMAC-SHA256 signature.
+ *
+ * `@supabase/auth-js` v2.105+ validates the JWT signature locally (using
+ * the anon key as the HMAC secret) before calling `/auth/v1/user`. A fake
+ * third segment like `'mock-signature'` therefore fails with "signature is
+ * invalid". We use Node's `crypto.createHmac` to produce a genuine
+ * HS256 signature so `setSession` passes the local validation and reaches
+ * the mock GoTrue's `/auth/v1/user` endpoint.
+ *
+ * @param secret - HMAC signing key. Defaults to `'e2e-anon-key'`, matching
+ *   the anon key passed to `createServerClient` in `auth.setup.ts` and to
+ *   `start-server.ts`'s `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+ */
+export function buildFixedJwt(payload: Record<string, unknown>, secret = 'e2e-anon-key'): string {
   const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = base64UrlEncode(JSON.stringify(payload));
-  // The mock does not verify signatures — any non-empty third segment makes
-  // the token syntactically valid for `decodeJWT()` consumers in supabase-js.
-  const signature = 'mock-signature';
-  return `${header}.${body}.${signature}`;
+  const data = `${header}.${body}`;
+  const signature = createHmac('sha256', secret).update(data).digest('base64url');
+  return `${data}.${signature}`;
 }

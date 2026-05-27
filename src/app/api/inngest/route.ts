@@ -8,6 +8,8 @@
 
 import { serve } from 'inngest/next';
 
+import { ingestStreamRecording } from '@/modules/ai-transcription/inngest/ingest-stream-recording';
+import { onAudioUploadedStub } from '@/modules/ai-transcription/inngest/on-audio-uploaded-stub';
 import { onConsentRevokedStub } from '@/modules/ai-transcription/inngest/on-consent-revoked-stub';
 import { expireProntuarioExportsCron } from '@/modules/medical-records/inngest/expire-exports';
 import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-remote-tokens';
@@ -32,6 +34,8 @@ import { webhookStopHandler } from '@/modules/whatsapp/inngest/webhook-stop-hand
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
+    ingestStreamRecording,
+    onAudioUploadedStub,
     onConsentRevokedStub,
     remindersDispatcher,
     reminderSender,

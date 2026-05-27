@@ -49,5 +49,19 @@ export type { AssertAiConsentDeps } from './lib/consent';
 // ---- Logger -----------------------------------------------------------------
 export { createTranscriptionLogger } from './lib/logger';
 
-// ---- Server (placeholder — will be populated by downstream changes) ---------
-export {} from './server';
+// ---- Audio input schemas ----------------------------------------------------
+export {
+  RequestAudioUploadUrlInputSchema,
+  type RequestAudioUploadUrlInput,
+  ConfirmAudioUploadInputSchema,
+  type ConfirmAudioUploadInput,
+  ALLOWED_AUDIO_CONTENT_TYPES,
+  type AllowedAudioContentType,
+  CONTENT_TYPE_TO_EXT,
+  PatientIdSchema as AudioPatientIdSchema,
+  SessionIdSchema as AudioSessionIdSchema,
+} from './lib/audio-input-schemas';
+
+// ---- Server -----------------------------------------------------------------
+export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
+export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';

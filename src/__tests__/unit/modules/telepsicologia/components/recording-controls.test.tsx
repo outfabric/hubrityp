@@ -266,9 +266,9 @@ describe('RecordingControls', () => {
   // ---- Error handling ----
 
   describe('error handling', () => {
-    it('shows consent error when server returns CONSENT_REQUIRED', async () => {
+    it('shows consent error when server returns CONSENT_INVALID', async () => {
       const user = userEvent.setup();
-      const result: ToggleRecordingResult = { ok: false, code: 'CONSENT_REQUIRED' };
+      const result: ToggleRecordingResult = { ok: false, code: 'CONSENT_INVALID' };
       renderControls({
         hasConsent: true,
         isRecording: false,

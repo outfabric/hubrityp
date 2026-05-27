@@ -1,11 +1,11 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes } from 'node:crypto';
 
 import { and, eq, sql as dsql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toggleRecordingImpl } from '@/modules/telepsicologia/server/toggle-recording';
 import { sessions } from '@/shared/db/schema/agenda/tables';
-import { patients } from '@/shared/db/schema/patients/tables';
+import { consentTerms, patients } from '@/shared/db/schema/patients/tables';
 import {
   videoRecordings,
   videoRooms,
@@ -109,6 +109,26 @@ async function seedVideoRoom(
 }
 
 /**
+ * Seeds a signed AI consent term (kind='ai_recording') for the given
+ * user+patient pair. Required for the dual consent gate introduced by
+ * the ai-transcription-audio-upload change.
+ */
+async function seedAiConsentTerm(userId: string, patientId: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(consentTerms).values({
+      userId,
+      patientId,
+      kind: 'ai_recording',
+      termText: 'AI recording consent term for test.',
+      templateVersion: 1,
+      signatureToken: randomBytes(32).toString('hex'),
+      signedAt: new Date(),
+      revocationTakesEffectImmediately: true,
+    });
+  });
+}
+
+/**
  * Build a minimal fake Supabase client that returns a specific user for
  * `auth.getUser()`. Isolates the server action logic from real Supabase Auth.
  */
@@ -153,6 +173,7 @@ describe('toggleRecordingImpl', () => {
       consentSignedAt: new Date(),
       consentRevokedAt: null,
     });
+    await seedAiConsentTerm(userId, patientId);
     await seedSession(userId, sessionId, patientId);
     const roomId = await seedVideoRoom(userId, sessionId);
 
@@ -194,7 +215,7 @@ describe('toggleRecordingImpl', () => {
   // Start recording — consent not signed (never signed)
   // -------------------------------------------------------------------------
 
-  it('returns CONSENT_REQUIRED when patient has never signed consent', async () => {
+  it('returns CONSENT_INVALID when patient has never signed consent', async () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     const sessionId = randomUUID();
@@ -212,7 +233,7 @@ describe('toggleRecordingImpl', () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.code).toBe('CONSENT_REQUIRED');
+    expect(result.code).toBe('CONSENT_INVALID');
 
     // Stream should NOT have been called
     expect(mockStartRecording).not.toHaveBeenCalled();
@@ -222,7 +243,7 @@ describe('toggleRecordingImpl', () => {
   // Start recording — consent revoked
   // -------------------------------------------------------------------------
 
-  it('returns CONSENT_REQUIRED when patient has revoked consent', async () => {
+  it('returns CONSENT_INVALID when patient has revoked consent', async () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     const sessionId = randomUUID();
@@ -240,7 +261,7 @@ describe('toggleRecordingImpl', () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.code).toBe('CONSENT_REQUIRED');
+    expect(result.code).toBe('CONSENT_INVALID');
 
     // Stream should NOT have been called
     expect(mockStartRecording).not.toHaveBeenCalled();

@@ -81,7 +81,7 @@ export function RecordingControls({
       } else {
         // Surface a generic message — no internal details leaked
         const message =
-          result.code === 'CONSENT_REQUIRED'
+          result.code === 'CONSENT_INVALID'
             ? 'Consentimento de gravacao nao encontrado.'
             : 'Erro ao alterar gravacao. Tente novamente.';
         setError(message);
