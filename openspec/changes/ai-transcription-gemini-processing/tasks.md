@@ -51,10 +51,10 @@
 
 ## 9. Consent revocation handler (real)
 
-- [ ] 9.1 Create `src/modules/ai-transcription/inngest/on-consent-revoked.ts` replacing the stub from `ai-transcription-consent`. Triggered by `ai-transcription/consent.revoked`. Implementation per spec.
-- [ ] 9.2 In `src/app/api/inngest/route.ts`: register the new function; REMOVE the stub registration.
-- [ ] 9.3 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/on-consent-revoked.test.ts`: (a) `pending` row → marked `cancelled`; (b) `transcribing` row → unchanged + log line; (c) `generating` row → unchanged + log line; (d) `ready`/`reviewed` rows → not affected.
-- [ ] 9.4 Integration test `src/__tests__/integration/ai-transcription/consent-revoked-cancels-pending.int.test.ts`: seed 4 rows (one per status), dispatch the event, assert each row's outcome via real DB.
+- [x] 9.1 Create `src/modules/ai-transcription/inngest/on-consent-revoked.ts` replacing the stub from `ai-transcription-consent`. Triggered by `ai-transcription/consent.revoked`. Implementation per spec.
+- [x] 9.2 In `src/app/api/inngest/route.ts`: register the new function; REMOVE the stub registration.
+- [x] 9.3 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/on-consent-revoked.test.ts`: (a) `pending` row → marked `cancelled`; (b) `transcribing` row → unchanged + log line; (c) `generating` row → unchanged + log line; (d) `ready`/`reviewed` rows → not affected.
+- [x] 9.4 Integration test `src/__tests__/integration/ai-transcription/consent-revoked-cancels-pending.int.test.ts`: seed 4 rows (one per status), dispatch the event, assert each row's outcome via real DB.
 
 ## 10. SSRF / network safety inside the pipeline
 

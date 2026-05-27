@@ -10,7 +10,7 @@ import { serve } from 'inngest/next';
 
 import { discardOldAudios } from '@/modules/ai-transcription/inngest/discard-old-audios';
 import { ingestStreamRecording } from '@/modules/ai-transcription/inngest/ingest-stream-recording';
-import { onConsentRevokedStub } from '@/modules/ai-transcription/inngest/on-consent-revoked-stub';
+import { onConsentRevoked } from '@/modules/ai-transcription/inngest/on-consent-revoked';
 import { processAudioTranscription } from '@/modules/ai-transcription/inngest/process-audio-transcription';
 import { purgeFailedAudios } from '@/modules/ai-transcription/inngest/purge-failed-audios';
 import { expireProntuarioExportsCron } from '@/modules/medical-records/inngest/expire-exports';
@@ -40,7 +40,7 @@ export const { GET, POST, PUT } = serve({
     purgeFailedAudios,
     ingestStreamRecording,
     processAudioTranscription,
-    onConsentRevokedStub,
+    onConsentRevoked,
     remindersDispatcher,
     reminderSender,
     confirmationAckSender,
