@@ -19,10 +19,10 @@
 
 ## 4. Prompts (versioned, template-specific)
 
-- [ ] 4.1 Create `src/modules/ai-transcription/server/prompts/transcription.ts` exporting `PROMPT_VERSION = 1` and `TRANSCRIPTION_SYSTEM_INSTRUCTION` (pt-BR, literal, no interpretation).
-- [ ] 4.2 Create one file per template: `note-tcc.ts`, `note-psicanalise.ts`, `note-sistemica.ts`, `note-aba.ts`, `note-livre.ts`. Each exports `PROMPT_VERSION` and `buildSystemInstruction(sensitivity)`.
-- [ ] 4.3 Create `src/modules/ai-transcription/server/prompts/index.ts` exporting a `getNotePromptModule(template)` switch.
-- [ ] 4.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/prompts/prompts.test.ts`: (a) all 5 templates resolvable via `getNotePromptModule`; (b) each prompt includes "Não invente conteúdo" and "[não mencionado]" and "Não faça interpretações clínicas profundas"; (c) sensitivity values produce different strings; (d) `PROMPT_VERSION` is a positive integer in each file.
+- [x] 4.1 Create `src/modules/ai-transcription/server/prompts/transcription.ts` exporting `PROMPT_VERSION = 1` and `TRANSCRIPTION_SYSTEM_INSTRUCTION` (pt-BR, literal, no interpretation).
+- [x] 4.2 Create one file per template: `note-tcc.ts`, `note-psicanalise.ts`, `note-sistemica.ts`, `note-aba.ts`, `note-livre.ts`. Each exports `PROMPT_VERSION` and `buildSystemInstruction(sensitivity)`.
+- [x] 4.3 Create `src/modules/ai-transcription/server/prompts/index.ts` exporting a `getNotePromptModule(template)` switch.
+- [x] 4.4 Unit test `src/__tests__/unit/modules/ai-transcription/server/prompts/prompts.test.ts`: (a) all 5 templates resolvable via `getNotePromptModule`; (b) each prompt includes "Não invente conteúdo" and "[não mencionado]" and "Não faça interpretações clínicas profundas"; (c) sensitivity values produce different strings; (d) `PROMPT_VERSION` is a positive integer in each file.
 
 ## 5. Pricing module
 
