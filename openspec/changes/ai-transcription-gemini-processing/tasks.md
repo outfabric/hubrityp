@@ -87,6 +87,6 @@
 
 ## 16. Sanity
 
-- [ ] 16.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
-- [ ] 16.2 Manual smoke (local docker compose): upload a small MP3 with a real `GEMINI_API_KEY` (developer's personal); confirm `status='ready'`; inspect `generated_note` JSONB structure; confirm Realtime broadcast hits the dashboard.
-- [ ] 16.3 PR description checklist: (a) Inngest dashboard alert configured for `discardOldAudios` failures; (b) cost columns reviewed; (c) prompt versions documented.
+- [x] 16.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
+- [x] 16.2 Manual smoke (local docker compose): upload a small MP3 with a real `GEMINI_API_KEY` (developer's personal); confirm `status='ready'`; inspect `generated_note` JSONB structure; confirm Realtime broadcast hits the dashboard.
+- [x] 16.3 PR description checklist: (a) Inngest dashboard alert configured for `discardOldAudios` failures; (b) cost columns reviewed; (c) prompt versions documented.
