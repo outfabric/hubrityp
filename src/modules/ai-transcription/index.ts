@@ -46,6 +46,9 @@ export { pseudonymizeTranscript } from './lib/pseudonymize';
 export { assertAiConsentActive, type AssertAiConsentResult } from './lib/consent';
 export type { AssertAiConsentDeps } from './lib/consent';
 
+// ---- Pricing ----------------------------------------------------------------
+export { PRICING_VERSION, MODEL_PRICING, computeCost } from './lib/pricing';
+
 // ---- Logger -----------------------------------------------------------------
 export { createTranscriptionLogger } from './lib/logger';
 

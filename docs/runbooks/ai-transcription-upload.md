@@ -120,8 +120,109 @@ These error codes are written to the `error_code` column of `ai_transcriptions` 
 | `stream_ingest_failed` | The download from Stream's CDN failed after retries, or the upload to Supabase Storage failed. Check Inngest run logs for the step that failed. |
 | `invalid_mime`         | The downloaded recording failed magic-number validation. The file from Stream was not a recognized audio format.                                |
 
+### `processAudioTranscription` (Inngest function)
+
+These error codes are written to the `error_code` column of `ai_transcriptions` when the Gemini processing pipeline fails:
+
+| Code                      | Description                                                                                                                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gemini_429`              | Gemini API rate limit (HTTP 429 / `RESOURCE_EXHAUSTED`). Retriable — Inngest retries up to 3 times automatically.                                                                            |
+| `gemini_safety_block`     | Gemini blocked the audio or generated note due to safety filters (finish reason `SAFETY`). Non-retriable — the content triggered `BLOCK_ONLY_HIGH` despite relaxed clinical safety settings. |
+| `gemini_5xx`              | Gemini returned a server error (500/502/503). Retriable — typically a transient outage on Google's side.                                                                                     |
+| `invalid_response_schema` | Gemini returned JSON that does not match the expected note schema (`GeneratedNoteSchema`). Indicates a model regression or prompt drift. Non-retriable on the current attempt.               |
+| `consent_revoked`         | The patient's AI consent was revoked while the transcription was in `pending` status. The `onConsentRevoked` handler cancelled the row. Audio is purged by the `purgeFailedAudios` cron.     |
+| `pipeline_exhausted`      | All 3 Inngest retries were exhausted without success. The `onFailure` handler wrote this terminal code. Check Inngest run logs for the step that caused the final failure.                   |
+
 ### `toggleRecording` (telepsicologia Server Action)
 
 | Code              | Description                                                                                                                                                                                                 |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CONSENT_INVALID` | The dual-gate check failed: either the legacy `recording_consent_signed_at` flag is not set, or the `ai_recording` consent term is not active (or both). Both must be satisfied to start a video recording. |
+
+---
+
+## 4. Re-processing a failed row
+
+When a transcription row lands in `status = 'failed'`, you can re-trigger the pipeline by dispatching an `ai-transcription/audio.uploaded` event with the row's ID. The pipeline is idempotent: re-execution transitions the row back through the processing steps and overwrites intermediate state.
+
+### Prerequisites
+
+- The row still has `audio_object_key IS NOT NULL` (the audio has not been discarded yet). If the audio was already purged, re-processing is not possible — the psychologist must upload the file again.
+- The patient's AI consent term is still active. If consent was revoked (`error_code = 'consent_revoked'`), re-processing will fail at the `assert-consent` step.
+
+### Via the Inngest dashboard
+
+1. Open the Inngest dashboard and navigate to **Events**.
+2. Click **Send Event** and use this payload (replace the placeholders):
+
+```json
+{
+  "name": "ai-transcription/audio.uploaded",
+  "data": {
+    "transcriptionId": "<transcription-uuid>",
+    "userId": "<psychologist-uuid>",
+    "patientId": "<patient-uuid>",
+    "source": "manual_upload"
+  }
+}
+```
+
+3. Monitor the function run in the **Runs** tab for `process-audio-transcription`.
+
+### Via SQL (find the IDs)
+
+```sql
+-- Find failed transcriptions with audio still available for re-processing
+SELECT id, user_id, patient_id, error_code, audio_object_key, created_at
+FROM ai_transcriptions
+WHERE status = 'failed'
+  AND audio_object_key IS NOT NULL
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+---
+
+## 5. Discard and purge crons
+
+Two Inngest scheduled functions manage audio file lifecycle in Supabase Storage.
+
+### `discardOldAudios` (cron: `0 * * * *` — every hour at minute 0)
+
+Deletes audio files from Storage for transcription rows that have exceeded their retention period. The retention threshold is per-user: it reads `ai_transcription_settings.keep_audio_hours` (default 24 hours) and discards audio older than that.
+
+**What it does per qualifying row:**
+
+1. Deletes the audio object from Supabase Storage (service-role).
+2. Sets `audio_object_key = NULL` and `audio_discarded_at = now()` on the row.
+
+**Qualifying rows:** `audio_object_key IS NOT NULL AND audio_discarded_at IS NULL AND created_at < now() - keep_audio_hours`.
+
+### `purgeFailedAudios` (cron: `15 * * * *` — every hour at minute 15)
+
+Shortens retention for terminal failures. Removes audio from rows in `failed` or `cancelled` status where the terminal timestamp is older than 1 hour.
+
+**What it does per qualifying row:**
+
+1. Deletes the audio object from Supabase Storage (service-role).
+2. Sets `audio_object_key = NULL` and `audio_discarded_at = now()` on the row.
+
+**Qualifying rows:** `status IN ('failed', 'cancelled') AND audio_object_key IS NOT NULL AND COALESCE(completed_at, updated_at) < now() - INTERVAL '1 hour'`.
+
+### Inspecting cron status in the Inngest dashboard
+
+1. Open the Inngest dashboard and navigate to **Functions**.
+2. Find `discard-old-audios` and `purge-failed-audios` in the function list.
+3. Click on either function to see:
+   - **Cron history**: timestamps of each invocation with pass/fail status.
+   - **Recent runs**: individual run details showing which step succeeded or failed.
+   - **Metrics**: execution duration, error rate, and throughput over time.
+4. To see details of a specific run, click on it in the **Runs** tab. Each row processed appears as a separate step (`discard-<id>` or `purge-<id>`), so you can identify which specific audio file caused a failure.
+
+### Troubleshooting
+
+| Symptom                                | Likely cause                                         | Resolution                                                                                                                          |
+| -------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Cron shows no recent runs              | Inngest function not registered or Inngest is paused | Check the Inngest dashboard for the function's registration status; verify the API route at `/api/inngest` is deployed and healthy. |
+| Runs succeed but no rows discarded     | No rows match the qualifying criteria                | Verify with the inspection queries in section 2 that there are eligible rows.                                                       |
+| Storage delete fails for specific rows | Object already deleted or bucket misconfigured       | Check the `audio_object_key` value against actual Storage contents; the cron logs the error and continues to the next row.          |

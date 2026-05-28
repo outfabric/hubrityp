@@ -38,6 +38,7 @@
     "@fullcalendar/timegrid": "^6.1.20",
     "@google/genai": "^2.6.0",
     "@hookform/resolvers": "^5.2.2",
+    "@inngest/middleware-encryption": "^2.0.0",
     "@playwright/cli": "^0.1.13",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -93,7 +94,8 @@
     "svg-to-pdfkit": "^0.1.8",
     "tailwind-merge": "^2.6.0",
     "twilio": "^6.0.2",
-    "zod": "^4.4.2"
+    "zod": "^4.4.2",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

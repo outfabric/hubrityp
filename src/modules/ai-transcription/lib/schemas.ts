@@ -11,6 +11,7 @@ export const TranscriptionStatusSchema = z.enum([
   'ready',
   'reviewed',
   'failed',
+  'cancelled',
 ]);
 export type TranscriptionStatus = z.infer<typeof TranscriptionStatusSchema>;
 
