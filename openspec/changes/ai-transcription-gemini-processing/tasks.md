@@ -72,9 +72,9 @@
 
 ## 13. Realtime broadcast
 
-- [ ] 13.1 Wire the broadcast in step 13 of the pipeline.
-- [ ] 13.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/realtime/broadcast.test.ts`: assert `broadcastAiReady` calls `supabase.channel('ai-transcription:user:' + userId).send(...)`; failure swallowed.
-- [ ] 13.3 Integration test `src/__tests__/integration/ai-transcription/realtime-broadcast.int.test.ts` (using Supabase local stack): subscribe two test clients (A and B). Run the pipeline for A. Assert A receives the `ready` event; B does NOT.
+- [x] 13.1 Wire the broadcast in step 13 of the pipeline.
+- [x] 13.2 Unit test `src/__tests__/unit/modules/ai-transcription/server/realtime/broadcast.test.ts`: assert `broadcastAiReady` calls `supabase.channel('ai-transcription:user:' + userId).send(...)`; failure swallowed.
+- [x] 13.3 Integration test `src/__tests__/integration/ai-transcription/realtime-broadcast.int.test.ts` (using Supabase local stack): subscribe two test clients (A and B). Run the pipeline for A. Assert A receives the `ready` event; B does NOT.
 
 ## 14. End-to-end (seeded)
 
