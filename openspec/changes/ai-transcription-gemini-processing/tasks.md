@@ -82,8 +82,8 @@
 
 ## 15. Documentation
 
-- [ ] 15.1 Update `docs/runbooks/ai-transcription-upload.md` (created in audio-upload change) with: (a) how to re-process a failed row; (b) error code glossary now including `gemini_429`, `gemini_safety_block`, `gemini_5xx`, `invalid_response_schema`, `consent_revoked`; (c) how to inspect the discard cron status in the Inngest dashboard.
-- [ ] 15.2 Add `docs/runbooks/ai-transcription-cost.md`: how to read `transcription_cost_usd`/`llm_cost_usd` columns; how to bump pricing in `lib/pricing.ts`.
+- [x] 15.1 Update `docs/runbooks/ai-transcription-upload.md` (created in audio-upload change) with: (a) how to re-process a failed row; (b) error code glossary now including `gemini_429`, `gemini_safety_block`, `gemini_5xx`, `invalid_response_schema`, `consent_revoked`; (c) how to inspect the discard cron status in the Inngest dashboard.
+- [x] 15.2 Add `docs/runbooks/ai-transcription-cost.md`: how to read `transcription_cost_usd`/`llm_cost_usd` columns; how to bump pricing in `lib/pricing.ts`.
 
 ## 16. Sanity
 
