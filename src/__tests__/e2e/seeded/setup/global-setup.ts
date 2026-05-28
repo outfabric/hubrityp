@@ -6,6 +6,7 @@ import { healthPings } from '@/shared/db/schema/health/tables';
 import {
   readSeedState,
   SEED_AI_CONSENT_TERMS,
+  SEED_AI_TRANSCRIPTIONS,
   SEED_CONSENT_TERMS,
   SEED_PATIENTS,
   SEED_SESSIONS,
@@ -606,6 +607,37 @@ export default async function globalSetup() {
         signed_ip       = EXCLUDED.signed_ip,
         signed_user_agent = EXCLUDED.signed_user_agent,
         revoked_at      = NULL;
+    `;
+    // Seed AI transcription row for the full-pipeline E2E test.
+    // This row simulates a manual upload that has been accepted but not yet
+    // processed by Inngest. The test will simulate pipeline completion by
+    // UPDATEing the row to 'ready' with test-generated note data.
+    const at = SEED_AI_TRANSCRIPTIONS;
+    await sql`
+      INSERT INTO public.ai_transcriptions (
+        id, user_id, patient_id, source,
+        audio_object_key, status
+      )
+      VALUES (
+        ${at.pendingPipeline.id},
+        ${seed.userId},
+        ${at.pendingPipeline.patientId},
+        'manual_upload',
+        ${at.pendingPipeline.audioObjectKey},
+        'pending'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id          = EXCLUDED.user_id,
+        patient_id       = EXCLUDED.patient_id,
+        source           = EXCLUDED.source,
+        audio_object_key = EXCLUDED.audio_object_key,
+        status           = EXCLUDED.status,
+        generated_note   = NULL,
+        risk_alerts      = NULL,
+        error_code       = NULL,
+        completed_at     = NULL,
+        reviewed_at      = NULL,
+        template_used    = NULL;
     `;
   } finally {
     await sql.end();

@@ -109,6 +109,21 @@ export const SEED_CONSENT_TERMS = {
  * We use a deterministic, manually-crafted base64url string for test
  * repeatability. It must be exactly 43 chars of [A-Za-z0-9_-].
  */
+/**
+ * Deterministic seed transcription for the full-pipeline E2E test.
+ *
+ * Seeded in global-setup.ts with status='pending' and a fake audio_object_key.
+ * The test simulates pipeline completion by UPDATEing the row to 'ready'.
+ */
+export const SEED_AI_TRANSCRIPTIONS = {
+  /** Pending transcription for activeMinimal — used by full-pipeline-mock-gemini.spec.ts */
+  pendingPipeline: {
+    id: '00000000-0000-4000-8000-000000000050',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    audioObjectKey: 'ai-audio/seed-user/test-pipeline-audio.mp3',
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -78,7 +78,7 @@
 
 ## 14. End-to-end (seeded)
 
-- [ ] 14.1 E2E test `src/__tests__/e2e/seeded/ai-transcription/full-pipeline-mock-gemini.spec.ts`: psychologist logs in → patient with active term + uploaded audio (seed) → trigger the Inngest function via the test harness → wait for Realtime `ready` → assert UI badge appears (the actual review UI is the next change, so for now just assert the indicator on the agenda/patient page if any minimal hint exists; OR adapt this test to a hook that polls the DB for `status='ready'` and asserts the row state).
+- [x] 14.1 E2E test `src/__tests__/e2e/seeded/ai-transcription/full-pipeline-mock-gemini.spec.ts`: psychologist logs in → patient with active term + uploaded audio (seed) → trigger the Inngest function via the test harness → wait for Realtime `ready` → assert UI badge appears (the actual review UI is the next change, so for now just assert the indicator on the agenda/patient page if any minimal hint exists; OR adapt this test to a hook that polls the DB for `status='ready'` and asserts the row state).
 
 ## 15. Documentation
 
