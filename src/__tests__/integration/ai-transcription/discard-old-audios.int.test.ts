@@ -94,14 +94,16 @@ async function seedTranscriptionRow(opts: {
   audioObjectKey: string | null;
   audioDiscardedAt?: Date | null;
   createdAt: Date;
+  status?: string;
 }): Promise<void> {
   await runAsService(async (db) => {
     // Use ISO strings for timestamps — postgres-js raw params choke on Date objects.
     const createdIso = opts.createdAt.toISOString();
     const discardedIso = opts.audioDiscardedAt ? opts.audioDiscardedAt.toISOString() : null;
+    const status = opts.status ?? 'ready';
     await db.execute(
       dsql`INSERT INTO ai_transcriptions (id, user_id, patient_id, source, status, audio_object_key, audio_discarded_at, created_at, updated_at)
-           VALUES (${opts.id}, ${opts.userId}, ${opts.patientId}, 'manual_upload', 'ready',
+           VALUES (${opts.id}, ${opts.userId}, ${opts.patientId}, 'manual_upload', ${status},
                    ${opts.audioObjectKey}, ${discardedIso},
                    ${createdIso}, ${createdIso})`,
     );
@@ -265,6 +267,93 @@ describe('discardOldAudios — integration (real Postgres + mock Storage)', () =
 
       expect(row!.audioObjectKey).toBe(objectKey);
       expect(row!.audioDiscardedAt).toBeNull();
+    } finally {
+      await sqlClient.end();
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Active pipeline rows (transcribing/generating) are NOT discarded
+  // -----------------------------------------------------------------------
+
+  it('does NOT discard audio from rows in transcribing or generating status', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+
+    await seedAuthUser(userId);
+    await seedPatient(userId, patientId);
+
+    // Row in 'transcribing' status, older than 24h — should NOT be discarded
+    const transcribingId = randomUUID();
+    const transcribingKey = `${userId}/${transcribingId}.webm`;
+    await seedTranscriptionRow({
+      id: transcribingId,
+      userId,
+      patientId,
+      audioObjectKey: transcribingKey,
+      createdAt: hoursAgo(48),
+      status: 'transcribing',
+    });
+
+    // Row in 'generating' status, older than 24h — should NOT be discarded
+    const generatingId = randomUUID();
+    const generatingKey = `${userId}/${generatingId}.webm`;
+    await seedTranscriptionRow({
+      id: generatingId,
+      userId,
+      patientId,
+      audioObjectKey: generatingKey,
+      createdAt: hoursAgo(48),
+      status: 'generating',
+    });
+
+    // Row in 'ready' status, older than 24h — SHOULD be discarded
+    const readyId = randomUUID();
+    const readyKey = `${userId}/${readyId}.webm`;
+    await seedTranscriptionRow({
+      id: readyId,
+      userId,
+      patientId,
+      audioObjectKey: readyKey,
+      createdAt: hoursAgo(48),
+      status: 'ready',
+    });
+
+    const step = buildStepContext();
+    const result = await handler({ step });
+
+    // Only the 'ready' row should be discarded
+    expect(result.processed).toBe(1);
+    expect(result.discarded).toBe(1);
+    expect(result.failed).toBe(0);
+
+    expect(storageRemoveCalls).toHaveLength(1);
+    expect(storageRemoveCalls[0]!.paths[0]).toContain(readyId);
+
+    // Verify the transcribing/generating rows still have their audio
+    const { sql: sqlClient, db } = openClient();
+    try {
+      const [transcribingRow] = await db
+        .select({
+          audioObjectKey: aiTranscriptions.audioObjectKey,
+          audioDiscardedAt: aiTranscriptions.audioDiscardedAt,
+        })
+        .from(aiTranscriptions)
+        .where(eq(aiTranscriptions.id, transcribingId));
+
+      expect(transcribingRow!.audioObjectKey).toBe(transcribingKey);
+      expect(transcribingRow!.audioDiscardedAt).toBeNull();
+
+      const [generatingRow] = await db
+        .select({
+          audioObjectKey: aiTranscriptions.audioObjectKey,
+          audioDiscardedAt: aiTranscriptions.audioDiscardedAt,
+        })
+        .from(aiTranscriptions)
+        .where(eq(aiTranscriptions.id, generatingId));
+
+      expect(generatingRow!.audioObjectKey).toBe(generatingKey);
+      expect(generatingRow!.audioDiscardedAt).toBeNull();
     } finally {
       await sqlClient.end();
     }
@@ -451,6 +540,7 @@ describe('discardOldAudios — integration (real Postgres + mock Storage)', () =
              LEFT JOIN ai_transcription_settings s ON s.user_id = t.user_id
              WHERE t.audio_object_key IS NOT NULL
                AND t.audio_discarded_at IS NULL
+               AND t.status NOT IN ('transcribing', 'generating')
                AND t.created_at < now() - make_interval(hours => COALESCE(s.keep_audio_hours, 24))`,
       );
 

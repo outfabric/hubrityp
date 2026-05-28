@@ -103,11 +103,25 @@ interface SendToGeminiResult {
   /** Non-null when the Files API was used (>20MB). */
   geminiFileName: string | null;
   geminiFileUri: string | null;
-  /** Base64-encoded audio for inline path (<= 20MB), null for Files API. */
-  inlineBase64: string | null;
+  /**
+   * Always null — the inline base64 is NOT duplicated here to avoid storing
+   * the audio twice in Inngest step state. Step 5 reads `downloadResult.base64`
+   * directly for the inline path.
+   */
+  inlineBase64: null;
   mimeType: string;
 }
 
+/**
+ * Step 5 result — the unredacted transcript of the therapy session.
+ *
+ * LGPD residual risk note: `rawTranscript` is ephemeral in Inngest step state
+ * and is NEVER persisted to our database or logs. It is consumed only by step 6
+ * (pseudonymize) and discarded after that step boundary. The
+ * `@inngest/middleware-encryption` configured on the Inngest client encrypts
+ * all step output client-side (AES-256 via LibSodium) before it reaches
+ * Inngest Cloud, mitigating the data-residency risk for this field.
+ */
 interface TranscriptionResult {
   rawTranscript: string;
   inputTokens: number;
@@ -194,12 +208,16 @@ export const processAudioTranscription = inngest.createFunction(
       const log = createTranscriptionLogger({});
 
       try {
-        const originalData = event.data.event.data as {
-          transcriptionId?: string;
-          userId?: string;
-        };
+        const parsed = audioUploadedEventSchema.safeParse(event.data.event.data);
+        if (!parsed.success) {
+          log.warn(
+            { event: 'onfailure_parse_error' },
+            'onFailure: could not parse original event data — skipping markAsFailed',
+          );
+          return;
+        }
 
-        if (!originalData.transcriptionId || !originalData.userId) return;
+        const { transcriptionId, userId } = parsed.data;
 
         const { db } = await import('@/shared/db/client');
         const { and, eq } = await import('drizzle-orm');
@@ -213,10 +231,7 @@ export const processAudioTranscription = inngest.createFunction(
             updatedAt: new Date(),
           })
           .where(
-            and(
-              eq(aiTranscriptions.id, originalData.transcriptionId),
-              eq(aiTranscriptions.userId, originalData.userId),
-            ),
+            and(eq(aiTranscriptions.id, transcriptionId), eq(aiTranscriptions.userId, userId)),
           );
       } catch (failErr: unknown) {
         const msg = failErr instanceof Error ? failErr.message : 'unknown';
@@ -296,14 +311,24 @@ export const processAudioTranscription = inngest.createFunction(
       const { eq, and } = await import('drizzle-orm');
       const { aiTranscriptions } = await import('@/shared/db/schema/ai-transcription/tables');
 
-      // Look up the audio object key from the transcription row
+      // Look up the audio object key and size from the transcription row
       const [row] = await db
-        .select({ audioObjectKey: aiTranscriptions.audioObjectKey })
+        .select({
+          audioObjectKey: aiTranscriptions.audioObjectKey,
+          audioSizeBytes: aiTranscriptions.audioSizeBytes,
+        })
         .from(aiTranscriptions)
         .where(and(eq(aiTranscriptions.id, transcriptionId), eq(aiTranscriptions.userId, userId)));
 
       if (!row?.audioObjectKey) {
         throw new NonRetriableError('AUDIO_OBJECT_KEY_MISSING');
+      }
+
+      // Pre-download size guard: prevent OOM by rejecting files that exceed
+      // the configured max before loading them into memory as base64.
+      const maxBytes = serverEnv.AI_TRANSCRIPTION_MAX_AUDIO_MB * 1024 * 1024;
+      if (row.audioSizeBytes && row.audioSizeBytes > maxBytes) {
+        throw new NonRetriableError('AUDIO_EXCEEDS_PIPELINE_LIMIT');
       }
 
       // SSRF safety: the URL used for download is server-generated from
@@ -387,7 +412,9 @@ export const processAudioTranscription = inngest.createFunction(
         };
       }
 
-      // Inline base64 path (<=20MB)
+      // Inline base64 path (<=20MB) — do NOT duplicate base64 into this step's
+      // return value; step 5 reads `downloadResult.base64` directly instead.
+      // This halves Inngest step-state storage for the common case.
       log.info(
         { event: 'gemini_inline_audio', sizeBytes: downloadResult.sizeBytes },
         'Audio will be sent inline (<=20MB)',
@@ -396,7 +423,7 @@ export const processAudioTranscription = inngest.createFunction(
       return {
         geminiFileName: null,
         geminiFileUri: null,
-        inlineBase64: downloadResult.base64,
+        inlineBase64: null,
         mimeType: downloadResult.contentType,
       };
     });
@@ -414,13 +441,16 @@ export const processAudioTranscription = inngest.createFunction(
         const ai = getGeminiClient();
         const model = serverEnv.GEMINI_MODEL_TRANSCRIPTION;
 
-        // Build contents: either Files API URI or inline base64
+        // Build contents: either Files API URI or inline base64.
+        // For the inline path, read base64 from step 3's downloadResult
+        // (not from geminiFileResult) to avoid storing the audio twice in
+        // Inngest step state.
         const audioPart =
           geminiFileResult.geminiFileUri !== null
             ? createPartFromUri(geminiFileResult.geminiFileUri, geminiFileResult.mimeType)
             : {
                 inlineData: {
-                  data: geminiFileResult.inlineBase64!,
+                  data: downloadResult.base64,
                   mimeType: geminiFileResult.mimeType,
                 },
               };

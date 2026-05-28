@@ -120,6 +120,8 @@ async function main(): Promise<void> {
       STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
       // Gemini AI transcription — dummy key so env validation passes.
       GEMINI_API_KEY: 'e2e-gemini-api-key',
+      // Inngest encryption — dummy key (min 32 chars) so env validation passes.
+      INNGEST_ENCRYPTION_KEY: 'e2e-inngest-encryption-key-min-32-chars',
       // Inngest — point the event API to a non-routable address so event
       // sends fail fast instead of retrying against the production API for
       // 30+ seconds. This is only needed for Server Actions that

@@ -83,6 +83,7 @@ async function defaultFindCandidates(): Promise<DiscardCandidate[]> {
       LEFT JOIN ai_transcription_settings s ON s.user_id = t.user_id
       WHERE t.audio_object_key IS NOT NULL
         AND t.audio_discarded_at IS NULL
+        AND t.status NOT IN ('transcribing', 'generating')
         AND t.created_at < now() - make_interval(hours => COALESCE(s.keep_audio_hours, 24))
     `,
   );

@@ -57,7 +57,15 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Integration em production/preview. Em dev local ficam vazias e o SDK
   // usa o Dev Server local (http://inngest:8288 via docker compose).
   INNGEST_EVENT_KEY: z.string().optional(),
+  // Required in production for webhook signature verification — the Inngest
+  // SDK rejects unauthenticated invocations when the key is present. Optional
+  // only for local dev where the Dev Server handles invocation directly.
   INNGEST_SIGNING_KEY: z.string().optional(),
+  // Encryption key for @inngest/middleware-encryption. Encrypts all step
+  // output (including clinical transcripts and audio base64) client-side
+  // before it reaches Inngest Cloud, ensuring LGPD-compliant data residency.
+  // Min 32 chars for adequate entropy (AES-256 / LibSodium).
+  INNGEST_ENCRYPTION_KEY: z.string().min(32),
   // Override do origem usado no sync com a cloud Inngest (apenas se
   // o domínio publico for diferente do que a Vercel detecta).
   INNGEST_SERVE_ORIGIN: z.string().url().optional(),

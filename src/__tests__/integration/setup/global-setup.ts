@@ -20,6 +20,8 @@ export default async function globalSetup() {
   process.env.STREAM_WEBHOOK_SECRET ??= 'integration-stream-webhook-secret';
   // Gemini AI transcription — dummy key for integration tests.
   process.env.GEMINI_API_KEY ??= 'integration-gemini-api-key';
+  // Inngest encryption — dummy key (min 32 chars) for integration tests.
+  process.env.INNGEST_ENCRYPTION_KEY ??= 'integration-inngest-encryption-key-32ch';
   // Signature hash salt — used for hashing IP/user-agent in consent signing.
   process.env.SIGNATURE_HASH_SALT ??= 'integration-test-signature-hash-salt-minimum-32-chars';
 

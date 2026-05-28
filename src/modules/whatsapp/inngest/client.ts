@@ -8,7 +8,10 @@
  * the shared client and typed event data interfaces.
  */
 
+import { encryptionMiddleware } from '@inngest/middleware-encryption';
 import { Inngest } from 'inngest';
+
+import { serverEnv } from '@/shared/env';
 
 // ---------------------------------------------------------------------------
 // Event data types
@@ -139,4 +142,15 @@ export const WHATSAPP_EVENTS = {
 // Inngest client
 // ---------------------------------------------------------------------------
 
-export const inngest = new Inngest({ id: 'hubrityp' });
+export const inngest = new Inngest({
+  id: 'hubrityp',
+  middleware: [
+    // Encrypts all step output and function results client-side before they
+    // reach Inngest Cloud. This prevents raw clinical transcripts, audio
+    // base64, and pseudonymized notes from being stored unencrypted outside
+    // sa-east-1 (LGPD art. 11 + art. 33 compliance).
+    encryptionMiddleware({
+      key: serverEnv.INNGEST_ENCRYPTION_KEY,
+    }),
+  ],
+});

@@ -110,6 +110,7 @@ vi.mock('@/shared/env', () => ({
   serverEnv: {
     SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
     AI_TRANSCRIPTION_BUCKET: 'ai-transcription-audio',
+    AI_TRANSCRIPTION_MAX_AUDIO_MB: 200,
     GEMINI_MODEL_TRANSCRIPTION: 'gemini-3.5-flash',
     GEMINI_MODEL_NOTE: 'gemini-3.5-flash',
     NODE_ENV: 'test',

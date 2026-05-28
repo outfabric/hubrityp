@@ -23,6 +23,7 @@ const validServer = {
   STREAM_API_SECRET: 'stream-api-secret',
   STREAM_WEBHOOK_SECRET: 'stream-webhook-secret',
   GEMINI_API_KEY: 'gemini-api-key',
+  INNGEST_ENCRYPTION_KEY: 'test-inngest-encryption-key-minimum-32ch',
   SIGNATURE_HASH_SALT: 'test-signature-hash-salt-minimum-32-chars',
 };
 
