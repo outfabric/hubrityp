@@ -122,6 +122,8 @@ async function main(): Promise<void> {
       GEMINI_API_KEY: 'e2e-gemini-api-key',
       // Inngest encryption — dummy key (min 32 chars) so env validation passes.
       INNGEST_ENCRYPTION_KEY: 'e2e-inngest-encryption-key-min-32-chars',
+      // Inngest signing — dummy key so the production guard in env/index.ts passes.
+      INNGEST_SIGNING_KEY: 'e2e-inngest-signing-key',
       // Inngest — point the event API to a non-routable address so event
       // sends fail fast instead of retrying against the production API for
       // 30+ seconds. This is only needed for Server Actions that

@@ -22,6 +22,9 @@ export default async function globalSetup() {
   process.env.GEMINI_API_KEY ??= 'integration-gemini-api-key';
   // Inngest encryption — dummy key (min 32 chars) for integration tests.
   process.env.INNGEST_ENCRYPTION_KEY ??= 'integration-inngest-encryption-key-32ch';
+  // Inngest signing — dummy key so any transitive import of serverEnv in
+  // production mode does not trip the production guard in env/index.ts.
+  process.env.INNGEST_SIGNING_KEY ??= 'integration-inngest-signing-key';
   // Signature hash salt — used for hashing IP/user-agent in consent signing.
   process.env.SIGNATURE_HASH_SALT ??= 'integration-test-signature-hash-salt-minimum-32-chars';
 

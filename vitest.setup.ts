@@ -47,6 +47,9 @@ process.env.STREAM_WEBHOOK_SECRET ??= 'unit-test-stream-webhook-secret';
 process.env.GEMINI_API_KEY ??= 'unit-test-gemini-api-key';
 // Inngest encryption — dummy key (min 32 chars) so env validation passes.
 process.env.INNGEST_ENCRYPTION_KEY ??= 'unit-test-inngest-encryption-key-32ch';
+// Inngest signing — dummy key so any transitive import of serverEnv in
+// production mode does not trip the production guard in env/index.ts.
+process.env.INNGEST_SIGNING_KEY ??= 'unit-test-inngest-signing-key';
 // Signature hash salt — used for hashing IP/user-agent in consent signing.
 process.env.SIGNATURE_HASH_SALT ??= 'unit-test-signature-hash-salt-minimum-32-chars';
 
