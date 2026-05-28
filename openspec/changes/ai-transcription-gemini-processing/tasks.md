@@ -64,7 +64,7 @@
 
 ## 11. Pseudonymization end-to-end assertion
 
-- [ ] 11.1 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/pseudonymization-end-to-end.test.ts`: mock Gemini and capture every `generateContent` call's `contents` and `systemInstruction`. Run the pipeline with `patientFirstName='Maria'`, `patientFullName='Maria Souza Lima'`, a transcript fixture mentioning the name 3 times. Assert: (a) the transcription step's contents have nothing about the patient (transcription only sees audio); (b) the note step's contents contain `"Paciente"` and NOT `"Maria"`/`"Souza"`/`"Lima"`; (c) no log line over the whole run contains the patient name (capture pino destination).
+- [x] 11.1 Unit test `src/__tests__/unit/modules/ai-transcription/inngest/pseudonymization-end-to-end.test.ts`: mock Gemini and capture every `generateContent` call's `contents` and `systemInstruction`. Run the pipeline with `patientFirstName='Maria'`, `patientFullName='Maria Souza Lima'`, a transcript fixture mentioning the name 3 times. Assert: (a) the transcription step's contents have nothing about the patient (transcription only sees audio); (b) the note step's contents contain `"Paciente"` and NOT `"Maria"`/`"Souza"`/`"Lima"`; (c) no log line over the whole run contains the patient name (capture pino destination).
 
 ## 12. Logging redaction integration
 
