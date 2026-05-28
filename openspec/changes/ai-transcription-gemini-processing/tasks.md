@@ -68,7 +68,7 @@
 
 ## 12. Logging redaction integration
 
-- [ ] 12.1 Integration test `src/__tests__/integration/ai-transcription/log-redaction.int.test.ts`: run the pipeline with a real-shaped row; capture all pino lines via a buffer; assert no line contains `transcript`, `generatedNote`, `riskAlerts`, `patientName` raw values (they appear as `[REDACTED]` if logged at all).
+- [x] 12.1 Integration test `src/__tests__/integration/ai-transcription/log-redaction.int.test.ts`: run the pipeline with a real-shaped row; capture all pino lines via a buffer; assert no line contains `transcript`, `generatedNote`, `riskAlerts`, `patientName` raw values (they appear as `[REDACTED]` if logged at all).
 
 ## 13. Realtime broadcast
 
