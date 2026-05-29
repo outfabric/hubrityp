@@ -34,4 +34,4 @@
 
 ## 7. Integration Tests
 
-- [ ] 7.1 Create `src/__tests__/integration/agenda/session-lifecycle-events.int.test.ts` — run against real Postgres with Drizzle migrations. Mock `inngest.send()` at the module level. Test: (a) confirm session emits `agenda/session.confirmed`, (b) cancel session emits `agenda/session.cancelled` with correct notice and reason, (c) mark done emits `agenda/session.done`, (d) mark no-show emits `agenda/session.no_show`, (e) complete reschedule emits `agenda/session.rescheduled` with both session IDs, (f) missing note reminder emits batch events for eligible sessions
+- [x] 7.1 Create `src/__tests__/integration/agenda/session-lifecycle-events.int.test.ts` — run against real Postgres with Drizzle migrations. Mock `inngest.send()` at the module level. Test: (a) confirm session emits `agenda/session.confirmed`, (b) cancel session emits `agenda/session.cancelled` with correct notice and reason, (c) mark done emits `agenda/session.done`, (d) mark no-show emits `agenda/session.no_show`, (e) complete reschedule emits `agenda/session.rescheduled` with both session IDs, (f) missing note reminder emits batch events for eligible sessions
