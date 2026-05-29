@@ -58,10 +58,10 @@
 
 ## 9. Realtime subscriber
 
-- [ ] 9.1 Create `src/modules/ai-transcription/hooks/use-ai-transcription-realtime.ts` (Client hook). Subscribes via `supabase.channel('ai-transcription:user:' + userId)`. On `ready`: invalidates `['ai-transcriptions','list']` and `['ai-transcriptions','ready-count']`; fires Sonner toast with `"Ver"` action.
-- [ ] 9.2 Mount the hook in `src/app/(app)/layout.tsx` via a small `<AiRealtimeBoundary>` Client Component to keep the layout server-rendered.
-- [ ] 9.3 Unit test `src/__tests__/unit/modules/ai-transcription/hooks/use-ai-transcription-realtime.test.ts`: mock `supabase.channel`; simulate `ready` event; assert TanStack `invalidateQueries` called with the right keys; assert Sonner toast appears (use `sonner` testing utils or capture via library mock).
-- [ ] 9.4 Integration test `src/__tests__/integration/ai-transcription/realtime-subscriber.int.test.ts` (Supabase local stack): boot the layout, send a real broadcast, assert toast.
+- [x] 9.1 Create `src/modules/ai-transcription/hooks/use-ai-transcription-realtime.ts` (Client hook). Subscribes via `supabase.channel('ai-transcription:user:' + userId)`. On `ready`: invalidates `['ai-transcriptions','list']` and `['ai-transcriptions','ready-count']`; fires Sonner toast with `"Ver"` action.
+- [x] 9.2 Mount the hook in `src/app/(app)/layout.tsx` via a small `<AiRealtimeBoundary>` Client Component to keep the layout server-rendered.
+- [x] 9.3 Unit test `src/__tests__/unit/modules/ai-transcription/hooks/use-ai-transcription-realtime.test.ts`: mock `supabase.channel`; simulate `ready` event; assert TanStack `invalidateQueries` called with the right keys; assert Sonner toast appears (use `sonner` testing utils or capture via library mock).
+- [x] 9.4 Integration test `src/__tests__/integration/ai-transcription/realtime-subscriber.int.test.ts` (Supabase local stack): boot the layout, send a real broadcast, assert toast.
 
 ## 10. Agenda card AI badge
 

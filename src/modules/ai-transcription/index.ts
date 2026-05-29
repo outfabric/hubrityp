@@ -42,6 +42,9 @@ export {
 // ---- Pure helpers -----------------------------------------------------------
 export { pseudonymizeTranscript } from './lib/pseudonymize';
 
+// ---- Client components ------------------------------------------------------
+export { AiRealtimeBoundary } from './components/ai-realtime-boundary';
+
 // ---- Consent helper ---------------------------------------------------------
 export { assertAiConsentActive, type AssertAiConsentResult } from './lib/consent';
 export type { AssertAiConsentDeps } from './lib/consent';
