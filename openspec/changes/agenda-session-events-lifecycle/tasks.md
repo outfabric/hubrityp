@@ -5,8 +5,8 @@
 
 ## 2. Wire session.cancelled Events
 
-- [ ] 2.1 In `src/modules/agenda/server/cancel-session.ts`, add imports for `inngest` and `sessionCancelledEventSchema`. Replace the TODO comment (line ~155) with fire-and-forget emission: use `cancelledBy: data.cancelledBy`, `cancelledAt` (existing variable), `reason: data.reason`, `notice` (existing variable from `calculateCancellationNotice`), `chargeApplied: data.chargeCancellation`, `patientId: existing.patientId`, `userId`
-- [ ] 2.2 In `src/modules/agenda/server/public-decline-session.ts`, add imports for `inngest` and `sessionCancelledEventSchema`. Replace the TODO comment (line ~158) with fire-and-forget emission: use `cancelledBy: 'patient'`, `cancelledAt` (existing variable), `reason: 'patient_cancelled'`, `notice` (existing variable), `chargeApplied: false`, `userId: existing.userId`, `patientId: existing.patientId`
+- [x] 2.1 In `src/modules/agenda/server/cancel-session.ts`, add imports for `inngest` and `sessionCancelledEventSchema`. Replace the TODO comment (line ~155) with fire-and-forget emission: use `cancelledBy: data.cancelledBy`, `cancelledAt` (existing variable), `reason: data.reason`, `notice` (existing variable from `calculateCancellationNotice`), `chargeApplied: data.chargeCancellation`, `patientId: existing.patientId`, `userId`
+- [x] 2.2 In `src/modules/agenda/server/public-decline-session.ts`, add imports for `inngest` and `sessionCancelledEventSchema`. Replace the TODO comment (line ~158) with fire-and-forget emission: use `cancelledBy: 'patient'`, `cancelledAt` (existing variable), `reason: 'patient_cancelled'`, `notice` (existing variable), `chargeApplied: false`, `userId: existing.userId`, `patientId: existing.patientId`
 
 ## 3. Wire session.done and session.no_show Events
 

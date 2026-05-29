@@ -3,8 +3,10 @@ import 'server-only';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { inngest } from '@/modules/agenda/inngest/client';
 import { calculateCancellationNotice } from '@/modules/agenda/lib/cancellation-notice';
 import { isTokenExpired } from '@/modules/agenda/lib/confirmation-token';
+import { sessionCancelledEventSchema } from '@/modules/agenda/lib/session-events';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -155,8 +157,37 @@ export async function publicDeclineSessionImpl(
       };
     }
 
-    // TODO: Emit `agenda/session.cancelled` via Inngest when client is available
-    // inngest.send({ name: 'agenda/session.cancelled', data: { ... } });
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    // Blocking slots (null patientId) fail Zod parse here and are skipped by design.
+    try {
+      const payload = sessionCancelledEventSchema.parse({
+        sessionId: existing.id,
+        patientId: existing.patientId,
+        userId: existing.userId,
+        cancelledAt,
+        cancelledBy: 'patient',
+        reason: 'patient_cancelled',
+        notice,
+        chargeApplied: false,
+      });
+
+      await inngest.send({
+        name: 'agenda/session.cancelled',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.cancelled',
+          sessionId: existing.id,
+          error: errMsg,
+        },
+        'failed to send agenda/session.cancelled event',
+      );
+    }
 
     return { ok: true };
   } catch (err: unknown) {
