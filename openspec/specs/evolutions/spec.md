@@ -8,7 +8,11 @@ Defines the clinical evolution (session notes) domain: creation linked to sessio
 
 ### Requirement: Psychologist can create an evolution linked to a session
 
-The system SHALL allow creation of one evolution per session (1:1 via UNIQUE constraint on `session_id`). The evolution MUST be linked to the patient, the session, and the authenticated psychologist (`user_id = auth.uid()`). The psychologist MUST select a template type (tcc, psicanalise, sistemica, aba, livre, or custom) at creation time. Content is stored as JSONB whose structure varies by template.
+The system SHALL allow creation of one evolution per session (1:1 via UNIQUE constraint on `session_id`) via `createEvolutionImpl({ patientId, sessionId, content, ... })`. The evolution MUST be linked to the patient, the session, and the authenticated psychologist (`user_id = auth.uid()`). The psychologist MUST select a template type (tcc, psicanalise, sistemica, aba, livre, or custom) at creation time. Content is stored as JSONB whose structure varies by template.
+
+The function SHALL accept two new optional parameters: `aiAssisted?: boolean` (default `false`) and `aiTranscriptionId?: string | null` (default `null`). When `aiAssisted=true`, the inserted row SHALL have `ai_assisted=true` and `ai_transcription_id=<provided>`. The function SHALL continue to enforce all existing rules (ownership, RLS, validation, version creation, etc.) without change.
+
+The `evolutions` table SHALL be extended with two columns: `ai_assisted boolean NOT NULL DEFAULT false`, `ai_transcription_id uuid NULL REFERENCES ai_transcriptions(id) ON DELETE SET NULL`. RLS policies on `evolutions` are NOT modified — the predicate `user_id = auth.uid()` already covers ownership for both columns. A new index `idx_evolutions_user_ai_assisted` on `(user_id, ai_assisted)` SHALL be created to serve audit/statistics queries.
 
 #### Scenario: Create evolution from a done session
 
@@ -24,6 +28,25 @@ The system SHALL allow creation of one evolution per session (1:1 via UNIQUE con
 
 - **WHEN** a request attempts to INSERT an evolution with a user_id different from auth.uid()
 - **THEN** the INSERT is rejected by RLS WITH CHECK policy
+
+#### Scenario: Default behavior unchanged for existing callers
+
+- **WHEN** an existing caller invokes `createEvolutionImpl` without the new options
+- **THEN** the row has `ai_assisted=false` and `ai_transcription_id=NULL`
+- **AND** all existing test assertions remain valid
+
+#### Scenario: AI-assisted evolution is auditable
+
+- **WHEN** `createEvolutionImpl` is called with `aiAssisted=true, aiTranscriptionId='<tx>'`
+- **THEN** the inserted row's flag and FK match
+- **AND** querying `WHERE user_id = X AND ai_assisted = true` yields the row efficiently (index used)
+
+#### Scenario: Deleting the source transcription does not delete the evolution
+
+- **GIVEN** an evolution linked to a transcription
+- **WHEN** the transcription row is deleted (edge case — manual admin op)
+- **THEN** the evolution's `ai_transcription_id` becomes NULL
+- **AND** the evolution itself remains
 
 ### Requirement: Psychologist can update an evolution within 30 days
 
@@ -182,3 +205,41 @@ The system SHALL render evolution content with a maximum width of 720px (72ch eq
 
 - **WHEN** psychologist views an evolution with a long paragraph
 - **THEN** the content area does not exceed 720px in width regardless of viewport size
+
+### Requirement: Evolutions carry an `ai_assisted` audit flag and an optional source transcription FK
+
+The system SHALL extend the `evolutions` table with two columns:
+
+- `ai_assisted boolean NOT NULL DEFAULT false` — marks evolutions whose initial content originated from an AI transcription.
+- `ai_transcription_id uuid NULL REFERENCES ai_transcriptions(id) ON DELETE SET NULL` — backlink to the source transcription, where applicable.
+
+The system SHALL extend `createEvolutionImpl` to accept optional parameters `{ aiAssisted?: boolean; aiTranscriptionId?: string | null }`. When `aiAssisted = true`, the inserted row's flag and FK SHALL be set accordingly. When omitted, behavior is unchanged.
+
+The system SHALL create the index `idx_evolutions_user_ai_assisted` on `(user_id, ai_assisted)` for audit and statistics queries.
+
+RLS on `evolutions` is unchanged — `user_id = auth.uid()` already enforces ownership for both columns.
+
+#### Scenario: Backfill leaves existing evolutions valid
+
+- **GIVEN** N existing rows in `evolutions`
+- **WHEN** the migration applies
+- **THEN** all N rows have `ai_assisted = false` and `ai_transcription_id = NULL`
+- **AND** no row is deleted or unlinked
+
+#### Scenario: AI-assisted evolution is created with the new fields
+
+- **WHEN** `createEvolutionImpl` is invoked with `aiAssisted = true, aiTranscriptionId = '<tx>'`
+- **THEN** the new row has the corresponding values
+
+#### Scenario: Existing callers unaffected
+
+- **WHEN** a caller from another module invokes `createEvolutionImpl` without the new options
+- **THEN** the row is created with `ai_assisted = false` and `ai_transcription_id = NULL`
+- **AND** all existing scenarios on the `evolutions` capability remain green
+
+#### Scenario: Deleting the transcription nulls the FK without dropping the evolution
+
+- **GIVEN** an evolution linked to a transcription row
+- **WHEN** the transcription is deleted
+- **THEN** the evolution's `ai_transcription_id` is NULL
+- **AND** the evolution remains queryable
