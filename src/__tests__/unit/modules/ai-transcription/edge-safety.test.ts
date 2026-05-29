@@ -24,19 +24,27 @@ describe('ai-transcription edge entrypoint', () => {
 });
 
 describe('ai-transcription main barrel', () => {
-  it('exports pseudonymizeTranscript, createTranscriptionLogger, and schemas', async () => {
-    const mainModule = await import('@/modules/ai-transcription');
+  // The main barrel now re-exports server action implementations, which pull in
+  // heavier dependencies (Drizzle, Supabase client). Resolving the full import
+  // chain can exceed the default 5s timeout on slower CI runners, so we give
+  // this export-existence check extra headroom.
+  it(
+    'exports pseudonymizeTranscript, createTranscriptionLogger, and schemas',
+    { timeout: 30000 },
+    async () => {
+      const mainModule = await import('@/modules/ai-transcription');
 
-    expect(mainModule.pseudonymizeTranscript).toBeDefined();
-    expect(typeof mainModule.pseudonymizeTranscript).toBe('function');
+      expect(mainModule.pseudonymizeTranscript).toBeDefined();
+      expect(typeof mainModule.pseudonymizeTranscript).toBe('function');
 
-    expect(mainModule.createTranscriptionLogger).toBeDefined();
-    expect(typeof mainModule.createTranscriptionLogger).toBe('function');
+      expect(mainModule.createTranscriptionLogger).toBeDefined();
+      expect(typeof mainModule.createTranscriptionLogger).toBe('function');
 
-    expect(mainModule.GeneratedNoteSchema).toBeDefined();
-    expect(mainModule.RiskAlertSchema).toBeDefined();
+      expect(mainModule.GeneratedNoteSchema).toBeDefined();
+      expect(mainModule.RiskAlertSchema).toBeDefined();
 
-    // Branded type schema
-    expect(mainModule.TranscriptionIdSchema).toBeDefined();
-  });
+      // Branded type schema
+      expect(mainModule.TranscriptionIdSchema).toBeDefined();
+    },
+  );
 });
