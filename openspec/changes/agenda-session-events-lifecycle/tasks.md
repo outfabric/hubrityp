@@ -1,7 +1,7 @@
 ## 1. Wire session.confirmed Events
 
-- [ ] 1.1 In `src/modules/agenda/server/confirm-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionConfirmedEventSchema` (from `@/modules/agenda/lib/session-events`). Replace the TODO comment (line ~128) with fire-and-forget `inngest.send()`: validate payload with `sessionConfirmedEventSchema.parse({ sessionId: validSessionId, patientId: existing.patientId, userId, confirmedAt: new Date(), confirmedBy: 'therapist' })`, send with event name `'agenda/session.confirmed'`, log error on failure
-- [ ] 1.2 In `src/modules/agenda/server/public-confirm-session.ts`, add imports for `inngest` and `sessionConfirmedEventSchema`. Replace the TODO comment (line ~132) with fire-and-forget emission: use `confirmedBy: 'patient'`, `confirmedAt: now` (existing variable at line 92), `userId: existing.userId`, `patientId: existing.patientId`
+- [x] 1.1 In `src/modules/agenda/server/confirm-session.ts`, add imports for `inngest` (from `@/modules/agenda/inngest/client`) and `sessionConfirmedEventSchema` (from `@/modules/agenda/lib/session-events`). Replace the TODO comment (line ~128) with fire-and-forget `inngest.send()`: validate payload with `sessionConfirmedEventSchema.parse({ sessionId: validSessionId, patientId: existing.patientId, userId, confirmedAt: new Date(), confirmedBy: 'therapist' })`, send with event name `'agenda/session.confirmed'`, log error on failure
+- [x] 1.2 In `src/modules/agenda/server/public-confirm-session.ts`, add imports for `inngest` and `sessionConfirmedEventSchema`. Replace the TODO comment (line ~132) with fire-and-forget emission: use `confirmedBy: 'patient'`, `confirmedAt: now` (existing variable at line 92), `userId: existing.userId`, `patientId: existing.patientId`
 
 ## 2. Wire session.cancelled Events
 
