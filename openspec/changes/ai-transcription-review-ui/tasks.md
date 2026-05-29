@@ -50,11 +50,11 @@
 
 ## 8. Page: review `/dashboard/transcricoes/[id]/revisar`
 
-- [ ] 8.1 Create `src/app/(app)/dashboard/transcricoes/[id]/revisar/page.tsx` (Server Component). Calls `getTranscriptionForReview`; renders header + status badge + banners + form. If `status='failed'`/`'cancelled'`: render a different layout.
-- [ ] 8.2 Create `src/app/(app)/dashboard/transcricoes/[id]/revisar/_components/transcription-review-form.tsx` (Client Component). Uses `react-hook-form` + Zod resolver. Fields: TextArea per array field of the note, single inputs for `humorInicial`/`humorFinal`. Auto-save every 10s + on-blur via debounce → calls `updateTranscriptionDraft`. `"Salvo às HH:MM"` indicator. Checkbox `"Revisei a nota..."`. Three action buttons.
-- [ ] 8.3 The danger button opens a `AlertDialog` with input requiring `"DESCARTAR"` to confirm; on confirm → `discardTranscription` then router push to `/dashboard/pacientes/<patientId>/evolucoes/nova?sessionId=...`.
-- [ ] 8.4 Unit test `src/__tests__/unit/app/dashboard/transcricoes/review/transcription-review-form.test.tsx`: (a) all fields render with initial values; (b) checkbox unchecked → save button disabled; (c) auto-save fires after 10s (use fake timers); (d) successful save shows toast and navigates; (e) discard confirmation requires typed input; (f) failed-status branch renders retry button.
-- [ ] 8.5 Accessibility test in the same file: keyboard nav covers all controls; risk banner gets focus on mount; `Esc` closes `AlertDialog`; axe-core passes.
+- [x] 8.1 Create `src/app/(app)/dashboard/transcricoes/[id]/revisar/page.tsx` (Server Component). Calls `getTranscriptionForReview`; renders header + status badge + banners + form. If `status='failed'`/`'cancelled'`: render a different layout.
+- [x] 8.2 Create `src/app/(app)/dashboard/transcricoes/[id]/revisar/_components/transcription-review-form.tsx` (Client Component). Uses `react-hook-form` + Zod resolver. Fields: TextArea per array field of the note, single inputs for `humorInicial`/`humorFinal`. Auto-save every 10s + on-blur via debounce → calls `updateTranscriptionDraft`. `"Salvo às HH:MM"` indicator. Checkbox `"Revisei a nota..."`. Three action buttons.
+- [x] 8.3 The danger button opens a `AlertDialog` with input requiring `"DESCARTAR"` to confirm; on confirm → `discardTranscription` then router push to `/dashboard/pacientes/<patientId>/evolucoes/nova?sessionId=...`.
+- [x] 8.4 Unit test `src/__tests__/unit/app/dashboard/transcricoes/review/transcription-review-form.test.tsx`: (a) all fields render with initial values; (b) checkbox unchecked → save button disabled; (c) auto-save fires after 10s (use fake timers); (d) successful save shows toast and navigates; (e) discard confirmation requires typed input; (f) failed-status branch renders retry button.
+- [x] 8.5 Accessibility test in the same file: keyboard nav covers all controls; risk banner gets focus on mount; `Esc` closes `AlertDialog`; axe-core passes.
 
 ## 9. Realtime subscriber
 
