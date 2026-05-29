@@ -70,10 +70,10 @@
 
 ## 11. Negative-auth + security tests
 
-- [ ] 11.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/review-anonymous-blocked.spec.ts`: anonymous → `/dashboard/transcricoes` → redirect to `/login`.
-- [ ] 11.2 E2E test `src/__tests__/e2e/seeded/ai-transcription/review-idor-blocked.spec.ts`: psychologist B logs in, opens A's `transcriptionId` URL → sees not-found page (no patient name leak).
-- [ ] 11.3 E2E happy `src/__tests__/e2e/seeded/ai-transcription/review-and-save.spec.ts`: with a seeded ready transcription → open review page → edit → check the box → save → assert an evolution exists with `ai_assisted=true` and `ai_transcription_id` set; assert UI redirects to the evolution detail or list with success toast.
-- [ ] 11.4 E2E discard `src/__tests__/e2e/seeded/ai-transcription/review-discard.spec.ts`: open → discard → confirm → redirected to new-evolution flow.
+- [x] 11.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/review-anonymous-blocked.spec.ts`: anonymous → `/dashboard/transcricoes` → redirect to `/login`.
+- [x] 11.2 E2E test `src/__tests__/e2e/seeded/ai-transcription/review-idor-blocked.spec.ts`: psychologist B logs in, opens A's `transcriptionId` URL → sees not-found page (no patient name leak).
+- [x] 11.3 E2E happy `src/__tests__/e2e/seeded/ai-transcription/review-and-save.spec.ts`: with a seeded ready transcription → open review page → edit → check the box → save → assert an evolution exists with `ai_assisted=true` and `ai_transcription_id` set; assert UI redirects to the evolution detail or list with success toast.
+- [x] 11.4 E2E discard `src/__tests__/e2e/seeded/ai-transcription/review-discard.spec.ts`: open → discard → confirm → redirected to new-evolution flow.
 
 ## 12. Sanity
 
