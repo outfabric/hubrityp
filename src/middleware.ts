@@ -124,6 +124,12 @@ function classifyPath(pathname: string): PathClass {
   // `(app)` shell: all authenticated route prefixes. The strict prefix check
   // (exact match OR prefix + `/` separator) prevents false matches like
   // `/pacientes-info` or `/dashboardnews` -- see the matcher-boundary tests.
+  // `/dashboard/transcricoes` (AI transcription review UI) is intentionally
+  // NOT a separate entry: the `/dashboard` prefix already subsumes every
+  // `/dashboard/...` subpath via the strict prefix+separator check below, so
+  // `/dashboard/transcricoes` and `/dashboard/transcricoes/<id>/revisar`
+  // resolve to the `'app'` (gated) class. A dedicated entry would be dead
+  // code -- see transcricoes-gating.int.test.ts for the negative-auth proof.
   const APP_PREFIXES = [
     '/pacientes',
     '/agenda',

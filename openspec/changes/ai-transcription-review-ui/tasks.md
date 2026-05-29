@@ -13,8 +13,8 @@
 
 ## 3. Middleware gating
 
-- [ ] 3.1 In `src/middleware.ts:classifyPath()`: add the `/dashboard/transcricoes*` prefix to the `'app'` class.
-- [ ] 3.2 Integration test `src/__tests__/integration/middleware/transcricoes-gating.int.test.ts`: anonymous → 307 to `/login?from=...` for both `/dashboard/transcricoes` and `/dashboard/transcricoes/abc/revisar`; Active user → pass-through; Suspended user → cleared-and-redirected per existing policy.
+- [x] 3.1 In `src/middleware.ts:classifyPath()`: add the `/dashboard/transcricoes*` prefix to the `'app'` class.
+- [x] 3.2 Integration test `src/__tests__/integration/middleware/transcricoes-gating.int.test.ts`: anonymous → 307 to `/login?from=...` for both `/dashboard/transcricoes` and `/dashboard/transcricoes/abc/revisar`; Active user → pass-through; Suspended user → cleared-and-redirected per existing policy.
 
 ## 4. Server Actions in `ai-transcription/server/`
 
