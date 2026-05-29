@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bell, Calendar, MapPin, MessageCircle } from 'lucide-react';
+import { Bell, Calendar, MapPin, MessageCircle, Sparkles } from 'lucide-react';
 
 /**
  * Metadata for each top-level settings area, consumed by the settings index
@@ -43,5 +43,12 @@ export const SETTINGS_AREAS: readonly SettingsArea[] = [
     href: '/configuracoes/agenda',
     icon: Calendar,
     slug: 'agenda',
+  },
+  {
+    label: 'Transcrição IA',
+    description: 'Ative a geração automática de notas e ajuste retenção e detecção de risco.',
+    href: '/configuracoes/transcricao-ia',
+    icon: Sparkles,
+    slug: 'transcricao-ia',
   },
 ] as const;

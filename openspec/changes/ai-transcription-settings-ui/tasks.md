@@ -17,12 +17,12 @@
 
 ## 3. Page + components
 
-- [ ] 3.1 Create `src/app/(app)/configuracoes/transcricao-ia/page.tsx` as Server Component: getUser → `getTranscriptionSettings` + `getTranscriptionStats` (parallel `Promise.all`) → render layout with `<TranscriptionSettingsForm>` and `<TranscriptionStatsPanel>`.
-- [ ] 3.2 Create `src/app/(app)/configuracoes/transcricao-ia/_components/transcription-settings-form.tsx` (Client). Use `react-hook-form` + Zod resolver. Render controls per the spec. On submit: call `updateTranscriptionSettings` → toast → router refresh (revalidate stats panel).
-- [ ] 3.3 Add the disable-confirmation `AlertDialog`: when `enabled` changed from `true` to `false`, intercept submit, open dialog, only call the action on confirm.
-- [ ] 3.4 Create `src/app/(app)/configuracoes/transcricao-ia/_components/transcription-stats-panel.tsx` (Server Component). Renders 4 cards or the empty state per spec.
-- [ ] 3.5 Unit test `src/__tests__/unit/app/configuracoes/transcricao-ia/transcription-settings-form.test.tsx` (RTL): defaults render; toggling switch and saving calls the action with the right payload; disabling shows AlertDialog; toast appears on success/error; axe-core passes.
-- [ ] 3.6 Unit test `src/__tests__/unit/app/configuracoes/transcricao-ia/transcription-stats-panel.test.tsx`: empty state when `totalProcessed=0`; correct rendering for populated stats; "Dados insuficientes" appears when `acceptanceRatePercent=null`; Sálvia classes applied.
+- [x] 3.1 Create `src/app/(app)/configuracoes/transcricao-ia/page.tsx` as Server Component: getUser → `getTranscriptionSettings` + `getTranscriptionStats` (parallel `Promise.all`) → render layout with `<TranscriptionSettingsForm>` and `<TranscriptionStatsPanel>`.
+- [x] 3.2 Create `src/app/(app)/configuracoes/transcricao-ia/_components/transcription-settings-form.tsx` (Client). Use `react-hook-form` + Zod resolver. Render controls per the spec. On submit: call `updateTranscriptionSettings` → toast → router refresh (revalidate stats panel).
+- [x] 3.3 Add the disable-confirmation `AlertDialog`: when `enabled` changed from `true` to `false`, intercept submit, open dialog, only call the action on confirm.
+- [x] 3.4 Create `src/app/(app)/configuracoes/transcricao-ia/_components/transcription-stats-panel.tsx` (Server Component). Renders 4 cards or the empty state per spec.
+- [x] 3.5 Unit test `src/__tests__/unit/app/configuracoes/transcricao-ia/transcription-settings-form.test.tsx` (RTL): defaults render; toggling switch and saving calls the action with the right payload; disabling shows AlertDialog; toast appears on success/error; axe-core passes.
+- [x] 3.6 Unit test `src/__tests__/unit/app/configuracoes/transcricao-ia/transcription-stats-panel.test.tsx`: empty state when `totalProcessed=0`; correct rendering for populated stats; "Dados insuficientes" appears when `acceptanceRatePercent=null`; Sálvia classes applied.
 
 ## 4. Settings shell updates
 

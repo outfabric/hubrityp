@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { SETTINGS_AREAS } from '@/app/(app)/configuracoes/settings-areas';
 
 describe('SETTINGS_AREAS', () => {
-  it('has exactly 4 entries', () => {
-    expect(SETTINGS_AREAS).toHaveLength(4);
+  it('has exactly 5 entries', () => {
+    expect(SETTINGS_AREAS).toHaveLength(5);
   });
 
   it('every entry has non-empty label, description, href, and slug', () => {
@@ -37,6 +37,12 @@ describe('SETTINGS_AREAS', () => {
 
   it('entries are in the expected order', () => {
     const labels = SETTINGS_AREAS.map((a) => a.label);
-    expect(labels).toEqual(['Locais de atendimento', 'WhatsApp', 'Lembretes', 'Agenda']);
+    expect(labels).toEqual([
+      'Locais de atendimento',
+      'WhatsApp',
+      'Lembretes',
+      'Agenda',
+      'Transcrição IA',
+    ]);
   });
 });
