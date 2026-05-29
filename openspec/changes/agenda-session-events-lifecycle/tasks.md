@@ -23,14 +23,14 @@
 
 ## 6. Unit Tests
 
-- [ ] 6.1 Create `src/__tests__/unit/modules/agenda/server/confirm-session-events.test.ts` — mock `@/modules/agenda/inngest/client`, `@/shared/db/client`, and `supabase.auth.getUser()`. Test: (a) successful confirm calls `inngest.send()` with `confirmedBy: 'therapist'` and correct payload, (b) fire-and-forget on failure, (c) concurrent modification does not emit event
-- [ ] 6.2 Create `src/__tests__/unit/modules/agenda/server/public-confirm-session-events.test.ts` — mock inngest client and db. Test: (a) successful confirm calls `inngest.send()` with `confirmedBy: 'patient'`, (b) fire-and-forget on failure, (c) expired token does not emit event
-- [ ] 6.3 Create `src/__tests__/unit/modules/agenda/server/cancel-session-events.test.ts` — Test: (a) successful cancel emits with correct `cancelledBy`, `reason`, `notice`, `chargeApplied`, (b) fire-and-forget on failure, (c) blocking slot (null patientId) fails Zod parse silently
-- [ ] 6.4 Create `src/__tests__/unit/modules/agenda/server/public-decline-session-events.test.ts` — Test: (a) successful decline emits with `cancelledBy: 'patient'`, `reason: 'patient_cancelled'`, `chargeApplied: false`, (b) fire-and-forget on failure
-- [ ] 6.5 Create `src/__tests__/unit/modules/agenda/server/mark-session-done-events.test.ts` — Test: (a) successful mark-done emits with `doneAt`, (b) fire-and-forget on failure
-- [ ] 6.6 Create `src/__tests__/unit/modules/agenda/server/mark-session-no-show-events.test.ts` — Test: (a) successful mark-no-show emits with `noShowAt`, (b) fire-and-forget on failure
-- [ ] 6.7 Create `src/__tests__/unit/modules/agenda/server/complete-reschedule-events.test.ts` — Test: (a) successful reschedule emits with both `oldSessionId` and `newSessionId`, (b) fire-and-forget on failure
-- [ ] 6.8 Create `src/__tests__/unit/modules/agenda/server/missing-note-reminder-events.test.ts` — Test: (a) batch emission sends one event per eligible session, (b) one failure does not block others, (c) zero eligible sessions emits no events
+- [x] 6.1 Create `src/__tests__/unit/modules/agenda/server/confirm-session-events.test.ts` — mock `@/modules/agenda/inngest/client`, `@/shared/db/client`, and `supabase.auth.getUser()`. Test: (a) successful confirm calls `inngest.send()` with `confirmedBy: 'therapist'` and correct payload, (b) fire-and-forget on failure, (c) concurrent modification does not emit event
+- [x] 6.2 Create `src/__tests__/unit/modules/agenda/server/public-confirm-session-events.test.ts` — mock inngest client and db. Test: (a) successful confirm calls `inngest.send()` with `confirmedBy: 'patient'`, (b) fire-and-forget on failure, (c) expired token does not emit event
+- [x] 6.3 Create `src/__tests__/unit/modules/agenda/server/cancel-session-events.test.ts` — Test: (a) successful cancel emits with correct `cancelledBy`, `reason`, `notice`, `chargeApplied`, (b) fire-and-forget on failure, (c) blocking slot (null patientId) fails Zod parse silently
+- [x] 6.4 Create `src/__tests__/unit/modules/agenda/server/public-decline-session-events.test.ts` — Test: (a) successful decline emits with `cancelledBy: 'patient'`, `reason: 'patient_cancelled'`, `chargeApplied: false`, (b) fire-and-forget on failure
+- [x] 6.5 Create `src/__tests__/unit/modules/agenda/server/mark-session-done-events.test.ts` — Test: (a) successful mark-done emits with `doneAt`, (b) fire-and-forget on failure
+- [x] 6.6 Create `src/__tests__/unit/modules/agenda/server/mark-session-no-show-events.test.ts` — Test: (a) successful mark-no-show emits with `noShowAt`, (b) fire-and-forget on failure
+- [x] 6.7 Create `src/__tests__/unit/modules/agenda/server/complete-reschedule-events.test.ts` — Test: (a) successful reschedule emits with both `oldSessionId` and `newSessionId`, (b) fire-and-forget on failure
+- [x] 6.8 Create `src/__tests__/unit/modules/agenda/server/missing-note-reminder-events.test.ts` — Test: (a) batch emission sends one event per eligible session, (b) one failure does not block others, (c) zero eligible sessions emits no events
 
 ## 7. Integration Tests
 
