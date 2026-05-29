@@ -18,8 +18,8 @@
 
 ## 4. Cascade Cancellation Function
 
-- [ ] 4.1 Create `src/modules/telepsicologia/inngest/cancel-room-on-session-cancel.ts` — a new Inngest function `telepsicologia-cancel-room-on-session-cancel` triggered by `agenda/session.cancelled` with `retries: 3`: query `video_rooms WHERE session_id = event.data.sessionId AND user_id = event.data.userId AND status IN ('pending', 'active')`; if no room found, return `{ action: 'skipped', reason: 'no_room' }`; if found, end the Stream call via `streamClient.video.call('default', room.streamCallId).end()` (try/catch, log error if Stream fails but continue), update room status to `'expired'`, insert `video_session_logs` entry with `eventType: 'room_expired'`, return `{ action: 'expired_room', roomId: room.id }`
-- [ ] 4.2 Register the new function in the Inngest serve call — add `cancelRoomOnSessionCancel` to the functions array in the Inngest route handler at `src/app/api/inngest/route.ts` (or wherever the Inngest functions are registered), following the same import pattern as existing telepsicologia functions
+- [x] 4.1 Create `src/modules/telepsicologia/inngest/cancel-room-on-session-cancel.ts` — a new Inngest function `telepsicologia-cancel-room-on-session-cancel` triggered by `agenda/session.cancelled` with `retries: 3`: query `video_rooms WHERE session_id = event.data.sessionId AND user_id = event.data.userId AND status IN ('pending', 'active')`; if no room found, return `{ action: 'skipped', reason: 'no_room' }`; if found, end the Stream call via `streamClient.video.call('default', room.streamCallId).end()` (try/catch, log error if Stream fails but continue), update room status to `'expired'`, insert `video_session_logs` entry with `eventType: 'room_expired'`, return `{ action: 'expired_room', roomId: room.id }`
+- [x] 4.2 Register the new function in the Inngest serve call — add `cancelRoomOnSessionCancel` to the functions array in the Inngest route handler at `src/app/api/inngest/route.ts` (or wherever the Inngest functions are registered), following the same import pattern as existing telepsicologia functions
 
 ## 5. Unit Tests
 
