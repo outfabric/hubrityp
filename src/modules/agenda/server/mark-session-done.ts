@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { inngest } from '@/modules/agenda/inngest/client';
+import { sessionDoneEventSchema } from '@/modules/agenda/lib/session-events';
 import { isSessionLocked } from '@/modules/agenda/lib/session-lock';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
@@ -132,7 +134,32 @@ export async function markSessionDoneImpl(
       };
     }
 
-    // TODO: Emit `agenda/session.done` via Inngest when client is available
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    try {
+      const payload = sessionDoneEventSchema.parse({
+        sessionId: validSessionId,
+        patientId: existing.patientId,
+        userId,
+        doneAt: new Date(),
+      });
+
+      await inngest.send({
+        name: 'agenda/session.done',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.done',
+          sessionId: validSessionId,
+          error: errMsg,
+        },
+        'failed to send agenda/session.done event',
+      );
+    }
 
     return { ok: true };
   } catch (err: unknown) {

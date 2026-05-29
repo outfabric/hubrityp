@@ -2,7 +2,9 @@ import 'server-only';
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
+import { inngest } from '@/modules/agenda/inngest/client';
 import { isTokenExpired } from '@/modules/agenda/lib/confirmation-token';
+import { sessionConfirmedEventSchema } from '@/modules/agenda/lib/session-events';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -129,8 +131,33 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
       };
     }
 
-    // TODO: Emit `agenda/session.confirmed` via Inngest when client is available
-    // inngest.send({ name: 'agenda/session.confirmed', data: { ... } });
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    try {
+      const payload = sessionConfirmedEventSchema.parse({
+        sessionId: existing.id,
+        patientId: existing.patientId,
+        userId: existing.userId,
+        confirmedAt: now,
+        confirmedBy: 'patient',
+      });
+
+      await inngest.send({
+        name: 'agenda/session.confirmed',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.confirmed',
+          sessionId: existing.id,
+          error: errMsg,
+        },
+        'failed to send agenda/session.confirmed event',
+      );
+    }
 
     return { ok: true };
   } catch (err: unknown) {

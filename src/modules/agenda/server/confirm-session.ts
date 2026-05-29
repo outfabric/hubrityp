@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { inngest } from '@/modules/agenda/inngest/client';
+import { sessionConfirmedEventSchema } from '@/modules/agenda/lib/session-events';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -125,8 +127,33 @@ export async function confirmSessionImpl(
       };
     }
 
-    // TODO: Emit `agenda/session.confirmed` via Inngest when client is available
-    // inngest.send({ name: 'agenda/session.confirmed', data: { ... } });
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    try {
+      const payload = sessionConfirmedEventSchema.parse({
+        sessionId: validSessionId,
+        patientId: existing.patientId,
+        userId,
+        confirmedAt: new Date(),
+        confirmedBy: 'therapist',
+      });
+
+      await inngest.send({
+        name: 'agenda/session.confirmed',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.confirmed',
+          sessionId: validSessionId,
+          error: errMsg,
+        },
+        'failed to send agenda/session.confirmed event',
+      );
+    }
 
     return { ok: true };
   } catch (err: unknown) {
