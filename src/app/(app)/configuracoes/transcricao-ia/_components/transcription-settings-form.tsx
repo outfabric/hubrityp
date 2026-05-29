@@ -8,11 +8,19 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { updateTranscriptionSettings } from '@/app/(app)/configuracoes/transcricao-ia/actions';
-import {
-  UpdateTranscriptionSettingsInputSchema,
-  type TranscriptionSettingsView,
-  type UpdateTranscriptionSettingsInput,
+import type {
+  TranscriptionSettingsView,
+  UpdateTranscriptionSettingsInput,
 } from '@/modules/ai-transcription';
+// The runtime Zod schema is imported from the pure `lib/` module directly,
+// NOT from the module barrel. The barrel re-exports the Server Action impls
+// (which transitively pull `server-only` / `db/client` / `next/headers`), so a
+// `'use client'` component importing a *runtime value* from it drags the entire
+// server graph into the browser bundle and breaks the Turbopack build. Types
+// above are erased at compile time and are safe to take from the barrel; this
+// value import must come from the client-safe leaf. (`lib/settings-schemas`
+// only imports `zod` and the pure domain enums.)
+import { UpdateTranscriptionSettingsInputSchema } from '@/modules/ai-transcription/lib/settings-schemas';
 import {
   AlertDialog,
   AlertDialogAction,

@@ -33,9 +33,9 @@
 
 ## 5. E2E
 
-- [ ] 5.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/settings-flow.spec.ts`: psychologist logs in → goes to `/configuracoes` → clicks Transcrição IA card → settings form renders → enables the feature → changes the template → saves → toast appears → revisits the page → values persisted.
-- [ ] 5.2 E2E negative `src/__tests__/e2e/seeded/ai-transcription/settings-anonymous-blocked.spec.ts`: anonymous → `/configuracoes/transcricao-ia` → redirect to `/login`.
-- [ ] 5.3 E2E stats `src/__tests__/e2e/seeded/ai-transcription/settings-stats.spec.ts`: with seeded transcriptions (3 reviewed, 1 saved-without-edits) → page shows "Dados insuficientes" (since reviewed < 5). Then seed 10 more (7 saved-without-edits) → revisit → page shows ~70%.
+- [x] 5.1 E2E test (Playwright seeded) `src/__tests__/e2e/seeded/ai-transcription/settings-flow.spec.ts`: psychologist logs in → goes to `/configuracoes` → clicks Transcrição IA card → settings form renders → enables the feature → changes the template → saves → toast appears → revisits the page → values persisted.
+- [x] 5.2 E2E negative `src/__tests__/e2e/seeded/ai-transcription/settings-anonymous-blocked.spec.ts`: anonymous → `/configuracoes/transcricao-ia` → redirect to `/login`.
+- [x] 5.3 E2E stats `src/__tests__/e2e/seeded/ai-transcription/settings-stats.spec.ts`: with seeded transcriptions (3 reviewed, 1 saved-without-edits) → page shows "Dados insuficientes" (since reviewed < 5). Then seed 10 more (7 saved-without-edits) → revisit → page shows ~70%.
 
 ## 6. Sanity and PR review
 
