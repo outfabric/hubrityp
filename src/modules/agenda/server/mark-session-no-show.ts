@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { inngest } from '@/modules/agenda/inngest/client';
+import { sessionNoShowEventSchema } from '@/modules/agenda/lib/session-events';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
@@ -123,7 +125,32 @@ export async function markSessionNoShowImpl(
       };
     }
 
-    // TODO: Emit `agenda/session.no_show` via Inngest when client is available
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    try {
+      const payload = sessionNoShowEventSchema.parse({
+        sessionId: validSessionId,
+        patientId: existing.patientId,
+        userId,
+        noShowAt: new Date(),
+      });
+
+      await inngest.send({
+        name: 'agenda/session.no_show',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.no_show',
+          sessionId: validSessionId,
+          error: errMsg,
+        },
+        'failed to send agenda/session.no_show event',
+      );
+    }
 
     return { ok: true };
   } catch (err: unknown) {

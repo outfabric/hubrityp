@@ -10,8 +10,8 @@
 
 ## 3. Wire session.done and session.no_show Events
 
-- [ ] 3.1 In `src/modules/agenda/server/mark-session-done.ts`, add imports for `inngest` and `sessionDoneEventSchema`. Replace the TODO comment (line ~135) with fire-and-forget emission: use `doneAt: new Date()`, `patientId: existing.patientId`, `userId`, `sessionId: validSessionId`
-- [ ] 3.2 In `src/modules/agenda/server/mark-session-no-show.ts`, add imports for `inngest` and `sessionNoShowEventSchema`. Replace the TODO comment (line ~126) with fire-and-forget emission: use `noShowAt: new Date()`, `patientId: existing.patientId`, `userId`, `sessionId: validSessionId`
+- [x] 3.1 In `src/modules/agenda/server/mark-session-done.ts`, add imports for `inngest` and `sessionDoneEventSchema`. Replace the TODO comment (line ~135) with fire-and-forget emission: use `doneAt: new Date()`, `patientId: existing.patientId`, `userId`, `sessionId: validSessionId`
+- [x] 3.2 In `src/modules/agenda/server/mark-session-no-show.ts`, add imports for `inngest` and `sessionNoShowEventSchema`. Replace the TODO comment (line ~126) with fire-and-forget emission: use `noShowAt: new Date()`, `patientId: existing.patientId`, `userId`, `sessionId: validSessionId`
 
 ## 4. Wire session.rescheduled Event
 
