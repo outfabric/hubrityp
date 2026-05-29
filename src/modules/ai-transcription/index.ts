@@ -93,6 +93,17 @@ export {
 // ---- Note serializer --------------------------------------------------------
 export { serializeNoteAsEvolution } from './lib/serialize-note';
 
+// ---- Settings schemas / types -----------------------------------------------
+export {
+  UpdateTranscriptionSettingsInputSchema,
+  type UpdateTranscriptionSettingsInput,
+  TranscriptionSettingsViewSchema,
+  type TranscriptionSettingsView,
+} from './lib/settings-schemas';
+
+// ---- Stats schemas / types --------------------------------------------------
+export { TranscriptionStatsViewSchema, type TranscriptionStatsView } from './lib/stats-schemas';
+
 // ---- Server -----------------------------------------------------------------
 export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
 export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';

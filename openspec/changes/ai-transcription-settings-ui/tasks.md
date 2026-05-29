@@ -1,8 +1,8 @@
 ## 1. Schemas
 
-- [ ] 1.1 Create `src/modules/ai-transcription/lib/settings-schemas.ts` exporting `UpdateTranscriptionSettingsInputSchema` (Zod object: `enabled: boolean`, `defaultTemplate: TranscriptionTemplateSchema`, `riskDetectionSensitivity: RiskSensitivitySchema`, `keepAudioHours: z.literal(24)` (MVP-locked), `keepTranscription: boolean`) and `TranscriptionSettingsViewSchema` (the same shape, used for typing the read).
-- [ ] 1.2 Create `src/modules/ai-transcription/lib/stats-schemas.ts` exporting `TranscriptionStatsViewSchema`: object with `totalProcessed, monthProcessed, reviewed, savedToProntuario, estimatedMinutesSaved, acceptanceRatePercent (nullable), avgCostUsd (nullable), failedCount`.
-- [ ] 1.3 Unit test `src/__tests__/unit/modules/ai-transcription/lib/settings-schemas.test.ts`: (a) accepts valid input; (b) rejects `keepAudioHours=48` (MVP-locked); (c) rejects unknown template; (d) rejects unknown sensitivity.
+- [x] 1.1 Create `src/modules/ai-transcription/lib/settings-schemas.ts` exporting `UpdateTranscriptionSettingsInputSchema` (Zod object: `enabled: boolean`, `defaultTemplate: TranscriptionTemplateSchema`, `riskDetectionSensitivity: RiskSensitivitySchema`, `keepAudioHours: z.literal(24)` (MVP-locked), `keepTranscription: boolean`) and `TranscriptionSettingsViewSchema` (the same shape, used for typing the read).
+- [x] 1.2 Create `src/modules/ai-transcription/lib/stats-schemas.ts` exporting `TranscriptionStatsViewSchema`: object with `totalProcessed, monthProcessed, reviewed, savedToProntuario, estimatedMinutesSaved, acceptanceRatePercent (nullable), avgCostUsd (nullable), failedCount`.
+- [x] 1.3 Unit test `src/__tests__/unit/modules/ai-transcription/lib/settings-schemas.test.ts`: (a) accepts valid input; (b) rejects `keepAudioHours=48` (MVP-locked); (c) rejects unknown template; (d) rejects unknown sensitivity.
 
 ## 2. Server Actions
 
