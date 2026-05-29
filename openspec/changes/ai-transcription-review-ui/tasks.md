@@ -65,8 +65,8 @@
 
 ## 10. Agenda card AI badge
 
-- [ ] 10.1 Update `src/modules/agenda/components/session-card.tsx`: query `ai_transcriptions` for the session (via a TanStack hook or via prop drilling from a parent batched query). When at least one `status='ready' AND saved_to_prontuario=false`, render `<Badge variant="brand"><Sparkles /> Nota IA</Badge>` clickable to the review page.
-- [ ] 10.2 Unit test update for `src/__tests__/unit/modules/agenda/components/session-card.test.tsx` (or new file): badge appears for ready transcription; absent for reviewed; aria-label correct; keyboard activable.
+- [x] 10.1 Update `src/modules/agenda/components/session-card.tsx`: query `ai_transcriptions` for the session (via a TanStack hook or via prop drilling from a parent batched query). When at least one `status='ready' AND saved_to_prontuario=false`, render `<Badge variant="brand"><Sparkles /> Nota IA</Badge>` clickable to the review page.
+- [x] 10.2 Unit test update for `src/__tests__/unit/modules/agenda/components/session-card.test.tsx` (or new file): badge appears for ready transcription; absent for reviewed; aria-label correct; keyboard activable.
 
 ## 11. Negative-auth + security tests
 
