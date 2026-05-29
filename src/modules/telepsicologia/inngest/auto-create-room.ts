@@ -9,6 +9,18 @@
  *   2. status must be 'scheduled' or 'confirmed'
  *   3. no existing video_rooms for this session (idempotent — delegated to helper)
  *
+ * Deferred creation: the room is NOT created at event time. Instead the
+ * function sleeps until ~1 hour before the session's `startAt`, then creates
+ * the room. This keeps Stream.io rooms short-lived and avoids provisioning
+ * rooms for sessions that are cancelled or rescheduled before they happen.
+ *   - If `startAt - 1h` is already in the past, the room is created immediately
+ *     (no sleep).
+ *   - `cancelOn` cancels the sleeping function if the session is cancelled.
+ *   - After the sleep wakes up, the session is re-queried from the DB to
+ *     confirm it is still eligible (online + schedulable); if not, creation is
+ *     skipped (defends against a race where the session changed during sleep
+ *     and `cancelOn` did not fire).
+ *
  * If the session is updated from online to in_person, the existing room is
  * soft-invalidated (status set to 'expired') but not deleted.
  *
@@ -27,6 +39,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import type { SessionCreatedEvent, SessionUpdatedEvent } from '@/modules/agenda/lib/session-events';
 import type { createVideoRoomHelper as CreateVideoRoomHelperFn } from '@/modules/telepsicologia/server/create-video-room-helper';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 
 import { inngest } from './client';
@@ -37,12 +50,28 @@ import { inngest } from './client';
 
 export const SESSION_CREATED_EVENT = 'agenda/session.created' as const;
 export const SESSION_UPDATED_EVENT = 'agenda/session.updated' as const;
+export const SESSION_CANCELLED_EVENT = 'agenda/session.cancelled' as const;
 
 // ---------------------------------------------------------------------------
 // Schedulable statuses — only these trigger room creation
 // ---------------------------------------------------------------------------
 
 const SCHEDULABLE_STATUSES = new Set(['scheduled', 'confirmed']);
+
+// ---------------------------------------------------------------------------
+// Deferred-creation window
+// ---------------------------------------------------------------------------
+
+/** How long before the session start the room is provisioned. */
+const ROOM_CREATE_LEAD_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Computes the instant at which the room should be created: `startAt - 1h`.
+ * The caller decides whether to sleep (future) or create immediately (past).
+ */
+export function computeWakeUpAt(startAt: Date): Date {
+  return new Date(startAt.getTime() - ROOM_CREATE_LEAD_MS);
+}
 
 // ---------------------------------------------------------------------------
 // Core logic — extracted for testability
@@ -59,12 +88,104 @@ export type AutoCreateRoomResult =
   | { action: 'created'; roomId: string }
   | { action: 'existing'; roomId: string }
   | { action: 'skipped'; reason: string }
-  | { action: 'expired_room'; sessionId: string }
-  | { action: 'error'; message: string };
+  | { action: 'expired_room'; sessionId: string };
+
+// ---------------------------------------------------------------------------
+// DB helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the existing video room for the (session, user) pair, or `null`.
+ * Scoped by `userId` so a forged event for someone else's session cannot
+ * reference another user's room.
+ */
+async function findExistingRoom(
+  db: AutoCreateRoomDeps['db'],
+  sessionId: string,
+  userId: string,
+): Promise<{ id: string } | null> {
+  const [room] = await db
+    .select({ id: videoRooms.id })
+    .from(videoRooms)
+    .where(and(eq(videoRooms.sessionId, sessionId), eq(videoRooms.userId, userId)))
+    .limit(1);
+
+  return room ?? null;
+}
+
+/**
+ * Re-queries the session from the database and confirms it is still eligible
+ * for room creation: modality 'online' and status in ('scheduled','confirmed').
+ *
+ * This runs AFTER the sleep wakes up, to defend against a race where the
+ * session was switched to in_person / cancelled while the function slept and
+ * `cancelOn` did not catch it (e.g. an in_person switch, which does not emit
+ * `session.cancelled`).
+ */
+async function isSessionStillEligible(
+  db: AutoCreateRoomDeps['db'],
+  sessionId: string,
+  userId: string,
+): Promise<boolean> {
+  const [session] = await db
+    .select({ modality: sessions.modality, status: sessions.status })
+    .from(sessions)
+    .where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))
+    .limit(1);
+
+  if (!session) {
+    return false;
+  }
+
+  return session.modality === 'online' && SCHEDULABLE_STATUSES.has(session.status);
+}
+
+// ---------------------------------------------------------------------------
+// Room creation (post-wake) — shared by created/updated paths
+// ---------------------------------------------------------------------------
+
+/**
+ * Creates the video room for an eligible session. Idempotent: delegates the
+ * existing-room short-circuit to `createVideoRoomHelper`.
+ *
+ * Throws (instead of returning an error result) on helper failure so Inngest's
+ * `retries: 3` kicks in and the failure surfaces in the dashboard instead of
+ * silently succeeding the step.
+ */
+async function createRoom(
+  data: SessionCreatedEvent | SessionUpdatedEvent,
+  deps: AutoCreateRoomDeps,
+): Promise<AutoCreateRoomResult> {
+  const streamClient = deps.getStreamClient();
+  const result = await deps.createVideoRoomHelper(
+    streamClient,
+    {
+      id: data.sessionId,
+      userId: data.userId,
+      patientId: data.patientId,
+      startAt: new Date(data.startAt),
+      endAt: new Date(data.endAt),
+    },
+    deps.db,
+  );
+
+  if (!result.ok) {
+    throw new Error(`Video room creation failed: ${result.message}`);
+  }
+
+  return { action: 'created', roomId: result.room.id };
+}
+
+// ---------------------------------------------------------------------------
+// Decision logic (no sleep) — used directly in tests and after the sleep
+// ---------------------------------------------------------------------------
 
 /**
  * Processes a session.created event — creates a video room if the session
  * is online and in a schedulable status.
+ *
+ * This contains only the synchronous guard + create decision; the deferred
+ * sleep is orchestrated by the Inngest handler (which owns `step`).
  */
 export async function processSessionCreated(
   data: SessionCreatedEvent,
@@ -81,30 +202,14 @@ export async function processSessionCreated(
   }
 
   // Guard 3 + room creation: delegated to the idempotent helper
-  const streamClient = deps.getStreamClient();
-  const result = await deps.createVideoRoomHelper(
-    streamClient,
-    {
-      id: data.sessionId,
-      userId: data.userId,
-      patientId: data.patientId,
-      startAt: new Date(data.startAt),
-      endAt: new Date(data.endAt),
-    },
-    deps.db,
-  );
-
-  if (!result.ok) {
-    return { action: 'error', message: result.message };
-  }
-
-  return { action: 'created', roomId: result.room.id };
+  return createRoom(data, deps);
 }
 
 /**
  * Processes a session.updated event — creates a room if the session is
- * (still or newly) online, or expires an existing room if the session
- * was changed from online to in_person.
+ * (still or newly) online, expires an existing room if the session was
+ * changed from online to in_person, or returns the existing room untouched
+ * if one already exists for an online session.
  */
 export async function processSessionUpdated(
   data: SessionUpdatedEvent,
@@ -137,24 +242,14 @@ export async function processSessionUpdated(
     return { action: 'skipped', reason: 'not_schedulable' };
   }
 
-  const streamClient = deps.getStreamClient();
-  const result = await deps.createVideoRoomHelper(
-    streamClient,
-    {
-      id: data.sessionId,
-      userId: data.userId,
-      patientId: data.patientId,
-      startAt: new Date(data.startAt),
-      endAt: new Date(data.endAt),
-    },
-    deps.db,
-  );
-
-  if (!result.ok) {
-    return { action: 'error', message: result.message };
+  // If a room already exists for this session, leave it untouched. Deferred
+  // (re)creation only applies when no room exists yet.
+  const existing = await findExistingRoom(db, data.sessionId, data.userId);
+  if (existing) {
+    return { action: 'existing', roomId: existing.id };
   }
 
-  return { action: 'created', roomId: result.room.id };
+  return createRoom(data, deps);
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +261,14 @@ export const autoCreateVideoRoom = inngest.createFunction(
     id: 'telepsicologia-auto-create-video-room',
     triggers: [{ event: SESSION_CREATED_EVENT }, { event: SESSION_UPDATED_EVENT }],
     retries: 3,
+    // Cancel the sleeping function if the session is cancelled before its
+    // `startAt - 1h` wake-up, so no room is provisioned for a cancelled session.
+    cancelOn: [
+      {
+        event: SESSION_CANCELLED_EVENT,
+        if: 'async.data.sessionId == event.data.sessionId',
+      },
+    ],
   },
   async ({ event, step, logger }) => {
     // Multi-trigger variant types event.data as `any`. Cast at the boundary
@@ -187,13 +290,99 @@ export const autoCreateVideoRoom = inngest.createFunction(
       createVideoRoomHelper,
     };
 
-    const result = await step.run('auto-create-room', async () => {
-      if (eventName === SESSION_CREATED_EVENT) {
-        return processSessionCreated(eventData, deps);
-      }
+    const isUpdate = eventName === SESSION_UPDATED_EVENT;
 
-      // SESSION_UPDATED_EVENT
-      return processSessionUpdated(eventData, deps);
+    // -- Fast-path guards + non-deferred branches ---------------------------
+    // These do not require waiting until the session's start window:
+    //   - non-online / non-schedulable sessions are skipped immediately
+    //   - online->in_person updates expire the room immediately
+    //   - updates where a room already exists return it untouched
+    const guard = await step.run(
+      'guard-and-handle-immediate',
+      async (): Promise<AutoCreateRoomResult> => {
+        if (isUpdate) {
+          const data = eventData as SessionUpdatedEvent;
+
+          // online -> in_person transition: expire existing room now.
+          if (data.previousModality === 'online' && data.modality !== 'online') {
+            return processSessionUpdated(data, deps);
+          }
+
+          if (data.modality !== 'online') {
+            return { action: 'skipped', reason: 'not_online' };
+          }
+          if (!SCHEDULABLE_STATUSES.has(data.status)) {
+            return { action: 'skipped', reason: 'not_schedulable' };
+          }
+
+          // If a room already exists, do not defer/recreate — return it.
+          const existing = await findExistingRoom(deps.db, data.sessionId, data.userId);
+          if (existing) {
+            return { action: 'existing', roomId: existing.id };
+          }
+
+          return { action: 'skipped', reason: 'eligible_pending_create' };
+        }
+
+        if (eventData.modality !== 'online') {
+          return { action: 'skipped', reason: 'not_online' };
+        }
+        if (!SCHEDULABLE_STATUSES.has(eventData.status)) {
+          return { action: 'skipped', reason: 'not_schedulable' };
+        }
+
+        return { action: 'skipped', reason: 'eligible_pending_create' };
+      },
+    );
+
+    // If the guard already produced a terminal result (skip / expire /
+    // existing), return it without deferring.
+    if (!(guard.action === 'skipped' && guard.reason === 'eligible_pending_create')) {
+      logger.info(
+        {
+          event: 'auto_create_room_complete',
+          action: guard.action,
+          sessionId: eventData.sessionId,
+        },
+        `Auto-create room: ${guard.action}`,
+      );
+      return guard;
+    }
+
+    // -- Deferred creation --------------------------------------------------
+    // Sleep until ~1h before the session start. If that instant is already
+    // past, skip the sleep and create immediately.
+    const wakeUpAt = computeWakeUpAt(new Date(eventData.startAt));
+    if (wakeUpAt.getTime() > Date.now()) {
+      await step.sleepUntil('wait-until-1h-before', wakeUpAt);
+    }
+
+    // -- Re-check eligibility after waking up -------------------------------
+    // The session may have been switched to in_person / cancelled while we
+    // slept (and `cancelOn` may not have fired for a non-cancellation change).
+    const stillEligible = await step.run('recheck-session-eligible', async () => {
+      return isSessionStillEligible(deps.db, eventData.sessionId, eventData.userId);
+    });
+
+    if (!stillEligible) {
+      const skipped: AutoCreateRoomResult = {
+        action: 'skipped',
+        reason: 'session_no_longer_eligible',
+      };
+      logger.info(
+        {
+          event: 'auto_create_room_complete',
+          action: skipped.action,
+          reason: skipped.reason,
+          sessionId: eventData.sessionId,
+        },
+        `Auto-create room: ${skipped.action}`,
+      );
+      return skipped;
+    }
+
+    const result = await step.run('auto-create-room', async () => {
+      return createRoom(eventData, deps);
     });
 
     logger.info(

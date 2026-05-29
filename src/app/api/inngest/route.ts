@@ -19,6 +19,7 @@ import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/e
 import { generateDocumentPdf } from '@/modules/medical-records/inngest/generate-document-pdf';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
 import { autoCreateVideoRoom } from '@/modules/telepsicologia/inngest/auto-create-room';
+import { cancelRoomOnSessionCancel } from '@/modules/telepsicologia/inngest/cancel-room-on-session-cancel';
 import { recordingCleanupCron } from '@/modules/telepsicologia/inngest/recording-cleanup';
 import { roomExpiryCron } from '@/modules/telepsicologia/inngest/room-expiry';
 import { cancellationNoticeSender } from '@/modules/whatsapp/inngest/cancellation-notice-sender';
@@ -57,6 +58,7 @@ export const { GET, POST, PUT } = serve({
     prontuarioExportPdfFunction,
     expireProntuarioExportsCron,
     autoCreateVideoRoom,
+    cancelRoomOnSessionCancel,
     recordingCleanupCron,
     roomExpiryCron,
   ],

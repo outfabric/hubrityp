@@ -128,6 +128,8 @@ export async function createVideoRoomHelper(
           },
           recording: {
             mode: 'available',
+            quality: '1080p',
+            audio_only: false,
           },
         },
       },
@@ -177,9 +179,12 @@ export async function createVideoRoomHelper(
       }
     }
 
-    const pgError = err as { code?: string };
     logger.error(
-      { event: 'create_video_room_helper_failed', errorCode: pgError.code },
+      {
+        event: 'create_video_room_helper_failed',
+        errorCode: (err as { code?: string }).code,
+        errorMessage: err instanceof Error ? err.message : 'unknown',
+      },
       'unexpected error creating video room in helper',
     );
     return {

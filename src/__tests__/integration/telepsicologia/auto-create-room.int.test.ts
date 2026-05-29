@@ -405,7 +405,10 @@ describe('auto-create-room: processSessionUpdated', () => {
     });
     const result = await processSessionUpdated(updateEvent, deps);
 
-    expect(result.action).toBe('created');
+    // A room already exists for this online session — it is left untouched and
+    // reported as 'existing' (deferred (re)creation only applies when no room
+    // exists yet).
+    expect(result.action).toBe('existing');
 
     // Only one row in DB
     const rows = await runAsService(async (db) => {
@@ -413,7 +416,7 @@ describe('auto-create-room: processSessionUpdated', () => {
     });
     expect(rows).toHaveLength(1);
 
-    // Stream SDK NOT called — helper returned existing room
+    // Stream SDK NOT called — no creation attempted for an existing room
     expect(mockGetOrCreate).not.toHaveBeenCalled();
   });
 });

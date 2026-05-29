@@ -105,6 +105,7 @@ export { TroubleshootingPopover } from './components/troubleshooting-popover';
 
 // ---- Inngest functions -------------------------------------------------------
 export { autoCreateVideoRoom } from './inngest/auto-create-room';
+export { cancelRoomOnSessionCancel } from './inngest/cancel-room-on-session-cancel';
 export { roomExpiryCron } from './inngest/room-expiry';
 export { recordingCleanupCron } from './inngest/recording-cleanup';
 
