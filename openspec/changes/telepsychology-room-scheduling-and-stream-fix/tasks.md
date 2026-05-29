@@ -23,9 +23,9 @@
 
 ## 5. Unit Tests
 
-- [ ] 5.1 Update `src/__tests__/unit/modules/telepsicologia/server/create-video-room-helper.test.ts` (or create if it does not exist) — test that the `call.getOrCreate()` mock receives `settings_override.recording` with `{ mode: 'available', quality: '1080p', audio_only: false }`; test that the error log includes `errorMessage` when Stream throws a non-Postgres error
-- [ ] 5.2 Update `src/__tests__/unit/modules/telepsicologia/inngest/auto-create-room.test.ts` (or create if it does not exist) — test that `processSessionCreated` throws `Error` (not returns `{ action: 'error' }`) when helper returns `{ ok: false }`; test same for `processSessionUpdated`; test that the `AutoCreateRoomResult` type no longer includes the `error` variant
-- [ ] 5.3 Create `src/__tests__/unit/modules/telepsicologia/inngest/cancel-room-on-session-cancel.test.ts` — test the core logic: (a) no room found returns `{ action: 'skipped' }`, (b) room found triggers Stream `call.end()` + DB update + log insert, (c) Stream `call.end()` failure does not prevent DB update
+- [x] 5.1 Update `src/__tests__/unit/modules/telepsicologia/server/create-video-room-helper.test.ts` (or create if it does not exist) — test that the `call.getOrCreate()` mock receives `settings_override.recording` with `{ mode: 'available', quality: '1080p', audio_only: false }`; test that the error log includes `errorMessage` when Stream throws a non-Postgres error
+- [x] 5.2 Update `src/__tests__/unit/modules/telepsicologia/inngest/auto-create-room.test.ts` (or create if it does not exist) — test that `processSessionCreated` throws `Error` (not returns `{ action: 'error' }`) when helper returns `{ ok: false }`; test same for `processSessionUpdated`; test that the `AutoCreateRoomResult` type no longer includes the `error` variant
+- [x] 5.3 Create `src/__tests__/unit/modules/telepsicologia/inngest/cancel-room-on-session-cancel.test.ts` — test the core logic: (a) no room found returns `{ action: 'skipped' }`, (b) room found triggers Stream `call.end()` + DB update + log insert, (c) Stream `call.end()` failure does not prevent DB update
 
 ## 6. Integration Tests
 
