@@ -46,7 +46,8 @@ export const SETTINGS_AREAS: readonly SettingsArea[] = [
   },
   {
     label: 'Transcrição IA',
-    description: 'Ative a geração automática de notas e ajuste retenção e detecção de risco.',
+    description:
+      'Ativar a feature, escolher template padrão, sensibilidade de risco e ver estatísticas.',
     href: '/configuracoes/transcricao-ia',
     icon: Sparkles,
     slug: 'transcricao-ia',

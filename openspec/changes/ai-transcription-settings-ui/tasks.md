@@ -26,10 +26,10 @@
 
 ## 4. Settings shell updates
 
-- [ ] 4.1 Edit `src/app/(app)/configuracoes/settings-areas.ts`: add the new `transcricao-ia` entry per spec.
-- [ ] 4.2 Edit `src/app/(app)/configuracoes/breadcrumb-labels.ts`: add `'transcricao-ia': 'Transcrição IA'`.
-- [ ] 4.3 Unit test `src/__tests__/unit/app/configuracoes/settings-areas.test.ts` (extend if exists, else create): assert the new entry exists, icon is `Sparkles`, href matches; assert every entry in `settings-areas` has a corresponding label in `breadcrumb-labels`.
-- [ ] 4.4 Update the existing settings index test (`src/__tests__/unit/app/configuracoes/page.test.tsx` if present) to assert the new card renders.
+- [x] 4.1 Edit `src/app/(app)/configuracoes/settings-areas.ts`: add the new `transcricao-ia` entry per spec.
+- [x] 4.2 Edit `src/app/(app)/configuracoes/breadcrumb-labels.ts`: add `'transcricao-ia': 'Transcrição IA'`.
+- [x] 4.3 Unit test `src/__tests__/unit/app/configuracoes/settings-areas.test.ts` (extend if exists, else create): assert the new entry exists, icon is `Sparkles`, href matches; assert every entry in `settings-areas` has a corresponding label in `breadcrumb-labels`.
+- [x] 4.4 Update the existing settings index test (`src/__tests__/unit/app/configuracoes/page.test.tsx` if present) to assert the new card renders.
 
 ## 5. E2E
 
