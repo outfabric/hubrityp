@@ -15,7 +15,7 @@
 
 ## 4. Wire session.rescheduled Event
 
-- [ ] 4.1 In `src/modules/agenda/server/complete-reschedule.ts`, add imports for `inngest` and `sessionRescheduledEventSchema`. Replace the TODO comment (line ~169) with fire-and-forget emission: use `oldSessionId` (function parameter), `newSessionId: newSessionRow.id`, `rescheduledAt: new Date()`, `patientId: oldSession.patientId`, `userId`
+- [x] 4.1 In `src/modules/agenda/server/complete-reschedule.ts`, add imports for `inngest` and `sessionRescheduledEventSchema`. Replace the TODO comment (line ~169) with fire-and-forget emission: use `oldSessionId` (function parameter), `newSessionId: newSessionRow.id`, `rescheduledAt: new Date()`, `patientId: oldSession.patientId`, `userId`
 
 ## 5. Wire session.missing_note_reminder Batch Emission
 

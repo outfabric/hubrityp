@@ -3,8 +3,10 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, sql } from 'drizzle-orm';
 
+import { inngest } from '@/modules/agenda/inngest/client';
 import { calculateCancellationNotice } from '@/modules/agenda/lib/cancellation-notice';
 import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
+import { sessionRescheduledEventSchema } from '@/modules/agenda/lib/session-events';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
 import { isValidTransition, type SessionStatus } from '@/modules/agenda/lib/session-status';
 import { db } from '@/shared/db/client';
@@ -42,8 +44,8 @@ export type CompleteRescheduleResult =
  *      c. Update old session with `rescheduled_to_session_id`.
  *      d. Create history entries for both sessions.
  *
- * Inngest event `agenda/session.rescheduled` will be emitted once the
- * Inngest client is configured in the project.
+ * After the transaction commits, the `agenda/session.rescheduled` Inngest
+ * event is emitted fire-and-forget (failures are logged, never surfaced).
  */
 export async function completeRescheduleImpl(
   supabase: SupabaseClient,
@@ -166,7 +168,36 @@ export async function completeRescheduleImpl(
       return [created!];
     });
 
-    // TODO: Emit `agenda/session.rescheduled` via Inngest when client is available
+    // Fire-and-forget: emit Inngest event for downstream consumers.
+    // Wrapped in try/catch so a transient Inngest failure never fails the user operation.
+    // Blocking slots have a null patientId, which fails the required `patientId` Zod
+    // field — the parse error is swallowed here by design (no event for blocking slots).
+    try {
+      const payload = sessionRescheduledEventSchema.parse({
+        oldSessionId,
+        newSessionId: newSessionRow.id,
+        patientId: oldSession.patientId,
+        userId,
+        rescheduledAt: new Date(),
+      });
+
+      await inngest.send({
+        name: 'agenda/session.rescheduled',
+        data: payload,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.rescheduled',
+          oldSessionId,
+          newSessionId: newSessionRow.id,
+          error: errMsg,
+        },
+        'failed to send agenda/session.rescheduled event',
+      );
+    }
 
     return { ok: true, newSessionId: newSessionRow.id };
   } catch (err: unknown) {
