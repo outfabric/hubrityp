@@ -45,7 +45,12 @@ interface ReadyBroadcastPayload {
   transcriptionId?: unknown;
 }
 
-function extractTranscriptionId(payload: unknown): string | null {
+/**
+ * Defensive extractor for the untrusted broadcast payload. Exported for unit
+ * testing the malformed-payload guard; used only to build the review link,
+ * never for any authorization decision.
+ */
+export function extractTranscriptionId(payload: unknown): string | null {
   if (typeof payload !== 'object' || payload === null) {
     return null;
   }

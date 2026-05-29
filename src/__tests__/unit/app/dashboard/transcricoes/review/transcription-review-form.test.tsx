@@ -212,6 +212,70 @@ describe('TranscriptionReviewForm — auto-save interval (8.4c)', () => {
     );
   });
 
+  it('auto-saves the EDITED text after the interval, not the initial value (HIGH 2 regression)', async () => {
+    // Regression for the stale-closure bug where `saveDraft` captured a frozen
+    // snapshot of the form values, silently discarding the user's edits.
+    // `useWatch` (funnelled through a ref so the long-lived interval is not torn
+    // down on every keystroke) is what makes `saveDraft` observe the live
+    // values. We type into a field, let the periodic auto-save fire, and assert
+    // the persisted draft carries the edited text. Real timers are used because
+    // RHF's `useWatch` subscription does not advance correctly under Vitest fake
+    // timers; the interval is 10s, so the test allows headroom.
+    const user = userEvent.setup();
+    const editedText = 'Risco de ideação suicida relatado';
+    const updateDraft = vi.fn().mockResolvedValue({ ok: true, savedAt: new Date() });
+    renderForm({ updateDraft });
+
+    const field = screen.getByTestId('field-observacoesExtras');
+    await user.clear(field);
+    await user.type(field, editedText);
+    expect(field).toHaveValue(editedText);
+
+    await waitFor(
+      () => {
+        expect(updateDraft).toHaveBeenCalled();
+      },
+      { timeout: 13_000 },
+    );
+    const lastCall = updateDraft.mock.calls.at(-1)?.[0] as {
+      transcriptionId: string;
+      generatedNote: { observacoesExtras: string | null };
+    };
+    expect(lastCall.transcriptionId).toBe(TRANSCRIPTION_ID);
+    expect(lastCall.generatedNote.observacoesExtras).toBe(editedText);
+  }, 20_000);
+
+  it('persists the EDITED text into the pre-prontuário draft save (HIGH 2 regression)', async () => {
+    // Complementary, fast assertion of the same fix via the save flow:
+    // `handleSave` calls `saveDraft()` before committing the evolution, so the
+    // edited text must reach `updateDraftAction`. This also guards the
+    // concurrency-guard fix (a ref, not stale setState) that previously skipped
+    // the pre-save persistence when invoked from inside an event handler.
+    const user = userEvent.setup();
+    const editedText = 'Conteúdo revisado pelo psicólogo';
+    const updateDraft = vi.fn().mockResolvedValue({ ok: true, savedAt: new Date() });
+    const saveToProntuario = vi.fn().mockResolvedValue({ ok: true, evolutionId: 'evo-99' });
+    renderForm({ updateDraft, saveToProntuario });
+
+    const field = screen.getByTestId('field-observacoesExtras');
+    await user.clear(field);
+    await user.type(field, editedText);
+
+    await user.click(screen.getByTestId('reviewed-checkbox'));
+    await user.click(screen.getByTestId('save-to-prontuario-btn'));
+
+    await waitFor(() => {
+      expect(saveToProntuario).toHaveBeenCalled();
+    });
+    expect(updateDraft).toHaveBeenCalled();
+    const lastCall = updateDraft.mock.calls.at(-1)?.[0] as {
+      transcriptionId: string;
+      generatedNote: { observacoesExtras: string | null };
+    };
+    expect(lastCall.transcriptionId).toBe(TRANSCRIPTION_ID);
+    expect(lastCall.generatedNote.observacoesExtras).toBe(editedText);
+  });
+
   it('stops auto-saving after "Editar mais" is clicked', async () => {
     const user = userEvent.setup();
     const updateDraft = vi.fn().mockResolvedValue({ ok: true, savedAt: new Date() });

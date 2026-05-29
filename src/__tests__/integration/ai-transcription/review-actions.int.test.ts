@@ -355,6 +355,58 @@ describe('saveTranscriptionToProntuarioImpl (integration)', () => {
     expect(evoCount).toBe(1);
   });
 
+  it('serializes concurrent saves of a NULL-session transcription: one succeeds, one ALREADY_SAVED, exactly one evolution', async () => {
+    // Regression for the orphaned-evolution race: with `sessionId = NULL`
+    // (manual upload), the per-session UNIQUE does not fire, so two racing
+    // callers could each pass the `saved_to_prontuario` read guard and reach
+    // `createEvolutionImpl`. The partial UNIQUE index on `ai_transcription_id`
+    // is what makes the DB reject the loser's INSERT (23505 → ALREADY_SAVED),
+    // leaving exactly one evolution and no orphan.
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    const transcriptionId = randomUUID();
+
+    await seedAuthUser(userId);
+    await seedPatient(userId, patientId);
+    await seedActiveConsent(userId, patientId);
+    await seedTranscription({
+      id: transcriptionId,
+      userId,
+      patientId,
+      sessionId: null,
+      status: 'ready',
+    });
+
+    const [first, second] = await Promise.all([
+      saveTranscriptionToProntuarioImpl(fakeSupabase(userId), {
+        transcriptionId,
+        reviewedChecked: true,
+      }),
+      saveTranscriptionToProntuarioImpl(fakeSupabase(userId), {
+        transcriptionId,
+        reviewedChecked: true,
+      }),
+    ]);
+
+    const successes = [first, second].filter((r) => r.ok);
+    const failures = [first, second].filter((r) => !r.ok);
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toEqual({ ok: false, code: 'ALREADY_SAVED' });
+
+    const evoCount = await runAsService(async (db) => {
+      const rows = await db
+        .select({ id: evolutions.id })
+        .from(evolutions)
+        .where(eq(evolutions.aiTranscriptionId, transcriptionId));
+      return rows.length;
+    });
+    expect(evoCount).toBe(1);
+
+    const row = await readTranscription(transcriptionId);
+    expect(row?.savedToProntuario).toBe(true);
+  });
+
   it('returns NOT_FOUND for a cross-tenant save and creates no evolution (IDOR)', async () => {
     const ownerId = randomUUID();
     const attackerId = randomUUID();

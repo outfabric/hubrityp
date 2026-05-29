@@ -1,5 +1,3 @@
-'use server';
-
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, inArray } from 'drizzle-orm';
 

@@ -62,18 +62,23 @@ test.describe('@ai-transcription review — edit, confirm, and save to prontuár
 
     const seed = await readSeedState();
 
-    // Exercise editing a single-line field. NOTE: the typed value reaches the
-    // DOM input (asserted below) but does NOT reach react-hook-form's
-    // `getValues()` under React Compiler in this form, so the committed
-    // evolution keeps the original note text. That is a pre-existing form-state
-    // bug (edits silently discarded), flagged separately — it is outside the
-    // scope of section 11 (negative-auth + flow coverage), so this test asserts
-    // the save flow's verifiable contract (evolution created + flagged +
-    // redirect + toast) rather than edit persistence.
+    // Edit a single-line field. The save flow persists the draft (via
+    // `useWatch`-backed auto-save) before committing the evolution, so the typed
+    // text MUST survive into the committed clinical record. This is asserted in
+    // the DB section below — the human's edits are the whole point of the review
+    // workflow (RF-10.15: the psychologist signs off on accurate content).
     const editedHumor = 'Humor inicial editado pelo revisor';
     const humorField = page.getByTestId('field-humorInicial');
-    await humorField.fill(editedHumor);
+    // Type char-by-char (not `fill`) so every keystroke dispatches the input
+    // event react-hook-form's `register` subscribes to — `fill` sets the value
+    // in one shot and RHF's internal store can miss it.
+    await humorField.click();
+    await humorField.press('Control+A');
+    await humorField.press('Delete');
+    await humorField.pressSequentially(editedHumor);
     await expect(humorField).toHaveValue(editedHumor);
+    // Blur so the on-blur draft auto-save captures the edit before we promote.
+    await humorField.blur();
 
     // Confirm review — this enables the primary action.
     await page.getByTestId('reviewed-checkbox').click();
@@ -111,13 +116,13 @@ test.describe('@ai-transcription review — edit, confirm, and save to prontuár
       expect(evolutionIdFromUrl).toBe(evolution.id);
 
       // The serialized note was committed as the evolution content (livre
-      // template `{ conteudo: string }`). We assert the structure landed; we do
-      // NOT assert the edited text survives — see the `editedHumor` note above:
-      // RHF `getValues()` does not reflect typed edits under React Compiler in
-      // this form, a pre-existing bug outside section 11's scope.
+      // template `{ conteudo: string }`). The edited single-line field MUST be
+      // present — proving the human's edits reach the permanent clinical record
+      // rather than being silently discarded (HIGH 2 regression).
       const contentRaw: unknown = evolution.content;
       const content = typeof contentRaw === 'string' ? contentRaw : JSON.stringify(contentRaw);
       expect(content).toContain('Nota gerada por IA (revisada)');
+      expect(content).toContain(editedHumor);
 
       const transcriptionRows = await sql`
         SELECT status, saved_to_prontuario, evolution_id

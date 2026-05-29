@@ -1,5 +1,3 @@
-'use server';
-
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, inArray } from 'drizzle-orm';
 
@@ -18,6 +16,40 @@ import { serializeNoteAsEvolution } from '../lib/serialize-note';
 
 // Statuses from which a transcription may be committed to the prontuario.
 const SAVEABLE_STATUSES = ['ready', 'reviewed'] as const;
+
+// Name of the partial UNIQUE index that enforces one evolution per AI
+// transcription (see the medical-records schema + its migration).
+const AI_TRANSCRIPTION_UNIQUE_INDEX = 'idx_evolutions_ai_transcription_id_unique';
+
+/**
+ * Detects a Postgres unique-violation (`23505`) on the AI-transcription backlink
+ * index anywhere in the error's `cause` chain. The `postgres` (postgres.js)
+ * driver exposes the violated constraint as `constraint_name` (not `constraint`),
+ * and Drizzle may wrap the driver error so the pg fields live on `err.cause` —
+ * we walk the chain and check both field spellings to be safe.
+ */
+function isAiTranscriptionUniqueViolation(err: unknown): boolean {
+  let current: unknown = err;
+  for (let depth = 0; current != null && depth < 5; depth += 1) {
+    const candidate = current as {
+      code?: unknown;
+      constraint_name?: unknown;
+      constraint?: unknown;
+      cause?: unknown;
+    };
+    const constraintName =
+      typeof candidate.constraint_name === 'string'
+        ? candidate.constraint_name
+        : typeof candidate.constraint === 'string'
+          ? candidate.constraint
+          : undefined;
+    if (candidate.code === '23505' && constraintName === AI_TRANSCRIPTION_UNIQUE_INDEX) {
+      return true;
+    }
+    current = candidate.cause;
+  }
+  return false;
+}
 
 /**
  * Commits a reviewed AI note to the patient's prontuario as a flagged
@@ -118,14 +150,32 @@ export async function saveTranscriptionToProntuarioImpl(
   // 5. Create the flagged evolution first. `createEvolutionImpl` authenticates
   // and authorizes ownership itself; if it fails we abort before mutating the
   // transcription row (no rollback needed — nothing was written here).
-  const evolutionResult = await createEvolutionImpl(supabase, {
-    patientId: row.patientId,
-    sessionId: row.sessionId ?? undefined,
-    templateType: 'livre',
-    content: serializeNoteAsEvolution(noteParsed.data),
-    aiAssisted: true,
-    aiTranscriptionId: transcriptionId,
-  });
+  //
+  // A concurrent writer racing on the SAME transcription with a NULL `sessionId`
+  // (manual upload, so the per-session UNIQUE does not fire) can pass the
+  // `saved_to_prontuario` read guard above and reach this insert too. The
+  // partial UNIQUE index `idx_evolutions_ai_transcription_id_unique` makes the
+  // database reject the loser's INSERT with a `23505` violation, which
+  // `createEvolutionImpl` re-throws (its own catch only maps `session_id`
+  // duplicates). We catch it here and surface `ALREADY_SAVED` — no orphaned
+  // evolution is left behind, since the DB never committed the duplicate row.
+  let evolutionResult: Awaited<ReturnType<typeof createEvolutionImpl>>;
+  try {
+    evolutionResult = await createEvolutionImpl(supabase, {
+      patientId: row.patientId,
+      sessionId: row.sessionId ?? undefined,
+      templateType: 'livre',
+      content: serializeNoteAsEvolution(noteParsed.data),
+      aiAssisted: true,
+      aiTranscriptionId: transcriptionId,
+    });
+  } catch (err: unknown) {
+    if (isAiTranscriptionUniqueViolation(err)) {
+      log.warn({ event: 'save_to_prontuario_concurrent_evolution', transcriptionId });
+      return { ok: false, code: 'ALREADY_SAVED' };
+    }
+    throw err;
+  }
 
   if (!evolutionResult.ok) {
     log.warn({

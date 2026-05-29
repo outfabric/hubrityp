@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -62,6 +63,16 @@ export const evolutions = pgTable(
     // Supports audit/statistics queries: "AI-assisted evolutions for this user".
     index('idx_evolutions_user_ai_assisted').on(table.userId, table.aiAssisted),
     unique('evolutions_session_id_unique').on(table.sessionId),
+    // Guarantees at most one evolution per source AI transcription. The save
+    // flow creates the evolution first, then flips the transcription's
+    // `saved_to_prontuario` flag; under concurrency two callers can each pass
+    // the flag guard's read and both reach `createEvolutionImpl`. Without this
+    // index, a NULL `session_id` (manual upload) lets both inserts succeed and
+    // orphans the loser's evolution permanently (Lei 13.787/2018 — no delete).
+    // The partial predicate keeps non-AI evolutions (NULL backlink) unconstrained.
+    uniqueIndex('idx_evolutions_ai_transcription_id_unique')
+      .on(table.aiTranscriptionId)
+      .where(sql`${table.aiTranscriptionId} IS NOT NULL`),
   ],
 );
 

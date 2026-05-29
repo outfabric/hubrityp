@@ -4,7 +4,10 @@ import { renderHook } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAiTranscriptionRealtime } from '@/modules/ai-transcription/hooks/use-ai-transcription-realtime';
+import {
+  extractTranscriptionId,
+  useAiTranscriptionRealtime,
+} from '@/modules/ai-transcription/hooks/use-ai-transcription-realtime';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -163,5 +166,36 @@ describe('useAiTranscriptionRealtime', () => {
 
     unmount();
     expect(mockRemoveChannel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('extractTranscriptionId', () => {
+  it('returns null for an empty object', () => {
+    expect(extractTranscriptionId({})).toBeNull();
+  });
+
+  it('returns null when the transcriptionId field is missing', () => {
+    expect(extractTranscriptionId({ other: 'value' })).toBeNull();
+  });
+
+  it('returns null when transcriptionId is a non-string value', () => {
+    expect(extractTranscriptionId({ transcriptionId: 123 })).toBeNull();
+    expect(extractTranscriptionId({ transcriptionId: { nested: true } })).toBeNull();
+    expect(extractTranscriptionId({ transcriptionId: ['array'] })).toBeNull();
+  });
+
+  it('returns null for null and non-object payloads', () => {
+    expect(extractTranscriptionId(null)).toBeNull();
+    expect(extractTranscriptionId(undefined)).toBeNull();
+    expect(extractTranscriptionId('not-an-object')).toBeNull();
+    expect(extractTranscriptionId(42)).toBeNull();
+  });
+
+  it('returns null for an empty string transcriptionId', () => {
+    expect(extractTranscriptionId({ transcriptionId: '' })).toBeNull();
+  });
+
+  it('returns the value for a valid UUID transcriptionId', () => {
+    expect(extractTranscriptionId({ transcriptionId: TRANSCRIPTION_ID })).toBe(TRANSCRIPTION_ID);
   });
 });

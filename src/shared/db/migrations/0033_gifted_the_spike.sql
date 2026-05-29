@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "idx_evolutions_ai_transcription_id_unique" ON "evolutions" USING btree ("ai_transcription_id") WHERE "evolutions"."ai_transcription_id" IS NOT NULL;
