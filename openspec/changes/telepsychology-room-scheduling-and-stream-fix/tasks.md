@@ -1,7 +1,7 @@
 ## 1. Fix Stream.io Recording Configuration (Cause Root)
 
-- [ ] 1.1 In `src/modules/telepsicologia/server/create-video-room-helper.ts`, update the `settings_override.recording` object at lines 129-131 from `{ mode: 'available' }` to `{ mode: 'available', quality: '1080p', audio_only: false }` — this resolves the Stream.io HTTP 400 error `"recording quality is required when audio_only is false and recording is enabled"`
-- [ ] 1.2 In the same file's catch block (lines 180-184), update the error log to include `err.message`: change `{ event: 'create_video_room_helper_failed', errorCode: pgError.code }` to `{ event: 'create_video_room_helper_failed', errorCode: (err as { code?: string }).code, errorMessage: err instanceof Error ? err.message : 'unknown' }` — this ensures Stream API errors are fully logged for diagnosis (no PII risk — Stream errors contain only technical details)
+- [x] 1.1 In `src/modules/telepsicologia/server/create-video-room-helper.ts`, update the `settings_override.recording` object at lines 129-131 from `{ mode: 'available' }` to `{ mode: 'available', quality: '1080p', audio_only: false }` — this resolves the Stream.io HTTP 400 error `"recording quality is required when audio_only is false and recording is enabled"`
+- [x] 1.2 In the same file's catch block (lines 180-184), update the error log to include `err.message`: change `{ event: 'create_video_room_helper_failed', errorCode: pgError.code }` to `{ event: 'create_video_room_helper_failed', errorCode: (err as { code?: string }).code, errorMessage: err instanceof Error ? err.message : 'unknown' }` — this ensures Stream API errors are fully logged for diagnosis (no PII risk — Stream errors contain only technical details)
 
 ## 2. Fix Silent Failure in Inngest Handler
 
