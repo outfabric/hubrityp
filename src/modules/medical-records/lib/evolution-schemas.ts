@@ -123,6 +123,18 @@ export const createEvolutionInputSchema = z.object({
     message: 'templateType inválido.',
   }),
   content: z.unknown(),
+
+  // AI-assist audit flags. Set when the evolution's initial content was
+  // produced from an AI transcription that the psychologist reviewed and
+  // saved. Both are optional so existing callers are unaffected; defaults
+  // (false / null) are applied in the implementation, not here, to keep the
+  // inferred input type honest about what callers may omit.
+  aiAssisted: z.boolean().optional(),
+  aiTranscriptionId: z
+    .string()
+    .uuid({ message: 'aiTranscriptionId deve ser um UUID válido.' })
+    .nullable()
+    .optional(),
 });
 
 export type CreateEvolutionInput = z.infer<typeof createEvolutionInputSchema>;

@@ -7,9 +7,9 @@
 
 ## 2. Extend `createEvolutionImpl`
 
-- [ ] 2.1 In `src/modules/medical-records/server/create-evolution.ts`: extend the input type with optional `aiAssisted?: boolean` and `aiTranscriptionId?: string | null`. Zod schema updated. INSERT statement sets the new columns from the parameters.
-- [ ] 2.2 Update the module barrel `src/modules/medical-records/index.ts` if needed (export types).
-- [ ] 2.3 Unit test `src/__tests__/unit/modules/medical-records/server/create-evolution-ai-flags.test.ts`: (a) default omits → `ai_assisted=false, ai_transcription_id=null`; (b) `aiAssisted=true, aiTranscriptionId=tx` → row has those values; (c) all existing tests on `createEvolutionImpl` still pass.
+- [x] 2.1 In `src/modules/medical-records/server/create-evolution.ts`: extend the input type with optional `aiAssisted?: boolean` and `aiTranscriptionId?: string | null`. Zod schema updated. INSERT statement sets the new columns from the parameters.
+- [x] 2.2 Update the module barrel `src/modules/medical-records/index.ts` if needed (export types).
+- [x] 2.3 Unit test `src/__tests__/unit/modules/medical-records/server/create-evolution-ai-flags.test.ts`: (a) default omits → `ai_assisted=false, ai_transcription_id=null`; (b) `aiAssisted=true, aiTranscriptionId=tx` → row has those values; (c) all existing tests on `createEvolutionImpl` still pass.
 
 ## 3. Middleware gating
 

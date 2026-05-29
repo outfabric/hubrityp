@@ -65,7 +65,8 @@ export async function createEvolutionImpl(
     return { ok: false, code: 'INVALID_TEMPLATE' };
   }
 
-  const { patientId, sessionId, templateType, content } = parsed.data;
+  const { patientId, sessionId, templateType, content, aiAssisted, aiTranscriptionId } =
+    parsed.data;
   const userId = user.id;
 
   // 3. Validate content against the template-specific schema
@@ -133,6 +134,10 @@ export async function createEvolutionImpl(
           templateType,
           content: validatedContent,
           currentVersion: 1,
+          // AI-assist audit columns. Default to false/null when the caller
+          // omits them so the existing (non-AI) flow is unchanged.
+          aiAssisted: aiAssisted ?? false,
+          aiTranscriptionId: aiTranscriptionId ?? null,
         })
         .returning({ id: evolutions.id });
 
