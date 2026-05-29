@@ -32,8 +32,8 @@
 
 ## 5. Status badge + helpers (small components)
 
-- [ ] 5.1 Create `src/modules/ai-transcription/components/transcription-status-badge.tsx`: maps statuses to Sálvia variants (`pending/transcribing/generating` → `neutral` "Processando"; `ready` → `info` "Pronta para revisão"; `reviewed` → `success` "Salva no prontuário"; `failed` → `danger` "Falhou"; `cancelled` → `warning` "Cancelada"). Includes appropriate Lucide icons.
-- [ ] 5.2 Unit test `src/__tests__/unit/modules/ai-transcription/components/transcription-status-badge.test.tsx`: snapshot per status; aria-label asserted.
+- [x] 5.1 Create `src/modules/ai-transcription/components/transcription-status-badge.tsx`: maps statuses to Sálvia variants (`pending/transcribing/generating` → `neutral` "Processando"; `ready` → `info` "Pronta para revisão"; `reviewed` → `success` "Salva no prontuário"; `failed` → `danger` "Falhou"; `cancelled` → `warning` "Cancelada"). Includes appropriate Lucide icons.
+- [x] 5.2 Unit test `src/__tests__/unit/modules/ai-transcription/components/transcription-status-badge.test.tsx`: snapshot per status; aria-label asserted.
 
 ## 6. Banners
 
