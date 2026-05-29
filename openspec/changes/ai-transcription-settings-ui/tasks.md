@@ -39,7 +39,7 @@
 
 ## 6. Sanity and PR review
 
-- [ ] 6.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
-- [ ] 6.2 Manual smoke: full settings flow + verify pipeline behavior on next transcription respects new `defaultTemplate` and `riskDetectionSensitivity`.
-- [ ] 6.3 Update PR description: confirm `keepAudioHours` UI is intentionally MVP-locked to 24h; future increase requires updating `AI_CONSENT_TEMPLATE_V1` + legal sign-off.
-- [ ] 6.4 Update runbook `docs/runbooks/ai-transcription-settings.md` (new): explain each control, audit log mapping, stats methodology.
+- [x] 6.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
+- [x] 6.2 Manual smoke: full settings flow + verify pipeline behavior on next transcription respects new `defaultTemplate` and `riskDetectionSensitivity`.
+- [x] 6.3 Update PR description: confirm `keepAudioHours` UI is intentionally MVP-locked to 24h; future increase requires updating `AI_CONSENT_TEMPLATE_V1` + legal sign-off.
+- [x] 6.4 Update runbook `docs/runbooks/ai-transcription-settings.md` (new): explain each control, audit log mapping, stats methodology.
