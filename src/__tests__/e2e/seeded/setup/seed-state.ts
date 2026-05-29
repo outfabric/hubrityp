@@ -122,6 +122,56 @@ export const SEED_AI_TRANSCRIPTIONS = {
     patientId: SEED_PATIENTS.activeMinimal.id,
     audioObjectKey: 'ai-audio/seed-user/test-pipeline-audio.mp3',
   },
+  /**
+   * Dedicated `ready` transcription for the review-and-save happy path
+   * (review-and-save.spec.ts). Kept separate from `pendingPipeline` so the
+   * full-pipeline spec's serial reset cannot race the save flow. Owned by the
+   * seed user; patient is `activeMinimal`, which has a signed `ai_recording`
+   * consent term (required by `saveTranscriptionToProntuario`).
+   */
+  readyForSave: {
+    id: '00000000-0000-4000-8000-000000000051',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    audioObjectKey: 'ai-audio/seed-user/review-save-audio.mp3',
+  },
+  /**
+   * Dedicated `ready` transcription for the discard flow
+   * (review-discard.spec.ts). Discard does not require active consent, so any
+   * owned patient works; we reuse `activeMinimal` for symmetry.
+   */
+  readyForDiscard: {
+    id: '00000000-0000-4000-8000-000000000052',
+    patientId: SEED_PATIENTS.activeMinimal.id,
+    audioObjectKey: 'ai-audio/seed-user/review-discard-audio.mp3',
+  },
+} as const;
+
+/**
+ * Cross-tenant fixture for the IDOR negative-auth test
+ * (review-idor-blocked.spec.ts).
+ *
+ * Psychologist A is a SECOND `auth.users`/`profiles` row that the mock GoTrue
+ * never authenticates — the e2e session always belongs to the seed user
+ * (psychologist B). A owns a `ready` transcription tied to A's own patient.
+ * When B opens A's `transcriptionId`, `getTranscriptionForReview` must scope
+ * the query to B and resolve NOT_FOUND (no data, no patient name leak).
+ *
+ * The patient name is deliberately unique so the test can assert it is ABSENT
+ * from the rendered not-found page.
+ */
+export const SEED_IDOR = {
+  psychologistA: {
+    id: '00000000-0000-4000-8000-0000000000a0',
+    email: 'psicologa-a@example.com',
+  },
+  patientA: {
+    id: '00000000-0000-4000-8000-0000000000a1',
+    fullName: 'Beatriz Confidencial Tenant A',
+  },
+  transcriptionA: {
+    id: '00000000-0000-4000-8000-0000000000a2',
+    audioObjectKey: 'ai-audio/psicologa-a/idor-audio.mp3',
+  },
 } as const;
 
 export const SEED_AI_CONSENT_TERMS = {

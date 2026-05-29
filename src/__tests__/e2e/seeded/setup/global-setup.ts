@@ -8,6 +8,7 @@ import {
   SEED_AI_CONSENT_TERMS,
   SEED_AI_TRANSCRIPTIONS,
   SEED_CONSENT_TERMS,
+  SEED_IDOR,
   SEED_PATIENTS,
   SEED_SESSIONS,
 } from './seed-state';
@@ -638,6 +639,154 @@ export default async function globalSetup() {
         completed_at     = NULL,
         reviewed_at      = NULL,
         template_used    = NULL;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Review UI fixtures (section 11): `ready` transcriptions for the
+    // happy-path save and the discard flow, plus the cross-tenant IDOR row.
+    // -----------------------------------------------------------------------
+
+    // A canonical `ready` generated note matching GeneratedNoteSchema v1. The
+    // save flow re-validates the stored JSONB, so the shape must be valid.
+    const reviewReadyNote = JSON.stringify({
+      schemaVersion: 1,
+      humorInicial: 'Apresentou-se ansioso no inicio da sessao',
+      humorFinal: 'Encerrou mais tranquilo apos as tecnicas',
+      pauta: ['Ansiedade no trabalho', 'Qualidade do sono'],
+      conteudoTrabalhado: ['Respiracao diafragmatica', 'Registro de pensamentos'],
+      tarefaCasa: ['Praticar respiracao antes de dormir'],
+      palavrasRisco: [],
+      observacoesExtras: 'Boa adesao as tecnicas propostas.',
+    });
+
+    // readyForSave — owned by the seed user; patient activeMinimal already has
+    // a signed ai_recording consent term, which the save action re-verifies.
+    const rfs = SEED_AI_TRANSCRIPTIONS.readyForSave;
+    // Drop any evolution a previous save-test run created for this row so the
+    // happy-path assertion ("an evolution exists for this transcription") is
+    // deterministic across reused Testcontainers.
+    await sql`
+      DELETE FROM public.evolutions
+      WHERE user_id = ${seed.userId}
+        AND ai_transcription_id = ${rfs.id};
+    `;
+    await sql`
+      INSERT INTO public.ai_transcriptions (
+        id, user_id, patient_id, source,
+        audio_object_key, status, generated_note, saved_to_prontuario
+      )
+      VALUES (
+        ${rfs.id}, ${seed.userId}, ${rfs.patientId}, 'manual_upload',
+        ${rfs.audioObjectKey}, 'ready', ${reviewReadyNote}::jsonb, false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id             = EXCLUDED.user_id,
+        patient_id          = EXCLUDED.patient_id,
+        source              = EXCLUDED.source,
+        audio_object_key    = EXCLUDED.audio_object_key,
+        status              = 'ready',
+        generated_note      = EXCLUDED.generated_note,
+        saved_to_prontuario = false,
+        evolution_id        = NULL,
+        risk_alerts         = NULL,
+        error_code          = NULL,
+        completed_at        = NULL,
+        reviewed_at         = NULL,
+        template_used       = NULL;
+    `;
+
+    // readyForDiscard — owned by the seed user. Discard transitions the row to
+    // status='reviewed' without saving to the prontuario.
+    const rfd = SEED_AI_TRANSCRIPTIONS.readyForDiscard;
+    await sql`
+      INSERT INTO public.ai_transcriptions (
+        id, user_id, patient_id, source,
+        audio_object_key, status, generated_note, saved_to_prontuario
+      )
+      VALUES (
+        ${rfd.id}, ${seed.userId}, ${rfd.patientId}, 'manual_upload',
+        ${rfd.audioObjectKey}, 'ready', ${reviewReadyNote}::jsonb, false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id             = EXCLUDED.user_id,
+        patient_id          = EXCLUDED.patient_id,
+        source              = EXCLUDED.source,
+        audio_object_key    = EXCLUDED.audio_object_key,
+        status              = 'ready',
+        generated_note      = EXCLUDED.generated_note,
+        saved_to_prontuario = false,
+        evolution_id        = NULL,
+        risk_alerts         = NULL,
+        error_code          = NULL,
+        completed_at        = NULL,
+        reviewed_at         = NULL,
+        template_used       = NULL;
+    `;
+
+    // ----- Cross-tenant IDOR fixture (psychologist A) ----------------------
+    // A second auth.users row the mock GoTrue never authenticates. Inserting it
+    // fires the handle_new_user() trigger which materializes A's profile.
+    const idor = SEED_IDOR;
+    const idorMetadata = JSON.stringify({
+      fullName: 'Psicologa A',
+      crpNumber: '11111-A',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${idor.psychologistA.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${idor.psychologistA.email},
+        ${idorMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now())
+      WHERE user_id = ${idor.psychologistA.id};
+    `;
+    // A's own patient — the full_name must NEVER surface on B's not-found page.
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status)
+      VALUES (
+        ${idor.patientA.id}, ${idor.psychologistA.id}, ${idor.patientA.fullName},
+        'individual', 'active'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id   = EXCLUDED.user_id,
+        full_name = EXCLUDED.full_name,
+        status    = EXCLUDED.status;
+    `;
+    // A's `ready` transcription. B will request this id and must get NOT_FOUND.
+    await sql`
+      INSERT INTO public.ai_transcriptions (
+        id, user_id, patient_id, source,
+        audio_object_key, status, generated_note, saved_to_prontuario
+      )
+      VALUES (
+        ${idor.transcriptionA.id}, ${idor.psychologistA.id}, ${idor.patientA.id},
+        'manual_upload', ${idor.transcriptionA.audioObjectKey}, 'ready',
+        ${reviewReadyNote}::jsonb, false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id             = EXCLUDED.user_id,
+        patient_id          = EXCLUDED.patient_id,
+        source              = EXCLUDED.source,
+        audio_object_key    = EXCLUDED.audio_object_key,
+        status              = 'ready',
+        generated_note      = EXCLUDED.generated_note,
+        saved_to_prontuario = false,
+        evolution_id        = NULL,
+        reviewed_at         = NULL;
     `;
   } finally {
     await sql.end();
