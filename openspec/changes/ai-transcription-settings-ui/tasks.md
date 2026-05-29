@@ -6,14 +6,14 @@
 
 ## 2. Server Actions
 
-- [ ] 2.1 Create `src/modules/ai-transcription/server/get-transcription-settings.ts`: getUser → upsert default row if missing → return current values typed by `TranscriptionSettingsViewSchema`.
-- [ ] 2.2 Create `src/modules/ai-transcription/server/update-transcription-settings.ts`: getUser → safeParse → SELECT old values → UPSERT new values → diff old vs new → write audit log rows per the spec mapping → return `{ ok: true }`.
-- [ ] 2.3 Create `src/modules/ai-transcription/server/get-transcription-stats.ts`: 4 parallel queries via `Promise.all` (counts, costs, etc.). Compute derived fields. Withhold acceptance rate when `reviewed < 5`. RLS-scoped client.
-- [ ] 2.4 Export from `src/modules/ai-transcription/server/index.ts` and the module barrel.
-- [ ] 2.5 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-settings.test.ts`: (a) first call inserts defaults; (b) subsequent call reads existing row; (c) anonymous rejected.
-- [ ] 2.6 Unit test `src/__tests__/unit/modules/ai-transcription/server/update-transcription-settings.test.ts`: (a) anonymous rejected; (b) Zod rejects invalid; (c) enabling triggers `ai_transcription_enabled` audit; (d) disabling triggers `ai_transcription_disabled` audit; (e) idempotent re-save without change emits NO audit; (f) UPSERT is keyed by `auth.uid()` (input cannot forge user_id).
-- [ ] 2.7 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-stats.test.ts`: (a) empty user → all zeros + nulls; (b) full user with 10 reviewed / 7 saved without edits → acceptance 70%; (c) `reviewed < 5` → acceptance null; (d) costs averaged correctly.
-- [ ] 2.8 Integration test `src/__tests__/integration/ai-transcription/settings-actions.int.test.ts` (Testcontainers + Drizzle): exercise the 3 actions end-to-end; cross-tenant assertion (B cannot update A's settings).
+- [x] 2.1 Create `src/modules/ai-transcription/server/get-transcription-settings.ts`: getUser → upsert default row if missing → return current values typed by `TranscriptionSettingsViewSchema`.
+- [x] 2.2 Create `src/modules/ai-transcription/server/update-transcription-settings.ts`: getUser → safeParse → SELECT old values → UPSERT new values → diff old vs new → write audit log rows per the spec mapping → return `{ ok: true }`.
+- [x] 2.3 Create `src/modules/ai-transcription/server/get-transcription-stats.ts`: 4 parallel queries via `Promise.all` (counts, costs, etc.). Compute derived fields. Withhold acceptance rate when `reviewed < 5`. RLS-scoped client.
+- [x] 2.4 Export from `src/modules/ai-transcription/server/index.ts` and the module barrel.
+- [x] 2.5 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-settings.test.ts`: (a) first call inserts defaults; (b) subsequent call reads existing row; (c) anonymous rejected.
+- [x] 2.6 Unit test `src/__tests__/unit/modules/ai-transcription/server/update-transcription-settings.test.ts`: (a) anonymous rejected; (b) Zod rejects invalid; (c) enabling triggers `ai_transcription_enabled` audit; (d) disabling triggers `ai_transcription_disabled` audit; (e) idempotent re-save without change emits NO audit; (f) UPSERT is keyed by `auth.uid()` (input cannot forge user_id).
+- [x] 2.7 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-stats.test.ts`: (a) empty user → all zeros + nulls; (b) full user with 10 reviewed / 7 saved without edits → acceptance 70%; (c) `reviewed < 5` → acceptance null; (d) costs averaged correctly.
+- [x] 2.8 Integration test `src/__tests__/integration/ai-transcription/settings-actions.int.test.ts` (Testcontainers + Drizzle): exercise the 3 actions end-to-end; cross-tenant assertion (B cannot update A's settings).
 
 ## 3. Page + components
 

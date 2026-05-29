@@ -112,3 +112,6 @@ export { listTranscriptionsForReviewImpl } from './server';
 export { updateTranscriptionDraftImpl } from './server';
 export { saveTranscriptionToProntuarioImpl } from './server';
 export { discardTranscriptionImpl } from './server';
+export { getTranscriptionSettingsImpl, type GetTranscriptionSettingsResult } from './server';
+export { updateTranscriptionSettingsImpl, type UpdateTranscriptionSettingsResult } from './server';
+export { getTranscriptionStatsImpl, type GetTranscriptionStatsResult } from './server';

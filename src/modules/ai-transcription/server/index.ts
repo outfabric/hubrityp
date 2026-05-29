@@ -19,3 +19,16 @@ export { listTranscriptionsForReviewImpl } from './list-transcriptions';
 export { updateTranscriptionDraftImpl } from './update-transcription-draft';
 export { saveTranscriptionToProntuarioImpl } from './save-transcription-to-prontuario';
 export { discardTranscriptionImpl } from './discard-transcription';
+
+export {
+  getTranscriptionSettingsImpl,
+  type GetTranscriptionSettingsResult,
+} from './get-transcription-settings';
+export {
+  updateTranscriptionSettingsImpl,
+  type UpdateTranscriptionSettingsResult,
+} from './update-transcription-settings';
+export {
+  getTranscriptionStatsImpl,
+  type GetTranscriptionStatsResult,
+} from './get-transcription-stats';
