@@ -19,7 +19,7 @@
 
 ## 5. Wire session.missing_note_reminder Batch Emission
 
-- [ ] 5.1 In `src/modules/agenda/server/missing-note-reminder.ts`, add import for `inngest` (from `@/modules/agenda/inngest/client`). In `runMissingNoteReminder`, replace the TODO comment (line ~137) with a loop over `result.events`: for each event, wrap `inngest.send({ name: 'agenda/session.missing_note_reminder', data: event })` in its own try/catch so that one failure does not block the rest. Log per-event errors with `{ event: 'inngest_send_failed', eventName: 'agenda/session.missing_note_reminder', sessionId: event.sessionId }`
+- [x] 5.1 In `src/modules/agenda/server/missing-note-reminder.ts`, add import for `inngest` (from `@/modules/agenda/inngest/client`). In `runMissingNoteReminder`, replace the TODO comment (line ~137) with a loop over `result.events`: for each event, wrap `inngest.send({ name: 'agenda/session.missing_note_reminder', data: event })` in its own try/catch so that one failure does not block the rest. Log per-event errors with `{ event: 'inngest_send_failed', eventName: 'agenda/session.missing_note_reminder', sessionId: event.sessionId }`
 
 ## 6. Unit Tests
 

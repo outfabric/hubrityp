@@ -2,6 +2,7 @@ import 'server-only';
 
 import { and, eq, isNull, lte } from 'drizzle-orm';
 
+import { inngest } from '@/modules/agenda/inngest/client';
 import type { SessionMissingNoteReminderEvent } from '@/modules/agenda/lib/session-events';
 import { db } from '@/shared/db/client';
 import { sessions } from '@/shared/db/schema/agenda/tables';
@@ -134,10 +135,27 @@ export async function runMissingNoteReminder(): Promise<{
     `found ${result.events.length} done session(s) missing clinical notes`,
   );
 
-  // TODO: Emit events via Inngest when client is available
-  // for (const event of result.events) {
-  //   await inngest.send({ name: 'agenda/session.missing_note_reminder', data: event });
-  // }
+  // Emit one event per eligible session. Each send is isolated in its own
+  // try/catch so a single failure does not block the remaining reminders.
+  for (const event of result.events) {
+    try {
+      await inngest.send({
+        name: 'agenda/session.missing_note_reminder',
+        data: event,
+      });
+    } catch (inngestErr: unknown) {
+      const errMsg = inngestErr instanceof Error ? inngestErr.message : 'unknown';
+      logger.error(
+        {
+          event: 'inngest_send_failed',
+          eventName: 'agenda/session.missing_note_reminder',
+          sessionId: event.sessionId,
+          error: errMsg,
+        },
+        'failed to send agenda/session.missing_note_reminder event',
+      );
+    }
+  }
 
   return { sessionsNotified: result.events.length, events: result.events };
 }
