@@ -65,6 +65,30 @@ export {
   SessionIdSchema as AudioSessionIdSchema,
 } from './lib/audio-input-schemas';
 
+// ---- Review schemas / types -------------------------------------------------
+export {
+  GetTranscriptionForReviewInputSchema,
+  type GetTranscriptionForReviewInput,
+  UpdateTranscriptionDraftInputSchema,
+  type UpdateTranscriptionDraftInput,
+  SaveTranscriptionToProntuarioInputSchema,
+  type SaveTranscriptionToProntuarioInput,
+  DiscardTranscriptionInputSchema,
+  type DiscardTranscriptionInput,
+  type GetTranscriptionForReviewResult,
+  type UpdateTranscriptionDraftResult,
+  type SaveTranscriptionToProntuarioResult,
+  type DiscardTranscriptionResult,
+  type TranscriptionForReview,
+} from './lib/review-schemas';
+
+// ---- Note serializer --------------------------------------------------------
+export { serializeNoteAsEvolution } from './lib/serialize-note';
+
 // ---- Server -----------------------------------------------------------------
 export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
 export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';
+export { getTranscriptionForReviewImpl } from './server';
+export { updateTranscriptionDraftImpl } from './server';
+export { saveTranscriptionToProntuarioImpl } from './server';
+export { discardTranscriptionImpl } from './server';

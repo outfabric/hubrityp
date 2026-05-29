@@ -18,17 +18,17 @@
 
 ## 4. Server Actions in `ai-transcription/server/`
 
-- [ ] 4.1 Create `src/modules/ai-transcription/lib/review-schemas.ts` exporting Zod schemas: `GetTranscriptionForReviewInputSchema`, `UpdateTranscriptionDraftInputSchema` (incorporates `GeneratedNoteSchema`), `SaveTranscriptionToProntuarioInputSchema` (includes `reviewedChecked: z.literal(true)`), `DiscardTranscriptionInputSchema`. Output discriminated unions.
-- [ ] 4.2 Create `src/modules/ai-transcription/server/get-transcription-for-review.ts`. Flow per spec: getUser → safeParse → RLS-scoped SELECT JOIN → JSONB Zod validation (drift detection logs `note_schema_drift` with `transcriptionId` only) → return shape.
-- [ ] 4.3 Create `src/modules/ai-transcription/server/update-transcription-draft.ts`. Idempotent UPDATE with row-not-found → `NOT_EDITABLE`.
-- [ ] 4.4 Create `src/modules/ai-transcription/server/save-transcription-to-prontuario.ts`. Transactional: re-read → call `createEvolutionImpl({ aiAssisted: true, aiTranscriptionId })` → UPDATE `ai_transcriptions`. Idempotency via `saved_to_prontuario = false` predicate in the WHERE clause.
-- [ ] 4.5 Create `src/modules/ai-transcription/server/discard-transcription.ts`. UPDATE + audit log entry via existing audit helper (if absent, use the project's standard `logAuditEvent` from `audit-log` module).
-- [ ] 4.6 Export all four from `src/modules/ai-transcription/server/index.ts` and the module barrel.
-- [ ] 4.7 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-for-review.test.ts`: anonymous; IDOR; happy; schema drift; PII not logged.
-- [ ] 4.8 Unit test `src/__tests__/unit/modules/ai-transcription/server/update-transcription-draft.test.ts`: increment counter; status='pending' → NOT_EDITABLE; IDOR.
-- [ ] 4.9 Unit test `src/__tests__/unit/modules/ai-transcription/server/save-transcription-to-prontuario.test.ts`: happy path creates evolution with flags; `reviewedChecked=false` → MUST_REVIEW (Zod); already saved → ALREADY_SAVED; transaction rollback if `createEvolutionImpl` throws.
-- [ ] 4.10 Unit test `src/__tests__/unit/modules/ai-transcription/server/discard-transcription.test.ts`: idempotency; audit row created.
-- [ ] 4.11 Integration test `src/__tests__/integration/ai-transcription/review-actions.int.test.ts`: all 4 actions exercised end-to-end via Testcontainers + Drizzle; cross-tenant assertions on each.
+- [x] 4.1 Create `src/modules/ai-transcription/lib/review-schemas.ts` exporting Zod schemas: `GetTranscriptionForReviewInputSchema`, `UpdateTranscriptionDraftInputSchema` (incorporates `GeneratedNoteSchema`), `SaveTranscriptionToProntuarioInputSchema` (includes `reviewedChecked: z.literal(true)`), `DiscardTranscriptionInputSchema`. Output discriminated unions.
+- [x] 4.2 Create `src/modules/ai-transcription/server/get-transcription-for-review.ts`. Flow per spec: getUser → safeParse → RLS-scoped SELECT JOIN → JSONB Zod validation (drift detection logs `note_schema_drift` with `transcriptionId` only) → return shape.
+- [x] 4.3 Create `src/modules/ai-transcription/server/update-transcription-draft.ts`. Idempotent UPDATE with row-not-found → `NOT_EDITABLE`.
+- [x] 4.4 Create `src/modules/ai-transcription/server/save-transcription-to-prontuario.ts`. Transactional: re-read → call `createEvolutionImpl({ aiAssisted: true, aiTranscriptionId })` → UPDATE `ai_transcriptions`. Idempotency via `saved_to_prontuario = false` predicate in the WHERE clause.
+- [x] 4.5 Create `src/modules/ai-transcription/server/discard-transcription.ts`. UPDATE + audit log entry via existing audit helper (if absent, use the project's standard `logAuditEvent` from `audit-log` module).
+- [x] 4.6 Export all four from `src/modules/ai-transcription/server/index.ts` and the module barrel.
+- [x] 4.7 Unit test `src/__tests__/unit/modules/ai-transcription/server/get-transcription-for-review.test.ts`: anonymous; IDOR; happy; schema drift; PII not logged.
+- [x] 4.8 Unit test `src/__tests__/unit/modules/ai-transcription/server/update-transcription-draft.test.ts`: increment counter; status='pending' → NOT_EDITABLE; IDOR.
+- [x] 4.9 Unit test `src/__tests__/unit/modules/ai-transcription/server/save-transcription-to-prontuario.test.ts`: happy path creates evolution with flags; `reviewedChecked=false` → MUST_REVIEW (Zod); already saved → ALREADY_SAVED; transaction rollback if `createEvolutionImpl` throws.
+- [x] 4.10 Unit test `src/__tests__/unit/modules/ai-transcription/server/discard-transcription.test.ts`: idempotency; audit row created.
+- [x] 4.11 Integration test `src/__tests__/integration/ai-transcription/review-actions.int.test.ts`: all 4 actions exercised end-to-end via Testcontainers + Drizzle; cross-tenant assertions on each.
 
 ## 5. Status badge + helpers (small components)
 

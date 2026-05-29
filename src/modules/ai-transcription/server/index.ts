@@ -10,3 +10,8 @@ export {
 } from './request-audio-upload-url';
 
 export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './confirm-audio-upload';
+
+export { getTranscriptionForReviewImpl } from './get-transcription-for-review';
+export { updateTranscriptionDraftImpl } from './update-transcription-draft';
+export { saveTranscriptionToProntuarioImpl } from './save-transcription-to-prontuario';
+export { discardTranscriptionImpl } from './discard-transcription';
