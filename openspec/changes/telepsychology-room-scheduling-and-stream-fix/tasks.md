@@ -5,9 +5,9 @@
 
 ## 2. Fix Silent Failure in Inngest Handler
 
-- [ ] 2.1 In `src/modules/telepsicologia/inngest/auto-create-room.ts`, in the `processSessionCreated` function (lines 97-98), replace `return { action: 'error', message: result.message }` with `throw new Error(\`Video room creation failed: \${result.message}\`)` — this activates Inngest's `retries: 3` mechanism and makes failures visible in the dashboard
-- [ ] 2.2 In the same file, in the `processSessionUpdated` function (around line 153-155), apply the same change: replace `return { action: 'error', message: result.message }` with `throw new Error(\`Video room creation failed: \${result.message}\`)` — ensuring consistent retry behavior for both event types
-- [ ] 2.3 Update the `AutoCreateRoomResult` type (lines 58-63) to remove the `| { action: 'error'; message: string }` variant, since the error path now throws instead of returning — this makes the type system enforce correctness
+- [x] 2.1 In `src/modules/telepsicologia/inngest/auto-create-room.ts`, in the `processSessionCreated` function (lines 97-98), replace `return { action: 'error', message: result.message }` with `throw new Error(\`Video room creation failed: \${result.message}\`)` — this activates Inngest's `retries: 3` mechanism and makes failures visible in the dashboard
+- [x] 2.2 In the same file, in the `processSessionUpdated` function (around line 153-155), apply the same change: replace `return { action: 'error', message: result.message }` with `throw new Error(\`Video room creation failed: \${result.message}\`)` — ensuring consistent retry behavior for both event types
+- [x] 2.3 Update the `AutoCreateRoomResult` type (lines 58-63) to remove the `| { action: 'error'; message: string }` variant, since the error path now throws instead of returning — this makes the type system enforce correctness
 
 ## 3. Defer Room Creation to 1h Before Session
 

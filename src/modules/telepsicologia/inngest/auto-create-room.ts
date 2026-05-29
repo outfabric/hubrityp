@@ -59,8 +59,7 @@ export type AutoCreateRoomResult =
   | { action: 'created'; roomId: string }
   | { action: 'existing'; roomId: string }
   | { action: 'skipped'; reason: string }
-  | { action: 'expired_room'; sessionId: string }
-  | { action: 'error'; message: string };
+  | { action: 'expired_room'; sessionId: string };
 
 /**
  * Processes a session.created event — creates a video room if the session
@@ -95,7 +94,10 @@ export async function processSessionCreated(
   );
 
   if (!result.ok) {
-    return { action: 'error', message: result.message };
+    // Throw (instead of returning an error result) so Inngest's `retries: 3`
+    // kicks in and the failure surfaces in the dashboard instead of silently
+    // succeeding the step.
+    throw new Error(`Video room creation failed: ${result.message}`);
   }
 
   return { action: 'created', roomId: result.room.id };
@@ -151,7 +153,10 @@ export async function processSessionUpdated(
   );
 
   if (!result.ok) {
-    return { action: 'error', message: result.message };
+    // Throw (instead of returning an error result) so Inngest's `retries: 3`
+    // kicks in and the failure surfaces in the dashboard instead of silently
+    // succeeding the step.
+    throw new Error(`Video room creation failed: ${result.message}`);
   }
 
   return { action: 'created', roomId: result.room.id };
