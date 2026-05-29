@@ -43,6 +43,11 @@ services:
       # when testing AI transcription features end-to-end.
       GEMINI_API_KEY: fake-gemini-key-for-local-dev
       SIGNATURE_HASH_SALT: local-dev-signature-hash-salt-minimum-32-chars
+      # Encryption key for @inngest/middleware-encryption (z.string().min(32)).
+      # Required by serverEnv at boot — without it every SSR page 500s. This is
+      # a dummy local-dev value; production/preview get a real key from the
+      # Vercel Marketplace Inngest integration.
+      INNGEST_ENCRYPTION_KEY: local-dev-inngest-encryption-key-minimum-32-chars
       STREAM_API_KEY: dummy_stream_key_for_local_dev
       STREAM_API_SECRET: dummy_stream_secret_for_local_dev
       STREAM_WEBHOOK_SECRET: dummy_stream_webhook_secret_for_local_dev
