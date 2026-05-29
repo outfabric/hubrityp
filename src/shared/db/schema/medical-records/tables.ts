@@ -39,6 +39,16 @@ export const evolutions = pgTable(
     content: jsonb('content').notNull(),
     currentVersion: integer('current_version').notNull().default(1),
 
+    // True when the initial content of this evolution originated from an AI
+    // transcription (the psychologist reviewed and saved an AI-generated note).
+    aiAssisted: boolean('ai_assisted').notNull().default(false),
+
+    // Backlink to the source `ai_transcriptions` row, when applicable. FK with
+    // ON DELETE SET NULL is emitted manually in the migration (cross-table FKs
+    // in this repo are appended by hand, not via Drizzle `.references()`), so
+    // deleting a transcription nulls this column without dropping the evolution.
+    aiTranscriptionId: uuid('ai_transcription_id'),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
@@ -49,6 +59,8 @@ export const evolutions = pgTable(
   },
   (table) => [
     index('idx_evolutions_patient_created').on(table.patientId, table.createdAt),
+    // Supports audit/statistics queries: "AI-assisted evolutions for this user".
+    index('idx_evolutions_user_ai_assisted').on(table.userId, table.aiAssisted),
     unique('evolutions_session_id_unique').on(table.sessionId),
   ],
 );

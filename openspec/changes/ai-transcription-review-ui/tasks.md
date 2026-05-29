@@ -1,9 +1,9 @@
 ## 1. Schema delta in `evolutions`
 
-- [ ] 1.1 In `src/shared/db/schema/medical-records/tables.ts`: add `aiAssisted: boolean('ai_assisted').notNull().default(false)` and `aiTranscriptionId: uuid('ai_transcription_id').references(() => aiTranscriptions.id, { onDelete: 'set null' })`. Update Drizzle relations.
-- [ ] 1.2 Run `npm run db:generate`. Inspect: migration adds the two columns + index `idx_evolutions_user_ai_assisted` on `(user_id, ai_assisted)`.
-- [ ] 1.3 Run `npm run db:migrate`. Idempotency check.
-- [ ] 1.4 Integration test `src/__tests__/integration/data-layer/evolutions-ai-flags.int.test.ts`: (a) defaults are `false`/`NULL`; (b) FK ON DELETE SET NULL works; (c) `EXPLAIN` of `WHERE user_id = X AND ai_assisted = true` uses the new index.
+- [x] 1.1 In `src/shared/db/schema/medical-records/tables.ts`: add `aiAssisted: boolean('ai_assisted').notNull().default(false)` and `aiTranscriptionId: uuid('ai_transcription_id').references(() => aiTranscriptions.id, { onDelete: 'set null' })`. Update Drizzle relations.
+- [x] 1.2 Run `npm run db:generate`. Inspect: migration adds the two columns + index `idx_evolutions_user_ai_assisted` on `(user_id, ai_assisted)`.
+- [x] 1.3 Run `npm run db:migrate`. Idempotency check.
+- [x] 1.4 Integration test `src/__tests__/integration/data-layer/evolutions-ai-flags.int.test.ts`: (a) defaults are `false`/`NULL`; (b) FK ON DELETE SET NULL works; (c) `EXPLAIN` of `WHERE user_id = X AND ai_assisted = true` uses the new index.
 
 ## 2. Extend `createEvolutionImpl`
 
