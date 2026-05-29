@@ -37,9 +37,9 @@
 
 ## 6. Banners
 
-- [ ] 6.1 Create `src/modules/ai-transcription/components/draft-warning-banner.tsx`: `Alert` variant warning, sticky top, copy in pt-BR per spec.
-- [ ] 6.2 Create `src/modules/ai-transcription/components/risk-alert-banner.tsx`: receives `riskAlerts: RiskAlert[]`. Maps `kind` to pt-BR label via a tiny lookup table. List of trimmed excerpts (max 200 chars displayed; full text available via tooltip — or truncated with ellipsis, given the Sálvia rule that tooltips don't carry critical info, the full text should be on click → small drawer). `role="alert"`, auto-focuses on mount.
-- [ ] 6.3 Unit test `src/__tests__/unit/modules/ai-transcription/components/risk-alert-banner.test.tsx`: renders all 5 risk kinds with pt-BR labels; sets focus on mount; respects `prefers-reduced-motion`.
+- [x] 6.1 Create `src/modules/ai-transcription/components/draft-warning-banner.tsx`: `Alert` variant warning, sticky top, copy in pt-BR per spec.
+- [x] 6.2 Create `src/modules/ai-transcription/components/risk-alert-banner.tsx`: receives `riskAlerts: RiskAlert[]`. Maps `kind` to pt-BR label via a tiny lookup table. List of trimmed excerpts (max 200 chars displayed; full text available via tooltip — or truncated with ellipsis, given the Sálvia rule that tooltips don't carry critical info, the full text should be on click → small drawer). `role="alert"`, auto-focuses on mount.
+- [x] 6.3 Unit test `src/__tests__/unit/modules/ai-transcription/components/risk-alert-banner.test.tsx`: renders all 5 risk kinds with pt-BR labels; sets focus on mount; respects `prefers-reduced-motion`.
 
 ## 7. Page: list `/dashboard/transcricoes`
 
