@@ -77,6 +77,6 @@
 
 ## 12. Sanity
 
-- [ ] 12.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
-- [ ] 12.2 Manual smoke: full flow from agenda badge click → review → save → confirm evolution.
-- [ ] 12.3 Update runbook doc with: how to retry a failed transcription from the review UI; what `ai_assisted` means in exports.
+- [x] 12.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e:seeded`. All green.
+- [x] 12.2 Manual smoke: full flow from agenda badge click → review → save → confirm evolution.
+- [x] 12.3 Update runbook doc with: how to retry a failed transcription from the review UI; what `ai_assisted` means in exports.
