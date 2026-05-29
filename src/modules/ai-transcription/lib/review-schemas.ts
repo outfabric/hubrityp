@@ -109,6 +109,48 @@ export type DiscardTranscriptionResult =
   | { ok: true }
   | { ok: false; code: 'UNAUTHORIZED' | 'INVALID_INPUT' | 'NOT_FOUND' | 'ALREADY_REVIEWED' };
 
+// ---------------------------------------------------------------------------
+// List-for-review
+// ---------------------------------------------------------------------------
+
+/**
+ * The three buckets the review list is grouped into. They are derived from the
+ * raw `status` + `saved_to_prontuario` columns, not stored directly:
+ *   - `pending`  → status='ready' AND saved_to_prontuario=false (needs review)
+ *   - `reviewed` → status='reviewed'
+ *   - `failed`   → status='failed'
+ *
+ * In-flight states (pending/transcribing/generating) and `cancelled` are not
+ * surfaced in this list — the user has nothing to act on yet, or the row was
+ * discarded.
+ */
+export const ReviewListFilterSchema = z.enum(['pending', 'reviewed', 'failed']);
+export type ReviewListFilter = z.infer<typeof ReviewListFilterSchema>;
+
+/**
+ * A single row in the review list. Carries only what the card needs:
+ * the patient's FIRST name (LGPD data-minimization on screen), the session
+ * date, the template label, and the derived bucket for status-badge mapping.
+ */
+export interface TranscriptionListItem {
+  transcriptionId: TranscriptionId;
+  status: TranscriptionStatus;
+  templateUsed: string | null;
+  patientFirstName: string;
+  sessionDate: Date | null;
+  createdAt: Date;
+}
+
+export interface TranscriptionListBuckets {
+  pending: TranscriptionListItem[];
+  reviewed: TranscriptionListItem[];
+  failed: TranscriptionListItem[];
+}
+
+export type ListTranscriptionsForReviewResult =
+  | ({ ok: true } & TranscriptionListBuckets)
+  | { ok: false; code: 'UNAUTHORIZED' };
+
 // Re-export the JSONB content schemas used for drift detection so the server
 // implementations import everything review-related from this single module.
 export { GeneratedNoteSchema, RiskAlertSchema };

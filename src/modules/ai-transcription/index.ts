@@ -80,6 +80,11 @@ export {
   type SaveTranscriptionToProntuarioResult,
   type DiscardTranscriptionResult,
   type TranscriptionForReview,
+  ReviewListFilterSchema,
+  type ReviewListFilter,
+  type TranscriptionListItem,
+  type TranscriptionListBuckets,
+  type ListTranscriptionsForReviewResult,
 } from './lib/review-schemas';
 
 // ---- Note serializer --------------------------------------------------------
@@ -89,6 +94,7 @@ export { serializeNoteAsEvolution } from './lib/serialize-note';
 export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
 export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';
 export { getTranscriptionForReviewImpl } from './server';
+export { listTranscriptionsForReviewImpl } from './server';
 export { updateTranscriptionDraftImpl } from './server';
 export { saveTranscriptionToProntuarioImpl } from './server';
 export { discardTranscriptionImpl } from './server';

@@ -43,10 +43,10 @@
 
 ## 7. Page: list `/dashboard/transcricoes`
 
-- [ ] 7.1 Create `src/app/(app)/dashboard/transcricoes/page.tsx` (Server Component). Fetches the list via a new helper `listTranscriptionsForReview(userId, filter)` in `ai-transcription/server/`. Renders `Tabs` ("Pendentes", "Revisadas", "Falhas"), `Card` per item with name, date, template, status badge, link.
-- [ ] 7.2 Create `src/modules/ai-transcription/server/list-transcriptions.ts`: query with RLS-scoped client + ordering rules from the spec.
-- [ ] 7.3 Empty state component `src/modules/ai-transcription/components/transcriptions-empty-state.tsx`: 3-part empty state per Sálvia (what's missing, why it matters, what to do).
-- [ ] 7.4 Unit test `src/__tests__/unit/app/dashboard/transcricoes/page.test.tsx` (RTL with mocked Server Action): tabs filter correctly; empty state renders when none; clicking a card navigates.
+- [x] 7.1 Create `src/app/(app)/dashboard/transcricoes/page.tsx` (Server Component). Fetches the list via a new helper `listTranscriptionsForReview(userId, filter)` in `ai-transcription/server/`. Renders `Tabs` ("Pendentes", "Revisadas", "Falhas"), `Card` per item with name, date, template, status badge, link.
+- [x] 7.2 Create `src/modules/ai-transcription/server/list-transcriptions.ts`: query with RLS-scoped client + ordering rules from the spec.
+- [x] 7.3 Empty state component `src/modules/ai-transcription/components/transcriptions-empty-state.tsx`: 3-part empty state per Sálvia (what's missing, why it matters, what to do).
+- [x] 7.4 Unit test `src/__tests__/unit/app/dashboard/transcricoes/page.test.tsx` (RTL with mocked Server Action): tabs filter correctly; empty state renders when none; clicking a card navigates.
 
 ## 8. Page: review `/dashboard/transcricoes/[id]/revisar`
 
