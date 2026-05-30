@@ -22,9 +22,9 @@
 
 ## 4. Conformidade Design System & acessibilidade
 
-- [ ] 4.1 Validar que nenhum estado congelado usa cor `brand`; usar exclusivamente `text-disabled`/`surface-muted` e Badge `neutral`
-- [ ] 4.2 Verificar contraste WCAG 2.1 AA do texto desabilitado e da tag "Em breve" (light e dark mode)
-- [ ] 4.3 Verificar navegação por teclado e leitores de tela (`aria-disabled`, ausência de alvo de navegação) nos itens congelados
+- [x] 4.1 Validar que nenhum estado congelado usa cor `brand`; usar exclusivamente `text-disabled`/`surface-muted` e Badge `neutral`
+- [x] 4.2 Verificar contraste WCAG 2.1 AA do texto desabilitado e da tag "Em breve" (light e dark mode)
+- [x] 4.3 Verificar navegação por teclado e leitores de tela (`aria-disabled`, ausência de alvo de navegação) nos itens congelados
 
 ## 5. Testes
 

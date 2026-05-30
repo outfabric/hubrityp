@@ -34,6 +34,10 @@ export default function SettingsIndexPage() {
           const Icon = area.icon;
           const disabled = !whatsappUiEnabled && WHATSAPP_DEPENDENT_SLUGS.has(area.slug);
 
+          // Frozen card: non-navigable (`<Card>`, no `<Link>`), `aria-disabled`.
+          // `text-disabled` is intentionally below 4.5:1 AA for normal text —
+          // WCAG 1.4.3 exempts inactive UI components, which this is. The DS
+          // token is authoritative; the "Em breve" neutral badge clears AA.
           if (disabled) {
             return (
               <Card

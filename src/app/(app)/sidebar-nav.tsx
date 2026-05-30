@@ -110,6 +110,11 @@ export function SidebarNav() {
       // disabled token. The unread badge is suppressed; only the "Em breve"
       // tag is shown. No `href`/link role means it is unreachable via keyboard
       // navigation and clicking it does nothing.
+      //
+      // `text-disabled` falls below the 4.5:1 AA contrast for normal text by
+      // design — WCAG 1.4.3 exempts inactive UI components, which this is
+      // (non-navigable, `aria-disabled`). The DS token is authoritative; do
+      // not "fix" the contrast here. The "Em breve" badge (neutral) clears AA.
       if (item.disabled) {
         return (
           <span
