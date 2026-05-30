@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import { clientEnv } from '@/shared/env';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -18,7 +19,22 @@ interface NavItem {
   readonly icon: LucideIcon;
   /** When true, a danger badge with the unread count is shown. */
   readonly showUnreadBadge?: boolean;
+  /**
+   * When true, the item is frozen: rendered as a non-navigable, non-focusable
+   * `<span>` (no `<Link>`), styled with the disabled token. Used to gate UI
+   * entry points behind a feature flag.
+   */
+  readonly disabled?: boolean;
+  /** When true, an "Em breve" neutral badge is shown next to the label. */
+  readonly comingSoon?: boolean;
 }
+
+/**
+ * The WhatsApp inbox UI is frozen behind a feature flag until the feature
+ * ships. When disabled, the "Caixa de entrada" entry is shown as a
+ * non-navigable, non-focusable item tagged "Em breve".
+ */
+const isInboxFrozen = !clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED;
 
 const navItems: readonly NavItem[] = [
   { label: 'Painel', href: '/dashboard', icon: LayoutDashboard },
@@ -28,6 +44,8 @@ const navItems: readonly NavItem[] = [
     href: '/caixa-de-entrada',
     icon: MessageCircle,
     showUnreadBadge: true,
+    disabled: isInboxFrozen,
+    comingSoon: isInboxFrozen,
   },
   { label: 'Agenda', href: '/agenda', icon: Calendar },
   { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -86,8 +104,31 @@ export function SidebarNav() {
 
   const renderNavItems = (onNavigate?: () => void) =>
     navItems.map((item) => {
-      const isActive = pathname.startsWith(item.href);
       const Icon = item.icon;
+
+      // Frozen item: render a non-navigable, non-focusable `<span>` with the
+      // disabled token. The unread badge is suppressed; only the "Em breve"
+      // tag is shown. No `href`/link role means it is unreachable via keyboard
+      // navigation and clicking it does nothing.
+      if (item.disabled) {
+        return (
+          <span
+            key={item.href}
+            aria-disabled="true"
+            className="text-text-disabled flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-[15px] font-normal no-underline"
+          >
+            <Icon size={20} aria-hidden="true" />
+            <span className="flex-1">{item.label}</span>
+            {item.comingSoon && (
+              <Badge variant="neutral" className="ml-2">
+                Em breve
+              </Badge>
+            )}
+          </span>
+        );
+      }
+
+      const isActive = pathname.startsWith(item.href);
       const showBadge = item.showUnreadBadge && unreadCount > 0;
 
       return (

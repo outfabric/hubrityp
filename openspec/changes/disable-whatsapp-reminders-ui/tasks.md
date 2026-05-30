@@ -7,11 +7,11 @@
 
 ## 2. Menu lateral — "Caixa de entrada"
 
-- [ ] 2.1 Estender a interface `NavItem` em `src/app/(app)/sidebar-nav.tsx` com `disabled?: boolean` e `comingSoon?: boolean`
-- [ ] 2.2 Derivar `disabled`/`comingSoon` do item "Caixa de entrada" a partir de `!clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED`
-- [ ] 2.3 Atualizar `renderNavItems()`: quando `disabled`, renderizar `<span>` (não `<Link>`), com classes do token `text-disabled`, `aria-disabled="true"`, `cursor-not-allowed`, sem estados hover/active de `brand` e sem underline
-- [ ] 2.4 Suprimir o badge de não-lidas (`showUnreadBadge`) quando o item está congelado e anexar `<Badge variant="neutral">Em breve</Badge>` ao lado do rótulo
-- [ ] 2.5 Garantir que o item não seja focável/ativável por teclado para navegação (sem `href`/role de link)
+- [x] 2.1 Estender a interface `NavItem` em `src/app/(app)/sidebar-nav.tsx` com `disabled?: boolean` e `comingSoon?: boolean`
+- [x] 2.2 Derivar `disabled`/`comingSoon` do item "Caixa de entrada" a partir de `!clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED`
+- [x] 2.3 Atualizar `renderNavItems()`: quando `disabled`, renderizar `<span>` (não `<Link>`), com classes do token `text-disabled`, `aria-disabled="true"`, `cursor-not-allowed`, sem estados hover/active de `brand` e sem underline
+- [x] 2.4 Suprimir o badge de não-lidas (`showUnreadBadge`) quando o item está congelado e anexar `<Badge variant="neutral">Em breve</Badge>` ao lado do rótulo
+- [x] 2.5 Garantir que o item não seja focável/ativável por teclado para navegação (sem `href`/role de link)
 
 ## 3. Configurações — cards "WhatsApp" e "Lembretes"
 
