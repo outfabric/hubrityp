@@ -1,9 +1,9 @@
 ## 1. Feature flag de ambiente
 
-- [ ] 1.1 Adicionar `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` ao `clientEnvSchema` em `src/shared/env/client-schema.ts` usando `z.enum(['true','false']).default('false').transform((v) => v === 'true')`
-- [ ] 1.2 Incluir a chave `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` no objeto parseado em `src/shared/env/client.ts` (ler de `process.env`)
-- [ ] 1.3 Documentar a variável em `.env.example` (com comentário explicando default `false` e que mudar exige rebuild do frontend por ser `NEXT_PUBLIC_`)
-- [ ] 1.4 Adicionar `NEXT_PUBLIC_WHATSAPP_UI_ENABLED: "false"` ao serviço da app em `docker-compose.yml`
+- [x] 1.1 Adicionar `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` ao `clientEnvSchema` em `src/shared/env/client-schema.ts` usando `z.enum(['true','false']).default('false').transform((v) => v === 'true')`
+- [x] 1.2 Incluir a chave `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` no objeto parseado em `src/shared/env/client.ts` (ler de `process.env`)
+- [x] 1.3 Documentar a variável em `.env.example` (com comentário explicando default `false` e que mudar exige rebuild do frontend por ser `NEXT_PUBLIC_`)
+- [x] 1.4 Adicionar `NEXT_PUBLIC_WHATSAPP_UI_ENABLED: "false"` ao serviço da app em `docker-compose.yml`
 
 ## 2. Menu lateral — "Caixa de entrada"
 
