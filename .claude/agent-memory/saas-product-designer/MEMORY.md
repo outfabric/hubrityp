@@ -1,0 +1,1 @@
+- [Escopo MVP vs pós-MVP](project_mvp-scope.md) — PRDs 04/06/07/08 adiados; MVP = PRDs 01/02/03/05/09/10/11
