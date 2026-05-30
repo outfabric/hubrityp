@@ -15,10 +15,10 @@
 
 ## 3. Configurações — cards "WhatsApp" e "Lembretes"
 
-- [ ] 3.1 Estender `SettingsArea` em `src/app/(app)/configuracoes/settings-areas.ts` com `disabled?: boolean` / `comingSoon?: boolean`
-- [ ] 3.2 Em `src/app/(app)/configuracoes/page.tsx`, derivar o estado congelado dos cards `whatsapp` e `lembretes` a partir de `clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED` e renderizar `<Card>` não-clicável (sem `<Link>`) com `aria-disabled="true"`, tokens `text-disabled` e `<Badge variant="neutral">Em breve</Badge>`
-- [ ] 3.3 Estender `Integration` em `src/app/(app)/configuracoes/integracoes/integrations.ts` e aplicar o mesmo congelamento ao card "WhatsApp" em `integracoes/page.tsx`
-- [ ] 3.4 Confirmar que os demais cards (Locais, Agenda, Transcrição IA, etc.) permanecem navegáveis e inalterados
+- [x] 3.1 Estender `SettingsArea` em `src/app/(app)/configuracoes/settings-areas.ts` com `disabled?: boolean` / `comingSoon?: boolean`
+- [x] 3.2 Em `src/app/(app)/configuracoes/page.tsx`, derivar o estado congelado dos cards `whatsapp` e `lembretes` a partir de `clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED` e renderizar `<Card>` não-clicável (sem `<Link>`) com `aria-disabled="true"`, tokens `text-disabled` e `<Badge variant="neutral">Em breve</Badge>`
+- [x] 3.3 Estender `Integration` em `src/app/(app)/configuracoes/integracoes/integrations.ts` e aplicar o mesmo congelamento ao card "WhatsApp" em `integracoes/page.tsx`
+- [x] 3.4 Confirmar que os demais cards (Locais, Agenda, Transcrição IA, etc.) permanecem navegáveis e inalterados
 
 ## 4. Conformidade Design System & acessibilidade
 

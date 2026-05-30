@@ -1,14 +1,19 @@
 import Link from 'next/link';
 
 import { INTEGRATIONS } from '@/app/(app)/configuracoes/integracoes/integrations';
+import { clientEnv } from '@/shared/env/client';
+import { Badge } from '@/shared/ui/badge';
 import { Card } from '@/shared/ui/card';
 
 /**
- * Integrations index page — renders a responsive grid of interactive cards
- * linking to each integration. Server Component (no client JS needed).
- * v1 ships with WhatsApp only; grid is prepared to scale.
+ * Integrations index page — renders a responsive grid of cards linking to each
+ * integration. Server Component (no client JS needed). When the WhatsApp UI is
+ * disabled, the WhatsApp card is rendered frozen: non-navigable, visually
+ * muted, and tagged "Em breve". v1 ships with WhatsApp only.
  */
 export default function IntegrationsIndexPage() {
+  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED;
+
   return (
     <div data-testid="integrations-index-page">
       <h1
@@ -21,6 +26,31 @@ export default function IntegrationsIndexPage() {
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {INTEGRATIONS.map((integration) => {
           const Icon = integration.icon;
+          const disabled = !whatsappUiEnabled && integration.slug === 'whatsapp';
+
+          if (disabled) {
+            return (
+              <Card
+                key={integration.slug}
+                aria-disabled="true"
+                className="h-full cursor-not-allowed p-6"
+                data-testid={`integration-card-${integration.slug}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <Icon size={20} className="text-text-disabled" aria-hidden="true" />
+                  <Badge variant="neutral">Em breve</Badge>
+                </div>
+
+                <h3 className="text-text-disabled mt-3 text-[18px] leading-[1.25] font-semibold">
+                  {integration.label}
+                </h3>
+
+                <p className="text-text-disabled mt-1 text-[13px] leading-[1.5] font-normal">
+                  {integration.description}
+                </p>
+              </Card>
+            );
+          }
 
           return (
             <Link

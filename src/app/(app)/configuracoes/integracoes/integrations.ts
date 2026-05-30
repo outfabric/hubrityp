@@ -13,6 +13,14 @@ export interface Integration {
   readonly href: string;
   readonly icon: LucideIcon;
   readonly slug: string;
+  /**
+   * When true the integration is rendered as a non-navigable, visually frozen
+   * card. Derived at the render point from a feature flag (see
+   * integracoes/page.tsx); the static metadata never hardcodes it.
+   */
+  readonly disabled?: boolean;
+  /** When true a "Em breve" badge is shown on the frozen card. */
+  readonly comingSoon?: boolean;
 }
 
 export const INTEGRATIONS: readonly Integration[] = [
