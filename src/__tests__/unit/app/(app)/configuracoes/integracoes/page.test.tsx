@@ -1,8 +1,21 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { INTEGRATIONS } from '@/app/(app)/configuracoes/integracoes/integrations';
-import IntegrationsIndexPage from '@/app/(app)/configuracoes/integracoes/page';
+import type IntegrationsIndexPageType from '@/app/(app)/configuracoes/integracoes/page';
+
+// This suite verifies the label, href, microcopy and structure of the WhatsApp
+// integration card in the fully-enabled view, so it forces the WhatsApp UI flag
+// ON. The frozen (flag-OFF) behaviour lives in `page-whatsapp-freeze.test.tsx`.
+// The page reads `clientEnv` at render time, so the flag is stubbed before a
+// dynamic import (after `vi.resetModules()`) re-parses the client env.
+let IntegrationsIndexPage: typeof IntegrationsIndexPageType;
+
+beforeEach(async () => {
+  vi.resetModules();
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', 'true');
+  IntegrationsIndexPage = (await import('@/app/(app)/configuracoes/integracoes/page')).default;
+});
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -30,6 +43,7 @@ vi.mock('next/link', () => ({
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllEnvs();
 });
 
 // ---------------------------------------------------------------------------

@@ -28,11 +28,11 @@
 
 ## 5. Testes
 
-- [ ] 5.1 Unit: `client-schema` coage `"true"`→`true`, `"false"`→`false`, ausente→`false` (default) e rejeita valor inválido
-- [ ] 5.2 Unit/UI: `sidebar-nav` renderiza "Caixa de entrada" navegável quando flag ligada e congelada (sem link, `aria-disabled`, tag "Em breve", sem badge de não-lidas) quando desligada
-- [ ] 5.3 Unit/UI: página `/configuracoes` renderiza cards "WhatsApp" e "Lembretes" navegáveis (flag on) e congelados (flag off); demais cards sempre navegáveis
-- [ ] 5.4 Unit/UI: card "WhatsApp" em `/configuracoes/integracoes` congelado quando flag off
-- [ ] 5.5 Verificar que nenhuma rota é bloqueada/redirecionada pela flag (escopo só-UI) — acesso direto a `/caixa-de-entrada` continua respondendo
+- [x] 5.1 Unit: `client-schema` coage `"true"`→`true`, `"false"`→`false`, ausente→`false` (default) e rejeita valor inválido
+- [x] 5.2 Unit/UI: `sidebar-nav` renderiza "Caixa de entrada" navegável quando flag ligada e congelada (sem link, `aria-disabled`, tag "Em breve", sem badge de não-lidas) quando desligada
+- [x] 5.3 Unit/UI: página `/configuracoes` renderiza cards "WhatsApp" e "Lembretes" navegáveis (flag on) e congelados (flag off); demais cards sempre navegáveis
+- [x] 5.4 Unit/UI: card "WhatsApp" em `/configuracoes/integracoes` congelado quando flag off
+- [x] 5.5 Verificar que nenhuma rota é bloqueada/redirecionada pela flag (escopo só-UI) — acesso direto a `/caixa-de-entrada` continua respondendo
 
 ## 6. Fechamento
 
