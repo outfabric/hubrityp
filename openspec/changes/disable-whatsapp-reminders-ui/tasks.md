@@ -36,6 +36,6 @@
 
 ## 6. Fechamento
 
-- [ ] 6.1 Rodar lint, type-check e a suíte de testes afetada
-- [ ] 6.2 Atualizar documentação relevante (se houver runbook/onboarding citando esses pontos de entrada)
-- [ ] 6.3 `openspec validate disable-whatsapp-reminders-ui` passando e abrir PR
+- [x] 6.1 Rodar lint, type-check e a suíte de testes afetada
+- [x] 6.2 Atualizar documentação relevante (se houver runbook/onboarding citando esses pontos de entrada)
+- [x] 6.3 `openspec validate disable-whatsapp-reminders-ui` passando e abrir PR
