@@ -47,21 +47,14 @@ test.describe('@configuracoes navigation shell', () => {
   // 9.2 — Card navigation to each settings area
   // -------------------------------------------------------------------------
   test('navegacao por card para cada area de configuracoes', async ({ page }) => {
+    // Only Locais and Agenda are navigable. WhatsApp and Lembretes are frozen
+    // behind NEXT_PUBLIC_WHATSAPP_UI_ENABLED (default OFF) — rendered as
+    // non-navigable "Em breve" cards, asserted in a dedicated test below.
     const areas = [
       {
         slug: 'locais',
         href: '/configuracoes/locais',
         titleTestid: 'locations-page-title',
-      },
-      {
-        slug: 'whatsapp',
-        href: '/configuracoes/integracoes/whatsapp',
-        titleTestid: 'whatsapp-integration-page-title',
-      },
-      {
-        slug: 'lembretes',
-        href: '/configuracoes/lembretes',
-        titleTestid: 'reminder-settings-page-title',
       },
       {
         slug: 'agenda',
@@ -89,9 +82,35 @@ test.describe('@configuracoes navigation shell', () => {
   });
 
   // -------------------------------------------------------------------------
+  // 9.2b — Frozen cards (WhatsApp, Lembretes) are non-navigable "Em breve"
+  // -------------------------------------------------------------------------
+  test('cards WhatsApp e Lembretes congelados nao sao navegaveis (Em breve)', async ({ page }) => {
+    await page.goto('/configuracoes');
+    await expect(page.getByTestId('settings-index-page')).toBeVisible({ timeout: 10_000 });
+
+    for (const slug of ['whatsapp', 'lembretes']) {
+      const card = page.getByTestId(`settings-area-card-${slug}`);
+      await expect(card).toBeVisible();
+      await expect(card).toHaveAttribute('aria-disabled', 'true');
+      await expect(card).toContainText('Em breve');
+
+      // No surrounding <Link>, so there is no navigation target.
+      await expect(page.locator(`a:has([data-testid="settings-area-card-${slug}"])`)).toHaveCount(
+        0,
+      );
+    }
+
+    // Clicking a frozen card does not navigate away from the index.
+    await page.getByTestId('settings-area-card-whatsapp').click();
+    await expect(page).toHaveURL(/\/configuracoes$/);
+  });
+
+  // -------------------------------------------------------------------------
   // 9.3 — Integrations index page and WhatsApp card
   // -------------------------------------------------------------------------
-  test('indice de integracoes renderiza card WhatsApp e breadcrumb funciona', async ({ page }) => {
+  test('indice de integracoes renderiza card WhatsApp congelado e breadcrumb funciona', async ({
+    page,
+  }) => {
     await page.goto('/configuracoes/integracoes');
 
     // Assert h1 "Integrações" visible
@@ -100,9 +119,14 @@ test.describe('@configuracoes navigation shell', () => {
     });
     await expect(page.getByTestId('integrations-index-page-title')).toHaveText('Integrações');
 
-    // Assert WhatsApp card visible
+    // The WhatsApp card is rendered but frozen behind
+    // NEXT_PUBLIC_WHATSAPP_UI_ENABLED (default OFF): a non-navigable
+    // `aria-disabled` "Em breve" card, NOT wrapped in a link.
     const whatsappCard = page.getByTestId('integration-card-whatsapp');
     await expect(whatsappCard).toBeVisible();
+    await expect(whatsappCard).toHaveAttribute('aria-disabled', 'true');
+    await expect(whatsappCard).toContainText('Em breve');
+    await expect(page.locator('a:has([data-testid="integration-card-whatsapp"])')).toHaveCount(0);
 
     // Assert breadcrumb shows "Configurações > Integrações"
     const breadcrumb = page.getByTestId('settings-breadcrumb');
@@ -116,10 +140,9 @@ test.describe('@configuracoes navigation shell', () => {
     const integracoesSegment = breadcrumb.locator('span[aria-current="page"]');
     await expect(integracoesSegment).toHaveText('Integrações');
 
-    // Click WhatsApp card — assert URL changes
+    // Clicking the frozen card does not navigate away from the index.
     await whatsappCard.click();
-    await page.waitForURL('**/configuracoes/integracoes/whatsapp', { timeout: 10_000 });
-    expect(new URL(page.url()).pathname).toBe('/configuracoes/integracoes/whatsapp');
+    await expect(page).toHaveURL(/\/configuracoes\/integracoes$/);
   });
 
   // -------------------------------------------------------------------------
@@ -424,30 +447,23 @@ test.describe('@configuracoes navigation shell', () => {
     await page.goto('/configuracoes');
     await expect(page.getByTestId('settings-index-page')).toBeVisible({ timeout: 10_000 });
 
-    // Focus the first card directly, then Tab through the rest.
-    // There are other focusable elements before the cards (sidebar links),
-    // so we click the page body first and then use sequential Tab presses
-    // to reach and traverse the card links.
-    const firstCardLink = page.locator('a:has([data-testid="settings-area-card-locais"])');
-    await firstCardLink.focus();
+    // With NEXT_PUBLIC_WHATSAPP_UI_ENABLED OFF (default), only Locais and
+    // Agenda are navigable links. WhatsApp and Lembretes are frozen
+    // ("Em breve") and intentionally NOT focusable — they are not links.
+    const navigableSlugs = ['locais', 'agenda'];
 
-    const cardSlugs = ['locais', 'whatsapp', 'lembretes', 'agenda'];
-
-    for (let i = 0; i < cardSlugs.length; i++) {
-      const slug = cardSlugs[i]!;
+    for (let i = 0; i < navigableSlugs.length; i++) {
+      const slug = navigableSlugs[i]!;
       const cardLink = page.locator(`a:has([data-testid="settings-area-card-${slug}"])`);
 
-      if (i > 0) {
-        await page.keyboard.press('Tab');
-      }
-
-      // Wait for the element to be focused
+      // Focus each card link directly. Sequential Tab is unreliable because
+      // the frozen cards interleave with the navigable ones in the DOM.
+      await cardLink.focus();
       await expect(cardLink).toBeFocused({ timeout: 5_000 });
 
       // Assert visible focus indicator (CSS box-shadow or outline).
       // Tailwind focus-visible:shadow-focus applies a box-shadow on
-      // :focus-visible. Programmatic `.focus()` and keyboard Tab both
-      // trigger :focus-visible in Chromium.
+      // :focus-visible; programmatic `.focus()` triggers it in Chromium.
       const hasFocusIndicator = await cardLink.evaluate((el) => {
         const styles = window.getComputedStyle(el);
         const hasShadow = styles.boxShadow !== 'none' && styles.boxShadow !== '';
@@ -457,14 +473,19 @@ test.describe('@configuracoes navigation shell', () => {
       expect(hasFocusIndicator).toBe(true);
     }
 
-    // Focus is now on "agenda" (last card). Shift-Tab once → "lembretes".
-    await page.keyboard.press('Shift+Tab');
+    // The frozen cards expose no link in the tab order.
+    await expect(page.locator('a:has([data-testid="settings-area-card-whatsapp"])')).toHaveCount(0);
+    await expect(page.locator('a:has([data-testid="settings-area-card-lembretes"])')).toHaveCount(
+      0,
+    );
 
-    // Press Enter on "Lembretes"
+    // Pressing Enter on a focused navigable card navigates.
+    const agendaLink = page.locator('a:has([data-testid="settings-area-card-agenda"])');
+    await agendaLink.focus();
     await page.keyboard.press('Enter');
 
-    await page.waitForURL('**/configuracoes/lembretes', { timeout: 10_000 });
-    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes');
+    await page.waitForURL('**/configuracoes/agenda', { timeout: 10_000 });
+    expect(new URL(page.url()).pathname).toBe('/configuracoes/agenda');
   });
 
   // -------------------------------------------------------------------------

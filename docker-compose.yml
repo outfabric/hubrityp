@@ -48,9 +48,14 @@ services:
       # a dummy local-dev value; production/preview get a real key from the
       # Vercel Marketplace Inngest integration.
       INNGEST_ENCRYPTION_KEY: local-dev-inngest-encryption-key-minimum-32-chars
+      NEXT_PUBLIC_STREAM_API_KEY: dummy_stream_key_for_local_dev
       STREAM_API_KEY: dummy_stream_key_for_local_dev
       STREAM_API_SECRET: dummy_stream_secret_for_local_dev
       STREAM_WEBHOOK_SECRET: dummy_stream_webhook_secret_for_local_dev
+      # WhatsApp UI entry points stay frozen behind this flag (default off).
+      # NEXT_PUBLIC_ is inlined at build time, so flipping this requires a
+      # rebuild of the dev container's .next, not just a restart.
+      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'false'
       # Tell the Inngest SDK to send events to the Dev Server container.
       # So funciona quando o profile `inngest` esta ativo (o host `inngest`
       # nao existe sem ele). Sem o Dev Server, o app boota normalmente —

@@ -1,8 +1,22 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import SettingsIndexPage from '@/app/(app)/configuracoes/page';
+import type SettingsIndexPageType from '@/app/(app)/configuracoes/page';
 import { SETTINGS_AREAS } from '@/app/(app)/configuracoes/settings-areas';
+
+// This suite verifies the labels, hrefs, microcopy and structure of EVERY
+// settings card in the fully-enabled view, so it forces the WhatsApp UI flag
+// ON. The frozen (flag-OFF) behaviour for the WhatsApp/Lembretes cards lives in
+// `page-whatsapp-freeze.test.tsx`. The page reads `clientEnv` at render time, so
+// the flag is stubbed before a dynamic import (after `vi.resetModules()`)
+// re-parses the client env.
+let SettingsIndexPage: typeof SettingsIndexPageType;
+
+beforeEach(async () => {
+  vi.resetModules();
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', 'true');
+  SettingsIndexPage = (await import('@/app/(app)/configuracoes/page')).default;
+});
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -30,6 +44,7 @@ vi.mock('next/link', () => ({
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllEnvs();
 });
 
 // ---------------------------------------------------------------------------

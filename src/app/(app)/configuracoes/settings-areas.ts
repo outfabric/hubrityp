@@ -13,6 +13,14 @@ export interface SettingsArea {
   readonly href: string;
   readonly icon: LucideIcon;
   readonly slug: string;
+  /**
+   * When true the area is rendered as a non-navigable, visually frozen card.
+   * Derived at the render point from a feature flag (see configuracoes/page.tsx);
+   * the static metadata never hardcodes it so the flag stays the single source.
+   */
+  readonly disabled?: boolean;
+  /** When true a "Em breve" badge is shown on the frozen card. */
+  readonly comingSoon?: boolean;
 }
 
 export const SETTINGS_AREAS: readonly SettingsArea[] = [
