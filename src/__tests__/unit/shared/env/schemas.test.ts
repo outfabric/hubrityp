@@ -14,6 +14,14 @@ const validClient = {
   NEXT_PUBLIC_STREAM_API_KEY: 'stream-public-key',
 };
 
+// The WhatsApp UI flag is parsed from a "true"/"false" string and transformed
+// into a boolean, so the parsed client env carries it even when the raw input
+// omits it (it defaults to `false`).
+const parsedClient = {
+  ...validClient,
+  NEXT_PUBLIC_WHATSAPP_UI_ENABLED: false,
+};
+
 const validServer = {
   ...validClient,
   DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
@@ -29,7 +37,7 @@ const validServer = {
 
 describe('clientEnvSchema', () => {
   it('parses a valid client env', () => {
-    expect(clientEnvSchema.parse(validClient)).toEqual(validClient);
+    expect(clientEnvSchema.parse(validClient)).toEqual(parsedClient);
   });
 
   it('rejects a non-URL Supabase URL', () => {
@@ -49,6 +57,40 @@ describe('clientEnvSchema', () => {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('defaults NEXT_PUBLIC_WHATSAPP_UI_ENABLED to false when omitted', () => {
+    const parsed = clientEnvSchema.parse(validClient);
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(false);
+  });
+
+  it('parses the literal "false" string as the boolean false', () => {
+    // Guards against the z.coerce.boolean() footgun, which would coerce the
+    // non-empty string "false" to `true`.
+    const parsed = clientEnvSchema.parse({
+      ...validClient,
+      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'false',
+    });
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(false);
+  });
+
+  it('parses the literal "true" string as the boolean true', () => {
+    const parsed = clientEnvSchema.parse({
+      ...validClient,
+      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'true',
+    });
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(true);
+  });
+
+  it('rejects a NEXT_PUBLIC_WHATSAPP_UI_ENABLED value outside the enum', () => {
+    const result = clientEnvSchema.safeParse({
+      ...validClient,
+      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: '1',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors).toHaveProperty('NEXT_PUBLIC_WHATSAPP_UI_ENABLED');
+    }
   });
 });
 
