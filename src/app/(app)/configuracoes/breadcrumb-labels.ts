@@ -12,4 +12,5 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   templates: 'Templates',
   historico: 'Histórico',
   agenda: 'Agenda',
+  'transcricao-ia': 'Transcrição IA',
 };

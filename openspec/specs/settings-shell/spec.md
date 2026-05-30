@@ -7,52 +7,28 @@ Navigation shell for the Configurações (Settings) area: index page with cards,
 
 ### Requirement: Settings index page displays interactive cards for each settings area
 
-The system SHALL render a Server Component page at `/configuracoes` displaying 4 interactive cards in a responsive grid. Each card uses `Card interactive` (DS: bg `surface`, border `border`, radius `xl`, shadow `xs`, padding `space-6`; hover: border `border-strong`, cursor pointer). The grid is 1 column on mobile (<640px), 2 columns on md (>=768px), and 3 columns on lg (>=1024px), with gap `space-6`. Each card displays a Lucide icon (20px, `text-text-secondary`), a label in `h3` style (18px/600, `text-text-primary`), and a description in `body-sm` (13px/400, `text-text-secondary`). Cards link to their respective settings area via `next/link`. Card data is static (no DB fetch, no Suspense).
+The settings index at `/configuracoes/page.tsx` SHALL render a grid of interactive cards (`<Card variant="interactive">`) for each settings area defined in `src/app/(app)/configuracoes/settings-areas.ts`. Clicking a card navigates to that area. Each card shows: title, short description, Lucide icon, and a chevron affordance.
 
-The page title is an `<h1>` "Configurações" (28px/600, `text-text-primary`), consistent with the DS heading hierarchy (h1 unique per page). The page uses `data-testid="settings-index-page"` on the container and `data-testid="settings-area-card-{slug}"` on each card (where slug is: `locais`, `whatsapp`, `lembretes`, `agenda`).
+The current set of areas is: Agenda, Locais, Lembretes, Integrações, **and Transcrição IA (added by `ai-transcription-settings-ui`)**. The Transcrição IA entry SHALL be defined as `{ id: 'transcricao-ia', label: 'Transcrição IA', description: 'Ativar a feature, escolher template padrão, sensibilidade de risco e ver estatísticas.', icon: Sparkles, href: '/configuracoes/transcricao-ia' }`.
 
-Cards and their content (exact microcopy):
-- Locais de atendimento / "Endereços e modalidades onde você atende presencial ou online." / `MapPin` / href `/configuracoes/locais`
-- WhatsApp / "Conecte sua conta do WhatsApp para enviar lembretes e mensagens." / `MessageCircle` / href `/configuracoes/integracoes/whatsapp`
-- Lembretes / "Personalize quando e como avisar pacientes sobre suas sessões." / `Bell` / href `/configuracoes/lembretes`
-- Agenda / "Horários de trabalho, duração padrão e regras de agendamento." / `Calendar` / href `/configuracoes/agenda`
+The breadcrumb label registry at `src/app/(app)/configuracoes/breadcrumb-labels.ts` SHALL include `'transcricao-ia': 'Transcrição IA'` so that the settings layout breadcrumb renders the correct label.
 
-Tap targets on mobile SHALL be at least 44x44px. Icons are decorative (`aria-hidden="true"`). Each card has a visible focus ring (`shadow-focus`) for keyboard navigation.
+#### Scenario: All current areas have cards on the index
+- **WHEN** the index renders
+- **THEN** Agenda, Locais, Lembretes, Integrações, and Transcrição IA each appear as a clickable card
 
-#### Scenario: Index page renders 4 cards with correct labels and icons
+#### Scenario: Card navigation is keyboard accessible
+- **WHEN** a card is focused with Tab and Enter is pressed
+- **THEN** the navigation happens (no mouse required)
 
-- **WHEN** psychologist navigates to `/configuracoes`
-- **THEN** the page displays an h1 "Configurações" and 4 interactive cards with labels "Locais de atendimento", "WhatsApp", "Lembretes", and "Agenda", each with its prescribed Lucide icon
+#### Scenario: Cards comply with Sálvia interactive variant
+- **WHEN** a card is hovered
+- **THEN** the border transitions to `border-strong` (Sálvia interactive variant), no shadow color change, no gradient
 
-#### Scenario: Card navigates to the correct settings area
-
-- **WHEN** psychologist clicks the "WhatsApp" card
-- **THEN** the browser navigates to `/configuracoes/integracoes/whatsapp`
-
-#### Scenario: Grid is responsive — 1 column on mobile
-
-- **WHEN** viewport width is 375px
-- **THEN** the cards are in a single column stack and each card has a minimum tap target of 44x44px
-
-#### Scenario: Grid is responsive — 2 columns on md
-
-- **WHEN** viewport width is 768px
-- **THEN** the cards are in a 2-column grid
-
-#### Scenario: Grid is responsive — 3 columns on lg
-
-- **WHEN** viewport width is 1024px
-- **THEN** the cards are in a 3-column grid with gap space-6
-
-#### Scenario: Cards are keyboard-navigable
-
-- **WHEN** psychologist uses Tab key on the index page
-- **THEN** focus moves through each card sequentially with a visible focus ring (shadow-focus), and pressing Enter activates the focused card's link
-
-#### Scenario: No loading state on index
-
-- **WHEN** psychologist navigates to `/configuracoes`
-- **THEN** the page renders immediately without any loading spinner or skeleton — data is static
+#### Scenario: Adding a new area requires updating BOTH `settings-areas.ts` AND `breadcrumb-labels.ts`
+- **WHEN** a future change adds a new area
+- **THEN** an integration test (existing pattern) asserts that every `settings-areas` entry has a corresponding label in `breadcrumb-labels`
+- **AND** Transcrição IA satisfies this rule
 
 ### Requirement: Settings layout renders a persistent breadcrumb
 

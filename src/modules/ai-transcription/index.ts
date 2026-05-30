@@ -93,6 +93,17 @@ export {
 // ---- Note serializer --------------------------------------------------------
 export { serializeNoteAsEvolution } from './lib/serialize-note';
 
+// ---- Settings schemas / types -----------------------------------------------
+export {
+  UpdateTranscriptionSettingsInputSchema,
+  type UpdateTranscriptionSettingsInput,
+  TranscriptionSettingsViewSchema,
+  type TranscriptionSettingsView,
+} from './lib/settings-schemas';
+
+// ---- Stats schemas / types --------------------------------------------------
+export { TranscriptionStatsViewSchema, type TranscriptionStatsView } from './lib/stats-schemas';
+
 // ---- Server -----------------------------------------------------------------
 export { requestAudioUploadUrlImpl, type RequestAudioUploadUrlResult } from './server';
 export { confirmAudioUploadImpl, type ConfirmAudioUploadResult } from './server';
@@ -101,3 +112,6 @@ export { listTranscriptionsForReviewImpl } from './server';
 export { updateTranscriptionDraftImpl } from './server';
 export { saveTranscriptionToProntuarioImpl } from './server';
 export { discardTranscriptionImpl } from './server';
+export { getTranscriptionSettingsImpl, type GetTranscriptionSettingsResult } from './server';
+export { updateTranscriptionSettingsImpl, type UpdateTranscriptionSettingsResult } from './server';
+export { getTranscriptionStatsImpl, type GetTranscriptionStatsResult } from './server';

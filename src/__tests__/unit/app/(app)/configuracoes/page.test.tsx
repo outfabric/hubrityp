@@ -51,13 +51,13 @@ describe('SettingsIndexPage', () => {
     expect(screen.getByTestId('settings-index-page')).toBeInTheDocument();
   });
 
-  it('renders exactly 4 settings area cards', () => {
+  it('renders exactly 5 settings area cards', () => {
     render(<SettingsIndexPage />);
 
     const cards = SETTINGS_AREAS.map((area) =>
       screen.getByTestId(`settings-area-card-${area.slug}`),
     );
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(5);
   });
 
   it.each([
@@ -85,6 +85,13 @@ describe('SettingsIndexPage', () => {
       href: '/configuracoes/agenda',
       description: 'Horários de trabalho, duração padrão e regras de agendamento.',
     },
+    {
+      slug: 'transcricao-ia',
+      label: 'Transcrição IA',
+      href: '/configuracoes/transcricao-ia',
+      description:
+        'Ativar a feature, escolher template padrão, sensibilidade de risco e ver estatísticas.',
+    },
   ])(
     'renders card "$slug" with label "$label", correct href, and exact microcopy',
     ({ slug, label, href, description }) => {
@@ -105,6 +112,24 @@ describe('SettingsIndexPage', () => {
       expect(link).toHaveAttribute('href', href);
     },
   );
+
+  it('renders the new "Transcrição IA" card with its label and microcopy', () => {
+    render(<SettingsIndexPage />);
+
+    const card = screen.getByTestId('settings-area-card-transcricao-ia');
+    expect(card).toBeInTheDocument();
+
+    const heading = within(card).getByRole('heading', { level: 3 });
+    expect(heading).toHaveTextContent('Transcrição IA');
+
+    expect(
+      within(card).getByText(
+        'Ativar a feature, escolher template padrão, sensibilidade de risco e ver estatísticas.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(card.closest('a')).toHaveAttribute('href', '/configuracoes/transcricao-ia');
+  });
 
   it('each card contains a decorative Lucide icon (svg with aria-hidden)', () => {
     render(<SettingsIndexPage />);
