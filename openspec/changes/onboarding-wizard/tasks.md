@@ -51,9 +51,9 @@
 
 ## 8. Wizard step 4 — Pronto + completion
 
-- [ ] 8.1 Create `src/modules/onboarding/components/step-done.tsx` — summary with check per configured item, "Configurar agora" link per missing item (non-blocking), primary "Ver minha agenda" (`/agenda`), secondary "Ir para o dashboard" (`/dashboard`), "O que vem em breve" info section (no enablement). Either CTA calls `completeOnboarding`
-- [ ] 8.2 Create thin `src/app/(app)/onboarding/setup/[step]/actions.ts` (`'use server'`) wrapping save/complete impls
-- [ ] 8.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/step-done.test.tsx` — shows check vs "Configurar agora" based on checklist state; renders "O que vem em breve" without enabling anything; no post-MVP module is actionable
+- [x] 8.1 Create `src/modules/onboarding/components/step-done.tsx` — summary with check per configured item, "Configurar agora" link per missing item (non-blocking), primary "Ver minha agenda" (`/agenda`), secondary "Ir para o dashboard" (`/dashboard`), "O que vem em breve" info section (no enablement). Either CTA calls `completeOnboarding`
+- [x] 8.2 Create thin `src/app/(app)/onboarding/setup/[step]/actions.ts` (`'use server'`) wrapping save/complete impls
+- [x] 8.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/step-done.test.tsx` — shows check vs "Configurar agora" based on checklist state; renders "O que vem em breve" without enabling anything; no post-MVP module is actionable
 
 ## 9. Unfinished-setup banner + resume
 

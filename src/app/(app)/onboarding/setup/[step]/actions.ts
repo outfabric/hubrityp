@@ -1,6 +1,8 @@
 'use server';
 
 import {
+  type CompleteOnboardingResult,
+  completeOnboardingImpl,
   configureLocationImpl,
   type ImportPatientsStepResult,
   importOnboardingPatientsImpl,
@@ -14,6 +16,8 @@ import {
   type WizardStep,
 } from '@/modules/onboarding';
 import { createServerClient } from '@/shared/supabase/server';
+
+export type { CompleteOnboardingResult } from '@/modules/onboarding';
 
 // ---------------------------------------------------------------------------
 // Result shapes returned to the client wizard components
@@ -160,4 +164,18 @@ export async function skipPatientsStep(): Promise<SkipPatientsStepResult> {
   const supabase = await createServerClient();
   const result = await saveOnboardingStepImpl(supabase, { step: 'patients' });
   return result.ok ? { ok: true } : { ok: false };
+}
+
+/**
+ * Completes the wizard from step 4 ("Pronto"). Stamps
+ * `onboarding_completed_at = now()` and sets `onboarding_step = 'done'`
+ * server-side, authorized by `auth.uid()` only — the action takes no client
+ * input, so there is no IDOR vector. RLS is the backstop on the owner-scoped
+ * `profiles` UPDATE. The client navigates (to `/agenda` or `/dashboard`) after
+ * a successful completion; the destination is decided client-side and never
+ * influences authorization.
+ */
+export async function completeOnboarding(): Promise<CompleteOnboardingResult> {
+  const supabase = await createServerClient();
+  return completeOnboardingImpl(supabase);
 }

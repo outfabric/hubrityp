@@ -1,8 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
 
 import {
+  getOnboardingChecklist,
   isValidStep,
+  type OnboardingSummary,
   resumeOnboardingStepImpl,
+  StepDone,
   StepLocation,
   StepPatients,
   StepProfile,
@@ -11,9 +14,11 @@ import {
   type WizardStep,
 } from '@/modules/onboarding';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
+import { db } from '@/shared/db/client';
 import { createServerClient } from '@/shared/supabase/server';
 
 import {
+  completeOnboarding,
   createOnboardingLocation,
   importOnboardingPatients,
   quickAddOnboardingPatient,
@@ -38,8 +43,7 @@ interface SetupStepPageProps {
   params: Promise<{ step: string }>;
 }
 
-// Section headings per navigable step. `done` (the terminal summary screen) is
-// built in a later section; until then it renders a neutral placeholder.
+// Section headings per navigable step.
 const STEP_HEADINGS: Record<WizardStep, string> = {
   profile: 'Sobre você',
   location: 'Local e agenda',
@@ -84,6 +88,13 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
     redirect(`/onboarding/setup/${resume.resumeStep}`);
   }
 
+  // The terminal `done` summary reads the OWNER'S checklist server-side. The
+  // `WHERE user_id = user.id` predicate inside `getOnboardingChecklist` is
+  // belt-and-suspenders on top of RLS; `user.id` comes from the authenticated
+  // session, never from the route. A brand-new user may have no row yet → all
+  // items default to "missing" (non-blocking links), never a crash.
+  const summary = step === 'done' ? await readSummary(profile.userId) : null;
+
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-8">
       <div className="flex flex-col gap-4">
@@ -93,21 +104,41 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
         </h1>
       </div>
 
-      {renderStep(step, profile.sensitiveDataConsentAt != null)}
+      {renderStep(step, profile.sensitiveDataConsentAt != null, summary)}
     </div>
   );
 }
 
 /**
+ * Reads the owner's onboarding checklist and projects it onto the three MVP
+ * summary items shown on step 4. Missing row → all items "missing".
+ */
+async function readSummary(userId: string): Promise<OnboardingSummary> {
+  const checklist = await getOnboardingChecklist(db, userId);
+  return {
+    profileCompleted: checklist?.profileCompleted ?? false,
+    locationConfigured: checklist?.locationConfigured ?? false,
+    firstPatientAdded: checklist?.firstPatientAdded ?? false,
+  };
+}
+
+/**
  * Renders the body for the given step. `profile` (step 1), `location` (step 2),
- * and `patients` (step 3) are implemented; the terminal `done` summary screen is
- * built in a later section and renders a neutral placeholder for now.
+ * `patients` (step 3), and the terminal `done` summary (step 4) are all
+ * implemented.
  *
  * `hasSensitiveDataConsent` is read server-side from the owner's profile and
  * controls whether the step-3 CSV upload is enabled (RN-11.03). The server gate
  * in `importOnboardingPatients` enforces it regardless of this UI flag.
+ *
+ * `summary` is the owner's checklist projection, non-null only for the `done`
+ * step (where it drives the check vs. "Configurar agora" rendering).
  */
-function renderStep(step: WizardStep, hasSensitiveDataConsent: boolean) {
+function renderStep(
+  step: WizardStep,
+  hasSensitiveDataConsent: boolean,
+  summary: OnboardingSummary | null,
+) {
   if (step === 'profile') {
     return <StepProfile onSaveStep={saveProfileStep} onUploadPhoto={uploadProfilePhoto} />;
   }
@@ -127,9 +158,14 @@ function renderStep(step: WizardStep, hasSensitiveDataConsent: boolean) {
     );
   }
 
+  // step === 'done' — `summary` is guaranteed non-null for this branch (the page
+  // reads it whenever `step === 'done'`); fall back to all-missing defensively.
   return (
-    <p className="text-text-secondary text-base" data-testid="setup-step-placeholder">
-      Esta etapa estará disponível em breve.
-    </p>
+    <StepDone
+      summary={
+        summary ?? { profileCompleted: false, locationConfigured: false, firstPatientAdded: false }
+      }
+      onComplete={completeOnboarding}
+    />
   );
 }

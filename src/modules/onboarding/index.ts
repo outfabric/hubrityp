@@ -87,3 +87,9 @@ export {
   type QuickAddPatientStepResult,
   type SkipPatientsStepResult,
 } from './components/step-patients';
+export {
+  StepDone,
+  type StepDoneProps,
+  type OnboardingSummary,
+  type CompleteOnboardingStepResult,
+} from './components/step-done';
