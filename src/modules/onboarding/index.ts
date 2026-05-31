@@ -54,3 +54,16 @@ export {
 } from './server/complete-onboarding';
 export { skipOnboardingImpl, type SkipOnboardingResult } from './server/skip-onboarding';
 export { resumeOnboardingStepImpl, type ResumeOnboardingStepResult } from './server/resume-step';
+export {
+  uploadProfilePhotoImpl,
+  type UploadProfilePhotoResult,
+} from './server/upload-profile-photo';
+
+// ---- Wizard UI components ----------------------------------------------------
+export { WizardProgress, type WizardProgressProps } from './components/wizard-progress';
+export {
+  StepProfile,
+  type StepProfileProps,
+  type SaveProfileStepResult,
+  type UploadPhotoActionResult,
+} from './components/step-profile';

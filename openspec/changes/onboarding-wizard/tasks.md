@@ -31,12 +31,12 @@
 
 ## 5. Wizard step 1 — Sobre você (profile)
 
-- [ ] 5.1 Create `src/modules/onboarding/components/wizard-progress.tsx` — "Passo N de 4" indicator (design-system caption-upper + neutral track)
-- [ ] 5.2 Create `src/app/(app)/onboarding/setup/[step]/page.tsx` (Server Component) — validate `[step]` via `isValidStep` (404/redirect otherwise), route invalid/earlier step to resume point, render the matching step component with progress indicator. Assert no post-MVP module text
-- [ ] 5.3 Create `src/modules/onboarding/components/step-profile.tsx` (client leaf) — RHF + Zod: display name, pronome (free text), especialização (autocomplete), tipo de atuação, optional photo upload. On submit calls `saveOnboardingStep` for `profile`
-- [ ] 5.4 Create server-validated photo upload action (`src/modules/onboarding/server/upload-profile-photo.ts`) — getUser() auth, validate MIME/size/extension server-side, store in Supabase Storage under UUID filename in owner-scoped path, sanitized error on reject
-- [ ] 5.5 **Integration test:** `src/__tests__/integration/onboarding/profile-photo-upload.int.test.ts` — rejects oversized file, rejects non-image MIME, accepts valid image and stores under a UUID name (not the supplied name); cross-user path isolation
-- [ ] 5.6 **Unit test:** `src/__tests__/unit/modules/onboarding/components/step-profile.test.tsx` — RHF validation: required display name, blur-time inline error styling per design system
+- [x] 5.1 Create `src/modules/onboarding/components/wizard-progress.tsx` — "Passo N de 4" indicator (design-system caption-upper + neutral track)
+- [x] 5.2 Create `src/app/(app)/onboarding/setup/[step]/page.tsx` (Server Component) — validate `[step]` via `isValidStep` (404/redirect otherwise), route invalid/earlier step to resume point, render the matching step component with progress indicator. Assert no post-MVP module text
+- [x] 5.3 Create `src/modules/onboarding/components/step-profile.tsx` (client leaf) — RHF + Zod: display name, pronome (free text), especialização (autocomplete), tipo de atuação, optional photo upload. On submit calls `saveOnboardingStep` for `profile`
+- [x] 5.4 Create server-validated photo upload action (`src/modules/onboarding/server/upload-profile-photo.ts`) — getUser() auth, validate MIME/size/extension server-side, store in Supabase Storage under UUID filename in owner-scoped path, sanitized error on reject
+- [x] 5.5 **Integration test:** `src/__tests__/integration/onboarding/profile-photo-upload.int.test.ts` — rejects oversized file, rejects non-image MIME, accepts valid image and stores under a UUID name (not the supplied name); cross-user path isolation
+- [x] 5.6 **Unit test:** `src/__tests__/unit/modules/onboarding/components/step-profile.test.tsx` — RHF validation: required display name, blur-time inline error styling per design system
 
 ## 6. Wizard step 2 — Local e agenda (reuse agenda module)
 
