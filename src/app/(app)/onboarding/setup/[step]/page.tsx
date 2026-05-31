@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import {
   isValidStep,
   resumeOnboardingStepImpl,
+  StepLocation,
   StepProfile,
   WIZARD_STEPS,
   WizardProgress,
@@ -11,7 +12,7 @@ import {
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
 
-import { saveProfileStep, uploadProfilePhoto } from './actions';
+import { createOnboardingLocation, saveProfileStep, uploadProfilePhoto } from './actions';
 
 // `/onboarding/setup/[step]` — the four-step MVP setup wizard.
 //
@@ -90,13 +91,17 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
 }
 
 /**
- * Renders the body for the given step. Only `profile` (step 1) is implemented
- * in this section; `location`, `patients`, and `done` get their components in
- * later sections and render a neutral placeholder for now.
+ * Renders the body for the given step. `profile` (step 1) and `location`
+ * (step 2) are implemented; `patients` and `done` get their components in later
+ * sections and render a neutral placeholder for now.
  */
 function renderStep(step: WizardStep) {
   if (step === 'profile') {
     return <StepProfile onSaveStep={saveProfileStep} onUploadPhoto={uploadProfilePhoto} />;
+  }
+
+  if (step === 'location') {
+    return <StepLocation onCreateLocation={createOnboardingLocation} />;
   }
 
   return (

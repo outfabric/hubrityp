@@ -58,6 +58,7 @@ export {
   uploadProfilePhotoImpl,
   type UploadProfilePhotoResult,
 } from './server/upload-profile-photo';
+export { configureLocationImpl, type ConfigureLocationResult } from './server/configure-location';
 
 // ---- Wizard UI components ----------------------------------------------------
 export { WizardProgress, type WizardProgressProps } from './components/wizard-progress';
@@ -67,3 +68,8 @@ export {
   type SaveProfileStepResult,
   type UploadPhotoActionResult,
 } from './components/step-profile';
+export {
+  StepLocation,
+  type StepLocationProps,
+  type SaveLocationStepResult,
+} from './components/step-location';

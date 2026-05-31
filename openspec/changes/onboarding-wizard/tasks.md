@@ -40,8 +40,8 @@
 
 ## 6. Wizard step 2 — Local e agenda (reuse agenda module)
 
-- [ ] 6.1 Create `src/modules/onboarding/components/step-location.tsx` — reuse `@/modules/agenda` location create + agenda settings (duration default 50, interval default 10, working hours). On at least one location, mark step complete (server flips `location_configured`)
-- [ ] 6.2 **Integration test:** `src/__tests__/integration/onboarding/step-location.int.test.ts` — adding first location flips `onboarding_checklist.location_configured = true`; no duplicate location table is created (reuses existing `locations`)
+- [x] 6.1 Create `src/modules/onboarding/components/step-location.tsx` — reuse `@/modules/agenda` location create + agenda settings (duration default 50, interval default 10, working hours). On at least one location, mark step complete (server flips `location_configured`)
+- [x] 6.2 **Integration test:** `src/__tests__/integration/onboarding/step-location.int.test.ts` — adding first location flips `onboarding_checklist.location_configured = true`; no duplicate location table is created (reuses existing `locations`)
 
 ## 7. Wizard step 3 — Importe pacientes (reuse patients module + consent gate)
 

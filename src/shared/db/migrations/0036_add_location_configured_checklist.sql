@@ -1,0 +1,1 @@
+ALTER TABLE "onboarding_checklist" ADD COLUMN "location_configured" boolean DEFAULT false NOT NULL;

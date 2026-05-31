@@ -1,8 +1,10 @@
 'use server';
 
 import {
+  configureLocationImpl,
   saveOnboardingStepImpl,
   uploadProfilePhotoImpl,
+  type LocationStepInput,
   type WizardStep,
 } from '@/modules/onboarding';
 import { createServerClient } from '@/shared/supabase/server';
@@ -19,6 +21,11 @@ export type SaveProfileStepResult =
 export type UploadPhotoActionResult =
   | { ok: true; objectKey: string }
   | { ok: false; message: string };
+
+export type SaveLocationStepResult =
+  | { ok: true }
+  | { ok: false; error: 'unauthenticated' | 'unknown' }
+  | { ok: false; error: 'invalid_input'; fieldErrors: Record<string, string[]> };
 
 /**
  * Thin Server Action wrappers for the onboarding wizard's step-1 surface.
@@ -65,4 +72,28 @@ export async function uploadProfilePhoto(formData: FormData): Promise<UploadPhot
     return { ok: false, message: 'Sessão expirada. Entre novamente.' };
   }
   return { ok: false, message: result.message };
+}
+
+/**
+ * Completes step 2 ("Local e agenda") by creating the first consultation
+ * location through the agenda module's create path. On success the impl flips
+ * `onboarding_checklist.location_configured`, ensures an `agenda_settings` row
+ * (table defaults: 50-min sessions, 10-min interval, standard working hours),
+ * and advances the step. The location shape is Zod-validated at the impl
+ * boundary; the result is collapsed to a sanitized shape for the UI.
+ */
+export async function createOnboardingLocation(
+  input: LocationStepInput,
+): Promise<SaveLocationStepResult> {
+  const supabase = await createServerClient();
+  const result = await configureLocationImpl(supabase, input);
+
+  if (result.ok) return { ok: true };
+  if (result.error === 'invalid_input') {
+    return { ok: false, error: 'invalid_input', fieldErrors: result.fieldErrors };
+  }
+  if (result.error === 'unauthenticated') {
+    return { ok: false, error: 'unauthenticated' };
+  }
+  return { ok: false, error: 'unknown' };
 }

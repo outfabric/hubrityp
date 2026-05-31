@@ -253,6 +253,13 @@
       "when": 1780246234744,
       "tag": "0035_onboarding_profile_photos_bucket",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1780247522043,
+      "tag": "0036_add_location_configured_checklist",
+      "breakpoints": true
     }
   ]
 }
