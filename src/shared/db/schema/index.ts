@@ -11,3 +11,4 @@ export * from './medical-records/tables';
 export * from './telepsicologia/tables';
 export * from './ai-transcription/tables';
 export * from './rate-limits/tables';
+export * from './onboarding/tables';
