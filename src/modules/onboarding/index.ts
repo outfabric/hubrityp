@@ -40,3 +40,17 @@ export {
 // ---- Read helpers (RLS-scoped, single-row reads) -----------------------------
 export { getOnboardingChecklist } from './server/read-checklist';
 export { getNotificationPreferences } from './server/read-preferences';
+
+// ---- Step-persistence Server Action implementations --------------------------
+// Session-scoped, server-authoritative writes. Authorization is `auth.uid()`
+// only; any client-supplied user id is ignored (IDOR-safe). RLS is the backstop.
+export {
+  saveOnboardingStepImpl,
+  type SaveOnboardingStepResult,
+} from './server/save-onboarding-step';
+export {
+  completeOnboardingImpl,
+  type CompleteOnboardingResult,
+} from './server/complete-onboarding';
+export { skipOnboardingImpl, type SkipOnboardingResult } from './server/skip-onboarding';
+export { resumeOnboardingStepImpl, type ResumeOnboardingStepResult } from './server/resume-step';

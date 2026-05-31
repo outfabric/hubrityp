@@ -16,12 +16,12 @@
 
 ## 3. Step-persistence Server Actions
 
-- [ ] 3.1 Create `src/modules/onboarding/server/save-onboarding-step.ts` — `saveOnboardingStepImpl(supabase, input)`: getUser() auth, Zod-validate, upsert `onboarding_checklist` row, set `profiles.onboarding_step` to the target (absolute, idempotent), flip the relevant checklist flag. Ignore any client `userId`. Sanitized errors, no PII logs
-- [ ] 3.2 Create `src/modules/onboarding/server/complete-onboarding.ts` — `completeOnboardingImpl(supabase)`: getUser() auth, set `onboarding_completed_at = now()`, `onboarding_step = 'done'`
-- [ ] 3.3 Create `src/modules/onboarding/server/skip-onboarding.ts` — `skipOnboardingImpl(supabase)`: getUser() auth, set `onboarding_step = 'done'` without forcing any step (does NOT set `onboarding_completed_at`, so checklist still nudges later)
-- [ ] 3.4 Create `src/modules/onboarding/server/resume-step.ts` — `resumeOnboardingStepImpl(supabase)`: read owner's `onboarding_step`, return resume segment
-- [ ] 3.5 Update `src/modules/onboarding/index.ts` barrel — export the four impls + their result types
-- [ ] 3.6 **Integration test:** `src/__tests__/integration/onboarding/wizard-actions.int.test.ts` — happy paths for each action; IDOR proof (payload `userId` for another account is ignored, only `auth.uid()` row written); skip leaves checklist flags FALSE; complete stamps `onboarding_completed_at`; cross-user RLS — user B cannot mutate user A's step
+- [x] 3.1 Create `src/modules/onboarding/server/save-onboarding-step.ts` — `saveOnboardingStepImpl(supabase, input)`: getUser() auth, Zod-validate, upsert `onboarding_checklist` row, set `profiles.onboarding_step` to the target (absolute, idempotent), flip the relevant checklist flag. Ignore any client `userId`. Sanitized errors, no PII logs
+- [x] 3.2 Create `src/modules/onboarding/server/complete-onboarding.ts` — `completeOnboardingImpl(supabase)`: getUser() auth, set `onboarding_completed_at = now()`, `onboarding_step = 'done'`
+- [x] 3.3 Create `src/modules/onboarding/server/skip-onboarding.ts` — `skipOnboardingImpl(supabase)`: getUser() auth, set `onboarding_step = 'done'` without forcing any step (does NOT set `onboarding_completed_at`, so checklist still nudges later)
+- [x] 3.4 Create `src/modules/onboarding/server/resume-step.ts` — `resumeOnboardingStepImpl(supabase)`: read owner's `onboarding_step`, return resume segment
+- [x] 3.5 Update `src/modules/onboarding/index.ts` barrel — export the four impls + their result types
+- [x] 3.6 **Integration test:** `src/__tests__/integration/onboarding/wizard-actions.int.test.ts` — happy paths for each action; IDOR proof (payload `userId` for another account is ignored, only `auth.uid()` row written); skip leaves checklist flags FALSE; complete stamps `onboarding_completed_at`; cross-user RLS — user B cannot mutate user A's step
 
 ## 4. Welcome page
 
