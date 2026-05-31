@@ -6,8 +6,8 @@
 
 ## 1. Middleware gating (security-first)
 
-- [ ] 1.1 Update `src/middleware.ts` `classifyPath()` — add `/onboarding/welcome` and `/onboarding/setup` to the onboarding gated class (strict prefix+separator match). Update the decision-table comment with the new row
-- [ ] 1.2 **Integration test:** `src/__tests__/integration/middleware/onboarding-wizard-gating.int.test.ts` — NEGATIVE-AUTH proof: anonymous GET `/onboarding/setup/profile` redirects to `/login?redirectTo=...`; active user passes; pending user is bounced to `/onboarding/pending`; near-miss `/onboarding/welcomex` is NOT gated
+- [x] 1.1 Update `src/middleware.ts` `classifyPath()` — add `/onboarding/welcome` and `/onboarding/setup` to the onboarding gated class (strict prefix+separator match). Update the decision-table comment with the new row
+- [x] 1.2 **Integration test:** `src/__tests__/integration/middleware/onboarding-wizard-gating.int.test.ts` — NEGATIVE-AUTH proof: anonymous GET `/onboarding/setup/profile` redirects to `/login?redirectTo=...`; active user passes; pending user is bounced to `/onboarding/pending`; near-miss `/onboarding/welcomex` is NOT gated
 
 ## 2. Wizard Zod schemas + step model (pure logic)
 
