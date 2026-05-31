@@ -11,8 +11,8 @@
 
 ## 2. Wizard Zod schemas + step model (pure logic)
 
-- [ ] 2.1 Create `src/modules/onboarding/lib/wizard.ts` — pure helpers: `WIZARD_STEPS` ordered list, `nextStep(step)`, `isValidStep(segment)`, and per-step input schemas (`profileStepSchema`, `locationStepSchema` re-using agenda location schema, `patientsStepSkipSchema`). Map `onboarding_step` → resume segment
-- [ ] 2.2 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/wizard.test.ts` — `nextStep` ordering, `isValidStep('billing')` is false, resume mapping from each `onboarding_step` value, `profileStepSchema` validation cases
+- [x] 2.1 Create `src/modules/onboarding/lib/wizard.ts` — pure helpers: `WIZARD_STEPS` ordered list, `nextStep(step)`, `isValidStep(segment)`, and per-step input schemas (`profileStepSchema`, `locationStepSchema` re-using agenda location schema, `patientsStepSkipSchema`). Map `onboarding_step` → resume segment
+- [x] 2.2 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/wizard.test.ts` — `nextStep` ordering, `isValidStep('billing')` is false, resume mapping from each `onboarding_step` value, `profileStepSchema` validation cases
 
 ## 3. Step-persistence Server Actions
 

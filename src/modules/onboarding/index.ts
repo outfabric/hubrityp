@@ -22,6 +22,21 @@ export {
   type NotificationPreferences,
 } from './lib/schemas';
 
+// ---- Wizard step model (pure logic) ------------------------------------------
+export {
+  WIZARD_STEPS,
+  nextStep,
+  isValidStep,
+  resumeStepFromOnboardingStep,
+  profileStepSchema,
+  locationStepSchema,
+  patientsStepSkipSchema,
+  type WizardStep,
+  type ProfileStepInput,
+  type LocationStepInput,
+  type PatientsStepSkipInput,
+} from './lib/wizard';
+
 // ---- Read helpers (RLS-scoped, single-row reads) -----------------------------
 export { getOnboardingChecklist } from './server/read-checklist';
 export { getNotificationPreferences } from './server/read-preferences';
