@@ -45,9 +45,9 @@
 
 ## 7. Wizard step 3 — Importe pacientes (reuse patients module + consent gate)
 
-- [ ] 7.1 Create `src/modules/onboarding/components/step-patients.tsx` — three options (CSV upload via existing import, quick-add via existing create, skip). Disable CSV upload when `sensitive_data_consent_at IS NULL` with copy pointing to Configurações > Privacidade. CSV preview = first 5 rows + validation highlight
-- [ ] 7.2 Ensure the server import entry refuses to start without sensitive-data consent (server-side gate, not only UI)
-- [ ] 7.3 **Integration test:** `src/__tests__/integration/onboarding/step-patients-consent-gate.int.test.ts` — import blocked server-side when `sensitive_data_consent_at` NULL; quick-add patient flips `first_patient_added = true`; cross-user RLS holds
+- [x] 7.1 Create `src/modules/onboarding/components/step-patients.tsx` — three options (CSV upload via existing import, quick-add via existing create, skip). Disable CSV upload when `sensitive_data_consent_at IS NULL` with copy pointing to Configurações > Privacidade. CSV preview = first 5 rows + validation highlight
+- [x] 7.2 Ensure the server import entry refuses to start without sensitive-data consent (server-side gate, not only UI)
+- [x] 7.3 **Integration test:** `src/__tests__/integration/onboarding/step-patients-consent-gate.int.test.ts` — import blocked server-side when `sensitive_data_consent_at` NULL; quick-add patient flips `first_patient_added = true`; cross-user RLS holds
 
 ## 8. Wizard step 4 — Pronto + completion
 

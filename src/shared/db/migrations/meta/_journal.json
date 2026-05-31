@@ -260,6 +260,13 @@
       "when": 1780247522043,
       "tag": "0036_add_location_configured_checklist",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1780247523043,
+      "tag": "0037_relax_sensitive_data_consent_not_null",
+      "breakpoints": true
     }
   ]
 }

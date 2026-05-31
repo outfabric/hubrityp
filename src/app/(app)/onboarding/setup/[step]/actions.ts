@@ -2,9 +2,15 @@
 
 import {
   configureLocationImpl,
-  saveOnboardingStepImpl,
-  uploadProfilePhotoImpl,
+  type ImportPatientsStepResult,
+  importOnboardingPatientsImpl,
   type LocationStepInput,
+  type OnboardingCsvPatientRow,
+  type QuickAddPatientStepResult,
+  quickAddOnboardingPatientImpl,
+  saveOnboardingStepImpl,
+  type SkipPatientsStepResult,
+  uploadProfilePhotoImpl,
   type WizardStep,
 } from '@/modules/onboarding';
 import { createServerClient } from '@/shared/supabase/server';
@@ -96,4 +102,62 @@ export async function createOnboardingLocation(
     return { ok: false, error: 'unauthenticated' };
   }
   return { ok: false, error: 'unknown' };
+}
+
+/**
+ * Completes step 3 ("Importe pacientes") via CSV import. The impl enforces the
+ * LGPD sensitive-data consent gate SERVER-side (refusing to start the import
+ * when `sensitive_data_consent_at IS NULL`), reuses the patients module's
+ * import, and flips `onboarding_checklist.first_patient_added`. Authorization is
+ * session-only (`auth.uid()`); the result is collapsed to a sanitized shape.
+ */
+export async function importOnboardingPatients(
+  rows: OnboardingCsvPatientRow[],
+): Promise<ImportPatientsStepResult> {
+  const supabase = await createServerClient();
+  const result = await importOnboardingPatientsImpl(supabase, rows);
+
+  if (result.ok) return { ok: true, importedCount: result.importedCount };
+  return { ok: false, error: result.error };
+}
+
+/**
+ * Completes step 3 via the quick "add first patient" path, reusing the patients
+ * create action and flipping `first_patient_added`. Authorization is session-
+ * only; field/duplicate errors are surfaced to the inline form.
+ */
+export async function quickAddOnboardingPatient(input: {
+  fullName: string;
+  phone?: string;
+  email?: string;
+}): Promise<QuickAddPatientStepResult> {
+  const supabase = await createServerClient();
+  // The patients create path requires `patientType`; the wizard quick-add only
+  // collects name/phone/email and defaults the type to 'individual' (the
+  // standard adult-patient type — see `PATIENT_TYPES`).
+  const result = await quickAddOnboardingPatientImpl(supabase, {
+    fullName: input.fullName,
+    patientType: 'individual',
+    phone: input.phone,
+    email: input.email,
+  });
+
+  if (result.ok) return { ok: true };
+  if (result.error === 'invalid_input') {
+    return { ok: false, error: 'invalid_input', fieldErrors: result.fieldErrors };
+  }
+  if (result.error === 'duplicate_phone') return { ok: false, error: 'duplicate_phone' };
+  if (result.error === 'duplicate_email') return { ok: false, error: 'duplicate_email' };
+  if (result.error === 'unauthenticated') return { ok: false, error: 'unauthenticated' };
+  return { ok: false, error: 'unknown' };
+}
+
+/**
+ * Skips step 3 without ingesting any patient data. Advances the wizard step
+ * server-side; authorization is session-only.
+ */
+export async function skipPatientsStep(): Promise<SkipPatientsStepResult> {
+  const supabase = await createServerClient();
+  const result = await saveOnboardingStepImpl(supabase, { step: 'patients' });
+  return result.ok ? { ok: true } : { ok: false };
 }

@@ -52,9 +52,17 @@ export const profiles = pgTable(
     status: text('status').notNull().default('pending_verification'),
     termsAcceptedAt: timestamp('terms_accepted_at', { withTimezone: true }).notNull(),
     privacyAcceptedAt: timestamp('privacy_accepted_at', { withTimezone: true }).notNull(),
+    // Nullable: the LGPD sensitive-data consent can be WITHDRAWN (Configurações
+    // > Privacidade), which clears this timestamp back to NULL. Signup always
+    // stamps it (the `handle_new_user` trigger requires it in the metadata), so
+    // a freshly registered profile has a value; but the onboarding wizard's
+    // step-3 CSV import gate (RN-11.03) and the future privacy-settings revoke
+    // flow depend on this column being able to hold NULL. A NULL value means
+    // "no sensitive-data consent on record" and MUST block clinical-data
+    // ingestion (the server gate in `importOnboardingPatientsImpl`).
     sensitiveDataConsentAt: timestamp('sensitive_data_consent_at', {
       withTimezone: true,
-    }).notNull(),
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),

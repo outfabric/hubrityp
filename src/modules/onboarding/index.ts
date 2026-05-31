@@ -59,6 +59,12 @@ export {
   type UploadProfilePhotoResult,
 } from './server/upload-profile-photo';
 export { configureLocationImpl, type ConfigureLocationResult } from './server/configure-location';
+export {
+  importOnboardingPatientsImpl,
+  type ImportOnboardingPatientsResult,
+  quickAddOnboardingPatientImpl,
+  type QuickAddOnboardingPatientResult,
+} from './server/import-onboarding-patients';
 
 // ---- Wizard UI components ----------------------------------------------------
 export { WizardProgress, type WizardProgressProps } from './components/wizard-progress';
@@ -73,3 +79,11 @@ export {
   type StepLocationProps,
   type SaveLocationStepResult,
 } from './components/step-location';
+export {
+  StepPatients,
+  type StepPatientsProps,
+  type OnboardingCsvPatientRow,
+  type ImportPatientsStepResult,
+  type QuickAddPatientStepResult,
+  type SkipPatientsStepResult,
+} from './components/step-patients';

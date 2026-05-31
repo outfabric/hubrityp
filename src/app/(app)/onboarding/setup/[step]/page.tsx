@@ -4,6 +4,7 @@ import {
   isValidStep,
   resumeOnboardingStepImpl,
   StepLocation,
+  StepPatients,
   StepProfile,
   WIZARD_STEPS,
   WizardProgress,
@@ -12,7 +13,14 @@ import {
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
 
-import { createOnboardingLocation, saveProfileStep, uploadProfilePhoto } from './actions';
+import {
+  createOnboardingLocation,
+  importOnboardingPatients,
+  quickAddOnboardingPatient,
+  saveProfileStep,
+  skipPatientsStep,
+  uploadProfilePhoto,
+} from './actions';
 
 // `/onboarding/setup/[step]` — the four-step MVP setup wizard.
 //
@@ -85,23 +93,38 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
         </h1>
       </div>
 
-      {renderStep(step)}
+      {renderStep(step, profile.sensitiveDataConsentAt != null)}
     </div>
   );
 }
 
 /**
- * Renders the body for the given step. `profile` (step 1) and `location`
- * (step 2) are implemented; `patients` and `done` get their components in later
- * sections and render a neutral placeholder for now.
+ * Renders the body for the given step. `profile` (step 1), `location` (step 2),
+ * and `patients` (step 3) are implemented; the terminal `done` summary screen is
+ * built in a later section and renders a neutral placeholder for now.
+ *
+ * `hasSensitiveDataConsent` is read server-side from the owner's profile and
+ * controls whether the step-3 CSV upload is enabled (RN-11.03). The server gate
+ * in `importOnboardingPatients` enforces it regardless of this UI flag.
  */
-function renderStep(step: WizardStep) {
+function renderStep(step: WizardStep, hasSensitiveDataConsent: boolean) {
   if (step === 'profile') {
     return <StepProfile onSaveStep={saveProfileStep} onUploadPhoto={uploadProfilePhoto} />;
   }
 
   if (step === 'location') {
     return <StepLocation onCreateLocation={createOnboardingLocation} />;
+  }
+
+  if (step === 'patients') {
+    return (
+      <StepPatients
+        hasSensitiveDataConsent={hasSensitiveDataConsent}
+        onImportCsv={importOnboardingPatients}
+        onQuickAdd={quickAddOnboardingPatient}
+        onSkip={skipPatientsStep}
+      />
+    );
   }
 
   return (
