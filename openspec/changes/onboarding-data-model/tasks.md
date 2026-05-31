@@ -6,10 +6,10 @@
 
 ## 1. Branded types + Zod validators (pure logic)
 
-- [ ] 1.1 Create `src/modules/onboarding/lib/branded.ts` — branded type `NpsScore` (integer 0–10) with a smart constructor `toNpsScore(n: number): NpsScore` that throws on out-of-range/non-integer. Add `OnboardingStep` union type `'welcome' | 'profile' | 'location' | 'patients' | 'done'`
-- [ ] 1.2 Create `src/modules/onboarding/lib/schemas.ts` — Zod schemas: `onboardingStepSchema` (z.enum of the OnboardingStep values), `npsAnswerSchema` (`{ score: z.number().int().min(0).max(10), feedback: z.string().max(2000).optional() }`), `notificationPreferencesSchema` (`{ emailDaily, emailWeekly, emailCritical, inAppSound }` booleans). Derive types via `z.infer`
-- [ ] 1.3 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/branded.test.ts` — `toNpsScore` accepts 0 and 10, rejects -1, 11, and 5.5
-- [ ] 1.4 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/schemas.test.ts` — `npsAnswerSchema` accepts `{score:9, feedback:'x'}` and `{score:0}`, rejects `{score:12}` and feedback >2000 chars; `onboardingStepSchema` rejects `'billing'`; `notificationPreferencesSchema` rejects non-boolean
+- [x] 1.1 Create `src/modules/onboarding/lib/branded.ts` — branded type `NpsScore` (integer 0–10) with a smart constructor `toNpsScore(n: number): NpsScore` that throws on out-of-range/non-integer. Add `OnboardingStep` union type `'welcome' | 'profile' | 'location' | 'patients' | 'done'`
+- [x] 1.2 Create `src/modules/onboarding/lib/schemas.ts` — Zod schemas: `onboardingStepSchema` (z.enum of the OnboardingStep values), `npsAnswerSchema` (`{ score: z.number().int().min(0).max(10), feedback: z.string().max(2000).optional() }`), `notificationPreferencesSchema` (`{ emailDaily, emailWeekly, emailCritical, inAppSound }` booleans). Derive types via `z.infer`
+- [x] 1.3 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/branded.test.ts` — `toNpsScore` accepts 0 and 10, rejects -1, 11, and 5.5
+- [x] 1.4 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/schemas.test.ts` — `npsAnswerSchema` accepts `{score:9, feedback:'x'}` and `{score:0}`, rejects `{score:12}` and feedback >2000 chars; `onboardingStepSchema` rejects `'billing'`; `notificationPreferencesSchema` rejects non-boolean
 
 ## 2. Profiles columns (schema)
 
