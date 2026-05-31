@@ -37,9 +37,8 @@ Levar o psicólogo do primeiro acesso ao **primeiro ciclo completo de valor do M
 - Dashboard diário operacional (agenda, pacientes, pendências de prontuário)
 - Tour guiado pela interface
 - Notificações in-app
-- Centro de ajuda contextual
 - Importação básica de pacientes (CSV)
-- Pesquisa NPS aos 30 dias
+- Pesquisa NPS aos 7 dias
 
 ### Fora do escopo (versões futuras)
 
@@ -273,46 +272,9 @@ Tipos de notificação no MVP:
 
 ---
 
-### 5.7. Notificações por email
+### 5.7. NPS e pesquisa de satisfação
 
-**RF-11.18.** Resumo diário (enviado às 8h da manhã, dias em que há sessões agendadas):
-- Sessões do dia com hora e nome do paciente (sem dados clínicos — LGPD)
-- Pendências de evolução em atraso (se houver)
-- Notas de transcrição aguardando revisão (se houver)
-
-**RF-11.19.** Avisos críticos (sempre enviados, não desativáveis):
-- Falha de processamento que afeta dados do psicólogo
-- Tentativas de acesso suspeitas (PRD 01)
-
-**RF-11.20.** Email semanal (segunda-feira, opcional):
-- Sessões realizadas na semana anterior
-- Evoluções registradas
-
-**RF-11.21.** Os emails do MVP **não** incluem: resumo financeiro, status de Receita Saúde, notificações de cobranças. Esses virão quando os módulos correspondentes existirem.
-
----
-
-### 5.8. Centro de ajuda contextual
-
-**RF-11.22.** Botão "?" flutuante no canto inferior direito em todas as telas autenticadas.
-
-Ao clicar, abre painel lateral com:
-- Campo de busca de artigos
-- Artigos sugeridos com base na tela atual (ex: na tela de prontuário → "Como registrar uma evolução", "Tipos de templates de prontuário")
-- Link "Falar com suporte" (email ou WhatsApp do time)
-- Link para vídeos tutoriais (canal externo)
-
-**RF-11.23.** FAQ embutido em telas com maior curva de aprendizado:
-- Prontuário: "Por que não posso editar uma evolução depois de 30 dias?"
-- Agenda: "Como remarcar uma sessão recorrente sem afetar as outras?"
-- Transcrição IA: "O áudio é descartado? Quando?"
-- Consentimento: "O que acontece se o paciente não assinar o termo?"
-
----
-
-### 5.9. NPS e pesquisa de satisfação
-
-**RF-11.24.** No dia 30 após o primeiro acesso, modal aparece uma única vez:
+**RF-11.24.** No dia 7 após o primeiro acesso, modal aparece uma única vez:
 - "Em uma escala de 0 a 10, qual a chance de você recomendar o sistema a uma colega?"
 - Campo aberto opcional: "O que faria você dar nota mais alta?"
 - Botão "Não responder agora" (não reaparece; pode ser respondido depois em Configurações > Feedback)
@@ -321,23 +283,11 @@ Ao clicar, abre painel lateral com:
 
 ---
 
-### 5.10. Configuração de notificações
-
-**RF-11.26.** Em Configurações > Notificações:
-- Email resumo diário: Sim / Não (default: Sim)
-- Email semanal: Sim / Não (default: Sim)
-- Notificações in-app com som: Sim / Não (default: Sim)
-- Email crítico: sempre ativo, não desativável
-
----
-
 ## 6. Requisitos não-funcionais
 
 **RNF-11.01.** Dashboard carrega em <1,5s (dados do dia são priorizados; resumo semanal pode ser carregado em segundo plano).
 
 **RNF-11.02.** Cada passo do wizard carrega em <500ms.
-
-**RNF-11.03.** Importação CSV de até 100 pacientes: máx 30s; acima de 100, processamento em background com notificação ao concluir.
 
 **RNF-11.04.** Notificações in-app em tempo real via Supabase Realtime (WebSocket).
 
@@ -415,10 +365,7 @@ Validação CRP (ativa ou em background)
 |---|---|
 | Psicólogo pula todo o onboarding | Dashboard abre mostrando checklist com 0% e estado vazio com orientações. Nenhuma feature é bloqueada. |
 | CRP ainda não validado ao chegar no dashboard | Banner informativo no topo: "Sua validação de CRP está em andamento. Você já pode usar o sistema; a confirmação pode levar até 24h." |
-| Importação CSV com encoding ANSI ou ponto-e-vírgula como delimitador | Detecção automática de delimitador e encoding; preview antes de importar; rejeita linhas inválidas individualmente sem abortar o lote. |
-| Importação CSV com mais de 1.000 pacientes | Processar em background (job Inngest); notificação in-app ao concluir. |
 | Psicólogo cancelou e voltou (conta reativada) | Onboarding adaptado: "Bem-vindo de volta, [Nome]!" sem repetir o wizard do início. Checklist mostra itens já feitos como concluídos. |
-| Mobile sem teclado físico prático | Wizard com inputs grandes, dropdowns ao invés de digitação livre onde possível, upload de foto via câmera do celular. |
 | Dashboard sem nenhum dado (sem pacientes, sem sessões) | Seções 3 e 4 exibem estado vazio com texto orientativo e CTA. Seção 1 exibe CTA "Agendar sua primeira sessão". |
 | Notificações em excesso | Default conservador; granularidade em Configurações > Notificações. Notificações do mesmo tipo são agrupadas (ex: "3 sessões sem evolução" não são 3 notificações separadas). |
 | Psicólogo usa sistema apenas para agenda, sem prontuário | Permitido. Banner gentil (não agressivo) sobre obrigação CFP de manter registro clínico: "Lembre-se: pelo CFP, todo atendimento deve ter evolução registrada. [Saiba mais]" |
@@ -436,25 +383,20 @@ Validação CRP (ativa ou em background)
 - [ ] Tour completo em menos de 2 minutos; botão "Pular" funciona em qualquer tooltip
 - [ ] Tour não menciona features pós-MVP
 - [ ] Importação CSV de 30 pacientes conclui em menos de 30s com preview correto
-- [ ] Importação de 1.000 pacientes roda em background com notificação ao concluir
 - [ ] Checklist mostra estado correto para cada item (concluído/pendente)
 - [ ] Ao concluir todos os itens obrigatórios do checklist, animação de celebração aparece
 - [ ] Notificação `evolution_pending` é enviada uma vez para cada sessão `done` sem evolução após 7 dias (não duplica)
 - [ ] Notificação `ai_note_ready` aparece quando transcrição IA conclui (PRD 10)
-- [ ] Email diário inclui apenas agenda e pendências de prontuário/transcrição (sem dados financeiros)
-- [ ] Botão "?" abre centro de ajuda com artigos contextuais corretos para a tela atual
-- [ ] NPS modal aparece no dia 30 e exatamente uma vez
-- [ ] Opt-out de email diário funciona e é respeitado imediatamente (LGPD)
+- [ ] NPS modal aparece no dia 7 e exatamente uma vez
 - [ ] Psicólogo que pula tudo consegue criar um paciente e agendar uma sessão sem passar pelo wizard
 
 ---
 
 ## 11. Dependências
 
-- Lib de tour guiado: Shepherd.js, Driver.js ou Intro.js
+- Lib de tour guiado: Driver.js
 - Supabase Realtime (notificações in-app via WebSocket)
-- Provedor de email transacional: Resend
-- Inngest (job de background para importação CSV grande e notificação de pendências)
+- Inngest (job de background para notificação de pendências)
 - PRD 01 (usuário autenticado com CRP validado)
 - PRD 02 (pacientes — importação, checklist)
 - PRD 03 (agenda — próxima sessão, pendências)
@@ -466,7 +408,7 @@ Validação CRP (ativa ou em background)
 
 ## 12. Referências regulatórias
 
-- **LGPD** — opt-in/opt-out de comunicações por email; importação de dados de pacientes exige base legal (execução de contrato — relação terapêutica)
+- **LGPD** — importação de dados de pacientes exige base legal (execução de contrato — relação terapêutica)
 - **Resolução CFP nº 001/2009** — obrigação de registrar evolução de cada sessão; comunicada ao psicólogo via pendências no dashboard
 - **Resolução CFP nº 09/2024** — psicólogo deve manter inscrição ativa no CRP para atender; comunicada na onboarding se CRP ainda não validado
 
