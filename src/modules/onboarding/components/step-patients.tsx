@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Lock, Upload, UserPlus, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -132,24 +133,46 @@ export function StepPatients({
   onQuickAdd,
   onSkip,
 }: StepPatientsProps) {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>('choose');
   const [isSkipping, startSkipping] = useTransition();
+
+  // All three step-3 paths (import, quick-add, skip) complete the step and the
+  // server advances `onboarding_step` to `done`; navigate the user forward to
+  // step 4.
+  const goToDone = useCallback(() => {
+    router.push('/onboarding/setup/done');
+  }, [router]);
 
   const handleSkip = useCallback(() => {
     startSkipping(async () => {
       const result = await onSkip();
       if (!result.ok) {
         toast.error('Não foi possível pular esta etapa. Tente novamente.');
+        return;
       }
+      goToDone();
     });
-  }, [onSkip]);
+  }, [onSkip, goToDone]);
 
   if (mode === 'csv') {
-    return <CsvImportSection onImportCsv={onImportCsv} onBack={() => setMode('choose')} />;
+    return (
+      <CsvImportSection
+        onImportCsv={onImportCsv}
+        onImported={goToDone}
+        onBack={() => setMode('choose')}
+      />
+    );
   }
 
   if (mode === 'quick-add') {
-    return <QuickAddSection onQuickAdd={onQuickAdd} onBack={() => setMode('choose')} />;
+    return (
+      <QuickAddSection
+        onQuickAdd={onQuickAdd}
+        onAdded={goToDone}
+        onBack={() => setMode('choose')}
+      />
+    );
   }
 
   return (
@@ -264,9 +287,12 @@ const PREVIEW_LIMIT = 5;
 
 function CsvImportSection({
   onImportCsv,
+  onImported,
   onBack,
 }: {
   onImportCsv: (rows: OnboardingCsvPatientRow[]) => Promise<ImportPatientsStepResult>;
+  /** Called after a successful import so the wizard advances to step 4. */
+  onImported: () => void;
   onBack: () => void;
 }) {
   const [stage, setStage] = useState<CsvStage>('upload');
@@ -374,6 +400,7 @@ function CsvImportSection({
       const result = await onImportCsv(toImport);
       if (result.ok) {
         toast.success(`${result.importedCount} pacientes importados com sucesso.`);
+        onImported();
         return;
       }
       if (result.error === 'consent_required') {
@@ -382,7 +409,7 @@ function CsvImportSection({
       }
       toast.error('Não foi possível importar os pacientes. Tente novamente.');
     });
-  }, [csvData, mapping, onImportCsv]);
+  }, [csvData, mapping, onImportCsv, onImported]);
 
   return (
     <div className="flex flex-col gap-6" data-testid="step-patients-csv">
@@ -464,6 +491,7 @@ function CsvImportSection({
 
 function QuickAddSection({
   onQuickAdd,
+  onAdded,
   onBack,
 }: {
   onQuickAdd: (input: {
@@ -471,6 +499,8 @@ function QuickAddSection({
     phone?: string;
     email?: string;
   }) => Promise<QuickAddPatientStepResult>;
+  /** Called after a successful add so the wizard advances to step 4. */
+  onAdded: () => void;
   onBack: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -501,6 +531,7 @@ function QuickAddSection({
 
       if (result.ok) {
         toast.success('Paciente adicionado.');
+        onAdded();
         return;
       }
 

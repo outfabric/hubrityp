@@ -21,7 +21,7 @@ import { runAsUser } from '../setup/run-as-user';
 //   * invalid location input is rejected with sanitized field errors
 //   * the happy path inserts ONE `locations` row, ensures an `agenda_settings`
 //     row exists with the table defaults (50 min / 10 min), flips the flag,
-//     and advances `profiles.onboarding_step` to 'location'
+//     and advances `profiles.onboarding_step` to the NEXT step 'patients'
 //   * the flow is idempotent-friendly: a second location keeps the flag TRUE
 //     and does not create a duplicate checklist/settings row
 //   * a client-supplied userId is ignored (IDOR), and a cross-user write is
@@ -177,9 +177,10 @@ describe('configureLocationImpl (wizard step 2)', () => {
     expect(checklist!.profileCompleted).toBe(false);
     expect(checklist!.firstPatientAdded).toBe(false);
 
-    // The wizard step advanced.
+    // The wizard step advanced to the NEXT step: completing `location`
+    // advances `onboarding_step` to `patients`.
     const profile = await readProfile(userId);
-    expect(profile?.onboardingStep).toBe('location');
+    expect(profile?.onboardingStep).toBe('patients');
 
     // An agenda_settings row now exists with the table defaults (50 / 10).
     const settings = await readAgendaSettings(userId);

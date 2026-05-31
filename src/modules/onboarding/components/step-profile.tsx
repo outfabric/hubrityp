@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImagePlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -70,6 +71,7 @@ function emptyToUndefined(value: unknown): string | undefined {
  * fields; transport/unknown failures surface a non-blocking toast.
  */
 export function StepProfile({ onSaveStep, onUploadPhoto }: StepProfileProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isUploading, startUpload] = useTransition();
   const [photoName, setPhotoName] = useState<string | null>(null);
@@ -132,7 +134,13 @@ export function StepProfile({ onSaveStep, onUploadPhoto }: StepProfileProps) {
     startTransition(async () => {
       const result = await onSaveStep();
 
-      if (result.ok) return;
+      if (result.ok) {
+        // The server advanced `onboarding_step` to `location`; move the user
+        // forward to step 2. The page guard allows this because the resume
+        // point now equals `location`.
+        router.push('/onboarding/setup/location');
+        return;
+      }
 
       if (result.error === 'invalid_input') {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {

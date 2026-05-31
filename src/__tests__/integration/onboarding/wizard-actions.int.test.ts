@@ -122,43 +122,13 @@ describe('saveOnboardingStepImpl', () => {
     expect(result.error).toBe('invalid_input');
   });
 
-  it('persists the profile step, flipping profile_completed and creating the checklist row', async () => {
+  it('completes the profile step: flips profile_completed and advances onboarding_step to the NEXT step (location)', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
     const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'profile' });
 
-    expect(result).toEqual({ ok: true, step: 'profile' });
-
-    const profile = await readProfile(userId);
-    expect(profile?.onboardingStep).toBe('profile');
-
-    const checklist = await readChecklist(userId);
-    expect(checklist).not.toBeNull();
-    expect(checklist!.profileCompleted).toBe(true);
-    // The patients flag is untouched by the profile step.
-    expect(checklist!.firstPatientAdded).toBe(false);
-  });
-
-  it('persists the patients step, flipping first_patient_added', async () => {
-    const userId = randomUUID();
-    await seedAuthUser(userId);
-
-    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'patients' });
-
-    expect(result).toEqual({ ok: true, step: 'patients' });
-
-    const checklist = await readChecklist(userId);
-    expect(checklist!.firstPatientAdded).toBe(true);
-    expect(checklist!.profileCompleted).toBe(false);
-  });
-
-  it('persists the location step (no dedicated flag) — ensures the checklist row exists but flips nothing', async () => {
-    const userId = randomUUID();
-    await seedAuthUser(userId);
-
-    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'location' });
-
+    // The returned step is the NEXT (persisted) step, not the completed one.
     expect(result).toEqual({ ok: true, step: 'location' });
 
     const profile = await readProfile(userId);
@@ -166,18 +136,56 @@ describe('saveOnboardingStepImpl', () => {
 
     const checklist = await readChecklist(userId);
     expect(checklist).not.toBeNull();
+    // The COMPLETED step's flag (`profile`) is flipped.
+    expect(checklist!.profileCompleted).toBe(true);
+    // The patients flag is untouched by the profile step.
+    expect(checklist!.firstPatientAdded).toBe(false);
+  });
+
+  it('completes the patients step: flips first_patient_added and advances onboarding_step to the NEXT step (done)', async () => {
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'patients' });
+
+    expect(result).toEqual({ ok: true, step: 'done' });
+
+    const profile = await readProfile(userId);
+    expect(profile?.onboardingStep).toBe('done');
+
+    const checklist = await readChecklist(userId);
+    expect(checklist!.firstPatientAdded).toBe(true);
+    expect(checklist!.profileCompleted).toBe(false);
+  });
+
+  it('completes the location step (no dedicated flag): advances to the NEXT step (patients), ensures the checklist row exists but flips nothing', async () => {
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'location' });
+
+    expect(result).toEqual({ ok: true, step: 'patients' });
+
+    const profile = await readProfile(userId);
+    expect(profile?.onboardingStep).toBe('patients');
+
+    const checklist = await readChecklist(userId);
+    expect(checklist).not.toBeNull();
     expect(checklist!.profileCompleted).toBe(false);
     expect(checklist!.firstPatientAdded).toBe(false);
   });
 
-  it('is idempotent — re-submitting the same step preserves the flag and a single row', async () => {
+  it('is idempotent — re-completing the same step preserves the flag, the advanced step, and a single row', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
     await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'profile' });
     const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'profile' });
 
-    expect(result).toEqual({ ok: true, step: 'profile' });
+    expect(result).toEqual({ ok: true, step: 'location' });
+
+    const profile = await readProfile(userId);
+    expect(profile?.onboardingStep).toBe('location');
 
     const rows = await runAsService(async (db) =>
       db.select().from(onboardingChecklist).where(eq(onboardingChecklist.userId, userId)),
@@ -193,16 +201,18 @@ describe('saveOnboardingStepImpl', () => {
     await seedAuthUser(victim);
 
     // The attacker authenticates as `sessionUser` but tries to target `victim`.
+    // Completing `patients` advances the session owner's step to the NEXT step
+    // (`done`) and flips their patient flag — never the victim's.
     const result = await saveOnboardingStepImpl(fakeSupabaseClient(sessionUser), {
       step: 'patients',
       userId: victim,
     });
 
-    expect(result).toEqual({ ok: true, step: 'patients' });
+    expect(result).toEqual({ ok: true, step: 'done' });
 
     // The session owner's row moved and got the flag.
     const ownProfile = await readProfile(sessionUser);
-    expect(ownProfile?.onboardingStep).toBe('patients');
+    expect(ownProfile?.onboardingStep).toBe('done');
     const ownChecklist = await readChecklist(sessionUser);
     expect(ownChecklist!.firstPatientAdded).toBe(true);
 
@@ -293,10 +303,12 @@ describe('resumeOnboardingStepImpl', () => {
     expect(result).toEqual({ ok: true, resumeStep: 'profile' });
   });
 
-  it('resumes at the persisted step (location)', async () => {
+  it('resumes at the persisted (advanced) step — completing profile resumes at location', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
-    await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'location' });
+    // Completing the profile step advances the persisted step to `location`,
+    // which is exactly where the user should resume.
+    await saveOnboardingStepImpl(fakeSupabaseClient(userId), { step: 'profile' });
 
     const result = await resumeOnboardingStepImpl(fakeSupabaseClient(userId));
     expect(result).toEqual({ ok: true, resumeStep: 'location' });
@@ -323,7 +335,8 @@ describe('cross-user RLS backstop', () => {
     await seedAuthUser(userA);
     await seedAuthUser(userB);
 
-    // User A advances to 'location' through the action.
+    // User A completes the `location` step through the action, which advances
+    // A's persisted step to the NEXT step (`patients`).
     await saveOnboardingStepImpl(fakeSupabaseClient(userA), { step: 'location' });
 
     // User B, on their own RLS-scoped (`authenticated`) connection, tries to
@@ -341,7 +354,7 @@ describe('cross-user RLS backstop', () => {
 
     // A's step is unchanged — the cross-tenant write never landed.
     const profileA = await readProfile(userA);
-    expect(profileA?.onboardingStep).toBe('location');
+    expect(profileA?.onboardingStep).toBe('patients');
   });
 
   it("user B's authenticated session cannot mutate user A's checklist row", async () => {

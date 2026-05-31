@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useId, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -63,6 +64,7 @@ const LOCATION_TYPE_LABELS: Record<LocationStepInput['type'], string> = {
  * re-collect them.
  */
 export function StepLocation({ onCreateLocation }: StepLocationProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const ids = {
@@ -96,7 +98,12 @@ export function StepLocation({ onCreateLocation }: StepLocationProps) {
     startTransition(async () => {
       const result = await onCreateLocation(data);
 
-      if (result.ok) return;
+      if (result.ok) {
+        // The server advanced `onboarding_step` to `patients`; move the user
+        // forward to step 3.
+        router.push('/onboarding/setup/patients');
+        return;
+      }
 
       if (result.error === 'invalid_input') {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {

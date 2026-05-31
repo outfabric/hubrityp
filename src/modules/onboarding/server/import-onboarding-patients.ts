@@ -65,7 +65,10 @@ async function hasSensitiveDataConsent(userId: string): Promise<boolean> {
 
 /**
  * Flips `onboarding_checklist.first_patient_added = TRUE` for the owner and
- * advances `profiles.onboarding_step` to `'patients'` ABSOLUTELY (idempotent).
+ * advances `profiles.onboarding_step` to the NEXT step `'done'` ABSOLUTELY
+ * (idempotent). The user just COMPLETED the `patients` step (by importing or
+ * quick-adding a patient), so the persisted step moves forward to `done`,
+ * routing them to the terminal step 4 next (see the onboarding-wizard spec).
  * Lazily upserts the checklist row so the data-model row exists on first write.
  * Scoped to the session owner; RLS is the backstop.
  */
@@ -81,7 +84,7 @@ async function markFirstPatientAdded(userId: string): Promise<void> {
 
     await tx
       .update(profiles)
-      .set({ onboardingStep: 'patients', updatedAt: new Date() })
+      .set({ onboardingStep: 'done', updatedAt: new Date() })
       .where(eq(profiles.userId, userId));
   });
 }

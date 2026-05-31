@@ -63,4 +63,4 @@
 
 ## 10. End-to-end wizard flow
 
-- [ ] 10.1 **E2E test:** `src/__tests__/e2e/seeded/onboarding/wizard-flow.spec.ts` — seeded active user completes all 4 steps in order; progress shows "Passo N de 4"; resume after reload returns to saved step; skip on step 3 still reaches step 4; completion routes to `/dashboard` and hides the banner; assert no "WhatsApp/Receita Saúde/PIX/cobrança/recibo" text anywhere in the wizard
+- [x] 10.1 **E2E test:** `src/__tests__/e2e/seeded/onboarding/wizard-flow.spec.ts` — seeded active user completes all 4 steps in order; progress shows "Passo N de 4"; resume after reload returns to saved step; skip on step 3 still reaches step 4; completion routes to `/dashboard` and hides the banner; assert no "WhatsApp/Receita Saúde/PIX/cobrança/recibo" text anywhere in the wizard

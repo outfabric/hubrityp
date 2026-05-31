@@ -1,12 +1,21 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StepProfile } from '@/modules/onboarding/components/step-profile';
 
 // Sonner toasts have no jsdom-renderable surface we assert on; stub them.
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+// The App Router is not mounted in jsdom; stub `useRouter` so the forward
+// navigation on save success (`router.push('/onboarding/setup/location')`) is
+// observable instead of throwing the "expected app router to be mounted"
+// invariant.
+const pushMock = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: pushMock }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -32,6 +41,10 @@ function renderStep(
 // ---------------------------------------------------------------------------
 
 describe('StepProfile', () => {
+  beforeEach(() => {
+    pushMock.mockClear();
+  });
+
   it('shows a required-field error for an empty display name on blur (blur-time validation)', async () => {
     const user = userEvent.setup();
     renderStep();
@@ -77,7 +90,7 @@ describe('StepProfile', () => {
     expect(onSaveStep).not.toHaveBeenCalled();
   });
 
-  it('calls onSaveStep once with a valid display name', async () => {
+  it('calls onSaveStep once and navigates forward to step 2 on success', async () => {
     const user = userEvent.setup();
     const onSaveStep = vi.fn().mockResolvedValue({ ok: true });
     renderStep({ onSaveStep });
@@ -87,6 +100,10 @@ describe('StepProfile', () => {
 
     await waitFor(() => {
       expect(onSaveStep).toHaveBeenCalledTimes(1);
+    });
+    // On a successful save the wizard advances the user to the location step.
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/onboarding/setup/location');
     });
   });
 

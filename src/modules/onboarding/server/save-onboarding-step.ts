@@ -10,6 +10,7 @@ import { onboardingChecklist } from '@/shared/db/schema/onboarding/tables';
 import { logger } from '@/shared/lib/logger';
 
 import type { OnboardingStep } from '../lib/branded';
+import { isValidStep, nextStep } from '../lib/wizard';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -22,11 +23,11 @@ export type SaveOnboardingStepResult =
   | { ok: false; error: 'unknown'; message: string };
 
 // ---------------------------------------------------------------------------
-// Step -> checklist flag mapping
+// Completed-step -> checklist flag mapping
 // ---------------------------------------------------------------------------
 
-// Maps a target onboarding step to the `onboarding_checklist` boolean column it
-// marks complete. The shipped data-model table (see
+// Maps the COMPLETED onboarding step to the `onboarding_checklist` boolean
+// column it marks done. The shipped data-model table (see
 // `src/shared/db/schema/onboarding/tables.ts`) only carries a flag for the
 // `profile` step (`profile_completed`) and the `patients` step
 // (`first_patient_added`). The `location` step has no dedicated boolean in the
@@ -44,7 +45,10 @@ const STEP_TO_CHECKLIST_FLAG = {
 // ---------------------------------------------------------------------------
 
 interface SaveOnboardingStepInput {
-  // The target step to persist. Validated with Zod at the boundary.
+  // The step the user just COMPLETED (e.g. 'profile' when finishing step 1).
+  // Validated with Zod at the boundary. The impl flips this step's checklist
+  // flag (when it owns one) and persists the NEXT step into
+  // `profiles.onboarding_step`, so the user advances forward.
   step: unknown;
   // Any client-supplied user id is intentionally accepted in the type but
   // IGNORED at runtime: authorization comes exclusively from the session's
@@ -57,16 +61,25 @@ interface SaveOnboardingStepInput {
 // ---------------------------------------------------------------------------
 
 /**
- * Persists the authenticated psychologist's onboarding progress.
+ * Advances the authenticated psychologist's onboarding progress by recording
+ * that a step was completed.
  *
  * Server-authoritative and session-scoped per the wizard design:
  *   1. Authenticate via `supabase.auth.getUser()` (NEVER `getSession()`).
- *   2. Zod-validate the target step at the boundary.
+ *   2. Zod-validate the completed step at the boundary.
  *   3. Lazily upsert the owner's `onboarding_checklist` row, flipping the flag
- *      relevant to the step (when one exists).
- *   4. Set `profiles.onboarding_step` to the target ABSOLUTELY (not by
+ *      the COMPLETED step owns (when one exists).
+ *   4. Set `profiles.onboarding_step` to the NEXT step ABSOLUTELY (not by
  *      increment), so concurrent re-submits from two tabs converge — the write
- *      is idempotent.
+ *      is idempotent. The terminal step (`done`) and the pre-wizard `welcome`
+ *      have no successor, so they persist unchanged.
+ *
+ * Persisting the NEXT step (rather than the just-completed one) is what lets
+ * the page guard and `resumeOnboardingStep` route the user forward to the step
+ * they should be on — see the onboarding-wizard spec, scenario "Advancing step
+ * 1 … sets onboarding_step = 'location'".
+ *
+ * The returned `step` is the NEXT (persisted) step, not the completed one.
  *
  * Authorization is `auth.uid()` only: any `userId` in `input` is ignored, and
  * every write is scoped `WHERE user_id = <session uid>` with RLS as the
@@ -99,19 +112,28 @@ export async function saveOnboardingStepImpl(
     };
   }
 
-  const targetStep = parsed.data;
+  const completedStep = parsed.data;
   const userId = user.id;
-  // Partial lookup: `undefined` for steps that own no checklist flag.
+
+  // Advance to the NEXT step. `welcome` (pre-wizard) and `done` (terminal) have
+  // no successor — `isValidStep` excludes `welcome`, and `nextStep('done')` is
+  // null — so in those cases we persist the value unchanged (idempotent).
+  const targetStep: OnboardingStep = isValidStep(completedStep)
+    ? (nextStep(completedStep) ?? completedStep)
+    : completedStep;
+
+  // Partial lookup: `undefined` for completed steps that own no checklist flag.
+  // Note this keys off the COMPLETED step, not the (next) target step.
   const flag: (typeof STEP_TO_CHECKLIST_FLAG)[keyof typeof STEP_TO_CHECKLIST_FLAG] | undefined =
-    STEP_TO_CHECKLIST_FLAG[targetStep as keyof typeof STEP_TO_CHECKLIST_FLAG];
+    STEP_TO_CHECKLIST_FLAG[completedStep as keyof typeof STEP_TO_CHECKLIST_FLAG];
 
   try {
     await db.transaction(async (tx) => {
-      // 3. Lazily upsert the checklist row, flipping the relevant flag (if any).
-      // The data-model row is created on first write, then the flag is set to
-      // TRUE on conflict. When the step owns no flag (e.g. `location`, `done`)
-      // we still ensure the row exists so the checklist nudge has somewhere to
-      // hang, but flip nothing.
+      // 3. Lazily upsert the checklist row, flipping the COMPLETED step's flag
+      // (if any). The data-model row is created on first write, then the flag is
+      // set to TRUE on conflict. When the completed step owns no flag (e.g.
+      // `location`) we still ensure the row exists so the checklist nudge has
+      // somewhere to hang, but flip nothing.
       if (flag) {
         await tx
           .insert(onboardingChecklist)
@@ -127,7 +149,8 @@ export async function saveOnboardingStepImpl(
           .onConflictDoNothing({ target: onboardingChecklist.userId });
       }
 
-      // 4. Set the step ABSOLUTELY (idempotent). Scoped to the session owner.
+      // 4. Set the NEXT step ABSOLUTELY (idempotent). Scoped to the session
+      // owner.
       await tx
         .update(profiles)
         .set({ onboardingStep: targetStep, updatedAt: new Date() })

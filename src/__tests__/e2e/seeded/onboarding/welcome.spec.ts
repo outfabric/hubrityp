@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import pgModule from 'postgres';
 
-import { readSeedState, STORAGE_STATE_PATH } from '../setup/seed-state';
+import {
+  ONBOARDING_PROFILE_LOCK_KEY,
+  readSeedState,
+  STORAGE_STATE_PATH,
+} from '../setup/seed-state';
 
 /**
  * @onboarding -- Welcome page (section 4).
@@ -47,18 +51,30 @@ test.describe('@onboarding welcome — seeded active user', () => {
   // The skip flow mutates the seeded profile's `onboarding_step` to 'done'.
   // Reset to 'welcome' before each test so the page renders and the assertion
   // is deterministic across retries and reused Testcontainers.
+  //
+  // This describe shares the seeded `profiles.onboarding_step` row with
+  // `wizard-flow.spec.ts`, which runs in parallel. Hold the cross-worker
+  // advisory lock for the duration of each test so the two specs never mutate
+  // the row concurrently (see `ONBOARDING_PROFILE_LOCK_KEY`).
+  let lockSql: ReturnType<typeof pgModule> | null = null;
+
   test.beforeEach(async () => {
     const seed = await readSeedState();
-    const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
-    try {
-      await sql`
-        UPDATE public.profiles
-        SET onboarding_step = 'welcome',
-            updated_at      = now()
-        WHERE user_id = ${seed.userId};
-      `;
-    } finally {
-      await sql.end();
+    lockSql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
+    await lockSql`SELECT pg_advisory_lock(${ONBOARDING_PROFILE_LOCK_KEY})`;
+    await lockSql`
+      UPDATE public.profiles
+      SET onboarding_step = 'welcome',
+          updated_at      = now()
+      WHERE user_id = ${seed.userId};
+    `;
+  });
+
+  test.afterEach(async () => {
+    if (lockSql) {
+      await lockSql`SELECT pg_advisory_unlock(${ONBOARDING_PROFILE_LOCK_KEY})`;
+      await lockSql.end();
+      lockSql = null;
     }
   });
 

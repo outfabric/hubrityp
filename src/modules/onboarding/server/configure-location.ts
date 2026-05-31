@@ -42,8 +42,10 @@ export type ConfigureLocationResult =
  *           50 min, interval 10 min, and the standard working hours.
  *        b. Upsert the owner's `onboarding_checklist` row, flipping
  *           `location_configured = TRUE`.
- *        c. Advance `profiles.onboarding_step` to `'location'` ABSOLUTELY
- *           (idempotent), so concurrent re-submits converge.
+ *        c. Advance `profiles.onboarding_step` to the NEXT step `'patients'`
+ *           ABSOLUTELY (idempotent), so concurrent re-submits converge. The
+ *           user just COMPLETED `location`, so persisting `patients` routes
+ *           them to step 3 next (see the onboarding-wizard spec).
  *
  * Authorization is `auth.uid()` only; RLS is the backstop on every write.
  * Errors are sanitized — callers receive a stable shape, never a Postgres
@@ -88,10 +90,11 @@ export async function configureLocationImpl(
           set: { locationConfigured: true, updatedAt: new Date() },
         });
 
-      // 2c. Advance the wizard step ABSOLUTELY (idempotent), scoped to owner.
+      // 2c. Advance to the NEXT step (`patients`) ABSOLUTELY (idempotent),
+      // scoped to owner. The user just COMPLETED `location`.
       await tx
         .update(profiles)
-        .set({ onboardingStep: 'location', updatedAt: new Date() })
+        .set({ onboardingStep: 'patients', updatedAt: new Date() })
         .where(eq(profiles.userId, userId));
     });
 

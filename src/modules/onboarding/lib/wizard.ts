@@ -18,7 +18,14 @@
 
 import { z } from 'zod';
 
-import { locationInputSchema } from '@/modules/agenda';
+// Import the schema from the agenda LEAF, never the module barrel. The agenda
+// barrel (`@/modules/agenda`) re-exports server-only Server Action impls that
+// transitively pull `postgres` (node:fs/net/tls); importing it here would drag
+// that server-only chain into every client leaf that consumes this pure wizard
+// model (e.g. `step-location.tsx`) and break the client bundle / `next build`.
+// The agenda module's OWN client leaf (`location-form-modal.tsx`) imports the
+// schema from this same leaf path for exactly this reason.
+import { locationInputSchema } from '@/modules/agenda/lib/location-input-schema';
 
 import type { OnboardingStep } from './branded';
 

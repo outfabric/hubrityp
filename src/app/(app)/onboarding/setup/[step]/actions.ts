@@ -11,6 +11,7 @@ import {
   type QuickAddPatientStepResult,
   quickAddOnboardingPatientImpl,
   saveOnboardingStepImpl,
+  skipOnboardingImpl,
   type SkipPatientsStepResult,
   uploadProfilePhotoImpl,
   type WizardStep,
@@ -54,8 +55,13 @@ export type SaveLocationStepResult =
  */
 export async function saveProfileStep(): Promise<SaveProfileStepResult> {
   const supabase = await createServerClient();
-  const step: WizardStep = 'profile';
-  const result = await saveOnboardingStepImpl(supabase, { step });
+  // The user just completed step 1 ("profile"). `saveOnboardingStepImpl`
+  // flips that completed step's checklist flag (`profile_completed`) AND
+  // advances `profiles.onboarding_step` to the NEXT step ("location"), per the
+  // onboarding-wizard spec ("Advancing step 1 … sets onboarding_step =
+  // 'location'"). The client then navigates forward to step 2.
+  const completedStep: WizardStep = 'profile';
+  const result = await saveOnboardingStepImpl(supabase, { step: completedStep });
 
   if (result.ok) return { ok: true };
   if (result.error === 'invalid_input') {
@@ -157,12 +163,17 @@ export async function quickAddOnboardingPatient(input: {
 }
 
 /**
- * Skips step 3 without ingesting any patient data. Advances the wizard step
- * server-side; authorization is session-only.
+ * Skips step 3 without ingesting any patient data. Advances
+ * `profiles.onboarding_step` to the terminal `'done'` WITHOUT flipping
+ * `first_patient_added` (skipping must never mark a patient as added) and
+ * WITHOUT stamping `onboarding_completed_at` (so the dashboard checklist keeps
+ * nudging). This reuses {@link skipOnboardingImpl} — the same "advance to done,
+ * flip nothing" primitive the welcome-screen skip uses. The client then
+ * navigates forward to step 4. Authorization is session-only (`auth.uid()`).
  */
 export async function skipPatientsStep(): Promise<SkipPatientsStepResult> {
   const supabase = await createServerClient();
-  const result = await saveOnboardingStepImpl(supabase, { step: 'patients' });
+  const result = await skipOnboardingImpl(supabase);
   return result.ok ? { ok: true } : { ok: false };
 }
 

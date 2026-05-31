@@ -160,7 +160,9 @@ describe('importOnboardingPatientsImpl — sensitive-data consent gate (wizard s
     expect(checklist).not.toBeNull();
     expect(checklist!.firstPatientAdded).toBe(true);
     expect(checklist!.locationConfigured).toBe(false);
-    expect((await readProfile(userId))?.onboardingStep).toBe('patients');
+    // Completing the patients step advances `onboarding_step` to the NEXT
+    // (terminal) step `done`.
+    expect((await readProfile(userId))?.onboardingStep).toBe('done');
   });
 });
 
@@ -192,7 +194,8 @@ describe('quickAddOnboardingPatientImpl (wizard step 3)', () => {
 
     const checklist = await readChecklist(userId);
     expect(checklist!.firstPatientAdded).toBe(true);
-    expect((await readProfile(userId))?.onboardingStep).toBe('patients');
+    // Completing the patients step advances `onboarding_step` to `done`.
+    expect((await readProfile(userId))?.onboardingStep).toBe('done');
   });
 
   it('quick-add is NOT gated by consent — it creates one patient via the standard path', async () => {

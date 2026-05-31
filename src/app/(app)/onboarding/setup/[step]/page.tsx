@@ -74,9 +74,13 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
   }
 
   // 3. Resolve the resume point from the OWNER'S persisted state (server-side,
-  // never client-supplied). A user may revisit an earlier/at step but cannot
-  // jump ahead of where they actually are — requesting a later step bounces
-  // back to the resume point.
+  // never client-supplied). The persisted `onboarding_step` already points at
+  // the step the user should be on NEXT (each completed step advances it), so
+  // the only navigable step is the resume point itself: requesting a LATER
+  // step (jumping ahead) OR an EARLIER step (redoing prior progress) both
+  // bounce to the resume point. This matches the onboarding-wizard spec
+  // ("…with a step earlier than their saved progress, they SHALL be routed to
+  // their saved resume point") and keeps the flow strictly forward.
   const resume = await resumeOnboardingStepImpl(supabase);
   if (!resume.ok) {
     redirect('/onboarding/pending');
@@ -84,7 +88,7 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
 
   const requestedIndex = WIZARD_STEPS.indexOf(step);
   const resumeIndex = WIZARD_STEPS.indexOf(resume.resumeStep);
-  if (requestedIndex > resumeIndex) {
+  if (requestedIndex !== resumeIndex) {
     redirect(`/onboarding/setup/${resume.resumeStep}`);
   }
 
