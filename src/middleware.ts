@@ -410,7 +410,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (decision.kind === 'pass') {
-    return response;
+    return withPathnameHeader(request, response, pathname);
   }
 
   // `request.nextUrl` (not `request.url`) is the user-facing URL with the
@@ -419,6 +419,29 @@ export async function middleware(request: NextRequest) {
   // hostname behind some proxies in prod.
   const url = new URL(decision.to, request.nextUrl);
   return buildRedirect(url, response);
+}
+
+// Re-emit the `pass` response with the resolved request pathname exposed as an
+// `x-pathname` request header so downstream Server Components / layouts can read
+// it via `next/headers` (Next.js does not expose the pathname to layouts by
+// default). The path is the already-public request URL, so it carries no PII
+// or secret. We rebuild the response from the incoming request with the cloned
+// header set and copy over any Set-Cookie deletions/refreshes that the Supabase
+// SSR client wrote onto the original response, so the session cookie refresh is
+// preserved.
+function withPathnameHeader(
+  request: NextRequest,
+  sourceResponse: NextResponse,
+  pathname: string,
+): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  for (const cookie of sourceResponse.cookies.getAll()) {
+    response.cookies.set(cookie);
+  }
+  return response;
 }
 
 // Construct a 307 redirect that inherits any Set-Cookie headers written by

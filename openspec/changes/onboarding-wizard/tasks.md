@@ -57,9 +57,9 @@
 
 ## 9. Unfinished-setup banner + resume
 
-- [ ] 9.1 Create `src/modules/onboarding/components/unfinished-setup-banner.tsx` — renders for `onboarding_completed_at IS NULL && onboarding_step != 'done'`; "continuar" links to resume step; design-system info/neutral alert (no brand bg)
-- [ ] 9.2 Wire the banner into the authenticated app shell layout (`src/app/(app)/layout.tsx`) using the server-side profile read; hidden when completed/skipped
-- [ ] 9.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/unfinished-setup-banner.test.tsx` — visible for incomplete profile, hidden when `onboarding_completed_at` set, link targets the resume step
+- [x] 9.1 Create `src/modules/onboarding/components/unfinished-setup-banner.tsx` — renders for `onboarding_completed_at IS NULL && onboarding_step != 'done'`; "continuar" links to resume step; design-system info/neutral alert (no brand bg)
+- [x] 9.2 Wire the banner into the authenticated app shell layout (`src/app/(app)/layout.tsx`) using the server-side profile read; hidden when completed/skipped
+- [x] 9.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/unfinished-setup-banner.test.tsx` — visible for incomplete profile, hidden when `onboarding_completed_at` set, link targets the resume step
 
 ## 10. End-to-end wizard flow
 

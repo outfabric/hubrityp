@@ -93,3 +93,7 @@ export {
   type OnboardingSummary,
   type CompleteOnboardingStepResult,
 } from './components/step-done';
+export {
+  UnfinishedSetupBanner,
+  type UnfinishedSetupBannerProps,
+} from './components/unfinished-setup-banner';
