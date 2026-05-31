@@ -80,6 +80,28 @@ export const profiles = pgTable(
     consecutiveLockouts: integer('consecutive_lockouts').notNull().default(0),
     // When true, the user must reset their password before regaining access.
     requiresPasswordReset: boolean('requires_password_reset').notNull().default(false),
+    // --- Onboarding + NPS columns (change onboarding-data-model) ---
+    // Current step in the guided onboarding flow. Defaults to 'welcome' for
+    // every new profile. The valid-value set is enforced by a CHECK constraint
+    // emitted in the migration so the enum stays in lockstep with the
+    // onboarding state machine.
+    onboardingStep: text('onboarding_step').notNull().default('welcome'),
+    // Stamped when the user finishes the onboarding flow. Nullable until done.
+    onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
+    // Stamped when the user finishes the in-app product tour. Nullable until done.
+    tourCompletedAt: timestamp('tour_completed_at', { withTimezone: true }),
+    // Stamped on the first authenticated dashboard render. Nullable until then.
+    firstAccessAt: timestamp('first_access_at', { withTimezone: true }),
+    // Stamped when a cancelled account is reactivated. Nullable until then.
+    reactivatedAt: timestamp('reactivated_at', { withTimezone: true }),
+    // NPS rating (0-10). The 0..10 range is enforced by a CHECK constraint in
+    // the migration. Nullable until the user responds to the NPS survey.
+    npsScore: integer('nps_score'),
+    // Free-text NPS feedback. May contain incidental PII — owner-scoped via RLS
+    // and MUST NEVER be logged. Nullable until the user responds.
+    npsFeedback: text('nps_feedback'),
+    // Stamped when the user submits an NPS response. Nullable until then.
+    npsRespondedAt: timestamp('nps_responded_at', { withTimezone: true }),
   },
   (table) => [
     // CRP is unique per UF (a psychologist registered in SP and another in
@@ -89,6 +111,12 @@ export const profiles = pgTable(
   ],
 );
 
+// Inferred row shape for `profiles`. Includes the auth-account-creation
+// columns, the login-hardening columns (auth-login-hardening), and the
+// onboarding/NPS columns (onboarding-data-model): `onboardingStep`,
+// `onboardingCompletedAt`, `tourCompletedAt`, `firstAccessAt`,
+// `reactivatedAt`, `npsScore`, `npsFeedback`, `npsRespondedAt`. Note that
+// `npsFeedback` is free text that may contain incidental PII — never log it.
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 

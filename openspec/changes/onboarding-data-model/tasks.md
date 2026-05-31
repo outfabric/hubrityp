@@ -13,7 +13,7 @@
 
 ## 2. Profiles columns (schema)
 
-- [ ] 2.1 Extend `src/shared/db/schema/auth/tables.ts` — add columns to `profiles`: `onboardingStep` (text NOT NULL default 'welcome'), `onboardingCompletedAt`, `tourCompletedAt`, `firstAccessAt`, `reactivatedAt` (all timestamptz nullable), `npsScore` (integer nullable), `npsFeedback` (text nullable), `npsRespondedAt` (timestamptz nullable). Update the inferred `Profile` type comment
+- [x] 2.1 Extend `src/shared/db/schema/auth/tables.ts` — add columns to `profiles`: `onboardingStep` (text NOT NULL default 'welcome'), `onboardingCompletedAt`, `tourCompletedAt`, `firstAccessAt`, `reactivatedAt` (all timestamptz nullable), `npsScore` (integer nullable), `npsFeedback` (text nullable), `npsRespondedAt` (timestamptz nullable). Update the inferred `Profile` type comment
 
 ## 3. Onboarding schema domain (tables + RLS + barrel)
 
