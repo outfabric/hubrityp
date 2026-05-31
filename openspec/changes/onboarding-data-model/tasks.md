@@ -27,7 +27,7 @@
 
 ## 4. Read helpers + module barrel
 
-- [ ] 4.1 Create `src/modules/onboarding/server/read-checklist.ts` — `getOnboardingChecklist(supabase, userId)` returning the owner's single checklist row or null via the RLS-scoped client. `import 'server-only'`
-- [ ] 4.2 Create `src/modules/onboarding/server/read-preferences.ts` — `getNotificationPreferences(supabase, userId)` returning the owner's single preferences row or null via the RLS-scoped client. `import 'server-only'`
-- [ ] 4.3 Create `src/modules/onboarding/index.ts` — barrel re-exporting: lib (branded types, schemas, inferred types) and the two read helpers
-- [ ] 4.4 **Integration test:** `src/__tests__/integration/onboarding/read-helpers.int.test.ts` — seed a checklist + preferences row for user A; verify each helper returns A's row under A's RLS client and returns null/zero rows under user B's client (negative cross-tenant proof)
+- [x] 4.1 Create `src/modules/onboarding/server/read-checklist.ts` — `getOnboardingChecklist(supabase, userId)` returning the owner's single checklist row or null via the RLS-scoped client. `import 'server-only'`
+- [x] 4.2 Create `src/modules/onboarding/server/read-preferences.ts` — `getNotificationPreferences(supabase, userId)` returning the owner's single preferences row or null via the RLS-scoped client. `import 'server-only'`
+- [x] 4.3 Create `src/modules/onboarding/index.ts` — barrel re-exporting: lib (branded types, schemas, inferred types) and the two read helpers
+- [x] 4.4 **Integration test:** `src/__tests__/integration/onboarding/read-helpers.int.test.ts` — seed a checklist + preferences row for user A; verify each helper returns A's row under A's RLS client and returns null/zero rows under user B's client (negative cross-tenant proof)
