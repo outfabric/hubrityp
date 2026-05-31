@@ -25,9 +25,9 @@
 
 ## 4. Welcome page
 
-- [ ] 4.1 Create `src/app/(app)/onboarding/welcome/page.tsx` (Server Component) — greeting "Olá, {firstName}!", primary "Começar configuração (5 min)" → `/onboarding/setup/profile`, secondary link "Pular e explorar por conta própria" → `skipOnboarding` then `/dashboard`. Welcome-back copy variant when `reactivated_at` is set. Sálvia tokens; Button `primary`/`link`
-- [ ] 4.2 Create thin `src/app/(app)/onboarding/welcome/actions.ts` (`'use server'`) wrapping `skipOnboardingImpl`
-- [ ] 4.3 **E2E test:** `src/__tests__/e2e/seeded/onboarding/welcome.spec.ts` — seeded active user sees greeting; "Pular e explorar" routes to `/dashboard` and sets `onboarding_step='done'`; anonymous visit redirects to `/login`
+- [x] 4.1 Create `src/app/(app)/onboarding/welcome/page.tsx` (Server Component) — greeting "Olá, {firstName}!", primary "Começar configuração (5 min)" → `/onboarding/setup/profile`, secondary link "Pular e explorar por conta própria" → `skipOnboarding` then `/dashboard`. Welcome-back copy variant when `reactivated_at` is set. Sálvia tokens; Button `primary`/`link`
+- [x] 4.2 Create thin `src/app/(app)/onboarding/welcome/actions.ts` (`'use server'`) wrapping `skipOnboardingImpl`
+- [x] 4.3 **E2E test:** `src/__tests__/e2e/seeded/onboarding/welcome.spec.ts` — seeded active user sees greeting; "Pular e explorar" routes to `/dashboard` and sets `onboarding_step='done'`; anonymous visit redirects to `/login`
 
 ## 5. Wizard step 1 — Sobre você (profile)
 
