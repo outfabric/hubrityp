@@ -17,13 +17,13 @@
 
 ## 3. Onboarding schema domain (tables + RLS + barrel)
 
-- [ ] 3.1 Create `src/shared/db/schema/onboarding/tables.ts` — `onboarding_checklist` (id uuid PK, user_id uuid NOT NULL UNIQUE, six MVP booleans DEFAULT FALSE, ai_transcription_tried boolean DEFAULT FALSE, updated_at timestamptz DEFAULT now()) and `notification_preferences` (id uuid PK, user_id uuid NOT NULL UNIQUE, email_daily/email_weekly/email_critical/in_app_sound booleans DEFAULT TRUE, updated_at timestamptz DEFAULT now()). Add a schema comment documenting that `email_critical` is non-disableable
-- [ ] 3.2 Create `src/shared/db/schema/onboarding/policies.ts` — RLS: ENABLE on both tables; per-operation policies SELECT/INSERT/UPDATE scoped by `auth.uid() = user_id` with WITH CHECK on INSERT/UPDATE; NO DELETE policy. Follow `src/shared/db/schema/notifications/policies.ts` style. No `USING (true)`
-- [ ] 3.3 Create `src/shared/db/schema/onboarding/index.ts` — barrel re-exporting tables, inferred types, and policies
-- [ ] 3.4 Update `src/shared/db/schema/index.ts` — add re-export of `./onboarding`
-- [ ] 3.5 Run `npm run db:generate`; hand-edit the migration to add: profiles columns + CHECK (`nps_score` BETWEEN 0 AND 10), the two tables, RLS ENABLE + policies, manual cross-schema FKs to `auth.users(id)`, UNIQUE on `user_id`, indexes on `user_id`
-- [ ] 3.6 Apply locally with `npm run db:migrate`
-- [ ] 3.7 **Integration test:** `src/__tests__/integration/onboarding/data-model.int.test.ts` — verify: profiles new columns exist with correct defaults; `nps_score = 11` rejected by CHECK; both new tables exist with RLS enabled; UNIQUE on `user_id` enforced (duplicate insert rejected); all item booleans default correctly; cross-user RLS — user B cannot SELECT/UPDATE user A's checklist or preferences rows; no DELETE policy grants `authenticated` deletion; index on `user_id` exists
+- [x] 3.1 Create `src/shared/db/schema/onboarding/tables.ts` — `onboarding_checklist` (id uuid PK, user_id uuid NOT NULL UNIQUE, six MVP booleans DEFAULT FALSE, ai_transcription_tried boolean DEFAULT FALSE, updated_at timestamptz DEFAULT now()) and `notification_preferences` (id uuid PK, user_id uuid NOT NULL UNIQUE, email_daily/email_weekly/email_critical/in_app_sound booleans DEFAULT TRUE, updated_at timestamptz DEFAULT now()). Add a schema comment documenting that `email_critical` is non-disableable
+- [x] 3.2 Create `src/shared/db/schema/onboarding/policies.ts` — RLS: ENABLE on both tables; per-operation policies SELECT/INSERT/UPDATE scoped by `auth.uid() = user_id` with WITH CHECK on INSERT/UPDATE; NO DELETE policy. Follow `src/shared/db/schema/notifications/policies.ts` style. No `USING (true)`
+- [x] 3.3 Create `src/shared/db/schema/onboarding/index.ts` — barrel re-exporting tables, inferred types, and policies
+- [x] 3.4 Update `src/shared/db/schema/index.ts` — add re-export of `./onboarding`
+- [x] 3.5 Run `npm run db:generate`; hand-edit the migration to add: profiles columns + CHECK (`nps_score` BETWEEN 0 AND 10), the two tables, RLS ENABLE + policies, manual cross-schema FKs to `auth.users(id)`, UNIQUE on `user_id`, indexes on `user_id`
+- [x] 3.6 Apply locally with `npm run db:migrate`
+- [x] 3.7 **Integration test:** `src/__tests__/integration/onboarding/data-model.int.test.ts` — verify: profiles new columns exist with correct defaults; `nps_score = 11` rejected by CHECK; both new tables exist with RLS enabled; UNIQUE on `user_id` enforced (duplicate insert rejected); all item booleans default correctly; cross-user RLS — user B cannot SELECT/UPDATE user A's checklist or preferences rows; no DELETE policy grants `authenticated` deletion; index on `user_id` exists
 
 ## 4. Read helpers + module barrel
 
