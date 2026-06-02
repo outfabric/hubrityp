@@ -22,6 +22,82 @@ export {
   type NotificationPreferences,
 } from './lib/schemas';
 
+// ---- Wizard step model (pure logic) ------------------------------------------
+export {
+  WIZARD_STEPS,
+  nextStep,
+  isValidStep,
+  resumeStepFromOnboardingStep,
+  profileStepSchema,
+  locationStepSchema,
+  patientsStepSkipSchema,
+  type WizardStep,
+  type ProfileStepInput,
+  type LocationStepInput,
+  type PatientsStepSkipInput,
+} from './lib/wizard';
+
 // ---- Read helpers (RLS-scoped, single-row reads) -----------------------------
 export { getOnboardingChecklist } from './server/read-checklist';
+export {
+  readOnboardingChecklistSummary,
+  type OnboardingChecklistSummary,
+} from './server/read-checklist-summary';
 export { getNotificationPreferences } from './server/read-preferences';
+
+// ---- Step-persistence Server Action implementations --------------------------
+// Session-scoped, server-authoritative writes. Authorization is `auth.uid()`
+// only; any client-supplied user id is ignored (IDOR-safe). RLS is the backstop.
+export {
+  saveOnboardingStepImpl,
+  type SaveOnboardingStepResult,
+} from './server/save-onboarding-step';
+export {
+  completeOnboardingImpl,
+  type CompleteOnboardingResult,
+} from './server/complete-onboarding';
+export { skipOnboardingImpl, type SkipOnboardingResult } from './server/skip-onboarding';
+export { resumeOnboardingStepImpl, type ResumeOnboardingStepResult } from './server/resume-step';
+export {
+  uploadProfilePhotoImpl,
+  type UploadProfilePhotoResult,
+} from './server/upload-profile-photo';
+export { configureLocationImpl, type ConfigureLocationResult } from './server/configure-location';
+export {
+  importOnboardingPatientsImpl,
+  type ImportOnboardingPatientsResult,
+  quickAddOnboardingPatientImpl,
+  type QuickAddOnboardingPatientResult,
+} from './server/import-onboarding-patients';
+
+// ---- Wizard UI components ----------------------------------------------------
+export { WizardProgress, type WizardProgressProps } from './components/wizard-progress';
+export {
+  StepProfile,
+  type StepProfileProps,
+  type SaveProfileStepResult,
+  type UploadPhotoActionResult,
+} from './components/step-profile';
+export {
+  StepLocation,
+  type StepLocationProps,
+  type SaveLocationStepResult,
+} from './components/step-location';
+export {
+  StepPatients,
+  type StepPatientsProps,
+  type OnboardingCsvPatientRow,
+  type ImportPatientsStepResult,
+  type QuickAddPatientStepResult,
+  type SkipPatientsStepResult,
+} from './components/step-patients';
+export {
+  StepDone,
+  type StepDoneProps,
+  type OnboardingSummary,
+  type CompleteOnboardingStepResult,
+} from './components/step-done';
+export {
+  UnfinishedSetupBanner,
+  type UnfinishedSetupBannerProps,
+} from './components/unfinished-setup-banner';

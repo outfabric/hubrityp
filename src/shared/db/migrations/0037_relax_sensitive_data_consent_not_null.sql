@@ -1,0 +1,17 @@
+-- Relax `profiles.sensitive_data_consent_at` from NOT NULL to nullable.
+--
+-- LGPD grants the psychologist the right to WITHDRAW their sensitive-data
+-- consent at any time (Configurações > Privacidade). Withdrawal clears this
+-- timestamp back to NULL, which the application treats as "no sensitive-data
+-- consent on record". The onboarding wizard's step-3 CSV import gate
+-- (RN-11.03) and the server gate in `importOnboardingPatientsImpl` key off
+-- this NULL state to block clinical-data ingestion.
+--
+-- Signup is unaffected: the `handle_new_user` trigger still requires the
+-- `sensitiveDataConsentAt` metadata field and raises if it is missing, so a
+-- freshly registered profile always has a value. This migration only allows
+-- the column to subsequently hold NULL after a consent withdrawal.
+--
+-- Reversible: re-adding NOT NULL would fail if any row has withdrawn consent;
+-- a down-migration would first need to backfill or block such rows.
+ALTER TABLE "profiles" ALTER COLUMN "sensitive_data_consent_at" DROP NOT NULL;

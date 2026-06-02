@@ -26,6 +26,8 @@ import { createMiddlewareClient } from '@/shared/supabase/middleware';
 //   /auth/link-account          | pass        | pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
 //   /onboarding/complete-profile| ->/login?...| pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
 //   /onboarding/pending         | ->/login?...| ->/onboarding/c-p         | pass                 | ->/dashboard   | ->/forgot-password   | ->/login + signOut
+//   /onboarding/welcome,        | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
+//     /onboarding/setup*        |             |                          |                      |               |                     |
 //   /dashboard*, /sessao*,      | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
 //     other (app)               |             |                          |                      |               |                     |
 //   /auth/callback              | pass        | pass                     | pass                 | pass          | pass                | pass
@@ -130,6 +132,15 @@ function classifyPath(pathname: string): PathClass {
   // `/dashboard/transcricoes` and `/dashboard/transcricoes/<id>/revisar`
   // resolve to the `'app'` (gated) class. A dedicated entry would be dead
   // code -- see transcricoes-gating.int.test.ts for the negative-auth proof.
+  // `/onboarding/welcome` and `/onboarding/setup*` are the onboarding WIZARD
+  // routes. They are gated like the rest of the `(app)` shell -- NOT like
+  // `/onboarding/pending`. The distinction matters: a `pending_*` user PASSES
+  // on `/onboarding/pending` (the onboarding class) but must be BOUNCED to
+  // `/onboarding/pending` when hitting the wizard, because the wizard is only
+  // reachable once the account is `active`. Mapping them to the `'app'` class
+  // gives exactly that (anon -> /login?redirectTo=, pending -> /onboarding/pending,
+  // active -> pass). The strict prefix+separator check below rejects near-miss
+  // paths like `/onboarding/welcomex` -- see onboarding-wizard-gating.int.test.ts.
   const APP_PREFIXES = [
     '/pacientes',
     '/agenda',
@@ -137,6 +148,8 @@ function classifyPath(pathname: string): PathClass {
     '/configuracoes',
     '/dashboard',
     '/sessao',
+    '/onboarding/welcome',
+    '/onboarding/setup',
   ] as const;
   for (const prefix of APP_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
@@ -397,7 +410,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (decision.kind === 'pass') {
-    return response;
+    return withPathnameHeader(request, response, pathname);
   }
 
   // `request.nextUrl` (not `request.url`) is the user-facing URL with the
@@ -406,6 +419,29 @@ export async function middleware(request: NextRequest) {
   // hostname behind some proxies in prod.
   const url = new URL(decision.to, request.nextUrl);
   return buildRedirect(url, response);
+}
+
+// Re-emit the `pass` response with the resolved request pathname exposed as an
+// `x-pathname` request header so downstream Server Components / layouts can read
+// it via `next/headers` (Next.js does not expose the pathname to layouts by
+// default). The path is the already-public request URL, so it carries no PII
+// or secret. We rebuild the response from the incoming request with the cloned
+// header set and copy over any Set-Cookie deletions/refreshes that the Supabase
+// SSR client wrote onto the original response, so the session cookie refresh is
+// preserved.
+function withPathnameHeader(
+  request: NextRequest,
+  sourceResponse: NextResponse,
+  pathname: string,
+): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  for (const cookie of sourceResponse.cookies.getAll()) {
+    response.cookies.set(cookie);
+  }
+  return response;
 }
 
 // Construct a 307 redirect that inherits any Set-Cookie headers written by

@@ -222,3 +222,20 @@ export async function readSeedState(): Promise<SeedState> {
   const raw = await readFile(SEED_STATE_PATH, 'utf8');
   return JSON.parse(raw) as SeedState;
 }
+
+/**
+ * Stable key for the cross-worker Postgres advisory lock that guards the shared
+ * seeded `profiles.onboarding_step` row.
+ *
+ * The seeded `active` user is GLOBAL: both `onboarding/welcome.spec.ts` and
+ * `onboarding/wizard-flow.spec.ts` mutate that single row's `onboarding_step`,
+ * and the seeded e2e suite runs `fullyParallel` across multiple workers. With
+ * the wizard's strict forward-only guard, a concurrent skip from one spec that
+ * advances the row to `done` can redirect the other spec away from the step it
+ * expects. Each spec acquires this advisory lock for the duration of its
+ * DB-mutating + navigation section (via `pg_advisory_lock` / `pg_advisory_unlock`
+ * on its own connection), making the two specs mutually exclusive WITHOUT
+ * serializing the whole suite — honest synchronization of a shared fixture, not
+ * a behavioural workaround.
+ */
+export const ONBOARDING_PROFILE_LOCK_KEY = 770_011;

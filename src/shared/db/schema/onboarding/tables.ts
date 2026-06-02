@@ -30,6 +30,12 @@ export const onboardingChecklist = pgTable(
     // --- Six MVP checklist items (all default FALSE) ---
     // Whether the user completed their profile details.
     profileCompleted: boolean('profile_completed').notNull().default(false),
+    // Whether the user configured at least one consultation location (wizard
+    // step 2 "Local e agenda"). Flipped TRUE when the first `locations` row is
+    // created through the onboarding wizard — the agenda module owns the
+    // `locations`/`agenda_settings` tables; this flag only records that the
+    // setup step is done. There is intentionally no separate location table.
+    locationConfigured: boolean('location_configured').notNull().default(false),
     // Whether the user added at least one patient.
     firstPatientAdded: boolean('first_patient_added').notNull().default(false),
     // Whether the user scheduled their first session.

@@ -19,6 +19,11 @@ const config = [
       'node_modules/**',
       'coverage/**',
       'playwright/.cache/**',
+      // Generated Playwright run artifacts (gitignored). Their bundled,
+      // minified JS must never be linted — linting it produces hundreds of
+      // false positives after an e2e run.
+      'playwright-report/**',
+      'test-results/**',
       'next-env.d.ts',
       '.husky/**',
       '.claude/**',
