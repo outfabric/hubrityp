@@ -39,6 +39,10 @@ export {
 
 // ---- Read helpers (RLS-scoped, single-row reads) -----------------------------
 export { getOnboardingChecklist } from './server/read-checklist';
+export {
+  readOnboardingChecklistSummary,
+  type OnboardingChecklistSummary,
+} from './server/read-checklist-summary';
 export { getNotificationPreferences } from './server/read-preferences';
 
 // ---- Step-persistence Server Action implementations --------------------------

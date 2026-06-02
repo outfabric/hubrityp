@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowRight, Calendar, Check, MessageCircle, Receipt, Wallet } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
@@ -162,7 +163,7 @@ export function StepDone({ summary, onComplete }: StepDoneProps) {
                 size="sm"
                 data-testid={`step-done-item-${item.key}-configure`}
               >
-                <a href={item.configureHref}>Configurar agora</a>
+                <Link href={item.configureHref}>Configurar agora</Link>
               </Button>
             )}
           </li>

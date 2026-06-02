@@ -10,7 +10,7 @@ import { onboardingChecklist } from '@/shared/db/schema/onboarding/tables';
 import { logger } from '@/shared/lib/logger';
 
 import type { OnboardingStep } from '../lib/branded';
-import { isValidStep, nextStep } from '../lib/wizard';
+import { isValidStep, nextStep, profileStepSchema } from '../lib/wizard';
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -50,6 +50,13 @@ interface SaveOnboardingStepInput {
   // flag (when it owns one) and persists the NEXT step into
   // `profiles.onboarding_step`, so the user advances forward.
   step: unknown;
+  // Optional step-1 ("profile") form payload. When the COMPLETED step is
+  // `profile`, this carries the display details the user typed (currently only
+  // `displayName`, persisted to `profiles.full_name`). Validated with Zod at the
+  // boundary via `profileStepSchema`; on any other step it is ignored. The
+  // `phone`/`bio` fields are accepted by the schema for UI symmetry but are NOT
+  // persisted — the `profiles` table has no column for them in the MVP.
+  profile?: unknown;
   // Any client-supplied user id is intentionally accepted in the type but
   // IGNORED at runtime: authorization comes exclusively from the session's
   // `auth.uid()`, never from this field. Closing the IDOR vector.
@@ -69,6 +76,10 @@ interface SaveOnboardingStepInput {
  *   2. Zod-validate the completed step at the boundary.
  *   3. Lazily upsert the owner's `onboarding_checklist` row, flipping the flag
  *      the COMPLETED step owns (when one exists).
+ *   3b. When the completed step is `profile`, validate the accompanying form
+ *      payload and persist `displayName` to `profiles.full_name` (the only
+ *      field the MVP `profiles` table can store; `phone`/`bio` are validated for
+ *      UI symmetry but have no column and are not written).
  *   4. Set `profiles.onboarding_step` to the NEXT step ABSOLUTELY (not by
  *      increment), so concurrent re-submits from two tabs converge — the write
  *      is idempotent. The terminal step (`done`) and the pre-wizard `welcome`
@@ -115,6 +126,28 @@ export async function saveOnboardingStepImpl(
   const completedStep = parsed.data;
   const userId = user.id;
 
+  // 2b. When the user just completed the `profile` step, validate the
+  // accompanying form payload at the boundary and derive the single field the
+  // schema currently persists: `displayName` -> `profiles.full_name`. The
+  // optional `phone`/`bio` are validated for UI symmetry but have no column in
+  // the MVP `profiles` table, so they are deliberately not written. On any
+  // other step there is no profile payload to persist.
+  let fullNameToPersist: string | undefined;
+  if (completedStep === 'profile' && input.profile !== undefined) {
+    const parsedProfile = profileStepSchema.safeParse(input.profile);
+    if (!parsedProfile.success) {
+      // `flatten().fieldErrors` is `Record<string, string[] | undefined>`; drop
+      // the undefined entries so the result stays the stable
+      // `Record<string, string[]>` shape the caller maps onto RHF fields.
+      const fieldErrors: Record<string, string[]> = {};
+      for (const [field, messages] of Object.entries(parsedProfile.error.flatten().fieldErrors)) {
+        if (messages && messages.length > 0) fieldErrors[field] = messages;
+      }
+      return { ok: false, error: 'invalid_input', fieldErrors };
+    }
+    fullNameToPersist = parsedProfile.data.displayName;
+  }
+
   // Advance to the NEXT step. `welcome` (pre-wizard) and `done` (terminal) have
   // no successor — `isValidStep` excludes `welcome`, and `nextStep('done')` is
   // null — so in those cases we persist the value unchanged (idempotent).
@@ -150,10 +183,16 @@ export async function saveOnboardingStepImpl(
       }
 
       // 4. Set the NEXT step ABSOLUTELY (idempotent). Scoped to the session
-      // owner.
+      // owner. When the profile step carried a display name, persist it to
+      // `profiles.full_name` in the same UPDATE so the data the user typed is
+      // never silently discarded.
       await tx
         .update(profiles)
-        .set({ onboardingStep: targetStep, updatedAt: new Date() })
+        .set({
+          onboardingStep: targetStep,
+          updatedAt: new Date(),
+          ...(fullNameToPersist !== undefined ? { fullName: fullNameToPersist } : {}),
+        })
         .where(eq(profiles.userId, userId));
     });
 

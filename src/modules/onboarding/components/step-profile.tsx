@@ -30,9 +30,11 @@ export type UploadPhotoActionResult =
 export interface StepProfileProps {
   /**
    * Persists the `profile` step server-side (authorized by `auth.uid()`). The
-   * client passes NO user id — authorization is session-only on the server.
+   * RHF-validated form values are passed through and re-validated on the server
+   * (the display name lands in `profiles.full_name`). The client passes NO user
+   * id — authorization is session-only on the server.
    */
-  onSaveStep: () => Promise<SaveProfileStepResult>;
+  onSaveStep: (input: ProfileStepInput) => Promise<SaveProfileStepResult>;
   /**
    * Uploads the optional profile photo. The file is re-validated SERVER-side
    * (MIME/size/extension); this client validation is advisory only.
@@ -130,9 +132,9 @@ export function StepProfile({ onSaveStep, onUploadPhoto }: StepProfileProps) {
     });
   }
 
-  const onSubmit = handleSubmit(() => {
+  const onSubmit = handleSubmit((values) => {
     startTransition(async () => {
-      const result = await onSaveStep();
+      const result = await onSaveStep(values);
 
       if (result.ok) {
         // The server advanced `onboarding_step` to `location`; move the user

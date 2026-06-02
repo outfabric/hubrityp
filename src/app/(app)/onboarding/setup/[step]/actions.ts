@@ -8,6 +8,7 @@ import {
   importOnboardingPatientsImpl,
   type LocationStepInput,
   type OnboardingCsvPatientRow,
+  type ProfileStepInput,
   type QuickAddPatientStepResult,
   quickAddOnboardingPatientImpl,
   saveOnboardingStepImpl,
@@ -49,19 +50,24 @@ export type SaveLocationStepResult =
  */
 
 /**
- * Advances the wizard by persisting a target step server-side. The step is
- * fixed by the call site (the client never chooses an arbitrary step), and the
- * impl Zod-validates it at the boundary.
+ * Advances the wizard by persisting step 1 ("profile") server-side. The step is
+ * fixed by the call site (the client never chooses an arbitrary step); the
+ * accompanying `input` carries the display details the user typed and the impl
+ * Zod-validates BOTH the step and the profile payload at the boundary. The
+ * display name is persisted to `profiles.full_name` so the collected data is
+ * never silently discarded. No client-supplied user id is accepted —
+ * authorization is `auth.uid()` only.
  */
-export async function saveProfileStep(): Promise<SaveProfileStepResult> {
+export async function saveProfileStep(input: ProfileStepInput): Promise<SaveProfileStepResult> {
   const supabase = await createServerClient();
   // The user just completed step 1 ("profile"). `saveOnboardingStepImpl`
-  // flips that completed step's checklist flag (`profile_completed`) AND
-  // advances `profiles.onboarding_step` to the NEXT step ("location"), per the
+  // flips that completed step's checklist flag (`profile_completed`), persists
+  // the validated `displayName` to `profiles.full_name`, AND advances
+  // `profiles.onboarding_step` to the NEXT step ("location"), per the
   // onboarding-wizard spec ("Advancing step 1 … sets onboarding_step =
   // 'location'"). The client then navigates forward to step 2.
   const completedStep: WizardStep = 'profile';
-  const result = await saveOnboardingStepImpl(supabase, { step: completedStep });
+  const result = await saveOnboardingStepImpl(supabase, { step: completedStep, profile: input });
 
   if (result.ok) return { ok: true };
   if (result.error === 'invalid_input') {

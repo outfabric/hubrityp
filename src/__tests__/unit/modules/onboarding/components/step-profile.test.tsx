@@ -90,7 +90,7 @@ describe('StepProfile', () => {
     expect(onSaveStep).not.toHaveBeenCalled();
   });
 
-  it('calls onSaveStep once and navigates forward to step 2 on success', async () => {
+  it('calls onSaveStep once with the typed form values and navigates forward to step 2 on success', async () => {
     const user = userEvent.setup();
     const onSaveStep = vi.fn().mockResolvedValue({ ok: true });
     renderStep({ onSaveStep });
@@ -101,6 +101,11 @@ describe('StepProfile', () => {
     await waitFor(() => {
       expect(onSaveStep).toHaveBeenCalledTimes(1);
     });
+    // The collected display name is passed through to the server action (so it
+    // can be persisted to `profiles.full_name`), not silently dropped.
+    expect(onSaveStep).toHaveBeenCalledWith(
+      expect.objectContaining({ displayName: 'Marina Costa' }),
+    );
     // On a successful save the wizard advances the user to the location step.
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith('/onboarding/setup/location');

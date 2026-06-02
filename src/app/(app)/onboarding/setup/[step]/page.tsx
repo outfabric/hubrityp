@@ -1,9 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { notFound, redirect } from 'next/navigation';
 
 import {
-  getOnboardingChecklist,
   isValidStep,
   type OnboardingSummary,
+  readOnboardingChecklistSummary,
   resumeOnboardingStepImpl,
   StepDone,
   StepLocation,
@@ -14,7 +15,6 @@ import {
   type WizardStep,
 } from '@/modules/onboarding';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
-import { db } from '@/shared/db/client';
 import { createServerClient } from '@/shared/supabase/server';
 
 import {
@@ -92,12 +92,12 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
     redirect(`/onboarding/setup/${resume.resumeStep}`);
   }
 
-  // The terminal `done` summary reads the OWNER'S checklist server-side. The
-  // `WHERE user_id = user.id` predicate inside `getOnboardingChecklist` is
-  // belt-and-suspenders on top of RLS; `user.id` comes from the authenticated
-  // session, never from the route. A brand-new user may have no row yet → all
-  // items default to "missing" (non-blocking links), never a crash.
-  const summary = step === 'done' ? await readSummary(profile.userId) : null;
+  // The terminal `done` summary reads the OWNER'S checklist server-side through
+  // the request's RLS-scoped Supabase client — `auth.uid()` is the only thing
+  // that can widen the result, so another user's row can never be returned. A
+  // brand-new user may have no row yet → all items default to "missing"
+  // (non-blocking links), never a crash.
+  const summary = step === 'done' ? await readSummary(supabase) : null;
 
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-8">
@@ -114,16 +114,12 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
 }
 
 /**
- * Reads the owner's onboarding checklist and projects it onto the three MVP
- * summary items shown on step 4. Missing row → all items "missing".
+ * Reads the owner's onboarding checklist through the RLS-scoped Supabase client
+ * and projects it onto the three MVP summary items shown on step 4. Missing row
+ * (or a read error) → all items "missing" (non-blocking).
  */
-async function readSummary(userId: string): Promise<OnboardingSummary> {
-  const checklist = await getOnboardingChecklist(db, userId);
-  return {
-    profileCompleted: checklist?.profileCompleted ?? false,
-    locationConfigured: checklist?.locationConfigured ?? false,
-    firstPatientAdded: checklist?.firstPatientAdded ?? false,
-  };
+async function readSummary(supabase: SupabaseClient): Promise<OnboardingSummary> {
+  return readOnboardingChecklistSummary(supabase);
 }
 
 /**

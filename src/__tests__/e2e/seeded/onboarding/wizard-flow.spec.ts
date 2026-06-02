@@ -64,6 +64,7 @@ async function resetOnboarding(): Promise<void> {
       UPDATE public.profiles
       SET onboarding_step = 'welcome',
           onboarding_completed_at = NULL,
+          full_name = ${RESET_FULL_NAME},
           updated_at = now()
       WHERE user_id = ${seed.userId};
     `;
@@ -73,17 +74,22 @@ async function resetOnboarding(): Promise<void> {
   }
 }
 
+// Deterministic baseline so the step-1 persistence assertion can prove the
+// display name actually changed (and was not just already equal by chance).
+const RESET_FULL_NAME = 'Seed Baseline';
+
 /**
  * Reads the persisted onboarding state for the seeded owner.
  */
 async function readOnboardingState(): Promise<{
   onboardingStep: string;
   onboardingCompletedAt: Date | null;
+  fullName: string;
 }> {
   const { seed, sql } = await openSeedSql();
   try {
     const rows = await sql`
-      SELECT onboarding_step, onboarding_completed_at
+      SELECT onboarding_step, onboarding_completed_at, full_name
       FROM public.profiles
       WHERE user_id = ${seed.userId};
     `;
@@ -92,6 +98,7 @@ async function readOnboardingState(): Promise<{
     return {
       onboardingStep: row.onboarding_step as string,
       onboardingCompletedAt: row.onboarding_completed_at as Date | null,
+      fullName: row.full_name as string,
     };
   } finally {
     await sql.end();
@@ -156,6 +163,10 @@ test.describe('@onboarding wizard-flow — full four-step walkthrough', () => {
     // step 2 — no manual `goto` needed.
     await page.waitForURL(`**${SETUP('location')}`, { timeout: 10_000 });
     await expect.poll(async () => (await readOnboardingState()).onboardingStep).toBe('location');
+
+    // The display name typed in step 1 is persisted to `profiles.full_name`
+    // (changed away from the reset baseline), not silently discarded.
+    await expect.poll(async () => (await readOnboardingState()).fullName).toBe('Dra. Seed');
 
     // ---- Step 2: location ("Local e agenda") -------------------------------
     await expect(page.getByTestId('setup-step-heading')).toHaveText('Local e agenda');

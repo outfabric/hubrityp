@@ -142,6 +142,49 @@ describe('saveOnboardingStepImpl', () => {
     expect(checklist!.firstPatientAdded).toBe(false);
   });
 
+  it('persists the typed display name to profiles.full_name when the profile payload is provided', async () => {
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    // The trigger seeds `full_name` from the signup metadata.
+    const before = await readProfile(userId);
+    expect(before?.fullName).toBe('Test Psychologist');
+
+    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), {
+      step: 'profile',
+      profile: { displayName: 'Dra. Marina Costa' },
+    });
+
+    expect(result).toEqual({ ok: true, step: 'location' });
+
+    // The collected display name was written to `profiles.full_name`, not
+    // silently discarded; the step still advanced.
+    const after = await readProfile(userId);
+    expect(after?.fullName).toBe('Dra. Marina Costa');
+    expect(after?.onboardingStep).toBe('location');
+  });
+
+  it('rejects an invalid profile payload (empty display name) without advancing the step', async () => {
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    const result = await saveOnboardingStepImpl(fakeSupabaseClient(userId), {
+      step: 'profile',
+      profile: { displayName: '   ' },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('expected failure');
+    expect(result.error).toBe('invalid_input');
+    if (result.error !== 'invalid_input') throw new Error('expected invalid_input');
+    expect(result.fieldErrors.displayName?.length).toBeGreaterThan(0);
+
+    // Neither the name nor the step changed on a rejected payload.
+    const after = await readProfile(userId);
+    expect(after?.fullName).toBe('Test Psychologist');
+    expect(after?.onboardingStep).toBe('welcome');
+  });
+
   it('completes the patients step: flips first_patient_added and advances onboarding_step to the NEXT step (done)', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
