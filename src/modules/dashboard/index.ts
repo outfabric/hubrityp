@@ -34,3 +34,6 @@ export {
   type SectionWeeklyProps,
 } from './components/section-weekly';
 export { SectionActions, type SectionActionsProps } from './components/section-actions';
+export { FirstStepsSlot, type FirstStepsSlotProps } from './components/first-steps-slot';
+export { WeeklySummarySlot } from './components/weekly-summary-slot';
+export { DashboardSecondary, type DashboardSecondaryProps } from './components/dashboard-secondary';
