@@ -22,14 +22,14 @@
 
 ## 3. Section components (UI, design-system)
 
-- [ ] 3.1 Create `src/modules/dashboard/components/section-today.tsx` — Card; next session w/ "Abrir sessão" (server-decided href by modality), compact list with status badges (design-system Badge variants), empty-state CTA "agendar uma". Lucide `Calendar`
-- [ ] 3.2 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-today.test.tsx` — renders next session + list; empty state renders schedule CTA; status maps to correct Badge variant; "Abrir sessão" href differs for online vs in_person
-- [ ] 3.3 Create `src/modules/dashboard/components/section-pendencias.tsx` — Card; three MVP pendência rows with counts + deep links; "Tudo em dia." when all zero. MUST NOT render post-MVP strings
-- [ ] 3.4 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-pendencias.test.tsx` — renders counts + links; positive state when all zero; asserts absence of "Receita Saúde"/"cobrança"/"WhatsApp"
-- [ ] 3.5 Create `src/modules/dashboard/components/section-weekly.tsx` — Card; metrics with graceful empty states; no benchmark/norm copy. Skeleton fallback for Suspense
-- [ ] 3.6 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-weekly.test.tsx` — each metric empty state when null; no-show rate hidden when null; no market-benchmark wording
-- [ ] 3.7 Create `src/modules/dashboard/components/section-actions.tsx` — Card; "+ Novo paciente" / "+ Nova sessão" open existing modals; agenda/pacientes links. Lucide `Plus`, `Users`, `Calendar`
-- [ ] 3.8 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-actions.test.tsx` — buttons wired to existing modal triggers and correct routes
+- [x] 3.1 Create `src/modules/dashboard/components/section-today.tsx` — Card; next session w/ "Abrir sessão" (server-decided href by modality), compact list with status badges (design-system Badge variants), empty-state CTA "agendar uma". Lucide `Calendar`
+- [x] 3.2 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-today.test.tsx` — renders next session + list; empty state renders schedule CTA; status maps to correct Badge variant; "Abrir sessão" href differs for online vs in_person
+- [x] 3.3 Create `src/modules/dashboard/components/section-pendencias.tsx` — Card; three MVP pendência rows with counts + deep links; "Tudo em dia." when all zero. MUST NOT render post-MVP strings
+- [x] 3.4 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-pendencias.test.tsx` — renders counts + links; positive state when all zero; asserts absence of "Receita Saúde"/"cobrança"/"WhatsApp"
+- [x] 3.5 Create `src/modules/dashboard/components/section-weekly.tsx` — Card; metrics with graceful empty states; no benchmark/norm copy. Skeleton fallback for Suspense
+- [x] 3.6 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-weekly.test.tsx` — each metric empty state when null; no-show rate hidden when null; no market-benchmark wording
+- [x] 3.7 Create `src/modules/dashboard/components/section-actions.tsx` — Card; "+ Novo paciente" / "+ Nova sessão" open existing modals; agenda/pacientes links. Lucide `Plus`, `Users`, `Calendar`
+- [x] 3.8 **Unit test:** `src/__tests__/unit/modules/dashboard/components/section-actions.test.tsx` — buttons wired to existing modal triggers and correct routes
 
 ## 4. Dashboard page composition + responsiveness + empty state
 

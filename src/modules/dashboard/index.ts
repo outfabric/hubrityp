@@ -24,3 +24,13 @@ export type {
   WeeklySummaryResult,
   UnauthorizedResult,
 } from './lib/types';
+
+// ---- Section components (presentational; consumed by the dashboard page) ----
+export { SectionToday, type SectionTodayProps } from './components/section-today';
+export { SectionPendencias, type SectionPendenciasProps } from './components/section-pendencias';
+export {
+  SectionWeekly,
+  SectionWeeklySkeleton,
+  type SectionWeeklyProps,
+} from './components/section-weekly';
+export { SectionActions, type SectionActionsProps } from './components/section-actions';
