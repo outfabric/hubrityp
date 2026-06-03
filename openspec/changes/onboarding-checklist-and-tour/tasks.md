@@ -6,10 +6,10 @@
 
 ## 1. Checklist completion logic (pure + server)
 
-- [ ] 1.1 Create `src/modules/onboarding/lib/checklist-items.ts` — pure model: ordered list of the 7 items with `key`, `label`, `actionTarget`, `mandatory` flag; `isComplete(state)` and `mandatoryCompletePct(state)` helpers (bonus excluded from 100%)
-- [ ] 1.2 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/checklist-items.test.ts` — 100% reached with all mandatory done + bonus pending; bonus pending never blocks; item ordering + mandatory flags correct
-- [ ] 1.3 Create `src/modules/onboarding/server/recompute-checklist.ts` — `recomputeChecklistImpl(supabase)`: getUser() auth; derive each item from owner's data (locations, active patients, non-cancelled sessions, evolutions, consent_signed_at, AI settings+transcriptions); upsert owner's `onboarding_checklist` row; ignore any client userId. Use React `cache()` to dedupe with dashboard aggregates. Export via barrel
-- [ ] 1.4 **Integration test:** `src/__tests__/integration/onboarding/recompute-checklist.int.test.ts` — creating a session flips `first_session_scheduled`; consent flips `first_consent_sent`; owner-scoping proven (user B's data never satisfies user A's items); client userId ignored; cross-user RLS holds
+- [x] 1.1 Create `src/modules/onboarding/lib/checklist-items.ts` — pure model: ordered list of the 7 items with `key`, `label`, `actionTarget`, `mandatory` flag; `isComplete(state)` and `mandatoryCompletePct(state)` helpers (bonus excluded from 100%)
+- [x] 1.2 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/checklist-items.test.ts` — 100% reached with all mandatory done + bonus pending; bonus pending never blocks; item ordering + mandatory flags correct
+- [x] 1.3 Create `src/modules/onboarding/server/recompute-checklist.ts` — `recomputeChecklistImpl(supabase)`: getUser() auth; derive each item from owner's data (locations, active patients, non-cancelled sessions, evolutions, consent_signed_at, AI settings+transcriptions); upsert owner's `onboarding_checklist` row; ignore any client userId. Use React `cache()` to dedupe with dashboard aggregates. Export via barrel
+- [x] 1.4 **Integration test:** `src/__tests__/integration/onboarding/recompute-checklist.int.test.ts` — creating a session flips `first_session_scheduled`; consent flips `first_consent_sent`; owner-scoping proven (user B's data never satisfies user A's items); client userId ignored; cross-user RLS holds
 
 ## 2. Checklist card UI + celebration
 

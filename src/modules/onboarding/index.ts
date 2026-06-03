@@ -22,6 +22,16 @@ export {
   type NotificationPreferences,
 } from './lib/schemas';
 
+// ---- Checklist item catalog + completion math (pure logic) -------------------
+export {
+  CHECKLIST_ITEMS,
+  isComplete,
+  mandatoryCompletePct,
+  type ChecklistItem,
+  type ChecklistItemKey,
+  type ChecklistState,
+} from './lib/checklist-items';
+
 // ---- Wizard step model (pure logic) ------------------------------------------
 export {
   WIZARD_STEPS,
@@ -44,6 +54,16 @@ export {
   type OnboardingChecklistSummary,
 } from './server/read-checklist-summary';
 export { getNotificationPreferences } from './server/read-preferences';
+
+// ---- Checklist recompute (session-only authz; client userId ignored) ---------
+// Re-derives every checklist item from authoritative sources and persists the
+// owner's `onboarding_checklist` row. RLS is the backstop.
+export {
+  recomputeChecklistImpl,
+  type RecomputeChecklistResult,
+  type RecomputeChecklistOk,
+  type RecomputeChecklistUnauthorized,
+} from './server/recompute-checklist';
 
 // ---- Step-persistence Server Action implementations --------------------------
 // Session-scoped, server-authoritative writes. Authorization is `auth.uid()`

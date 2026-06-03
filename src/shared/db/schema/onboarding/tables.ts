@@ -44,6 +44,12 @@ export const onboardingChecklist = pgTable(
     whatsappConnected: boolean('whatsapp_connected').notNull().default(false),
     // Whether the user recorded their first clinical evolution.
     firstEvolutionRecorded: boolean('first_evolution_recorded').notNull().default(false),
+    // Whether the user sent at least one consent term — derived from the owner
+    // having >=1 patient with `consent_signed_at` set. Added by the
+    // `onboarding-checklist-and-tour` change: the original `onboarding-data-model`
+    // table omitted this column even though the archived data-model spec lists
+    // `first_consent_sent`, so the checklist's "primeiro termo" item had no home.
+    firstConsentSent: boolean('first_consent_sent').notNull().default(false),
     // Whether the user configured their billing / PIX details.
     billingConfigured: boolean('billing_configured').notNull().default(false),
 
