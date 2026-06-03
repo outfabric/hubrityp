@@ -35,6 +35,10 @@ hubrityp/
 │   │   │   ├── edge.ts                 # edge-safe PUBLIC API
 │   │   │   └── index.ts                # module PUBLIC API (barrel)
 │   │   ├── auth/                       # session, sign-in, sign-out
+│   │   ├── dashboard/                  # operational home — aggregate read queries
+│   │   │   ├── lib/                    # São Paulo time windows + result types
+│   │   │   ├── server/                 # owner-scoped read helpers (today/pendências/weekly/has-data)
+│   │   │   └── index.ts                # module PUBLIC API (barrel)
 │   │   ├── health/                     # liveness/readiness helpers
 │   │   ├── notifications/              # transactional notifications (server-only)
 │   │   ├── oauth/                      # OAuth provider linking

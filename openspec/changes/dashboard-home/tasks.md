@@ -6,14 +6,14 @@
 
 ## 1. Aggregate read queries (server, RLS-scoped)
 
-- [ ] 1.1 Create `src/modules/dashboard/server/get-today-sessions.ts` — `getTodaySessions(supabase)`: getUser() auth; query owner's sessions where `start_at` is within today (America/Sao_Paulo); return next upcoming + ordered list with patient name, time, modality, status. RLS-scoped, no service-role
-- [ ] 1.2 **Integration test:** `src/__tests__/integration/dashboard/today-sessions.int.test.ts` — seed sessions for user A and user B today; assert A sees only A's sessions; next-upcoming selection correct; cross-user RLS returns zero of B's rows
-- [ ] 1.3 Create `src/modules/dashboard/server/get-pendencias.ts` — `getPendencias(supabase)`: getUser() auth; compute (a) count of `done` sessions older than 7 days with no evolution, (b) count of patients with `consent_signed_at IS NULL`, (c) count of AI notes awaiting review. Owner-scoped. Return counts + deep-link targets only (no clinical content)
-- [ ] 1.4 **Integration test:** `src/__tests__/integration/dashboard/pendencias.int.test.ts` — seed overdue done-without-evolution sessions, patients missing consent, AI notes pending; assert correct counts; assert cross-user isolation; assert result carries no clinical text fields
-- [ ] 1.5 Create `src/modules/dashboard/server/get-weekly-summary.ts` — `getWeeklySummary(supabase)`: getUser() auth; owner-only counts: sessions done this week, scheduled this week, no-show rate (only if >= threshold sessions, else null), new patients this month, evolutions this week
-- [ ] 1.6 **Integration test:** `src/__tests__/integration/dashboard/weekly-summary.int.test.ts` — seed mixed-status sessions across two users; assert owner-only counts; no-show rate null below threshold and correct above; cross-user isolation
-- [ ] 1.7 Create `src/modules/dashboard/server/has-any-data.ts` — `hasAnyData(supabase)`: getUser() auth; returns true if owner has >=1 patient OR >=1 session
-- [ ] 1.8 Create `src/modules/dashboard/index.ts` barrel — export the four read helpers + result types
+- [x] 1.1 Create `src/modules/dashboard/server/get-today-sessions.ts` — `getTodaySessions(supabase)`: getUser() auth; query owner's sessions where `start_at` is within today (America/Sao_Paulo); return next upcoming + ordered list with patient name, time, modality, status. RLS-scoped, no service-role
+- [x] 1.2 **Integration test:** `src/__tests__/integration/dashboard/today-sessions.int.test.ts` — seed sessions for user A and user B today; assert A sees only A's sessions; next-upcoming selection correct; cross-user RLS returns zero of B's rows
+- [x] 1.3 Create `src/modules/dashboard/server/get-pendencias.ts` — `getPendencias(supabase)`: getUser() auth; compute (a) count of `done` sessions older than 7 days with no evolution, (b) count of patients with `consent_signed_at IS NULL`, (c) count of AI notes awaiting review. Owner-scoped. Return counts + deep-link targets only (no clinical content)
+- [x] 1.4 **Integration test:** `src/__tests__/integration/dashboard/pendencias.int.test.ts` — seed overdue done-without-evolution sessions, patients missing consent, AI notes pending; assert correct counts; assert cross-user isolation; assert result carries no clinical text fields
+- [x] 1.5 Create `src/modules/dashboard/server/get-weekly-summary.ts` — `getWeeklySummary(supabase)`: getUser() auth; owner-only counts: sessions done this week, scheduled this week, no-show rate (only if >= threshold sessions, else null), new patients this month, evolutions this week
+- [x] 1.6 **Integration test:** `src/__tests__/integration/dashboard/weekly-summary.int.test.ts` — seed mixed-status sessions across two users; assert owner-only counts; no-show rate null below threshold and correct above; cross-user isolation
+- [x] 1.7 Create `src/modules/dashboard/server/has-any-data.ts` — `hasAnyData(supabase)`: getUser() auth; returns true if owner has >=1 patient OR >=1 session
+- [x] 1.8 Create `src/modules/dashboard/index.ts` barrel — export the four read helpers + result types
 
 ## 2. first_access_at stamp
 
