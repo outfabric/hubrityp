@@ -13,6 +13,7 @@ export { getTodaySessions } from './server/get-today-sessions';
 export { getPendencias } from './server/get-pendencias';
 export { getWeeklySummary } from './server/get-weekly-summary';
 export { hasAnyData, type HasAnyDataResult } from './server/has-any-data';
+export { stampFirstAccess, type StampFirstAccessResult } from './server/stamp-first-access';
 
 export type {
   SessionModality,

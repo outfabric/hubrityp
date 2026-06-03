@@ -17,8 +17,8 @@
 
 ## 2. first_access_at stamp
 
-- [ ] 2.1 Create `src/modules/dashboard/server/stamp-first-access.ts` — `stampFirstAccess(supabase)`: getUser() auth; idempotent `UPDATE profiles SET first_access_at = now() WHERE id = auth.uid() AND first_access_at IS NULL`. Export via barrel
-- [ ] 2.2 **Integration test:** `src/__tests__/integration/dashboard/first-access.int.test.ts` — first call sets `first_access_at`; second call does not overwrite; cross-user write impossible (only `auth.uid()` row touched)
+- [x] 2.1 Create `src/modules/dashboard/server/stamp-first-access.ts` — `stampFirstAccess(supabase)`: getUser() auth; idempotent `UPDATE profiles SET first_access_at = now() WHERE id = auth.uid() AND first_access_at IS NULL`. Export via barrel
+- [x] 2.2 **Integration test:** `src/__tests__/integration/dashboard/first-access.int.test.ts` — first call sets `first_access_at`; second call does not overwrite; cross-user write impossible (only `auth.uid()` row touched)
 
 ## 3. Section components (UI, design-system)
 
