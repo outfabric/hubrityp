@@ -174,6 +174,29 @@ export const SEED_IDOR = {
   },
 } as const;
 
+/**
+ * Dedicated zero-data user for the dashboard first-steps E2E test
+ * (dashboard/dashboard-home.spec.ts).
+ *
+ * The GLOBAL seed user always owns the three `SEED_PATIENTS` rows, so its
+ * dashboard can never reach the empty state (`hasAnyData` is permanently true).
+ * Deleting those patients to force the empty state is unsafe — patient/agenda
+ * spec files run in parallel against the same reused database and depend on
+ * them existing.
+ *
+ * This is therefore a SECOND `auth.users` + `profiles` row (status='active')
+ * that owns NO patients and NO sessions. The mock GoTrue never authenticates it
+ * by default; the dashboard spec registers it at runtime via
+ * `POST /_test/register-oauth-user` and signs the browser in with a cookie it
+ * builds itself, so it can load `/dashboard` as a genuinely empty account
+ * without touching the shared seed user's data.
+ */
+export const SEED_DASHBOARD_EMPTY_USER = {
+  id: '00000000-0000-4000-8000-0000000000d0',
+  email: 'painel-vazio@example.com',
+  fullName: 'Painel Vazio',
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -8,6 +8,7 @@ import {
   SEED_AI_CONSENT_TERMS,
   SEED_AI_TRANSCRIPTIONS,
   SEED_CONSENT_TERMS,
+  SEED_DASHBOARD_EMPTY_USER,
   SEED_IDOR,
   SEED_PATIENTS,
   SEED_SESSIONS,
@@ -788,6 +789,49 @@ export default async function globalSetup() {
         evolution_id        = NULL,
         reviewed_at         = NULL;
     `;
+
+    // -----------------------------------------------------------------------
+    // Zero-data dashboard user (dashboard/dashboard-home.spec.ts).
+    //
+    // A second active psychologist that owns NO patients and NO sessions, so
+    // its dashboard renders the first-steps empty state. Inserting the
+    // auth.users row fires handle_new_user() which materializes the profile;
+    // we then force it `active` exactly like the seed user. We also DELETE any
+    // patients/sessions left over from a previous reused-container run so the
+    // account is guaranteed empty.
+    const emptyUser = SEED_DASHBOARD_EMPTY_USER;
+    const emptyMetadata = JSON.stringify({
+      fullName: emptyUser.fullName,
+      crpNumber: '22222-V',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${emptyUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${emptyUser.email},
+        ${emptyMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${emptyUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          requires_password_reset = false
+      WHERE user_id = ${emptyUser.id};
+    `;
+    // Guarantee the account is empty even on a reused container.
+    await sql`DELETE FROM public.sessions WHERE user_id = ${emptyUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${emptyUser.id}`;
   } finally {
     await sql.end();
   }

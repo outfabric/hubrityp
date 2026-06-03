@@ -1,0 +1,39 @@
+// Public API of the `dashboard` module.
+//
+// External consumers (the `/dashboard` page and its section components) import
+// the four aggregate read helpers and their result types ONLY from here, never
+// from internal `server/` or `lib/` paths.
+//
+// Each helper takes the RLS-scoped Supabase client, authenticates via
+// `getUser()`, and scopes every query to `auth.uid()` — no caller-supplied id
+// is ever accepted. Results carry counts, the day's session display fields, and
+// server-computed deep-link targets only — never clinical content.
+
+export { getTodaySessions } from './server/get-today-sessions';
+export { getPendencias } from './server/get-pendencias';
+export { getWeeklySummary } from './server/get-weekly-summary';
+export { hasAnyData, type HasAnyDataResult } from './server/has-any-data';
+export { stampFirstAccess, type StampFirstAccessResult } from './server/stamp-first-access';
+
+export type {
+  SessionModality,
+  SessionStatus,
+  TodaySessionView,
+  TodaySessionsResult,
+  PendenciasResult,
+  WeeklySummaryResult,
+  UnauthorizedResult,
+} from './lib/types';
+
+// ---- Section components (presentational; consumed by the dashboard page) ----
+export { SectionToday, type SectionTodayProps } from './components/section-today';
+export { SectionPendencias, type SectionPendenciasProps } from './components/section-pendencias';
+export {
+  SectionWeekly,
+  SectionWeeklySkeleton,
+  type SectionWeeklyProps,
+} from './components/section-weekly';
+export { SectionActions, type SectionActionsProps } from './components/section-actions';
+export { FirstStepsSlot, type FirstStepsSlotProps } from './components/first-steps-slot';
+export { WeeklySummarySlot } from './components/weekly-summary-slot';
+export { DashboardSecondary, type DashboardSecondaryProps } from './components/dashboard-secondary';

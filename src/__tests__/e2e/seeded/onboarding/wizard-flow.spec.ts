@@ -78,6 +78,36 @@ async function resetOnboarding(): Promise<void> {
 // display name actually changed (and was not just already equal by chance).
 const RESET_FULL_NAME = 'Seed Baseline';
 
+// The shared seed user's pristine display name, written by
+// `setup/global-setup.ts` (`fullName: 'Seed User'`). This spec mutates the
+// GLOBAL seed `profiles` row (`resetOnboarding` overwrites `full_name` with
+// `RESET_FULL_NAME`), so an `afterAll` MUST restore this value — otherwise
+// the pollution leaks across the Playwright worker into sibling specs that
+// assert on "Seed User" (auth.spec, telepsicologia/patient-join-flow,
+// agenda/public-confirmation-confirm).
+const SEED_USER_FULL_NAME = 'Seed User';
+
+/**
+ * Restores the shared seed user's `full_name` to its pristine value.
+ *
+ * Counterpart to the `full_name` overwrite in `resetOnboarding`. Without this
+ * the GLOBAL `profiles` row stays at `RESET_FULL_NAME`, breaking any sibling
+ * spec on the same worker that expects "Seed User".
+ */
+async function restoreSeedFullName(): Promise<void> {
+  const { seed, sql } = await openSeedSql();
+  try {
+    await sql`
+      UPDATE public.profiles
+      SET full_name = ${SEED_USER_FULL_NAME},
+          updated_at = now()
+      WHERE user_id = ${seed.userId};
+    `;
+  } finally {
+    await sql.end();
+  }
+}
+
 /**
  * Reads the persisted onboarding state for the seeded owner.
  */
@@ -143,6 +173,24 @@ test.describe('@onboarding wizard-flow — full four-step walkthrough', () => {
       await lockSql`SELECT pg_advisory_unlock(${ONBOARDING_PROFILE_LOCK_KEY})`;
       await lockSql.end();
       lockSql = null;
+    }
+  });
+
+  // Restore the shared seed user's `full_name` after the whole describe block.
+  // `resetOnboarding` (run per-test) overwrites the GLOBAL `profiles` row with
+  // `RESET_FULL_NAME`; leaving it there pollutes sibling specs on the same
+  // worker that expect "Seed User". We re-acquire the advisory lock for the
+  // duration of the restore so the write cannot race a concurrent
+  // `welcome.spec.ts` touching the same row.
+  test.afterAll(async () => {
+    const seed = await readSeedState();
+    const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
+    try {
+      await sql`SELECT pg_advisory_lock(${ONBOARDING_PROFILE_LOCK_KEY})`;
+      await restoreSeedFullName();
+      await sql`SELECT pg_advisory_unlock(${ONBOARDING_PROFILE_LOCK_KEY})`;
+    } finally {
+      await sql.end();
     }
   });
 
