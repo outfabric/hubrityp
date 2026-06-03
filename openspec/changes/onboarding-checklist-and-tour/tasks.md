@@ -13,12 +13,12 @@
 
 ## 2. Checklist card UI + celebration
 
-- [ ] 2.1 Create `src/modules/onboarding/components/checklist-card.tsx` (client leaf) — expandable Card/Accordion; items with `CheckCircle2` for done, action buttons for pending; "Bônus" Badge on the AI item; collapses at 100%. Design-system tokens only
-- [ ] 2.2 Create `src/modules/onboarding/components/checklist-celebration.tsx` — discreet <=300ms CSS flourish + "Você completou a configuração inicial..." message; `prefers-reduced-motion` guard
-- [ ] 2.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/checklist-card.test.tsx` — done vs pending rendering; bonus badge present; card collapses at 100%; pending items expose their action target
-- [ ] 2.4 **Unit test:** `src/__tests__/unit/modules/onboarding/components/checklist-celebration.test.tsx` — renders message on complete; reduced-motion path uses near-instant transition; no bouncing/dramatic animation classes
-- [ ] 2.5 Fill the dashboard `<FirstStepsSlot>` with the checklist card (server reads checklist via recompute, passes to client leaf). Mount the card at the top of `/dashboard` whenever a mandatory item is pending
-- [ ] 2.6 Add Configurações > Ajuda > "Primeiros passos" entry rendering the checklist (read-only when complete)
+- [x] 2.1 Create `src/modules/onboarding/components/checklist-card.tsx` (client leaf) — expandable Card/Accordion; items with `CheckCircle2` for done, action buttons for pending; "Bônus" Badge on the AI item; collapses at 100%. Design-system tokens only
+- [x] 2.2 Create `src/modules/onboarding/components/checklist-celebration.tsx` — discreet <=300ms CSS flourish + "Você completou a configuração inicial..." message; `prefers-reduced-motion` guard
+- [x] 2.3 **Unit test:** `src/__tests__/unit/modules/onboarding/components/checklist-card.test.tsx` — done vs pending rendering; bonus badge present; card collapses at 100%; pending items expose their action target
+- [x] 2.4 **Unit test:** `src/__tests__/unit/modules/onboarding/components/checklist-celebration.test.tsx` — renders message on complete; reduced-motion path uses near-instant transition; no bouncing/dramatic animation classes
+- [x] 2.5 Fill the dashboard `<FirstStepsSlot>` with the checklist card (server reads checklist via recompute, passes to client leaf). Mount the card at the top of `/dashboard` whenever a mandatory item is pending
+- [x] 2.6 Add Configurações > Ajuda > "Primeiros passos" entry rendering the checklist (read-only when complete)
 
 ## 3. Guided tour (Driver.js)
 

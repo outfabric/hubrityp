@@ -308,3 +308,44 @@
     box-shadow: var(--ds-shadow-focus);
   }
 }
+
+/*
+ * Onboarding checklist completion flourish. Discreet by design — a single
+ * fade-and-rise on mount, bounded to 300ms (the Sálvia ceiling: no animation
+ * may run longer than 300ms or bounce — `docs/design-system/rules.md` §Animação).
+ * No scale-overshoot, no infinite loop, no keyframe that exceeds opacity + a
+ * small translate. The global `prefers-reduced-motion: reduce` rule above already
+ * collapses `animation-duration` to 0.01ms, so motion-averse users see the
+ * message appear instantly without a separate override here.
+ */
+@keyframes onboarding-celebration {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-celebration {
+  animation: onboarding-celebration var(--duration-slow, 300ms) var(--ease-out) both;
+}
+
+/*
+ * The icon gets a gentler, faster fade (no movement) so it reads as part of the
+ * same flourish without drawing extra attention. Still <=300ms, still single-run.
+ */
+@keyframes onboarding-celebration-emphasis {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.onboarding-celebration-emphasis {
+  animation: onboarding-celebration-emphasis var(--duration-base, 200ms) var(--ease-out) both;
+}

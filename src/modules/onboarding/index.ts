@@ -121,3 +121,11 @@ export {
   UnfinishedSetupBanner,
   type UnfinishedSetupBannerProps,
 } from './components/unfinished-setup-banner';
+
+// ---- Checklist UI components (dashboard first-run + Configurações → Ajuda) ----
+export { ChecklistCard, type ChecklistCardProps } from './components/checklist-card';
+export {
+  ChecklistCelebration,
+  type ChecklistCelebrationProps,
+} from './components/checklist-celebration';
+export { ChecklistSlot, type ChecklistSlotProps } from './components/checklist-slot';

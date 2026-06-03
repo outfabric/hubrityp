@@ -13,6 +13,7 @@ import {
   stampFirstAccess,
   WeeklySummarySlot,
 } from '@/modules/dashboard';
+import { ChecklistSlot } from '@/modules/onboarding';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -75,6 +76,14 @@ export default async function DashboardPage() {
           Olá, {profile.fullName}
         </span>
       </header>
+
+      {/* First-run onboarding checklist — renders at the top whenever a
+          mandatory item is still pending, and disappears once setup is 100%
+          complete (`hideWhenComplete`). Streams inside <Suspense> so its
+          recompute never blocks the day's data from painting. */}
+      <Suspense fallback={null}>
+        <ChecklistSlot hideWhenComplete />
+      </Suspense>
 
       {!hasDataResult.hasAnyData ? (
         <FirstStepsSlot />
