@@ -58,10 +58,10 @@
 
 ## 9. NPS scheduling + detractor email (Inngest + Resend)
 
-- [ ] 9.1 Create `src/modules/nps/inngest/detractor-followup.ts` — Inngest function (service-role, justified comment) that, on the detractor event, sends a follow-up email via the existing Resend helper; no clinical content; log only the user id
-- [ ] 9.2 Create `src/modules/nps/inngest/nps-eligibility-sweep.ts` (optional sweep) OR rely on server-derived eligibility per design; if a sweep is used, service-role + registered in serve route
-- [ ] 9.3 Register NPS Inngest function(s) in `src/app/api/inngest/route.ts`
-- [ ] 9.4 **Integration test:** `src/__tests__/integration/nps/detractor-followup.int.test.ts` — detractor event triggers Resend send (mock Resend); log assertion: user id present, email/name/feedback absent; promoter does not trigger
+- [x] 9.1 Create `src/modules/nps/inngest/detractor-followup.ts` — Inngest function (service-role, justified comment) that, on the detractor event, sends a follow-up email via the existing Resend helper; no clinical content; log only the user id
+- [x] 9.2 Create `src/modules/nps/inngest/nps-eligibility-sweep.ts` (optional sweep) OR rely on server-derived eligibility per design; if a sweep is used, service-role + registered in serve route
+- [x] 9.3 Register NPS Inngest function(s) in `src/app/api/inngest/route.ts`
+- [x] 9.4 **Integration test:** `src/__tests__/integration/nps/detractor-followup.int.test.ts` — detractor event triggers Resend send (mock Resend); log assertion: user id present, email/name/feedback absent; promoter does not trigger
 
 ## 10. End-to-end NPS flow
 

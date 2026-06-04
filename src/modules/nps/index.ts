@@ -27,6 +27,14 @@ export {
   type DetractorSubmittedEvent,
 } from './inngest/events';
 
+// NOTE: the `npsDetractorFollowup` Inngest function is intentionally NOT
+// re-exported here. Like every other module's queued jobs, it is consumed only
+// by the Inngest serve route via its internal path
+// (`@/modules/nps/inngest/detractor-followup`). Re-exporting it through the
+// barrel would force `inngest.createFunction(...)` to evaluate whenever any
+// barrel consumer (e.g. the Server Action) is imported — which breaks tests that
+// mock the Inngest client with a bare `{ send }` stub.
+
 // ---- Server Action implementation --------------------------------------------
 // Session-scoped, server-authoritative write. Authorization is `auth.uid()`
 // only; any client-supplied user id is ignored (IDOR-safe). RLS is the backstop.
