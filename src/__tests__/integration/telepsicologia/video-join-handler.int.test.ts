@@ -11,6 +11,20 @@ import { cleanTestData } from '../setup/clean-test-data';
 import { runAsService } from '../setup/run-as-service';
 
 // ---------------------------------------------------------------------------
+// Stream client mock
+// ---------------------------------------------------------------------------
+//
+// The join handler upserts the patient into Stream before returning the JWT.
+// We mock the Stream client module so the handler does not hit the real
+// Stream API during integration tests, and so we can assert upsert behaviour.
+
+const upsertUsers = vi.fn((): Promise<void> => Promise.resolve());
+
+vi.mock('@/modules/telepsicologia/server/stream-client', () => ({
+  getStreamClient: () => ({ upsertUsers }),
+}));
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -55,20 +69,21 @@ async function seedVideoRoom(
     availableFrom?: Date;
     expiresAt?: Date;
     streamCallId?: string;
+    patientFullName?: string;
   },
-): Promise<void> {
+): Promise<{ patientId: string; sessionId: string }> {
   const sessionId = randomUUID();
+  const patientId = randomUUID();
   const now = new Date();
   await runAsService(async (db) => {
     // Seed a minimal session to satisfy FK
     const { sessions } = await import('@/shared/db/schema/agenda/tables');
     const { patients } = await import('@/shared/db/schema/patients/tables');
 
-    const patientId = randomUUID();
     await db.insert(patients).values({
       id: patientId,
       userId,
-      fullName: 'Test Patient',
+      fullName: opts?.patientFullName ?? 'Test Patient',
       patientType: 'individual',
     });
     await db.insert(sessions).values({
@@ -95,6 +110,8 @@ async function seedVideoRoom(
       status: opts?.status ?? 'pending',
     });
   });
+
+  return { patientId, sessionId };
 }
 
 /** Auto-incrementing IP counter to avoid triggering the in-memory rate limiter. */
@@ -205,6 +222,8 @@ describe('POST /api/video/join', () => {
     expect(response.status).toBe(404);
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('NOT_FOUND');
+    // No Stream upsert for a not-found token.
+    expect(upsertUsers).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -228,6 +247,8 @@ describe('POST /api/video/join', () => {
     const body = (await response.json()) as { error: string; psychologistName: string };
     expect(body.error).toBe('SESSION_ENDED');
     expect(body.psychologistName).toBe('Dr. Test');
+    // No Stream upsert for an ended room.
+    expect(upsertUsers).not.toHaveBeenCalled();
   });
 
   it('returns 410 for room with status expired (includes psychologistName)', async () => {
@@ -305,6 +326,8 @@ describe('POST /api/video/join', () => {
     // Must NOT contain streamToken or callId
     expect(body).not.toHaveProperty('streamToken');
     expect(body).not.toHaveProperty('callId');
+    // No Stream upsert for a non-active (too_early) room.
+    expect(upsertUsers).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -318,11 +341,12 @@ describe('POST /api/video/join', () => {
     const streamCallId = `session-${randomUUID()}`;
     await seedAuthUser(userId);
     await seedProfile(userId, 'Dr. Carlos');
-    await seedVideoRoom(userId, {
+    const { patientId } = await seedVideoRoom(userId, {
       status: 'active',
       patientToken,
       patientJwt,
       streamCallId,
+      patientFullName: 'João da Silva',
     });
 
     const { POST } = await import('@/app/api/video/join/route');
@@ -343,6 +367,35 @@ describe('POST /api/video/join', () => {
     expect(body.callId).toBe(streamCallId);
     expect(body.psychologistName).toBe('Dr. Carlos');
     expect(body.psychologistPhotoUrl).toBeNull();
+
+    // Patient must be upserted in Stream with the synthetic ID + display name
+    // BEFORE the JWT is handed out.
+    expect(upsertUsers).toHaveBeenCalledTimes(1);
+    expect(upsertUsers).toHaveBeenCalledWith([
+      { id: `patient-${patientId}`, name: 'João da Silva' },
+    ]);
+  });
+
+  it('returns 500 INTERNAL_ERROR when the Stream upsert fails for an active room', async () => {
+    const userId = randomUUID();
+    const patientToken = 'feed1234'.repeat(8); // 64 hex chars
+    await seedAuthUser(userId);
+    await seedProfile(userId, 'Dr. Falha');
+    await seedVideoRoom(userId, {
+      status: 'active',
+      patientToken,
+    });
+
+    upsertUsers.mockRejectedValueOnce(new Error('stream upsert failed'));
+
+    const { POST } = await import('@/app/api/video/join/route');
+    const response = await POST(makeRequest({ token: patientToken }));
+
+    expect(response.status).toBe(500);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('INTERNAL_ERROR');
+    // The JWT must NOT be handed out when the upsert fails.
+    expect(body).not.toHaveProperty('streamToken');
   });
 
   // -------------------------------------------------------------------------
@@ -375,6 +428,8 @@ describe('POST /api/video/join', () => {
     expect(body).not.toHaveProperty('streamToken');
     expect(body).not.toHaveProperty('apiKey');
     expect(body).not.toHaveProperty('callId');
+    // No Stream upsert for a non-active (waiting) room.
+    expect(upsertUsers).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -389,12 +444,13 @@ describe('POST /api/video/join', () => {
     const partnerJwt = 'partner-jwt-value';
     await seedAuthUser(userId);
     await seedProfile(userId, 'Dr. Partner Test');
-    await seedVideoRoom(userId, {
+    const { patientId } = await seedVideoRoom(userId, {
       status: 'active',
       patientToken,
       patientJwt,
       partnerToken,
       partnerJwt,
+      patientFullName: 'Casal Teste',
     });
 
     const { POST } = await import('@/app/api/video/join/route');
@@ -410,6 +466,9 @@ describe('POST /api/video/join', () => {
     expect(body.status).toBe('active');
     // Partner token should resolve to partner JWT, not patient JWT
     expect(body.streamToken).toBe(partnerJwt);
+    // Partner is upserted under the `partner-<patientId>` synthetic ID.
+    expect(upsertUsers).toHaveBeenCalledTimes(1);
+    expect(upsertUsers).toHaveBeenCalledWith([{ id: `partner-${patientId}`, name: 'Casal Teste' }]);
   });
 
   // -------------------------------------------------------------------------
