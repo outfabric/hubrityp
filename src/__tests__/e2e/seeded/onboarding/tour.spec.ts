@@ -163,14 +163,20 @@ base.describe('@onboarding tour — guided dashboard walkthrough', () => {
     const popover = page.locator(POPOVER);
     await expect(popover).toBeVisible({ timeout: 15_000 });
 
-    // The "Pular tour" close control is present on EVERY step.
+    // The "Pular tour" close control is present and labeled on EVERY step.
+    // Driver.js 1.4.0 ignores `closeBtnText`, so the leaf relabels the button
+    // (text + accessible name) via `onPopoverRender`; assert the pt-BR label so
+    // a regression back to the bare "×"/"Close" default is caught.
     await expect(page.locator(POPOVER_CLOSE)).toBeVisible();
+    await expect(page.locator(POPOVER_CLOSE)).toHaveText('Pular tour');
+    await expect(page.locator(POPOVER_CLOSE)).toHaveAttribute('aria-label', 'Pular tour');
 
     // Walk the five steps in order, asserting each title, then advance. The
     // tooltip copy must be MVP-only on every step.
     for (let i = 0; i < STEP_TITLES.length; i++) {
       await expect(page.locator(POPOVER_TITLE)).toHaveText(STEP_TITLES[i]!, { timeout: 10_000 });
       await expect(page.locator(POPOVER_CLOSE)).toBeVisible();
+      await expect(page.locator(POPOVER_CLOSE)).toHaveText('Pular tour');
 
       const tooltip = `${await page.locator(POPOVER_TITLE).innerText()}\n${await page
         .locator(POPOVER_DESC)

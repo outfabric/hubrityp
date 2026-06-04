@@ -1,6 +1,6 @@
 'use client';
 
-import { type Driver, driver } from 'driver.js';
+import { type Driver, driver, type PopoverDOM } from 'driver.js';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef } from 'react';
 
@@ -28,6 +28,25 @@ export const REPLAY_TOUR_EVENT = 'hubrityp:start-tour';
  */
 export const REPLAY_TOUR_PARAM = 'tour';
 const REPLAY_TOUR_VALUE = 'replay';
+
+/**
+ * pt-BR label for the popover dismiss control. Driver.js 1.4.0 hardcodes the
+ * close button to `×` with `aria-label="Close"` and ignores the `closeBtnText`
+ * config option entirely, so we relabel it ourselves via `onPopoverRender`
+ * (the supported customization hook) on every step — both the visible text and
+ * the accessible name, since this is an otherwise pt-BR product.
+ */
+const SKIP_TOUR_LABEL = 'Pular tour';
+
+/**
+ * Relabel the Driver.js close button to the pt-BR "Pular tour" affordance.
+ * Runs on every popover render (every step), overriding the library's
+ * hardcoded `×` / `aria-label="Close"`.
+ */
+function relabelCloseButton(popover: PopoverDOM): void {
+  popover.closeButton.textContent = SKIP_TOUR_LABEL;
+  popover.closeButton.setAttribute('aria-label', SKIP_TOUR_LABEL);
+}
 
 /**
  * `DashboardTourImpl` — the Driver.js-backed guided tour (client leaf).
@@ -88,6 +107,9 @@ export function DashboardTourImpl({ tourCompletedAt, completeTour }: DashboardTo
       prevBtnText: 'Anterior',
       doneBtnText: 'Concluir',
       // The close button doubles as the always-visible "Pular tour" control.
+      // Driver.js 1.4.0 ignores `closeBtnText`, so we relabel the button (text +
+      // accessible name) on every popover render instead.
+      onPopoverRender: (popover) => relabelCloseButton(popover),
       progressText: '{{current}} de {{total}}',
       showProgress: true,
       steps: TOUR_STEPS.map((step) => ({
@@ -95,7 +117,6 @@ export function DashboardTourImpl({ tourCompletedAt, completeTour }: DashboardTo
         popover: {
           title: step.title,
           description: step.description,
-          closeBtnText: 'Pular tour',
         },
       })),
       // Fired once when the tour ends — whether the user reached the last step
