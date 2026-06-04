@@ -34,10 +34,10 @@
 
 ## 5. Notification preferences UI + action
 
-- [ ] 5.1 Create `src/modules/notifications/server/update-preferences.ts` — getUser() auth; Zod-validate; upsert owner's `notification_preferences`; REJECT/coerce `email_critical = false` (server-enforced). Export via barrel
-- [ ] 5.2 **Integration test:** `src/__tests__/integration/notifications/update-preferences.int.test.ts` — happy update; `email_critical=false` coerced/rejected to true; cross-user update affects zero rows; client userId ignored
-- [ ] 5.3 Create `src/app/(app)/configuracoes/notificacoes/page.tsx` + thin `actions.ts` + a `notification-preferences-form.tsx` client leaf (RHF+Zod, switches; `email_critical` shown locked-on)
-- [ ] 5.4 **Integration test:** `src/__tests__/integration/middleware/notificacoes-gating.int.test.ts` — NEGATIVE-AUTH: anonymous GET `/configuracoes/notificacoes` redirects to `/login?redirectTo=...` (proves the existing `/configuracoes` classification covers the new route)
+- [x] 5.1 Create `src/modules/notifications/server/update-preferences.ts` — getUser() auth; Zod-validate; upsert owner's `notification_preferences`; REJECT/coerce `email_critical = false` (server-enforced). Export via barrel
+- [x] 5.2 **Integration test:** `src/__tests__/integration/notifications/update-preferences.int.test.ts` — happy update; `email_critical=false` coerced/rejected to true; cross-user update affects zero rows; client userId ignored
+- [x] 5.3 Create `src/app/(app)/configuracoes/notificacoes/page.tsx` + thin `actions.ts` + a `notification-preferences-form.tsx` client leaf (RHF+Zod, switches; `email_critical` shown locked-on)
+- [x] 5.4 **Integration test:** `src/__tests__/integration/middleware/notificacoes-gating.int.test.ts` — NEGATIVE-AUTH: anonymous GET `/configuracoes/notificacoes` redirects to `/login?redirectTo=...` (proves the existing `/configuracoes` classification covers the new route)
 
 ## 6. End-to-end notifications flow
 

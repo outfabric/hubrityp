@@ -1,5 +1,13 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bell, Calendar, HelpCircle, MapPin, MessageCircle, Sparkles } from 'lucide-react';
+import {
+  Bell,
+  BellRing,
+  Calendar,
+  HelpCircle,
+  MapPin,
+  MessageCircle,
+  Sparkles,
+} from 'lucide-react';
 
 /**
  * Metadata for each top-level settings area, consumed by the settings index
@@ -59,6 +67,13 @@ export const SETTINGS_AREAS: readonly SettingsArea[] = [
     href: '/configuracoes/transcricao-ia',
     icon: Sparkles,
     slug: 'transcricao-ia',
+  },
+  {
+    label: 'Notificações',
+    description: 'Escolha quais avisos por e-mail e no app você quer receber.',
+    href: '/configuracoes/notificacoes',
+    icon: BellRing,
+    slug: 'notificacoes',
   },
   {
     label: 'Ajuda',

@@ -21,6 +21,17 @@ export {
 } from './server/mark-read';
 export { markAllNotificationsRead, type MarkAllReadResult } from './server/mark-all-read';
 
+// ---- Preferences (Configurações → Notificações) ----
+export {
+  getNotificationPreferencesForOwner,
+  type GetNotificationPreferencesResult,
+} from './server/get-preferences';
+export {
+  updateNotificationPreferencesImpl,
+  type UpdateNotificationPreferencesResult,
+  type NotificationPreferencesView,
+} from './server/update-preferences';
+
 // ---- Pure presentation/validation helpers (lib) ----
 export {
   markReadInputSchema,
@@ -31,6 +42,10 @@ export {
   type NotificationTypeMeta,
   getNotificationTypeMeta,
 } from './lib/schemas';
+export {
+  updateNotificationPreferencesInputSchema,
+  type UpdateNotificationPreferencesInput,
+} from './lib/preferences-schema';
 export { formatNotificationTime } from './lib/relative-time';
 
 // ---- Client components (bell + dropdown) ----
