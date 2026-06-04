@@ -118,6 +118,11 @@ async function main(): Promise<void> {
       STREAM_API_KEY: 'e2e-stream-api-key',
       STREAM_API_SECRET: 'e2e-stream-api-secret',
       STREAM_WEBHOOK_SECRET: 'e2e-stream-webhook-secret',
+      // Return an in-memory no-op Stream client server-side so the seeded
+      // suite never makes real outbound Stream API calls (there is no network
+      // path to Stream here). Without this, the patient-join route's defensive
+      // `upsertUsers` throws and the route returns 500. See getStreamClient().
+      E2E_STREAM_STUB: 'true',
       // Gemini AI transcription — dummy key so env validation passes.
       GEMINI_API_KEY: 'e2e-gemini-api-key',
       // Inngest encryption — dummy key (min 32 chars) so env validation passes.
