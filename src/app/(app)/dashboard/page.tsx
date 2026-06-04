@@ -13,9 +13,11 @@ import {
   stampFirstAccess,
   WeeklySummarySlot,
 } from '@/modules/dashboard';
-import { ChecklistSlot } from '@/modules/onboarding';
+import { ChecklistSlot, DashboardTour } from '@/modules/onboarding';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
+
+import { completeTour } from './actions';
 
 // Operational home for the authenticated psychologist.
 //
@@ -76,6 +78,23 @@ export default async function DashboardPage() {
           Olá, {profile.fullName}
         </span>
       </header>
+
+      {/* Guided product tour (Driver.js, client leaf, `dynamic ssr:false`).
+          Renders no markup — it is a side-effect controller over the
+          `data-tour-*` anchors. It auto-runs ONCE when `tour_completed_at` is
+          still NULL; the gate is this server-read timestamp, never localStorage.
+          On finish/skip it calls `completeTour` to stamp the row so it never
+          auto-runs again, on any device.
+
+          Note: a brand-new user (no patients/sessions) sees `FirstStepsSlot`
+          below instead of the four sections, so the Hoje/Pendências/Ações
+          anchors are absent on that very first visit; Driver.js degrades
+          gracefully (centered popover, no highlight) for missing anchors, so
+          the tour copy still shows and completion still stamps. */}
+      <DashboardTour
+        tourCompletedAt={profile.tourCompletedAt?.toISOString() ?? null}
+        completeTour={completeTour}
+      />
 
       {/* First-run onboarding checklist — renders at the top whenever a
           mandatory item is still pending, and disappears once setup is 100%

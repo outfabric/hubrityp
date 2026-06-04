@@ -22,14 +22,14 @@
 
 ## 3. Guided tour (Driver.js)
 
-- [ ] 3.1 `npm install driver.js`. Confirm it is imported only in client leaves (no Server Component / Edge import)
-- [ ] 3.2 Ensure `dashboard-home` surfaces carry stable `data-tour-*` anchors (sidebar nav, Seção Hoje, Seção Pendências, "+ Novo paciente", "+ Nova sessão"); add anchors here if missing
-- [ ] 3.3 Create `src/modules/onboarding/lib/tour-steps.ts` — pure array of the 5 steps with PRD copy + anchor selectors; assert no post-MVP strings in the copy
-- [ ] 3.4 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/tour-steps.test.ts` — exactly 5 steps in order; copy matches PRD intent; contains none of "WhatsApp"/"Receita Saúde"/"PIX"/"cobrança"/"recibo"
-- [ ] 3.5 Create `src/modules/onboarding/components/dashboard-tour.tsx` (client leaf) — `dynamic(ssr:false)` Driver.js init with `allowClose:true`, default `overlayClickBehavior`, `disableActiveInteraction:false`, always-visible "Pular tour"; auto-run only when `tourCompletedAt` prop is null; `destroy()` on route-change/unmount; calls `completeTour` on finish/skip
-- [ ] 3.6 Create `src/modules/onboarding/server/complete-tour.ts` — `completeTourImpl(supabase)`: getUser() auth; set `profiles.tour_completed_at = now()` on the `auth.uid()` row; export via barrel
-- [ ] 3.7 **Integration test:** `src/__tests__/integration/onboarding/complete-tour.int.test.ts` — sets `tour_completed_at` for owner only; client userId ignored; cross-user RLS holds
-- [ ] 3.8 Mount `<DashboardTour>` on `/dashboard` passing server-read `tourCompletedAt`; add "Refazer tour" entry under Configurações > Ajuda that starts the tour bypassing the gate
+- [x] 3.1 `npm install driver.js`. Confirm it is imported only in client leaves (no Server Component / Edge import)
+- [x] 3.2 Ensure `dashboard-home` surfaces carry stable `data-tour-*` anchors (sidebar nav, Seção Hoje, Seção Pendências, "+ Novo paciente", "+ Nova sessão"); add anchors here if missing
+- [x] 3.3 Create `src/modules/onboarding/lib/tour-steps.ts` — pure array of the 5 steps with PRD copy + anchor selectors; assert no post-MVP strings in the copy
+- [x] 3.4 **Unit test:** `src/__tests__/unit/modules/onboarding/lib/tour-steps.test.ts` — exactly 5 steps in order; copy matches PRD intent; contains none of "WhatsApp"/"Receita Saúde"/"PIX"/"cobrança"/"recibo"
+- [x] 3.5 Create `src/modules/onboarding/components/dashboard-tour.tsx` (client leaf) — `dynamic(ssr:false)` Driver.js init with `allowClose:true`, default `overlayClickBehavior`, `disableActiveInteraction:false`, always-visible "Pular tour"; auto-run only when `tourCompletedAt` prop is null; `destroy()` on route-change/unmount; calls `completeTour` on finish/skip
+- [x] 3.6 Create `src/modules/onboarding/server/complete-tour.ts` — `completeTourImpl(supabase)`: getUser() auth; set `profiles.tour_completed_at = now()` on the `auth.uid()` row; export via barrel
+- [x] 3.7 **Integration test:** `src/__tests__/integration/onboarding/complete-tour.int.test.ts` — sets `tour_completed_at` for owner only; client userId ignored; cross-user RLS holds
+- [x] 3.8 Mount `<DashboardTour>` on `/dashboard` passing server-read `tourCompletedAt`; add "Refazer tour" entry under Configurações > Ajuda that starts the tour bypassing the gate
 
 ## 4. End-to-end flows
 
