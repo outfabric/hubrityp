@@ -10,6 +10,8 @@ import {
   SEED_CONSENT_TERMS,
   SEED_DASHBOARD_EMPTY_USER,
   SEED_IDOR,
+  SEED_ONBOARDING_CHECKLIST_USER,
+  SEED_ONBOARDING_TOUR_USER,
   SEED_PATIENTS,
   SEED_SESSIONS,
 } from './seed-state';
@@ -76,11 +78,19 @@ export default async function globalSetup() {
     // `status = 'pending_verification'`, which middleware would redirect
     // to `/onboarding/pending` instead). The UPDATE is idempotent and
     // safe to run on already-active rows.
+    //
+    // `tour_completed_at` is stamped here so the guided dashboard tour does
+    // NOT auto-run for the GLOBAL seed user. Many parallel specs land this
+    // user on `/dashboard`; with `tour_completed_at IS NULL` the driver.js
+    // overlay auto-opens and intercepts pointer events, blocking unrelated
+    // clicks (logout, upload, tab switches, "Reconectar"). Only the dedicated
+    // tour user keeps `tour_completed_at` NULL so the auto-run is still tested.
     await sql`
       UPDATE public.profiles
       SET status = 'active',
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
           failed_login_count = 0,
           last_failed_login_at = NULL,
           lockout_until = NULL,
@@ -826,12 +836,146 @@ export default async function globalSetup() {
           full_name = ${emptyUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
           requires_password_reset = false
       WHERE user_id = ${emptyUser.id};
     `;
     // Guarantee the account is empty even on a reused container.
     await sql`DELETE FROM public.sessions WHERE user_id = ${emptyUser.id}`;
     await sql`DELETE FROM public.patients WHERE user_id = ${emptyUser.id}`;
+
+    // -----------------------------------------------------------------------
+    // Dedicated onboarding-checklist user (onboarding/checklist.spec.ts).
+    //
+    // A third active psychologist owning NO data, so its mandatory checklist
+    // starts at exactly one item done (`cadastro_completo`: email verified +
+    // CRP validated, both forced below). The spec writes its own owner-scoped
+    // rows to flip the remaining items and drive the card 0% → 100%. We reset
+    // every owned table + the persisted checklist cache + `tour_completed_at`
+    // on each run so the reused container never carries a prior state.
+    // -----------------------------------------------------------------------
+    const checklistUser = SEED_ONBOARDING_CHECKLIST_USER;
+    const checklistMetadata = JSON.stringify({
+      fullName: checklistUser.fullName,
+      crpNumber: '33333-C',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${checklistUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${checklistUser.email},
+        ${checklistMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${checklistUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = now(),
+          requires_password_reset = false
+      WHERE user_id = ${checklistUser.id};
+    `;
+    // Wipe every owned source row + the denormalized checklist cache so the
+    // account is a clean "only cadastro_completo" slate on a reused container.
+    // FK order: dependents before patients/sessions.
+    await sql`DELETE FROM public.evolutions WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.ai_transcriptions WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.ai_transcription_settings WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.consent_terms WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.session_history WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.locations WHERE user_id = ${checklistUser.id}`;
+    await sql`DELETE FROM public.onboarding_checklist WHERE user_id = ${checklistUser.id}`;
+
+    // -----------------------------------------------------------------------
+    // Dedicated onboarding-tour user (onboarding/tour.spec.ts).
+    //
+    // A fourth active psychologist that DOES own one active patient + one
+    // session, so `hasAnyData` is true and the dashboard renders the four
+    // operational sections — making all five `data-tour-anchor` surfaces
+    // present so the tour highlights real elements in order. We reset
+    // `tour_completed_at` to NULL here so the global-setup baseline is "tour
+    // never completed"; the spec controls it per-test thereafter.
+    // -----------------------------------------------------------------------
+    const tourUser = SEED_ONBOARDING_TOUR_USER;
+    const tourMetadata = JSON.stringify({
+      fullName: tourUser.fullName,
+      crpNumber: '44444-T',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${tourUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${tourUser.email},
+        ${tourMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${tourUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = NULL,
+          requires_password_reset = false
+      WHERE user_id = ${tourUser.id};
+    `;
+    // Clean stale data, then reseed exactly one patient + one session so
+    // `hasAnyData` is deterministically true.
+    await sql`DELETE FROM public.session_history WHERE user_id = ${tourUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${tourUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${tourUser.id}`;
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status)
+      VALUES (
+        ${tourUser.patientId}, ${tourUser.id}, 'Paciente Tour', 'individual', 'active'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id     = EXCLUDED.user_id,
+        status      = 'active',
+        archived_at = NULL;
+    `;
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking
+      )
+      VALUES (
+        ${tourUser.sessionId},
+        ${tourUser.id},
+        ${tourUser.patientId},
+        (now() + interval '1 day'),
+        (now() + interval '1 day' + interval '50 minutes'),
+        50, 'scheduled', 'online', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id    = EXCLUDED.user_id,
+        patient_id = EXCLUDED.patient_id,
+        start_at   = EXCLUDED.start_at,
+        end_at     = EXCLUDED.end_at,
+        status     = 'scheduled',
+        deleted_at = NULL;
+    `;
   } finally {
     await sql.end();
   }

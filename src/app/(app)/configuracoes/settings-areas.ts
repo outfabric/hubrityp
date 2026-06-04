@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Bell, Calendar, MapPin, MessageCircle, Sparkles } from 'lucide-react';
+import { Bell, Calendar, HelpCircle, MapPin, MessageCircle, Sparkles } from 'lucide-react';
 
 /**
  * Metadata for each top-level settings area, consumed by the settings index
@@ -59,5 +59,12 @@ export const SETTINGS_AREAS: readonly SettingsArea[] = [
     href: '/configuracoes/transcricao-ia',
     icon: Sparkles,
     slug: 'transcricao-ia',
+  },
+  {
+    label: 'Ajuda',
+    description: 'Revisite os primeiros passos de configuração do seu consultório.',
+    href: '/configuracoes/ajuda/primeiros-passos',
+    icon: HelpCircle,
+    slug: 'ajuda',
   },
 ] as const;

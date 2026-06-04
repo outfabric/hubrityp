@@ -5,8 +5,8 @@ import { BREADCRUMB_LABELS } from '@/app/(app)/configuracoes/breadcrumb-labels';
 import { SETTINGS_AREAS } from '@/app/(app)/configuracoes/settings-areas';
 
 describe('SETTINGS_AREAS', () => {
-  it('has exactly 5 entries', () => {
-    expect(SETTINGS_AREAS).toHaveLength(5);
+  it('has exactly 6 entries', () => {
+    expect(SETTINGS_AREAS).toHaveLength(6);
   });
 
   it('every entry has non-empty label, description, href, and slug', () => {
@@ -45,6 +45,7 @@ describe('SETTINGS_AREAS', () => {
       'Lembretes',
       'Agenda',
       'Transcrição IA',
+      'Ajuda',
     ]);
   });
 

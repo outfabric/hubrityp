@@ -100,6 +100,16 @@ export type RegisteredOAuthUser = {
   user: MockGoTrueUser;
   jwt: string;
   code: string;
+  /**
+   * Optional per-user refresh token. When supplied, `POST /auth/v1/token`
+   * with `grant_type=refresh_token` resolves THIS user (and re-issues its
+   * `jwt`) — keeping a refreshed session bound to the correct registered user
+   * instead of collapsing every registered user to the default seeded identity.
+   * Tests that drive a dedicated user through a Server Action (which may trigger
+   * a server-side token refresh) MUST set a unique value here, or the refresh
+   * would resolve the wrong user.
+   */
+  refreshToken?: string;
   /** When defined, the mock returns this profile row via the PostgREST shim. */
   profile?: Record<string, unknown> | null;
 };
@@ -188,6 +198,29 @@ async function handleRequest(
     return;
   }
   if (method === 'POST' && path === '/_test/clear-oauth-users') {
+    // Scoped clear: when the caller supplies a `{ code }`, remove ONLY that
+    // registration. A blanket `oauthUserRegistry.clear()` here is a cross-spec
+    // hazard under `fullyParallel` — it wipes the dedicated checklist/tour/empty
+    // users registered by `signInAsDedicatedUser` while their specs are still
+    // running, so the Edge profile shim resolves "no profile" mid-test and the
+    // middleware bounces them to /login. Callers that own a single registration
+    // (the Google-OAuth stub teardown) MUST pass their own `code` so cleanup is
+    // surgical; the unscoped full-clear is kept only for explicit global resets.
+    const body = await readBody(req);
+    let scopedCode: string | undefined;
+    if (body.trim().length > 0) {
+      try {
+        scopedCode = (JSON.parse(body) as { code?: string }).code;
+      } catch {
+        respondJson(res, 400, { error: 'invalid JSON' });
+        return;
+      }
+    }
+    if (scopedCode !== undefined) {
+      oauthUserRegistry.delete(scopedCode);
+      respondJson(res, 200, { cleared: true, code: scopedCode });
+      return;
+    }
     oauthUserRegistry.clear();
     respondJson(res, 200, { cleared: true });
     return;
@@ -406,6 +439,50 @@ async function handleRequest(
           ...context.user,
           last_sign_in_at: nowIso,
         },
+      });
+      return;
+    }
+
+    // Refresh-token grant — supabase-js calls this server-side when it deems the
+    // access token near expiry (e.g. during a Server Action's `getUser()`). We
+    // resolve the user by the supplied refresh token so a refreshed session
+    // stays bound to the right identity. A registered dedicated user with a
+    // UNIQUE refresh token resolves to itself; anything else (including the
+    // shared `mock-refresh-token`) re-issues the default seeded session, which
+    // is the historical behaviour the rest of the suite relies on.
+    if (grantType === 'refresh_token') {
+      let parsedRefresh: { refresh_token?: string } = {};
+      try {
+        parsedRefresh = JSON.parse(body) as { refresh_token?: string };
+      } catch {
+        parsedRefresh = {};
+      }
+      const suppliedRefresh = parsedRefresh.refresh_token ?? queryParams.get('refresh_token') ?? '';
+
+      const nowIso = new Date().toISOString();
+      const nowSec = Math.floor(Date.now() / 1000);
+
+      for (const entry of oauthUserRegistry.values()) {
+        if (entry.refreshToken && entry.refreshToken === suppliedRefresh) {
+          respondJson(res, 200, {
+            access_token: entry.jwt,
+            token_type: 'bearer',
+            expires_in: 60 * 60 * 24 * 30,
+            expires_at: nowSec + 60 * 60 * 24 * 30,
+            refresh_token: entry.refreshToken,
+            user: { ...entry.user, last_sign_in_at: nowIso },
+          });
+          return;
+        }
+      }
+
+      respondJson(res, 200, {
+        access_token: context.fixedToken,
+        token_type: 'bearer',
+        expires_in: 60 * 60 * 24 * 30,
+        expires_at: nowSec + 60 * 60 * 24 * 30,
+        refresh_token: 'mock-refresh-token',
+        user: { ...context.user, last_sign_in_at: nowIso },
       });
       return;
     }

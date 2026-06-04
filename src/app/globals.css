@@ -308,3 +308,87 @@
     box-shadow: var(--ds-shadow-focus);
   }
 }
+
+/*
+ * Onboarding guided-tour (Driver.js) "Pular tour" close control.
+ *
+ * Driver.js 1.4.0 sizes `.driver-popover-close-btn` as a fixed ~32x28px box
+ * built for a single `×` glyph. The tour relabels it to the pt-BR multi-word
+ * string "Pular tour" (see `dashboard-tour-impl.tsx` → `relabelCloseButton`),
+ * which overflowed and wrapped outside the popover card. We restyle the box
+ * into a contained text affordance: it sits in the popover's top-right corner
+ * (within the library's 15px padding), hugs the text on a single line, and
+ * reads as an intentional Sálvia `link`-style control (text `brand-700`, no
+ * underline per the design system) instead of a clipped glyph slot.
+ *
+ * Scoped to `.driver-popover` so it cannot leak onto any other element.
+ */
+.driver-popover .driver-popover-close-btn {
+  position: absolute !important;
+  left: auto !important;
+  width: auto;
+  height: auto;
+  top: var(--ds-space-3);
+  right: var(--ds-space-3);
+  padding: 0;
+  white-space: nowrap;
+  font-size: 0.8125rem; /* body-sm / caption scale — fits within the popover header */
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-brand-700);
+}
+
+.driver-popover .driver-popover-close-btn:hover,
+.driver-popover .driver-popover-close-btn:focus {
+  color: var(--color-brand-800, var(--color-brand-700));
+}
+
+/*
+ * Reserve header space so the title never sits under the "Pular tour" control.
+ * The padding-right keeps the popover title clear of the absolutely-positioned
+ * close affordance regardless of title length.
+ */
+.driver-popover .driver-popover-title {
+  padding-right: 4.5rem;
+}
+
+/*
+ * Onboarding checklist completion flourish. Discreet by design — a single
+ * fade-and-rise on mount, bounded to 300ms (the Sálvia ceiling: no animation
+ * may run longer than 300ms or bounce — `docs/design-system/rules.md` §Animação).
+ * No scale-overshoot, no infinite loop, no keyframe that exceeds opacity + a
+ * small translate. The global `prefers-reduced-motion: reduce` rule above already
+ * collapses `animation-duration` to 0.01ms, so motion-averse users see the
+ * message appear instantly without a separate override here.
+ */
+@keyframes onboarding-celebration {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-celebration {
+  animation: onboarding-celebration var(--duration-slow, 300ms) var(--ease-out) both;
+}
+
+/*
+ * The icon gets a gentler, faster fade (no movement) so it reads as part of the
+ * same flourish without drawing extra attention. Still <=300ms, still single-run.
+ */
+@keyframes onboarding-celebration-emphasis {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.onboarding-celebration-emphasis {
+  animation: onboarding-celebration-emphasis var(--duration-base, 200ms) var(--ease-out) both;
+}

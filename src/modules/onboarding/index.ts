@@ -22,6 +22,16 @@ export {
   type NotificationPreferences,
 } from './lib/schemas';
 
+// ---- Checklist item catalog + completion math (pure logic) -------------------
+export {
+  CHECKLIST_ITEMS,
+  isComplete,
+  mandatoryCompletePct,
+  type ChecklistItem,
+  type ChecklistItemKey,
+  type ChecklistState,
+} from './lib/checklist-items';
+
 // ---- Wizard step model (pure logic) ------------------------------------------
 export {
   WIZARD_STEPS,
@@ -45,6 +55,16 @@ export {
 } from './server/read-checklist-summary';
 export { getNotificationPreferences } from './server/read-preferences';
 
+// ---- Checklist recompute (session-only authz; client userId ignored) ---------
+// Re-derives every checklist item from authoritative sources and persists the
+// owner's `onboarding_checklist` row. RLS is the backstop.
+export {
+  recomputeChecklistImpl,
+  type RecomputeChecklistResult,
+  type RecomputeChecklistOk,
+  type RecomputeChecklistUnauthorized,
+} from './server/recompute-checklist';
+
 // ---- Step-persistence Server Action implementations --------------------------
 // Session-scoped, server-authoritative writes. Authorization is `auth.uid()`
 // only; any client-supplied user id is ignored (IDOR-safe). RLS is the backstop.
@@ -57,6 +77,14 @@ export {
   type CompleteOnboardingResult,
 } from './server/complete-onboarding';
 export { skipOnboardingImpl, type SkipOnboardingResult } from './server/skip-onboarding';
+
+// ---- Guided product tour ------------------------------------------------------
+// `completeTourImpl` stamps `profiles.tour_completed_at` (session-scoped, no
+// payload). `TOUR_STEPS` is the pure 5-step catalog consumed by the client tour
+// leaf. `DashboardTour` is the client leaf itself (Driver.js, `dynamic ssr:false`).
+export { completeTourImpl, type CompleteTourResult } from './server/complete-tour';
+export { TOUR_STEPS, type TourStep } from './lib/tour-steps';
+export { DashboardTour, type DashboardTourProps } from './components/dashboard-tour';
 export { resumeOnboardingStepImpl, type ResumeOnboardingStepResult } from './server/resume-step';
 export {
   uploadProfilePhotoImpl,
@@ -101,3 +129,11 @@ export {
   UnfinishedSetupBanner,
   type UnfinishedSetupBannerProps,
 } from './components/unfinished-setup-banner';
+
+// ---- Checklist UI components (dashboard first-run + Configurações → Ajuda) ----
+export { ChecklistCard, type ChecklistCardProps } from './components/checklist-card';
+export {
+  ChecklistCelebration,
+  type ChecklistCelebrationProps,
+} from './components/checklist-celebration';
+export { ChecklistSlot, type ChecklistSlotProps } from './components/checklist-slot';

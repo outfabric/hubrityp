@@ -1,0 +1,1 @@
+ALTER TABLE "onboarding_checklist" ADD COLUMN "first_consent_sent" boolean DEFAULT false NOT NULL;

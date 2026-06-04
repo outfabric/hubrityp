@@ -66,13 +66,13 @@ describe('SettingsIndexPage', () => {
     expect(screen.getByTestId('settings-index-page')).toBeInTheDocument();
   });
 
-  it('renders exactly 5 settings area cards', () => {
+  it('renders exactly 6 settings area cards', () => {
     render(<SettingsIndexPage />);
 
     const cards = SETTINGS_AREAS.map((area) =>
       screen.getByTestId(`settings-area-card-${area.slug}`),
     );
-    expect(cards).toHaveLength(5);
+    expect(cards).toHaveLength(6);
   });
 
   it.each([
@@ -144,6 +144,18 @@ describe('SettingsIndexPage', () => {
     ).toBeInTheDocument();
 
     expect(card.closest('a')).toHaveAttribute('href', '/configuracoes/transcricao-ia');
+  });
+
+  it('renders the "Ajuda" card linking to the onboarding checklist (Primeiros passos)', () => {
+    render(<SettingsIndexPage />);
+
+    const card = screen.getByTestId('settings-area-card-ajuda');
+    expect(card).toBeInTheDocument();
+
+    const heading = within(card).getByRole('heading', { level: 3 });
+    expect(heading).toHaveTextContent('Ajuda');
+
+    expect(card.closest('a')).toHaveAttribute('href', '/configuracoes/ajuda/primeiros-passos');
   });
 
   it('each card contains a decorative Lucide icon (svg with aria-hidden)', () => {
