@@ -22,8 +22,8 @@
 
 ## 4. Client-side error logging + tests
 
-- [ ] 4.1 In `src/modules/telepsicologia/components/pre-call-lobby.tsx`, update the `call.join().catch()` handler (line ~123): capture the error parameter and call `console.error('[telepsicologia] call.join failed', err)` before setting the permission error state.
+- [x] 4.1 In `src/modules/telepsicologia/components/pre-call-lobby.tsx`, update the `call.join().catch()` handler (line ~123): capture the error parameter and call `console.error('[telepsicologia] call.join failed', err)` before setting the permission error state.
 
-- [ ] 4.2 In `src/modules/telepsicologia/components/patient-in-call-view.tsx`, update the `call.join().catch()` handler (line ~428): capture the error parameter and call `console.error('[telepsicologia] call.join failed', err)`.
+- [x] 4.2 In `src/modules/telepsicologia/components/patient-in-call-view.tsx`, update the `call.join().catch()` handler (line ~428): capture the error parameter and call `console.error('[telepsicologia] call.join failed', err)`.
 
-- [ ] 4.3 Update the unit test `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx`: add a test that when `mockJoin` rejects with an error, `console.error` is called with the `[telepsicologia]` prefix and the actual error object. Use `vi.spyOn(console, 'error')`.
+- [x] 4.3 Update the unit test `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx`: add a test that when `mockJoin` rejects with an error, `console.error` is called with the `[telepsicologia]` prefix and the actual error object. Use `vi.spyOn(console, 'error')`.
