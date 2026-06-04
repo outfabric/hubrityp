@@ -48,7 +48,9 @@ function supabaseConnectSrc(): string {
 const STREAM_CONNECT_SRC = [
   'https://*.stream-io-api.com',
   'wss://*.stream-io-api.com',
-  'https://hint.stream-io-video.com',
+  // SFU media servers are dynamic subdomains (e.g. sfu-oci-brazil-vp2-*.stream-io-video.com)
+  'https://*.stream-io-video.com',
+  'wss://*.stream-io-video.com',
   'https://*.stream-io-cdn.com',
 ].join(' ');
 
