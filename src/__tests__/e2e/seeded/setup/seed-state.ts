@@ -255,6 +255,35 @@ export const SEED_ONBOARDING_TOUR_USER = {
   sessionId: '00000000-0000-4000-8000-0000000000c4',
 } as const;
 
+/**
+ * Dedicated user for the end-to-end NPS day-7 flow E2E test
+ * (nps/day7-modal.spec.ts).
+ *
+ * The day-7 NPS modal auto-opens on the FIRST eligible `(app)` render (gate:
+ * `first_access_at` ≥ 7 days ago AND `nps_responded_at IS NULL`) and a Radix
+ * Dialog renders a full-screen overlay that intercepts pointer events across the
+ * whole shell — exactly the hazard the tour overlay poses. Driving this on the
+ * GLOBAL seed user would make the modal pop on every parallel `/dashboard` spec
+ * and block their clicks; mutating the shared user's `first_access_at` /
+ * `nps_responded_at` would also leak across siblings under `fullyParallel`.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, so the spec OWNS its NPS state end-to-end: it sets
+ * `first_access_at` to 7+ days ago and `nps_responded_at` to NULL to make the
+ * modal eligible, then drives submit / dismiss / reload assertions and the
+ * later-answer path via Configurações > Feedback.
+ *
+ * `tour_completed_at` is stamped in `global-setup.ts` so the guided tour overlay
+ * never auto-runs for this user and cannot steal the clicks the NPS modal needs.
+ * The mock GoTrue never authenticates this user by default; the spec signs in at
+ * runtime via the shared `signInAsDedicatedUser` helper.
+ */
+export const SEED_NPS_USER = {
+  id: '00000000-0000-4000-8000-0000000000c5',
+  email: 'nps-e2e@example.com',
+  fullName: 'NPS E2E',
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -65,4 +65,4 @@
 
 ## 10. End-to-end NPS flow
 
-- [ ] 10.1 **E2E test:** `src/__tests__/e2e/seeded/nps/day7-modal.spec.ts` — seed a user with `first_access_at` 7 days ago and `nps_responded_at` null: modal appears once; submitting persists; reload does not re-show; "Não responder agora" suppresses and answer still possible via Configurações > Feedback
+- [x] 10.1 **E2E test:** `src/__tests__/e2e/seeded/nps/day7-modal.spec.ts` — seed a user with `first_access_at` 7 days ago and `nps_responded_at` null: modal appears once; submitting persists; reload does not re-show; "Não responder agora" suppresses and answer still possible via Configurações > Feedback
