@@ -10,9 +10,9 @@
 
 ## 2. Upsert psychologist on token minting + tests
 
-- [ ] 2.1 In `get-video-token.ts`, after verifying room ownership (step 3) and before generating the call token (step 5): fetch the psychologist's `profiles.fullName` from the DB (scoped by `userId`), then call `streamClient.upsertUsers()` with the psychologist's UUID and current name. This ensures the display name is fresh at the moment the psychologist opens the video page.
+- [x] 2.1 In `get-video-token.ts`, after verifying room ownership (step 3) and before generating the call token (step 5): fetch the psychologist's `profiles.fullName` from the DB (scoped by `userId`), then call `streamClient.upsertUsers()` with the psychologist's UUID and current name. This ensures the display name is fresh at the moment the psychologist opens the video page.
 
-- [ ] 2.2 Update the integration test `src/__tests__/integration/telepsicologia/get-video-token.int.test.ts`: add `upsertUsers` to the mock Stream client, assert it is called with the psychologist's user ID and profile name before `generateCallToken` on the successful token minting path.
+- [x] 2.2 Update the integration test `src/__tests__/integration/telepsicologia/get-video-token.int.test.ts`: add `upsertUsers` to the mock Stream client, assert it is called with the psychologist's user ID and profile name before `generateCallToken` on the successful token minting path.
 
 ## 3. Upsert patient on join route + tests
 
