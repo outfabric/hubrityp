@@ -6,11 +6,15 @@ import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import {
-  updateNotificationPreferencesInputSchema,
-  type NotificationPreferencesView,
-  type UpdateNotificationPreferencesInput,
+import type {
+  NotificationPreferencesView,
+  UpdateNotificationPreferencesInput,
 } from '@/modules/notifications';
+// The Zod schema is a runtime VALUE — import it from the pure `lib` leaf, NOT
+// the module barrel. The barrel re-exports server-only read actions (which pull
+// `db`/`postgres`), so importing this value through it would drag the entire
+// server graph into the client bundle and break `next build`.
+import { updateNotificationPreferencesInputSchema } from '@/modules/notifications/lib/preferences-schema';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Label } from '@/shared/ui/label';

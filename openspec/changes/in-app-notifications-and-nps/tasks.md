@@ -41,7 +41,7 @@
 
 ## 6. End-to-end notifications flow
 
-- [ ] 6.1 **E2E test:** `src/__tests__/e2e/seeded/notifications/bell.spec.ts` — seeded owner with notifications sees unread badge; opens dropdown with relative times; clicking marks read + routes; "Marcar todas como lidas" clears the badge; anonymous cannot reach `/configuracoes/notificacoes`
+- [x] 6.1 **E2E test:** `src/__tests__/e2e/seeded/notifications/bell.spec.ts` — seeded owner with notifications sees unread badge; opens dropdown with relative times; clicking marks read + routes; "Marcar todas como lidas" clears the badge; anonymous cannot reach `/configuracoes/notificacoes`
 
 ## 7. NPS — schema-free feature (uses onboarding-data-model columns)
 
