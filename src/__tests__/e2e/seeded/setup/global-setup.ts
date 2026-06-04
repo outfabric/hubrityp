@@ -78,11 +78,19 @@ export default async function globalSetup() {
     // `status = 'pending_verification'`, which middleware would redirect
     // to `/onboarding/pending` instead). The UPDATE is idempotent and
     // safe to run on already-active rows.
+    //
+    // `tour_completed_at` is stamped here so the guided dashboard tour does
+    // NOT auto-run for the GLOBAL seed user. Many parallel specs land this
+    // user on `/dashboard`; with `tour_completed_at IS NULL` the driver.js
+    // overlay auto-opens and intercepts pointer events, blocking unrelated
+    // clicks (logout, upload, tab switches, "Reconectar"). Only the dedicated
+    // tour user keeps `tour_completed_at` NULL so the auto-run is still tested.
     await sql`
       UPDATE public.profiles
       SET status = 'active',
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
           failed_login_count = 0,
           last_failed_login_at = NULL,
           lockout_until = NULL,
@@ -828,6 +836,7 @@ export default async function globalSetup() {
           full_name = ${emptyUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
           requires_password_reset = false
       WHERE user_id = ${emptyUser.id};
     `;
