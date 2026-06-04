@@ -66,13 +66,13 @@ describe('SettingsIndexPage', () => {
     expect(screen.getByTestId('settings-index-page')).toBeInTheDocument();
   });
 
-  it('renders exactly 6 settings area cards', () => {
+  it('renders exactly 8 settings area cards', () => {
     render(<SettingsIndexPage />);
 
     const cards = SETTINGS_AREAS.map((area) =>
       screen.getByTestId(`settings-area-card-${area.slug}`),
     );
-    expect(cards).toHaveLength(6);
+    expect(cards).toHaveLength(8);
   });
 
   it.each([
@@ -106,6 +106,18 @@ describe('SettingsIndexPage', () => {
       href: '/configuracoes/transcricao-ia',
       description:
         'Ativar a feature, escolher template padrão, sensibilidade de risco e ver estatísticas.',
+    },
+    {
+      slug: 'notificacoes',
+      label: 'Notificações',
+      href: '/configuracoes/notificacoes',
+      description: 'Escolha quais avisos por e-mail e no app você quer receber.',
+    },
+    {
+      slug: 'feedback',
+      label: 'Feedback',
+      href: '/configuracoes/feedback',
+      description: 'Avalie o sistema e conte o que faria você recomendá-lo a uma colega.',
     },
   ])(
     'renders card "$slug" with label "$label", correct href, and exact microcopy',
