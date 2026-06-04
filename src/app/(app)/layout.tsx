@@ -3,6 +3,12 @@ import { headers } from 'next/headers';
 import { Suspense } from 'react';
 
 import { AiRealtimeBoundary } from '@/modules/ai-transcription';
+import {
+  getUnreadCount,
+  listNotifications,
+  NotificationBellBoundary,
+  type NotificationView,
+} from '@/modules/notifications';
 import { onboardingStepSchema, UnfinishedSetupBanner } from '@/modules/onboarding';
 import { WhatsAppHealthBanner } from '@/modules/whatsapp';
 import { db } from '@/shared/db/client';
@@ -10,7 +16,7 @@ import { profiles } from '@/shared/db/schema/auth/tables';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
-import { signOut } from './actions';
+import { markAllNotificationsReadAction, markNotificationReadAction, signOut } from './actions';
 import { SidebarNav } from './sidebar-nav';
 
 // Async slot that reads the authenticated psychologist's onboarding state and
@@ -81,16 +87,35 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
 
+  // Seed the bell server-side. Both reads are owner-scoped (getUser() inside the
+  // module impls) and independent, so fetch them in parallel — no waterfall. An
+  // unauthenticated request yields an empty bell rather than blocking the shell.
+  const [listResult, unreadResult] = await Promise.all([
+    listNotifications(supabase),
+    getUnreadCount(supabase),
+  ]);
+  const initialNotifications: NotificationView[] = listResult.ok ? listResult.notifications : [];
+  const initialUnreadCount = unreadResult.ok ? unreadResult.count : 0;
+
   return (
     <div className="flex min-h-svh flex-col">
       <AiRealtimeBoundary userId={userId} />
       <header className="border-border bg-surface flex items-center justify-between border-b px-6 py-3 pl-14 md:pl-6">
         <span className="text-lg font-semibold">HubrityP</span>
-        <form action={signOut}>
-          <Button type="submit" variant="ghost" data-testid="dashboard-logout">
-            Sair
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <NotificationBellBoundary
+            userId={userId}
+            notifications={initialNotifications}
+            initialUnreadCount={initialUnreadCount}
+            markRead={markNotificationReadAction}
+            markAllRead={markAllNotificationsReadAction}
+          />
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" data-testid="dashboard-logout">
+              Sair
+            </Button>
+          </form>
+        </div>
       </header>
       <Suspense>
         <UnfinishedSetupBannerSlot />

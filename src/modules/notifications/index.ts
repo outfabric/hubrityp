@@ -39,3 +39,7 @@ export {
   NotificationDropdown,
   type NotificationDropdownProps,
 } from './components/notification-dropdown';
+export {
+  NotificationBellBoundary,
+  type NotificationBellBoundaryProps,
+} from './components/notification-bell-boundary';

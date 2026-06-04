@@ -10,6 +10,7 @@
 // in thin async functions instead of bare `export ... from`.
 
 import { signOut as signOutImpl } from '@/modules/auth';
+import { markAllNotificationsRead, markNotificationRead } from '@/modules/notifications';
 import { getTotalUnreadCountImpl, type GetTotalUnreadCountResult } from '@/modules/whatsapp';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -20,4 +21,18 @@ export async function signOut(): Promise<void> {
 export async function getTotalUnreadCount(): Promise<GetTotalUnreadCountResult> {
   const supabase = await createServerClient();
   return getTotalUnreadCountImpl(supabase);
+}
+
+// Fire-and-forget mark-read actions wired to the notification bell. Each builds
+// a cookie-bound (RLS-scoped) server client and delegates to the module impl,
+// which authenticates via getUser() and authorizes ownership from the session —
+// the `id` arg only identifies the row to mark and can never widen access.
+export async function markNotificationReadAction(id: string): Promise<void> {
+  const supabase = await createServerClient();
+  await markNotificationRead(supabase, { id });
+}
+
+export async function markAllNotificationsReadAction(): Promise<void> {
+  const supabase = await createServerClient();
+  await markAllNotificationsRead(supabase);
 }

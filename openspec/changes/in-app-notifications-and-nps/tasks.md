@@ -22,9 +22,9 @@
 
 ## 3. Realtime unread updates
 
-- [ ] 3.1 Create `src/modules/notifications/hooks/use-notifications-realtime.ts` — subscribe to `postgres_changes` on `notifications` filtered by `user_id=eq.<owner>`, reusing the ai-transcription realtime pattern; cleanup on unmount; bump unread count on INSERT
-- [ ] 3.2 Wire bell + realtime hook into `src/app/(app)/layout.tsx` header (server reads initial unread count, passes to client leaf)
-- [ ] 3.3 **Integration test:** `src/__tests__/integration/notifications/realtime-subscriber.int.test.ts` — insert for owner delivers an event; insert for another user is NOT delivered (owner-filter proof). Follow existing realtime-subscriber test style
+- [x] 3.1 Create `src/modules/notifications/hooks/use-notifications-realtime.ts` — subscribe to `postgres_changes` on `notifications` filtered by `user_id=eq.<owner>`, reusing the ai-transcription realtime pattern; cleanup on unmount; bump unread count on INSERT
+- [x] 3.2 Wire bell + realtime hook into `src/app/(app)/layout.tsx` header (server reads initial unread count, passes to client leaf)
+- [x] 3.3 **Integration test:** `src/__tests__/integration/notifications/realtime-subscriber.int.test.ts` — insert for owner delivers an event; insert for another user is NOT delivered (owner-filter proof). Follow existing realtime-subscriber test style
 
 ## 4. 30-day auto-read Inngest job
 
