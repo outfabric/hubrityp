@@ -40,6 +40,18 @@ function supabaseConnectSrc(): string {
   }
 }
 
+// Stream Video SDK endpoints the browser must reach:
+//   - REST API (join, token refresh, call metadata)
+//   - WebSocket (real-time signaling for video calls)
+//   - Location hint (optimal SFU selection)
+//   - CDN (avatars, thumbnails, recording assets)
+const STREAM_CONNECT_SRC = [
+  'https://*.stream-io-api.com',
+  'wss://*.stream-io-api.com',
+  'https://hint.stream-io-video.com',
+  'https://*.stream-io-cdn.com',
+].join(' ');
+
 const securityHeaders = [
   {
     key: 'Strict-Transport-Security',
@@ -59,7 +71,9 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
+    // camera and microphone MUST be permitted for (self) — telepsychology
+    // video calls require both. Blocking them would silently break getUserMedia.
+    value: 'camera=(self), microphone=(self), geolocation=()',
   },
   {
     key: 'Content-Security-Policy',
@@ -71,7 +85,7 @@ const securityHeaders = [
       // In Docker dev, SUPABASE_PUBLIC_URL is the browser-facing origin (signed
       // URLs are rewritten to it), so it must also be permitted.
       `img-src 'self' data: blob:${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
-      `connect-src 'self'${supabaseConnectSrc()}`,
+      `connect-src 'self'${supabaseConnectSrc()} ${STREAM_CONNECT_SRC}`,
       "font-src 'self' data:",
       // PDF preview iframe loads signed URLs from Supabase Storage
       `frame-src 'self'${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
