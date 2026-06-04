@@ -328,8 +328,8 @@
   left: auto !important;
   width: auto;
   height: auto;
-  top: var(--space-3);
-  right: var(--space-3);
+  top: var(--ds-space-3);
+  right: var(--ds-space-3);
   padding: 0;
   white-space: nowrap;
   font-size: 0.8125rem; /* body-sm / caption scale — fits within the popover header */
