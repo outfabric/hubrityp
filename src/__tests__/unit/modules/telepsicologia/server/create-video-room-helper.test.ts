@@ -82,17 +82,20 @@ function makeMockDb(options: {
 function makeStreamClient(overrides?: { getOrCreate?: ReturnType<typeof vi.fn> }): {
   client: StreamClient;
   getOrCreate: ReturnType<typeof vi.fn>;
+  upsertUsers: ReturnType<typeof vi.fn>;
 } {
   const getOrCreate = overrides?.getOrCreate ?? vi.fn().mockResolvedValue({});
+  const upsertUsers = vi.fn().mockResolvedValue({});
 
   const client = {
+    upsertUsers,
     video: {
       call: vi.fn().mockReturnValue({ getOrCreate }),
     },
     generateCallToken: vi.fn().mockReturnValue('fake-patient-jwt'),
   } as unknown as StreamClient;
 
-  return { client, getOrCreate };
+  return { client, getOrCreate, upsertUsers };
 }
 
 const session: SessionData = {
@@ -101,6 +104,15 @@ const session: SessionData = {
   patientId: null,
   startAt: new Date('2026-06-01T15:00:00.000Z'),
   endAt: new Date('2026-06-01T16:00:00.000Z'),
+  psychologistName: 'Dr. Ana Souza',
+  patientFullName: null,
+};
+
+/** Session with a linked patient — used to assert the patient is also upserted. */
+const sessionWithPatient: SessionData = {
+  ...session,
+  patientId: '33333333-3333-3333-3333-333333333333',
+  patientFullName: 'João da Silva',
 };
 
 beforeEach(() => {
@@ -127,6 +139,62 @@ describe('createVideoRoomHelper', () => {
       quality: '1080p',
       audio_only: false,
     });
+  });
+
+  it('upserts both psychologist and patient into Stream before getOrCreate', async () => {
+    const { client, getOrCreate, upsertUsers } = makeStreamClient();
+    // No existing room (first select empty); patient-type lookup (second select).
+    const db = makeMockDb({ selectResults: [[], []], insertedRoom: { id: 'room-1' } });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const result = await createVideoRoomHelper(client, sessionWithPatient, db);
+
+    expect(result.ok).toBe(true);
+    expect(upsertUsers).toHaveBeenCalledOnce();
+
+    // Both users registered: psychologist (Supabase UUID) + patient (synthetic id)
+    const users = upsertUsers.mock.calls[0]![0] as { id: string; name: string }[];
+    expect(users).toEqual([
+      { id: sessionWithPatient.userId, name: 'Dr. Ana Souza' },
+      { id: `patient-${sessionWithPatient.patientId}`, name: 'João da Silva' },
+    ]);
+
+    // upsertUsers must run BEFORE getOrCreate (client join needs the user to exist)
+    expect(upsertUsers.mock.invocationCallOrder[0]!).toBeLessThan(
+      getOrCreate.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it('upserts only the psychologist when no patient is linked', async () => {
+    const { client, upsertUsers } = makeStreamClient();
+    // No existing room (first select empty); no patient lookup (patientId null).
+    const db = makeMockDb({ selectResults: [[]], insertedRoom: { id: 'room-1' } });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const result = await createVideoRoomHelper(client, session, db);
+
+    expect(result.ok).toBe(true);
+    expect(upsertUsers).toHaveBeenCalledOnce();
+
+    const users = upsertUsers.mock.calls[0]![0] as { id: string; name: string }[];
+    expect(users).toEqual([{ id: session.userId, name: 'Dr. Ana Souza' }]);
+  });
+
+  it('does NOT upsert users on the idempotent early-return path (room already exists)', async () => {
+    const { client, getOrCreate, upsertUsers } = makeStreamClient();
+    // First select resolves an existing room → early return.
+    const db = makeMockDb({ selectResults: [[{ id: 'existing-room' }]] });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const result = await createVideoRoomHelper(client, sessionWithPatient, db);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.room).toEqual({ id: 'existing-room' });
+
+    // No Stream side effects on the idempotent path
+    expect(upsertUsers).not.toHaveBeenCalled();
+    expect(getOrCreate).not.toHaveBeenCalled();
   });
 
   it('returns ok:false and logs errorMessage when Stream throws a non-Postgres error', async () => {

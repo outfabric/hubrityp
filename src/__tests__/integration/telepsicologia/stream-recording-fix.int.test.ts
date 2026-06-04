@@ -41,8 +41,11 @@ import { runAsService } from '../setup/run-as-service';
 const mockGetOrCreate = vi.fn().mockResolvedValue({ call: { cid: 'default:mock-call' } });
 const mockGenerateCallToken = vi.fn().mockReturnValue('mock-patient-jwt-token');
 
+const mockUpsertUsers = vi.fn().mockResolvedValue({});
+
 function makeStreamClient(): StreamClient {
   return {
+    upsertUsers: mockUpsertUsers,
     video: {
       call: () => ({
         getOrCreate: mockGetOrCreate,
@@ -101,6 +104,8 @@ function makeSessionData(userId: string, sessionId: string, patientId: string): 
     patientId,
     startAt: now,
     endAt: new Date(now.getTime() + 3600_000),
+    psychologistName: 'Dr. Ana Souza',
+    patientFullName: 'Test Patient',
   };
 }
 

@@ -40,6 +40,8 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { SessionCreatedEvent, SessionUpdatedEvent } from '@/modules/agenda/lib/session-events';
 import type { createVideoRoomHelper as CreateVideoRoomHelperFn } from '@/modules/telepsicologia/server/create-video-room-helper';
 import { sessions } from '@/shared/db/schema/agenda/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
+import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 
 import { inngest } from './client';
@@ -157,6 +159,26 @@ async function createRoom(
   deps: AutoCreateRoomDeps,
 ): Promise<AutoCreateRoomResult> {
   const streamClient = deps.getStreamClient();
+
+  // Resolve display names for Stream user registration. Owner-scoped to the
+  // event's userId (which originates from the emitting Server Action, not from
+  // client input) so a forged event cannot read another tenant's data.
+  const [profile] = await deps.db
+    .select({ fullName: profiles.fullName })
+    .from(profiles)
+    .where(eq(profiles.userId, data.userId))
+    .limit(1);
+
+  let patientFullName: string | null = null;
+  if (data.patientId) {
+    const [patient] = await deps.db
+      .select({ fullName: patients.fullName })
+      .from(patients)
+      .where(and(eq(patients.id, data.patientId), eq(patients.userId, data.userId)))
+      .limit(1);
+    patientFullName = patient?.fullName ?? null;
+  }
+
   const result = await deps.createVideoRoomHelper(
     streamClient,
     {
@@ -165,6 +187,8 @@ async function createRoom(
       patientId: data.patientId,
       startAt: new Date(data.startAt),
       endAt: new Date(data.endAt),
+      psychologistName: profile?.fullName ?? '',
+      patientFullName,
     },
     deps.db,
   );

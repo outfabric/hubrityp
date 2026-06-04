@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createVideoRoomImpl } from '@/modules/telepsicologia/server/create-video-room';
 import { sessions } from '@/shared/db/schema/agenda/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 
@@ -18,9 +19,11 @@ import { runAsUser } from '../setup/run-as-user';
 
 const mockGetOrCreate = vi.fn().mockResolvedValue({ call: { cid: 'default:mock-call' } });
 const mockGenerateCallToken = vi.fn().mockReturnValue('mock-patient-jwt-token');
+const mockUpsertUsers = vi.fn().mockResolvedValue({});
 
 vi.mock('@/modules/telepsicologia/server/stream-client', () => ({
   getStreamClient: () => ({
+    upsertUsers: mockUpsertUsers,
     video: {
       call: () => ({
         getOrCreate: mockGetOrCreate,
@@ -44,16 +47,32 @@ async function seedAuthUser(userId: string): Promise<void> {
   });
 }
 
+async function seedProfile(userId: string, fullName: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(profiles).values({
+      userId,
+      email: `test-${userId}@example.com`,
+      fullName,
+      crpNumber: '123456',
+      crpUf: 'SP',
+      status: 'active',
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
+      sensitiveDataConsentAt: new Date(),
+    });
+  });
+}
+
 async function seedPatient(
   userId: string,
   patientId: string,
-  opts?: { patientType?: string },
+  opts?: { patientType?: string; fullName?: string },
 ): Promise<void> {
   await runAsService(async (db) => {
     await db.insert(patients).values({
       id: patientId,
       userId,
-      fullName: 'Test Patient',
+      fullName: opts?.fullName ?? 'Test Patient',
       patientType: opts?.patientType ?? 'individual',
     });
   });
@@ -118,7 +137,8 @@ describe('createVideoRoomImpl', () => {
     const patientId = randomUUID();
     const sessionId = randomUUID();
     await seedAuthUser(userId);
-    await seedPatient(userId, patientId);
+    await seedProfile(userId, 'Dr. Ana Souza');
+    await seedPatient(userId, patientId, { fullName: 'João da Silva' });
     await seedSession(userId, sessionId, patientId);
 
     const client = fakeSupabaseClient(userId);
@@ -126,6 +146,14 @@ describe('createVideoRoomImpl', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+
+    // Verify Stream users were registered with the correct IDs and names
+    expect(mockUpsertUsers).toHaveBeenCalledOnce();
+    const upsertedUsers = mockUpsertUsers.mock.calls[0]![0] as { id: string; name: string }[];
+    expect(upsertedUsers).toEqual([
+      { id: userId, name: 'Dr. Ana Souza' },
+      { id: `patient-${patientId}`, name: 'João da Silva' },
+    ]);
 
     // Verify the room shape
     expect(result.room.userId).toBe(userId);
@@ -224,9 +252,10 @@ describe('createVideoRoomImpl', () => {
     expect(result2.room.id).toBe(result1.room.id);
     expect(result2.room.patientToken).toBe(result1.room.patientToken);
 
-    // Stream SDK NOT called again
+    // Stream SDK NOT called again — including upsertUsers (idempotent early return)
     expect(mockGetOrCreate).not.toHaveBeenCalled();
     expect(mockGenerateCallToken).not.toHaveBeenCalled();
+    expect(mockUpsertUsers).not.toHaveBeenCalled();
 
     // Only one row in DB
     const rows = await runAsService(async (db) => {
