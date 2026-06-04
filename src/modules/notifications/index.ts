@@ -31,3 +31,11 @@ export {
   type NotificationTypeMeta,
   getNotificationTypeMeta,
 } from './lib/schemas';
+export { formatNotificationTime } from './lib/relative-time';
+
+// ---- Client components (bell + dropdown) ----
+export { NotificationBell, type NotificationBellProps } from './components/notification-bell';
+export {
+  NotificationDropdown,
+  type NotificationDropdownProps,
+} from './components/notification-dropdown';

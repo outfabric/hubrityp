@@ -14,11 +14,11 @@
 
 ## 2. Bell + dropdown UI + relative time
 
-- [ ] 2.1 Create `src/modules/notifications/lib/relative-time.ts` — pure helper formatting a timestamp to pt-BR relative text via date-fns (`America/Sao_Paulo`)
-- [ ] 2.2 **Unit test:** `src/__tests__/unit/modules/notifications/lib/relative-time.test.ts` — "há 5 min", "ontem", boundary cases; deterministic with injected `now`
-- [ ] 2.3 Create `src/modules/notifications/components/notification-bell.tsx` (client leaf) — Lucide `Bell`, unread badge, `aria-label`; opens dropdown
-- [ ] 2.4 Create `src/modules/notifications/components/notification-dropdown.tsx` — chronological list, per-type icon, relative time, "Marcar todas como lidas"; click marks read + routes; renders only MVP types
-- [ ] 2.5 **Unit test:** `src/__tests__/unit/modules/notifications/components/notification-dropdown.test.tsx` — renders type icon + relative time; click triggers markRead + route; mark-all wired; post-MVP type yields no payment/Receita/WhatsApp affordance
+- [x] 2.1 Create `src/modules/notifications/lib/relative-time.ts` — pure helper formatting a timestamp to pt-BR relative text via date-fns (`America/Sao_Paulo`)
+- [x] 2.2 **Unit test:** `src/__tests__/unit/modules/notifications/lib/relative-time.test.ts` — "há 5 min", "ontem", boundary cases; deterministic with injected `now`
+- [x] 2.3 Create `src/modules/notifications/components/notification-bell.tsx` (client leaf) — Lucide `Bell`, unread badge, `aria-label`; opens dropdown
+- [x] 2.4 Create `src/modules/notifications/components/notification-dropdown.tsx` — chronological list, per-type icon, relative time, "Marcar todas como lidas"; click marks read + routes; renders only MVP types
+- [x] 2.5 **Unit test:** `src/__tests__/unit/modules/notifications/components/notification-dropdown.test.tsx` — renders type icon + relative time; click triggers markRead + route; mark-all wired; post-MVP type yields no payment/Receita/WhatsApp affordance
 
 ## 3. Realtime unread updates
 
