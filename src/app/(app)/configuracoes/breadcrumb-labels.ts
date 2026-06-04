@@ -14,6 +14,7 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   agenda: 'Agenda',
   'transcricao-ia': 'Transcrição IA',
   notificacoes: 'Notificações',
+  feedback: 'Feedback',
   ajuda: 'Ajuda',
   'primeiros-passos': 'Primeiros passos',
 };

@@ -9,6 +9,7 @@ import {
   NotificationBellBoundary,
   type NotificationView,
 } from '@/modules/notifications';
+import { getNpsEligibility, NpsModal } from '@/modules/nps';
 import { onboardingStepSchema, UnfinishedSetupBanner } from '@/modules/onboarding';
 import { WhatsAppHealthBanner } from '@/modules/whatsapp';
 import { db } from '@/shared/db/client';
@@ -16,7 +17,13 @@ import { profiles } from '@/shared/db/schema/auth/tables';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
-import { markAllNotificationsReadAction, markNotificationReadAction, signOut } from './actions';
+import {
+  dismissNpsAction,
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+  signOut,
+  submitNpsAction,
+} from './actions';
 import { SidebarNav } from './sidebar-nav';
 
 // Async slot that reads the authenticated psychologist's onboarding state and
@@ -63,6 +70,25 @@ async function UnfinishedSetupBannerSlot() {
       onboardingStep={parsedStep.data}
       onboardingCompletedAt={profile.onboardingCompletedAt}
     />
+  );
+}
+
+// Async slot that computes server-side NPS eligibility (from the profile's
+// `first_access_at` + `nps_responded_at`) and mounts the day-7 modal. Wrapped in
+// <Suspense> so its DB read never blocks the shell. Suppressed on the onboarding
+// pages — the survey is a post-onboarding nudge and would clash with the wizard.
+// The modal itself renders nothing when ineligible; this slot avoids the read
+// entirely on onboarding routes.
+async function NpsModalSlot() {
+  const pathname = (await headers()).get('x-pathname') ?? '';
+  if (pathname.startsWith('/onboarding')) return null;
+
+  const supabase = await createServerClient();
+  const isEligible = await getNpsEligibility(supabase);
+  if (!isEligible) return null;
+
+  return (
+    <NpsModal isEligible={isEligible} onSubmit={submitNpsAction} onDismiss={dismissNpsAction} />
   );
 }
 
@@ -122,6 +148,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </Suspense>
       <Suspense>
         <WhatsAppHealthBanner />
+      </Suspense>
+      <Suspense>
+        <NpsModalSlot />
       </Suspense>
       <div className="flex flex-1">
         <SidebarNav />

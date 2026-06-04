@@ -31,3 +31,15 @@ export {
 // Session-scoped, server-authoritative write. Authorization is `auth.uid()`
 // only; any client-supplied user id is ignored (IDOR-safe). RLS is the backstop.
 export { submitNpsImpl, type SubmitNpsInput, type SubmitNpsResult } from './server/submit-nps';
+
+// ---- Server read: day-7 eligibility ------------------------------------------
+// Owner-scoped (getUser()), fail-closed. Consumed by the (app) layout to decide
+// whether to mount the NPS modal.
+export { getNpsEligibility } from './server/get-eligibility';
+export { getNpsHasResponded } from './server/get-has-responded';
+
+// ---- UI components -----------------------------------------------------------
+// Client leaves. They receive Server Action callbacks + a server-computed
+// eligibility prop; they never reach into the DB or call the action directly.
+export { NpsModal, type NpsModalProps } from './components/nps-modal';
+export { NpsForm, type NpsFormProps } from './components/nps-form';

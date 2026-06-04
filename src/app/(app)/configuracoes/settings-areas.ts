@@ -6,6 +6,7 @@ import {
   HelpCircle,
   MapPin,
   MessageCircle,
+  MessageSquare,
   Sparkles,
 } from 'lucide-react';
 
@@ -74,6 +75,13 @@ export const SETTINGS_AREAS: readonly SettingsArea[] = [
     href: '/configuracoes/notificacoes',
     icon: BellRing,
     slug: 'notificacoes',
+  },
+  {
+    label: 'Feedback',
+    description: 'Avalie o sistema e conte o que faria você recomendá-lo a uma colega.',
+    href: '/configuracoes/feedback',
+    icon: MessageSquare,
+    slug: 'feedback',
   },
   {
     label: 'Ajuda',

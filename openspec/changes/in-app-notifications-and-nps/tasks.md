@@ -52,9 +52,9 @@
 
 ## 8. NPS modal + deferred entry
 
-- [ ] 8.1 Create `src/modules/nps/components/nps-modal.tsx` (client leaf) — 0–10 selector, optional feedback field, "Não responder agora"; shown once based on server-provided eligibility prop; design-system Modal
-- [ ] 8.2 Mount the modal in `src/app/(app)/layout.tsx` driven by server-computed `isEligibleForNps`; add Configurações > Feedback entry that renders the same submit form later
-- [ ] 8.3 **Unit test:** `src/__tests__/unit/modules/nps/components/nps-modal.test.tsx` — renders when eligible, hidden when not; "Não responder agora" calls submit-dismiss; score selection submits; respects design-system Modal a11y (focus, Escape)
+- [x] 8.1 Create `src/modules/nps/components/nps-modal.tsx` (client leaf) — 0–10 selector, optional feedback field, "Não responder agora"; shown once based on server-provided eligibility prop; design-system Modal
+- [x] 8.2 Mount the modal in `src/app/(app)/layout.tsx` driven by server-computed `isEligibleForNps`; add Configurações > Feedback entry that renders the same submit form later
+- [x] 8.3 **Unit test:** `src/__tests__/unit/modules/nps/components/nps-modal.test.tsx` — renders when eligible, hidden when not; "Não responder agora" calls submit-dismiss; score selection submits; respects design-system Modal a11y (focus, Escape)
 
 ## 9. NPS scheduling + detractor email (Inngest + Resend)
 
