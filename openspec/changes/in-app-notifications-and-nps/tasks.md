@@ -7,10 +7,10 @@
 
 ## 1. Notification read Server Actions + Zod (logic + server)
 
-- [ ] 1.1 Create `src/modules/notifications/lib/schemas.ts` — Zod: `markReadInputSchema` (`{ id: z.string().uuid() }`); MVP type allowlist + per-type icon/route map (pure). Derive types via z.infer
-- [ ] 1.2 **Unit test:** `src/__tests__/unit/modules/notifications/lib/schemas.test.ts` — markRead rejects non-UUID; type map covers exactly the 7 MVP types and excludes post-MVP types
-- [ ] 1.3 Create `src/modules/notifications/server/list-notifications.ts`, `get-unread-count.ts`, `mark-read.ts`, `mark-all-read.ts` — each getUser() auth, Zod-validate, owner-scoped via RLS; `markRead` updates `WHERE id = :id AND user_id = auth.uid()`. Sanitized errors. Export via barrel
-- [ ] 1.4 **Integration test:** `src/__tests__/integration/notifications/read-actions.int.test.ts` — list/unread owner-scoped; IDOR proof (B marking A's notification affects zero rows); mark-all scopes to `auth.uid()`; invalid UUID rejected at boundary; cross-user RLS holds
+- [x] 1.1 Create `src/modules/notifications/lib/schemas.ts` — Zod: `markReadInputSchema` (`{ id: z.string().uuid() }`); MVP type allowlist + per-type icon/route map (pure). Derive types via z.infer
+- [x] 1.2 **Unit test:** `src/__tests__/unit/modules/notifications/lib/schemas.test.ts` — markRead rejects non-UUID; type map covers exactly the 7 MVP types and excludes post-MVP types
+- [x] 1.3 Create `src/modules/notifications/server/list-notifications.ts`, `get-unread-count.ts`, `mark-read.ts`, `mark-all-read.ts` — each getUser() auth, Zod-validate, owner-scoped via RLS; `markRead` updates `WHERE id = :id AND user_id = auth.uid()`. Sanitized errors. Export via barrel
+- [x] 1.4 **Integration test:** `src/__tests__/integration/notifications/read-actions.int.test.ts` — list/unread owner-scoped; IDOR proof (B marking A's notification affects zero rows); mark-all scopes to `auth.uid()`; invalid UUID rejected at boundary; cross-user RLS holds
 
 ## 2. Bell + dropdown UI + relative time
 

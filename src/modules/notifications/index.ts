@@ -5,3 +5,29 @@
 // never from internal paths like `@/modules/notifications/server/...`.
 
 export { notify, type NotificationPayload } from './server/notify';
+
+// ---- Read Server Actions (bell / dropdown) ----
+export {
+  listNotifications,
+  type ListNotificationsResult,
+  type NotificationView,
+  type NotificationsUnauthorizedResult,
+} from './server/list-notifications';
+export { getUnreadCount, type UnreadCountResult } from './server/get-unread-count';
+export {
+  markNotificationRead,
+  type MarkReadResult,
+  type NotificationsInvalidInputResult,
+} from './server/mark-read';
+export { markAllNotificationsRead, type MarkAllReadResult } from './server/mark-all-read';
+
+// ---- Pure presentation/validation helpers (lib) ----
+export {
+  markReadInputSchema,
+  type MarkReadInput,
+  notificationTypeSchema,
+  type NotificationType,
+  notificationTypeMeta,
+  type NotificationTypeMeta,
+  getNotificationTypeMeta,
+} from './lib/schemas';
