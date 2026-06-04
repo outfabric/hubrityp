@@ -28,9 +28,9 @@
 
 ## 4. 30-day auto-read Inngest job
 
-- [ ] 4.1 Create `src/modules/notifications/inngest/auto-read-old.ts` — scheduled function: service-role client (justified comment), set `read_at = now()` where `read_at IS NULL AND created_at < now() - 30 days`; never deletes. Reuse an existing inngest client
-- [ ] 4.2 Register the function in `src/app/api/inngest/route.ts`
-- [ ] 4.3 **Integration test:** `src/__tests__/integration/notifications/auto-read-old.int.test.ts` — 31-day-old unread becomes read; recent unread untouched; no rows deleted
+- [x] 4.1 Create `src/modules/notifications/inngest/auto-read-old.ts` — scheduled function: service-role client (justified comment), set `read_at = now()` where `read_at IS NULL AND created_at < now() - 30 days`; never deletes. Reuse an existing inngest client
+- [x] 4.2 Register the function in `src/app/api/inngest/route.ts`
+- [x] 4.3 **Integration test:** `src/__tests__/integration/notifications/auto-read-old.int.test.ts` — 31-day-old unread becomes read; recent unread untouched; no rows deleted
 
 ## 5. Notification preferences UI + action
 
