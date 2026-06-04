@@ -198,6 +198,29 @@ async function handleRequest(
     return;
   }
   if (method === 'POST' && path === '/_test/clear-oauth-users') {
+    // Scoped clear: when the caller supplies a `{ code }`, remove ONLY that
+    // registration. A blanket `oauthUserRegistry.clear()` here is a cross-spec
+    // hazard under `fullyParallel` — it wipes the dedicated checklist/tour/empty
+    // users registered by `signInAsDedicatedUser` while their specs are still
+    // running, so the Edge profile shim resolves "no profile" mid-test and the
+    // middleware bounces them to /login. Callers that own a single registration
+    // (the Google-OAuth stub teardown) MUST pass their own `code` so cleanup is
+    // surgical; the unscoped full-clear is kept only for explicit global resets.
+    const body = await readBody(req);
+    let scopedCode: string | undefined;
+    if (body.trim().length > 0) {
+      try {
+        scopedCode = (JSON.parse(body) as { code?: string }).code;
+      } catch {
+        respondJson(res, 400, { error: 'invalid JSON' });
+        return;
+      }
+    }
+    if (scopedCode !== undefined) {
+      oauthUserRegistry.delete(scopedCode);
+      respondJson(res, 200, { cleared: true, code: scopedCode });
+      return;
+    }
     oauthUserRegistry.clear();
     respondJson(res, 200, { cleared: true });
     return;
