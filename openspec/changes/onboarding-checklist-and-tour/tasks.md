@@ -33,5 +33,5 @@
 
 ## 4. End-to-end flows
 
-- [ ] 4.1 **E2E test:** `src/__tests__/e2e/seeded/onboarding/checklist.spec.ts` — seeded user sees checklist card with correct done/pending states; creating a patient/session updates items; reaching all mandatory shows the celebration and collapses the card; checklist reachable under Configurações > Ajuda
-- [ ] 4.2 **E2E test:** `src/__tests__/e2e/seeded/onboarding/tour.spec.ts` — first dashboard open auto-runs the 5-step tour; "Pular tour" dismisses it; after completion `tour_completed_at` set and tour does not auto-run again; "Refazer tour" restarts it; assert no post-MVP strings in any tooltip
+- [x] 4.1 **E2E test:** `src/__tests__/e2e/seeded/onboarding/checklist.spec.ts` — seeded user sees checklist card with correct done/pending states; creating a patient/session updates items; reaching all mandatory shows the celebration and collapses the card; checklist reachable under Configurações > Ajuda
+- [x] 4.2 **E2E test:** `src/__tests__/e2e/seeded/onboarding/tour.spec.ts` — first dashboard open auto-runs the 5-step tour; "Pular tour" dismisses it; after completion `tour_completed_at` set and tour does not auto-run again; "Refazer tour" restarts it; assert no post-MVP strings in any tooltip

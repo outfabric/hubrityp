@@ -197,6 +197,64 @@ export const SEED_DASHBOARD_EMPTY_USER = {
   fullName: 'Painel Vazio',
 } as const;
 
+/**
+ * Dedicated user for the onboarding-checklist E2E test
+ * (onboarding/checklist.spec.ts).
+ *
+ * The GLOBAL seed user already owns the three `SEED_PATIENTS`, a session, and a
+ * signed consent term, so its mandatory checklist is permanently part-done and
+ * mutating it (or its `onboarding_checklist` cache) would pollute the many
+ * sibling specs that share it under `fullyParallel`. This is therefore a
+ * SECOND active `auth.users` + `profiles` row that owns NO patients and NO
+ * sessions, so the checklist spec OWNS its state end-to-end: it starts from a
+ * known-partial state (only `cadastro_completo` true — email verified + CRP
+ * validated), then writes the owner's own data rows to flip items and assert
+ * the recompute reflects them, up to mandatory 100%.
+ *
+ * `crp_validated_at`/`email_verified_at` are forced in `global-setup.ts` so the
+ * `cadastro_completo` item is always done; everything else (location, patient,
+ * session, evolution, consent, AI) is absent at the start of every run (reset on
+ * the reused container) and the spec adds exactly what it needs.
+ *
+ * The mock GoTrue never authenticates this user by default; the spec registers
+ * it at runtime via `POST /_test/register-oauth-user` and signs the browser in
+ * with a cookie it builds itself (same approach as the dashboard zero-data
+ * user).
+ */
+export const SEED_ONBOARDING_CHECKLIST_USER = {
+  id: '00000000-0000-4000-8000-0000000000c1',
+  email: 'checklist-e2e@example.com',
+  fullName: 'Checklist E2E',
+} as const;
+
+/**
+ * Dedicated user for the onboarding-tour E2E test (onboarding/tour.spec.ts).
+ *
+ * The guided tour auto-runs on EVERY `/dashboard` visit while
+ * `profiles.tour_completed_at` is NULL, and finishing/skipping stamps it. The
+ * GLOBAL seed user's dashboard is visited by many parallel specs, so using it
+ * for the tour spec would (a) let a sibling's `/dashboard` visit stamp
+ * `tour_completed_at` between this spec's reset and assertion, and (b) leak this
+ * spec's stamp onto siblings. This dedicated user is touched by NOTHING else, so
+ * the spec can deterministically reset `tour_completed_at` to NULL, assert the
+ * auto-run, complete it, and assert the stamp + no-replay.
+ *
+ * Unlike the checklist/empty users, the tour user OWNS one active patient and
+ * one session so `hasAnyData` is true and the dashboard renders the four
+ * operational sections — which is what makes all five `data-tour-anchor`
+ * surfaces (`sidebar-nav`, `secao-hoje`, `secao-pendencias`, `novo-paciente`,
+ * `nova-sessao`) present, so the tour highlights real elements in order.
+ */
+export const SEED_ONBOARDING_TOUR_USER = {
+  id: '00000000-0000-4000-8000-0000000000c2',
+  email: 'tour-e2e@example.com',
+  fullName: 'Tour E2E',
+  /** One active patient so `hasAnyData` is true and the four sections render. */
+  patientId: '00000000-0000-4000-8000-0000000000c3',
+  /** One scheduled session so the Hoje/Pendências/Ações surfaces all render. */
+  sessionId: '00000000-0000-4000-8000-0000000000c4',
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

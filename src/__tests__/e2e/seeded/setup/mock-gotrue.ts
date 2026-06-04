@@ -100,6 +100,16 @@ export type RegisteredOAuthUser = {
   user: MockGoTrueUser;
   jwt: string;
   code: string;
+  /**
+   * Optional per-user refresh token. When supplied, `POST /auth/v1/token`
+   * with `grant_type=refresh_token` resolves THIS user (and re-issues its
+   * `jwt`) — keeping a refreshed session bound to the correct registered user
+   * instead of collapsing every registered user to the default seeded identity.
+   * Tests that drive a dedicated user through a Server Action (which may trigger
+   * a server-side token refresh) MUST set a unique value here, or the refresh
+   * would resolve the wrong user.
+   */
+  refreshToken?: string;
   /** When defined, the mock returns this profile row via the PostgREST shim. */
   profile?: Record<string, unknown> | null;
 };
@@ -406,6 +416,50 @@ async function handleRequest(
           ...context.user,
           last_sign_in_at: nowIso,
         },
+      });
+      return;
+    }
+
+    // Refresh-token grant — supabase-js calls this server-side when it deems the
+    // access token near expiry (e.g. during a Server Action's `getUser()`). We
+    // resolve the user by the supplied refresh token so a refreshed session
+    // stays bound to the right identity. A registered dedicated user with a
+    // UNIQUE refresh token resolves to itself; anything else (including the
+    // shared `mock-refresh-token`) re-issues the default seeded session, which
+    // is the historical behaviour the rest of the suite relies on.
+    if (grantType === 'refresh_token') {
+      let parsedRefresh: { refresh_token?: string } = {};
+      try {
+        parsedRefresh = JSON.parse(body) as { refresh_token?: string };
+      } catch {
+        parsedRefresh = {};
+      }
+      const suppliedRefresh = parsedRefresh.refresh_token ?? queryParams.get('refresh_token') ?? '';
+
+      const nowIso = new Date().toISOString();
+      const nowSec = Math.floor(Date.now() / 1000);
+
+      for (const entry of oauthUserRegistry.values()) {
+        if (entry.refreshToken && entry.refreshToken === suppliedRefresh) {
+          respondJson(res, 200, {
+            access_token: entry.jwt,
+            token_type: 'bearer',
+            expires_in: 60 * 60 * 24 * 30,
+            expires_at: nowSec + 60 * 60 * 24 * 30,
+            refresh_token: entry.refreshToken,
+            user: { ...entry.user, last_sign_in_at: nowIso },
+          });
+          return;
+        }
+      }
+
+      respondJson(res, 200, {
+        access_token: context.fixedToken,
+        token_type: 'bearer',
+        expires_in: 60 * 60 * 24 * 30,
+        expires_at: nowSec + 60 * 60 * 24 * 30,
+        refresh_token: 'mock-refresh-token',
+        user: { ...context.user, last_sign_in_at: nowIso },
       });
       return;
     }
