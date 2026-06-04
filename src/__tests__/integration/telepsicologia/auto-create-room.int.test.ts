@@ -12,6 +12,7 @@ import {
 } from '@/modules/telepsicologia/inngest/auto-create-room';
 import { createVideoRoomHelper } from '@/modules/telepsicologia/server/create-video-room-helper';
 import { sessions } from '@/shared/db/schema/agenda/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 
@@ -25,8 +26,10 @@ import { runAsService } from '../setup/run-as-service';
 
 const mockGetOrCreate = vi.fn().mockResolvedValue({ call: { cid: 'default:mock-call' } });
 const mockGenerateCallToken = vi.fn().mockReturnValue('mock-patient-jwt-token');
+const mockUpsertUsers = vi.fn().mockResolvedValue({});
 
 const mockStreamClient = {
+  upsertUsers: mockUpsertUsers,
   video: {
     call: () => ({
       getOrCreate: mockGetOrCreate,
@@ -66,16 +69,32 @@ async function seedAuthUser(userId: string): Promise<void> {
   });
 }
 
+async function seedProfile(userId: string, fullName: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(profiles).values({
+      userId,
+      email: `test-${userId}@example.com`,
+      fullName,
+      crpNumber: '123456',
+      crpUf: 'SP',
+      status: 'active',
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
+      sensitiveDataConsentAt: new Date(),
+    });
+  });
+}
+
 async function seedPatient(
   userId: string,
   patientId: string,
-  opts?: { patientType?: string },
+  opts?: { patientType?: string; fullName?: string },
 ): Promise<void> {
   await runAsService(async (db) => {
     await db.insert(patients).values({
       id: patientId,
       userId,
-      fullName: 'Test Patient',
+      fullName: opts?.fullName ?? 'Test Patient',
       patientType: opts?.patientType ?? 'individual',
     });
   });
@@ -151,7 +170,8 @@ describe('auto-create-room: processSessionCreated', () => {
     const patientId = randomUUID();
     const sessionId = randomUUID();
     await seedAuthUser(userId);
-    await seedPatient(userId, patientId);
+    await seedProfile(userId, 'Dr. Ana Souza');
+    await seedPatient(userId, patientId, { fullName: 'João da Silva' });
     await seedSession(userId, sessionId, patientId);
 
     const deps = makeDeps();
@@ -174,6 +194,14 @@ describe('auto-create-room: processSessionCreated', () => {
     // Verify Stream SDK was called
     expect(mockGetOrCreate).toHaveBeenCalledOnce();
     expect(mockGenerateCallToken).toHaveBeenCalledOnce();
+
+    // Verify Stream users were registered (psychologist + patient) before creation
+    expect(mockUpsertUsers).toHaveBeenCalledOnce();
+    const upsertedUsers = mockUpsertUsers.mock.calls[0]![0] as { id: string; name: string }[];
+    expect(upsertedUsers).toEqual([
+      { id: userId, name: 'Dr. Ana Souza' },
+      { id: `patient-${patientId}`, name: 'João da Silva' },
+    ]);
   });
 
   it('creates a room for a confirmed session', async () => {

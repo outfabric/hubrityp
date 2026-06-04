@@ -6,6 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { videoTokenInputSchema } from '@/modules/telepsicologia/lib/schemas';
 import { getStreamClient } from '@/modules/telepsicologia/server/stream-client';
 import { db } from '@/shared/db/client';
+import { profiles } from '@/shared/db/schema/auth/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import { logger } from '@/shared/lib/logger';
 
@@ -41,8 +42,9 @@ const PSYCHOLOGIST_JWT_VALIDITY_SECONDS = 7200;
  *   2. Validate input with videoTokenInputSchema.
  *   3. Verify room ownership (user_id = auth.uid()).
  *   4. Verify room status is 'pending' or 'active'.
- *   5. Mint psychologist JWT with admin role, scoped to the call.
- *   6. Return { ok: true, token }.
+ *   5. Refresh the psychologist's Stream user (UUID + current profile name).
+ *   6. Mint psychologist JWT with admin role, scoped to the call.
+ *   7. Return { ok: true, token }.
  */
 export async function getVideoTokenImpl(
   supabase: SupabaseClient,
@@ -91,8 +93,22 @@ export async function getVideoTokenImpl(
       return { ok: false, error: 'room_not_available' };
     }
 
-    // 5. Mint psychologist JWT — admin role, scoped to this call only
     const streamClient = getStreamClient();
+
+    // 5. Refresh the psychologist's Stream user. The room may have been created
+    // by the Inngest auto-create job hours earlier with a now-stale display
+    // name; re-upserting at token-minting time keeps the name current when the
+    // psychologist actually opens the video page. Scoped by userId from the
+    // session, never from input.
+    const [profile] = await db
+      .select({ fullName: profiles.fullName })
+      .from(profiles)
+      .where(eq(profiles.userId, userId))
+      .limit(1);
+
+    await streamClient.upsertUsers([{ id: userId, name: profile?.fullName ?? userId }]);
+
+    // 6. Mint psychologist JWT — admin role, scoped to this call only
     const token = streamClient.generateCallToken({
       user_id: userId,
       call_cids: [`default:${room.streamCallId}`],
@@ -100,7 +116,7 @@ export async function getVideoTokenImpl(
       validity_in_seconds: PSYCHOLOGIST_JWT_VALIDITY_SECONDS,
     });
 
-    // 6. Return token
+    // 7. Return token
     return { ok: true, token };
   } catch (err: unknown) {
     const pgError = err as { code?: string };

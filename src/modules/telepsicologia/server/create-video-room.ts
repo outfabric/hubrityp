@@ -11,6 +11,8 @@ import {
 import { getStreamClient } from '@/modules/telepsicologia/server/stream-client';
 import { db } from '@/shared/db/client';
 import { sessions } from '@/shared/db/schema/agenda/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
+import { patients } from '@/shared/db/schema/patients/tables';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 
 // ---------------------------------------------------------------------------
@@ -97,7 +99,28 @@ export async function createVideoRoomImpl(
     return { ok: false, error: 'session_not_schedulable' };
   }
 
-  // 5. Delegate to shared helper (idempotent room creation)
+  // 5. Resolve display names for Stream user registration. The psychologist
+  // name is owner-scoped by PK (profiles.userId = auth.uid()); the patient name
+  // is owner-scoped to prevent reading another tenant's patient. Both are read
+  // through the RLS-bypassing db client but constrained to the authenticated
+  // user's own rows, so there is no cross-tenant exposure.
+  const [profile] = await db
+    .select({ fullName: profiles.fullName })
+    .from(profiles)
+    .where(eq(profiles.userId, userId))
+    .limit(1);
+
+  let patientFullName: string | null = null;
+  if (session.patientId) {
+    const [patient] = await db
+      .select({ fullName: patients.fullName })
+      .from(patients)
+      .where(and(eq(patients.id, session.patientId), eq(patients.userId, userId)))
+      .limit(1);
+    patientFullName = patient?.fullName ?? null;
+  }
+
+  // 6. Delegate to shared helper (idempotent room creation)
   const streamClient = getStreamClient();
   const helperResult: CreateVideoRoomHelperResult = await createVideoRoomHelper(
     streamClient,
@@ -107,6 +130,8 @@ export async function createVideoRoomImpl(
       patientId: session.patientId,
       startAt: session.startAt,
       endAt: session.endAt,
+      psychologistName: profile?.fullName ?? '',
+      patientFullName,
     },
     db,
   );

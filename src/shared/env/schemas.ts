@@ -48,6 +48,17 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Secret used to verify webhook signatures from Stream Video.
   // Validated with `crypto.timingSafeEqual` in the webhook handler.
   STREAM_WEBHOOK_SECRET: z.string().min(1),
+  // E2E-only escape hatch. When `'true'`, `getStreamClient()` returns an
+  // in-memory no-op stub instead of the real Node SDK, so the seeded
+  // Playwright server (which boots `next start` with dummy Stream creds and
+  // no network access to Stream's API) never makes real outbound calls.
+  // Defaults to `'false'`; production and dev MUST NOT set it. Gating here —
+  // rather than in feature code — keeps every route/Server Action path
+  // identical between e2e and production except for the SDK transport.
+  E2E_STREAM_STUB: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   // Public-facing application URL (e.g. https://app.hubrityp.com.br).
   // Used server-side to build absolute URLs for patient-facing links in
   // WhatsApp messages (video call links, etc.). Optional because local dev

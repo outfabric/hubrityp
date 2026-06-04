@@ -120,7 +120,8 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
   const handleJoin = useCallback(() => {
     if (!call) return;
     setIsJoining(true);
-    void call.join().catch(() => {
+    void call.join().catch((err) => {
+      console.error('[telepsicologia] call.join failed', err);
       setIsJoining(false);
       setPermissionError('Nao foi possivel entrar na sessao. Tente novamente.');
     });

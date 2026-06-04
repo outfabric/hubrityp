@@ -425,8 +425,9 @@ export function PatientInCallView({
     if (!client) return undefined;
     const c = client.call('default', callId);
     // Join immediately — patient does not go through a lobby
-    void c.join().catch(() => {
-      // Join failure is handled by the CallingState observer
+    void c.join().catch((err) => {
+      console.error('[telepsicologia] call.join failed', err);
+      // User-facing failure is handled by the CallingState observer
     });
     return c;
   }, [client, callId]);

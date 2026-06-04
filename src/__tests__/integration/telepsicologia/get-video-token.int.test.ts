@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getVideoTokenImpl } from '@/modules/telepsicologia/server/get-video-token';
 import { sessions } from '@/shared/db/schema/agenda/tables';
+import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 
@@ -17,10 +18,12 @@ import { runAsUser } from '../setup/run-as-user';
 // ---------------------------------------------------------------------------
 
 const mockGenerateCallToken = vi.fn().mockReturnValue('mock-psychologist-jwt-token');
+const mockUpsertUsers = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/modules/telepsicologia/server/stream-client', () => ({
   getStreamClient: () => ({
     generateCallToken: mockGenerateCallToken,
+    upsertUsers: mockUpsertUsers,
   }),
 }));
 
@@ -35,6 +38,22 @@ async function seedAuthUser(userId: string): Promise<void> {
            VALUES (${userId}, ${`test-${userId}@example.com`}, '{"provider":"google"}'::jsonb)
            ON CONFLICT (id) DO NOTHING`,
     );
+  });
+}
+
+async function seedProfile(userId: string, fullName: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db.insert(profiles).values({
+      userId,
+      email: `test-${userId}@example.com`,
+      fullName,
+      crpNumber: '123456',
+      crpUf: 'SP',
+      status: 'active',
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
+      sensitiveDataConsentAt: new Date(),
+    });
   });
 }
 
@@ -135,6 +154,7 @@ describe('getVideoTokenImpl', () => {
     const patientId = randomUUID();
     const sessionId = randomUUID();
     await seedAuthUser(userId);
+    await seedProfile(userId, 'Dra. Ana Souza');
     await seedPatient(userId, patientId);
     await seedSession(userId, sessionId, patientId);
 
@@ -147,6 +167,16 @@ describe('getVideoTokenImpl', () => {
     if (!result.ok) return;
 
     expect(result.token).toBe('mock-psychologist-jwt-token');
+
+    // The psychologist's Stream user is refreshed with the current profile
+    // name (scoped by the session's userId) before the token is minted.
+    expect(mockUpsertUsers).toHaveBeenCalledOnce();
+    expect(mockUpsertUsers).toHaveBeenCalledWith([{ id: userId, name: 'Dra. Ana Souza' }]);
+
+    // upsertUsers MUST run before generateCallToken.
+    const upsertOrder = mockUpsertUsers.mock.invocationCallOrder[0]!;
+    const tokenOrder = mockGenerateCallToken.mock.invocationCallOrder[0]!;
+    expect(upsertOrder).toBeLessThan(tokenOrder);
 
     // Verify the Stream SDK was called with the correct parameters
     expect(mockGenerateCallToken).toHaveBeenCalledOnce();

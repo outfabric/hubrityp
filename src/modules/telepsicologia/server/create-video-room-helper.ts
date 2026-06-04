@@ -28,6 +28,10 @@ export interface SessionData {
   patientId: string | null;
   startAt: Date;
   endAt: Date;
+  /** Psychologist display name (from `profiles.fullName`) — used to register the user in Stream. */
+  psychologistName: string;
+  /** Patient display name (from `patients.fullName`), or `null` when no patient is linked. */
+  patientFullName: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,10 +71,11 @@ type DrizzleDb = PostgresJsDatabase<any>;
  *   2. Generate 64-char hex patient_token via crypto.randomBytes(32).
  *   3. Compute available_from and expires_at from session timestamps.
  *   4. Look up patient type to determine max participants (couple = 3).
- *   5. Create Stream call with settings (limits, screensharing, recording).
- *   6. Mint patient JWT scoped to the call.
- *   7. INSERT video_rooms row.
- *   8. Return { ok: true, room }.
+ *   5. Upsert the psychologist (and patient, if any) into Stream's user DB.
+ *   6. Create Stream call with settings (limits, screensharing, recording).
+ *   7. Mint patient JWT scoped to the call.
+ *   8. INSERT video_rooms row.
+ *   9. Return { ok: true, room }.
  */
 export async function createVideoRoomHelper(
   streamClient: StreamClient,
@@ -112,7 +117,22 @@ export async function createVideoRoomHelper(
       }
     }
 
-    // 5. Create Stream call
+    // 5. Register Stream users BEFORE creating the call.
+    // Client-side `call.join()` fails if the joining user is not present in
+    // Stream's user database. Server-side admin operations (getOrCreate, token
+    // minting) succeed without this, which is why the bug went unnoticed. We
+    // upsert the psychologist (always) and the patient (when one is linked).
+    // Skipped on the idempotent early-return path above (room already exists).
+    const streamUsers = [{ id: session.userId, name: session.psychologistName }];
+    if (session.patientId) {
+      streamUsers.push({
+        id: `patient-${session.patientId}`,
+        name: session.patientFullName ?? `patient-${session.patientId}`,
+      });
+    }
+    await streamClient.upsertUsers(streamUsers);
+
+    // 6. Create Stream call
     const roomId = `session-${session.id}`;
     const call = streamClient.video.call('default', roomId);
 
@@ -135,7 +155,7 @@ export async function createVideoRoomHelper(
       },
     });
 
-    // 6. Mint patient JWT scoped to this call only
+    // 7. Mint patient JWT scoped to this call only
     // Validity bounded so it does not exceed the room's expires_at
     const patientJwtValiditySeconds = Math.max(
       0,
@@ -147,7 +167,7 @@ export async function createVideoRoomHelper(
       validity_in_seconds: patientJwtValiditySeconds,
     });
 
-    // 7. INSERT video_rooms row
+    // 8. INSERT video_rooms row
     const [inserted] = await db
       .insert(videoRooms)
       .values({
@@ -162,7 +182,7 @@ export async function createVideoRoomHelper(
       })
       .returning();
 
-    // 8. Return the created room
+    // 9. Return the created room
     return { ok: true, room: inserted! };
   } catch (err: unknown) {
     // Unique violation (23505): a concurrent request already inserted the room.

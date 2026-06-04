@@ -25,8 +25,11 @@ import { eq, or } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { getStreamClient } from '@/modules/telepsicologia/server/stream-client';
 import { db } from '@/shared/db/client';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
+import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import { clientEnv } from '@/shared/env/client';
 import { logger } from '@/shared/lib/logger';
@@ -106,6 +109,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         expiresAt: videoRooms.expiresAt,
         status: videoRooms.status,
         userId: videoRooms.userId,
+        sessionId: videoRooms.sessionId,
       })
       .from(videoRooms)
       .where(or(eq(videoRooms.patientToken, token), eq(videoRooms.partnerToken, token)))
@@ -164,6 +168,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 3. Active — psychologist has started the session
     if (room.status === 'active') {
+      // Register the patient/partner user in Stream BEFORE handing out the
+      // call JWT. Client-side `call.join()` fails if the joining user is not
+      // present in Stream's user DB; the join handler is the last server-side
+      // touchpoint before the patient enters the call, so we upsert here in
+      // addition to room creation (room creation can predate Stream user
+      // provisioning failures, e.g. transient errors).
+      //
+      // The synthetic user ID is reconstructed from the session's patient (the
+      // same scheme used when minting the JWT: `patient-<patientId>` /
+      // `partner-<patientId>`), avoiding JWT parsing.
+      const [patient] = await db
+        .select({
+          patientId: patients.id,
+          fullName: patients.fullName,
+        })
+        .from(sessions)
+        .innerJoin(patients, eq(sessions.patientId, patients.id))
+        .where(eq(sessions.id, room.sessionId))
+        .limit(1);
+
+      // Fall back to the session ID when no patient is linked, mirroring the
+      // JWT minting scheme (`patient-${session.patientId ?? session.id}`).
+      const syntheticBaseId = patient?.patientId ?? room.sessionId;
+      const syntheticUserId = isPatient
+        ? `patient-${syntheticBaseId}`
+        : `partner-${syntheticBaseId}`;
+      const displayName = patient?.fullName ?? syntheticUserId;
+
+      try {
+        const streamClient = getStreamClient();
+        await streamClient.upsertUsers([{ id: syntheticUserId, name: displayName }]);
+      } catch {
+        logger.error(
+          { event: 'video_join_upsert_error', route: '/api/video/join' },
+          'failed to upsert Stream user in POST /api/video/join',
+        );
+        return NextResponse.json(
+          { error: 'INTERNAL_ERROR' },
+          { status: 500, headers: NO_STORE_HEADERS },
+        );
+      }
+
       return NextResponse.json(
         {
           status: 'active',

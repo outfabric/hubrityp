@@ -168,6 +168,23 @@ describe('PreCallLobby', () => {
     resolveJoin!();
   });
 
+  it('logs the actual Stream error with the [telepsicologia] prefix when call.join() rejects', async () => {
+    const user = userEvent.setup();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const joinError = new Error('Stream connection refused');
+    mockJoin.mockRejectedValueOnce(joinError);
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    await user.click(screen.getByTestId('join-call-button'));
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[telepsicologia] call.join failed', joinError);
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it('shows patient waiting badge when participantCount > 0', () => {
     mockParticipantCount = 1;
 
