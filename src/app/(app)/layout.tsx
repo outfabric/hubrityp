@@ -3,6 +3,13 @@ import { headers } from 'next/headers';
 import { Suspense } from 'react';
 
 import { AiRealtimeBoundary } from '@/modules/ai-transcription';
+import {
+  getUnreadCount,
+  listNotifications,
+  NotificationBellBoundary,
+  type NotificationView,
+} from '@/modules/notifications';
+import { getNpsEligibility, NpsModal } from '@/modules/nps';
 import { onboardingStepSchema, UnfinishedSetupBanner } from '@/modules/onboarding';
 import { WhatsAppHealthBanner } from '@/modules/whatsapp';
 import { db } from '@/shared/db/client';
@@ -10,7 +17,13 @@ import { profiles } from '@/shared/db/schema/auth/tables';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
-import { signOut } from './actions';
+import {
+  dismissNpsAction,
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+  signOut,
+  submitNpsAction,
+} from './actions';
 import { SidebarNav } from './sidebar-nav';
 
 // Async slot that reads the authenticated psychologist's onboarding state and
@@ -60,6 +73,25 @@ async function UnfinishedSetupBannerSlot() {
   );
 }
 
+// Async slot that computes server-side NPS eligibility (from the profile's
+// `first_access_at` + `nps_responded_at`) and mounts the day-7 modal. Wrapped in
+// <Suspense> so its DB read never blocks the shell. Suppressed on the onboarding
+// pages — the survey is a post-onboarding nudge and would clash with the wizard.
+// The modal itself renders nothing when ineligible; this slot avoids the read
+// entirely on onboarding routes.
+async function NpsModalSlot() {
+  const pathname = (await headers()).get('x-pathname') ?? '';
+  if (pathname.startsWith('/onboarding')) return null;
+
+  const supabase = await createServerClient();
+  const isEligible = await getNpsEligibility(supabase);
+  if (!isEligible) return null;
+
+  return (
+    <NpsModal isEligible={isEligible} onSubmit={submitNpsAction} onDismiss={dismissNpsAction} />
+  );
+}
+
 // Authenticated shell: every page under (app) inherits this header (with the
 // logout control), the sidebar navigation, and the main content area. The
 // logout `<form action={...}>` works without client JavaScript — submitting
@@ -81,22 +113,44 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
 
+  // Seed the bell server-side. Both reads are owner-scoped (getUser() inside the
+  // module impls) and independent, so fetch them in parallel — no waterfall. An
+  // unauthenticated request yields an empty bell rather than blocking the shell.
+  const [listResult, unreadResult] = await Promise.all([
+    listNotifications(supabase),
+    getUnreadCount(supabase),
+  ]);
+  const initialNotifications: NotificationView[] = listResult.ok ? listResult.notifications : [];
+  const initialUnreadCount = unreadResult.ok ? unreadResult.count : 0;
+
   return (
     <div className="flex min-h-svh flex-col">
       <AiRealtimeBoundary userId={userId} />
       <header className="border-border bg-surface flex items-center justify-between border-b px-6 py-3 pl-14 md:pl-6">
         <span className="text-lg font-semibold">HubrityP</span>
-        <form action={signOut}>
-          <Button type="submit" variant="ghost" data-testid="dashboard-logout">
-            Sair
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <NotificationBellBoundary
+            userId={userId}
+            notifications={initialNotifications}
+            initialUnreadCount={initialUnreadCount}
+            markRead={markNotificationReadAction}
+            markAllRead={markAllNotificationsReadAction}
+          />
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" data-testid="dashboard-logout">
+              Sair
+            </Button>
+          </form>
+        </div>
       </header>
       <Suspense>
         <UnfinishedSetupBannerSlot />
       </Suspense>
       <Suspense>
         <WhatsAppHealthBanner />
+      </Suspense>
+      <Suspense>
+        <NpsModalSlot />
       </Suspense>
       <div className="flex flex-1">
         <SidebarNav />

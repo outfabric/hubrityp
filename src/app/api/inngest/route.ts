@@ -18,6 +18,8 @@ import { expireRemoteTokens } from '@/modules/medical-records/inngest/expire-rem
 import { prontuarioExportPdfFunction } from '@/modules/medical-records/inngest/export-pdf';
 import { generateDocumentPdf } from '@/modules/medical-records/inngest/generate-document-pdf';
 import { remindMissingEvolution } from '@/modules/medical-records/inngest/remind-missing-evolution';
+import { autoReadOldNotifications } from '@/modules/notifications/inngest/auto-read-old';
+import { npsDetractorFollowup } from '@/modules/nps/inngest/detractor-followup';
 import { autoCreateVideoRoom } from '@/modules/telepsicologia/inngest/auto-create-room';
 import { cancelRoomOnSessionCancel } from '@/modules/telepsicologia/inngest/cancel-room-on-session-cancel';
 import { recordingCleanupCron } from '@/modules/telepsicologia/inngest/recording-cleanup';
@@ -53,6 +55,8 @@ export const { GET, POST, PUT } = serve({
     webhookStopHandler,
     inboxMessageIngest,
     remindMissingEvolution,
+    autoReadOldNotifications,
+    npsDetractorFollowup,
     expireRemoteTokens,
     generateDocumentPdf,
     prontuarioExportPdfFunction,

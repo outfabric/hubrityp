@@ -10,6 +10,7 @@ import {
   SEED_CONSENT_TERMS,
   SEED_DASHBOARD_EMPTY_USER,
   SEED_IDOR,
+  SEED_NPS_USER,
   SEED_ONBOARDING_CHECKLIST_USER,
   SEED_ONBOARDING_TOUR_USER,
   SEED_PATIENTS,
@@ -975,6 +976,55 @@ export default async function globalSetup() {
         end_at     = EXCLUDED.end_at,
         status     = 'scheduled',
         deleted_at = NULL;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated NPS day-7 user (nps/day7-modal.spec.ts).
+    //
+    // A fifth active psychologist touched by nothing else, so the NPS spec can
+    // deterministically set `first_access_at` (7+ days ago) and reset
+    // `nps_responded_at`/`nps_score`/`nps_feedback` to drive the day-7 modal
+    // through submit / dismiss / later-answer paths without leaking onto
+    // siblings under `fullyParallel`. `tour_completed_at` is stamped here so the
+    // guided tour overlay never auto-runs and steals the modal's clicks. The
+    // global-setup baseline leaves the survey UNANSWERED with `first_access_at`
+    // NULL (never eligible until the spec sets it), so a stray render before the
+    // spec's own setup never pops the modal.
+    // -----------------------------------------------------------------------
+    const npsUser = SEED_NPS_USER;
+    const npsMetadata = JSON.stringify({
+      fullName: npsUser.fullName,
+      crpNumber: '55555-N',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${npsUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${npsUser.email},
+        ${npsMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${npsUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          nps_score = NULL,
+          nps_feedback = NULL,
+          requires_password_reset = false
+      WHERE user_id = ${npsUser.id};
     `;
   } finally {
     await sql.end();

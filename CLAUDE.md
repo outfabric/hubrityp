@@ -41,6 +41,11 @@ hubrityp/
 │   │   │   └── index.ts                # module PUBLIC API (barrel)
 │   │   ├── health/                     # liveness/readiness helpers
 │   │   ├── notifications/              # transactional notifications (server-only)
+│   │   ├── nps/                        # NPS survey — Zod schema + eligibility,
+│   │   │   ├── inngest/                #   submit Server Action, detractor email event
+│   │   │   ├── lib/                    # npsAnswerSchema (reused from onboarding) + helpers
+│   │   │   ├── server/                 # submitNpsImpl
+│   │   │   └── index.ts                # module PUBLIC API (barrel)
 │   │   ├── oauth/                      # OAuth provider linking
 │   │   ├── password-recovery/          # forgot/reset password flow
 │   │   ├── patients/                   # patient CRUD + import
