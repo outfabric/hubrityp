@@ -45,10 +45,10 @@
 
 ## 7. NPS — schema-free feature (uses onboarding-data-model columns)
 
-- [ ] 7.1 Create `src/modules/nps/lib/schemas.ts` — reuse/extend `npsAnswerSchema` from `@/modules/onboarding`; add `isDetractor(score)` pure helper (score <= 6) and `isEligibleForNps({ firstAccessAt, npsRespondedAt, now })` (>= 7 days, not yet responded)
-- [ ] 7.2 **Unit test:** `src/__tests__/unit/modules/nps/lib/schemas.test.ts` — `isDetractor` boundaries (6 true, 7 false); `isEligibleForNps` day-6 false, day-7 true, already-responded false
-- [ ] 7.3 Create `src/modules/nps/server/submit-nps.ts` — `submitNpsImpl(supabase, input)`: getUser() auth; Zod-validate; write `nps_score`/`nps_feedback`/`nps_responded_at` on `auth.uid()` row only; dismissal path sets `nps_responded_at` without score; if detractor, enqueue the follow-up email Inngest event. Sanitized errors; no PII logs. Export via barrel
-- [ ] 7.4 **Integration test:** `src/__tests__/integration/nps/submit-nps.int.test.ts` — valid answer persisted owner-only; score 12 rejected at boundary; dismissal sets `nps_responded_at` with null score; detractor (4) enqueues email event, promoter (9) does not; cross-user write impossible; assert logged payload carries user id but no email/name/feedback
+- [x] 7.1 Create `src/modules/nps/lib/schemas.ts` — reuse/extend `npsAnswerSchema` from `@/modules/onboarding`; add `isDetractor(score)` pure helper (score <= 6) and `isEligibleForNps({ firstAccessAt, npsRespondedAt, now })` (>= 7 days, not yet responded)
+- [x] 7.2 **Unit test:** `src/__tests__/unit/modules/nps/lib/schemas.test.ts` — `isDetractor` boundaries (6 true, 7 false); `isEligibleForNps` day-6 false, day-7 true, already-responded false
+- [x] 7.3 Create `src/modules/nps/server/submit-nps.ts` — `submitNpsImpl(supabase, input)`: getUser() auth; Zod-validate; write `nps_score`/`nps_feedback`/`nps_responded_at` on `auth.uid()` row only; dismissal path sets `nps_responded_at` without score; if detractor, enqueue the follow-up email Inngest event. Sanitized errors; no PII logs. Export via barrel
+- [x] 7.4 **Integration test:** `src/__tests__/integration/nps/submit-nps.int.test.ts` — valid answer persisted owner-only; score 12 rejected at boundary; dismissal sets `nps_responded_at` with null score; detractor (4) enqueues email event, promoter (9) does not; cross-user write impossible; assert logged payload carries user id but no email/name/feedback
 
 ## 8. NPS modal + deferred entry
 
