@@ -1,7 +1,7 @@
 ## 1. Database migration — make stream_call_id and patient_jwt nullable
 
-- [ ] 1.1 Create a Drizzle migration that runs `ALTER TABLE video_rooms ALTER COLUMN stream_call_id DROP NOT NULL` and `ALTER TABLE video_rooms ALTER COLUMN patient_jwt DROP NOT NULL`. Update the Drizzle schema definition in `src/shared/db/schema/telepsicologia/tables.ts` to mark `stream_call_id` and `patient_jwt` as optional (remove `.notNull()` from both columns). Run `npm run db:migrate` to apply.
-- [ ] 1.2 Write an integration test (`src/__tests__/integration/telepsicologia/video-rooms-nullable-columns.int.test.ts`) that verifies: (a) a `video_rooms` row can be inserted with `stream_call_id=NULL` and `patient_jwt=NULL`; (b) a row can be inserted with both columns populated (backward compat); (c) an existing row with NULLs can be UPDATEd to set both columns to non-NULL values.
+- [x] 1.1 Create a Drizzle migration that runs `ALTER TABLE video_rooms ALTER COLUMN stream_call_id DROP NOT NULL` and `ALTER TABLE video_rooms ALTER COLUMN patient_jwt DROP NOT NULL`. Update the Drizzle schema definition in `src/shared/db/schema/telepsicologia/tables.ts` to mark `stream_call_id` and `patient_jwt` as optional (remove `.notNull()` from both columns). Run `npm run db:migrate` to apply.
+- [x] 1.2 Write an integration test (`src/__tests__/integration/telepsicologia/video-rooms-nullable-columns.int.test.ts`) that verifies: (a) a `video_rooms` row can be inserted with `stream_call_id=NULL` and `patient_jwt=NULL`; (b) a row can be inserted with both columns populated (backward compat); (c) an existing row with NULLs can be UPDATEd to set both columns to non-NULL values.
 
 ## 2. Shared room constants and reserveVideoRoom helper
 

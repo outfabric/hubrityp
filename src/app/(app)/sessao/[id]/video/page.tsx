@@ -121,7 +121,15 @@ export default async function VideoCallPage({ params }: VideoCallPageProps) {
     return <CreateRoomCard sessionId={sessionId} patientName={patient?.fullName ?? null} />;
   }
 
-  // 8. Room exists: mint a psychologist token to join the call
+  // 8. Room reserved but not yet activated: a room is first reserved at
+  //    schedule time (`streamCallId=NULL`) and only activated (Stream call +
+  //    JWT) at startAt − 1h. Until activation there is no call to join, so
+  //    show the "create room"/reservation UI rather than a broken loader.
+  if (room.streamCallId === null) {
+    return <CreateRoomCard sessionId={sessionId} patientName={patient?.fullName ?? null} />;
+  }
+
+  // 9. Room activated: mint a psychologist token to join the call.
   //    getVideoToken validates ownership + room status internally.
   const tokenResult = await getVideoToken(room.id);
 

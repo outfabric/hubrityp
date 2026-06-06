@@ -121,11 +121,18 @@ export async function toggleRecordingImpl(
       return { ok: false, code: 'ROOM_NOT_FOUND' };
     }
 
-    if (action === 'start') {
-      return await handleStartRecording(room, userId);
+    // A reserved-but-not-yet-activated room has `streamCallId=NULL` and no
+    // live Stream call, so there is nothing to record. Fail closed — treat it
+    // as if the room is not available for recording yet.
+    if (room.streamCallId === null) {
+      return { ok: false, code: 'ROOM_NOT_FOUND' };
     }
 
-    return await handleStopRecording(room, userId);
+    if (action === 'start') {
+      return await handleStartRecording({ ...room, streamCallId: room.streamCallId }, userId);
+    }
+
+    return await handleStopRecording({ ...room, streamCallId: room.streamCallId }, userId);
   } catch (err: unknown) {
     const pgError = err as { code?: string };
     logger.error(
