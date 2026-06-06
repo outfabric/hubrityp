@@ -44,8 +44,8 @@
 
 ## 9. Post-scheduling toast with copy action (Frontend)
 
-- [ ] 9.1 Update `MutationResult` interface in `SessionFormModal` (`src/modules/agenda/components/session-form-modal.tsx`) to include `patientVideoUrl?: string`. In `handleSubmit`, after a successful create (not edit), if `result.patientVideoUrl` is present, show a Sonner toast with `toast.success("Sessão agendada com sucesso.", { description: "Link do paciente disponível para cópia.", action: { label: "Copiar link", onClick: () => navigator.clipboard.writeText(result.patientVideoUrl) }, duration: 8000 })`. If `patientVideoUrl` is absent, show the existing simple toast.
-- [ ] 9.2 Write a unit test (`src/__tests__/unit/modules/agenda/components/session-form-modal-copy-toast.test.tsx`) that verifies: (a) creating an online session with `patientVideoUrl` in the result shows a toast with "Copiar link" action; (b) creating an in-person session shows the simple toast without copy action; (c) editing a session shows the "Sessão atualizada" toast without copy action.
+- [x] 9.1 Update `MutationResult` interface in `SessionFormModal` (`src/modules/agenda/components/session-form-modal.tsx`) to include `patientVideoUrl?: string`. In `handleSubmit`, after a successful create (not edit), if `result.patientVideoUrl` is present, show a Sonner toast with `toast.success("Sessão agendada com sucesso.", { description: "Link do paciente disponível para cópia.", action: { label: "Copiar link", onClick: () => navigator.clipboard.writeText(result.patientVideoUrl) }, duration: 8000 })`. If `patientVideoUrl` is absent, show the existing simple toast.
+- [x] 9.2 Write a unit test (`src/__tests__/unit/modules/agenda/components/session-form-modal-copy-toast.test.tsx`) that verifies: (a) creating an online session with `patientVideoUrl` in the result shows a toast with "Copiar link" action; (b) creating an in-person session shows the simple toast without copy action; (c) editing a session shows the "Sessão atualizada" toast without copy action.
 
 ## 10. E2E test — copy patient video link flow
 
