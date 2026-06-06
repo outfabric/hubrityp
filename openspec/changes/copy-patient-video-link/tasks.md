@@ -34,8 +34,8 @@
 
 ## 7. /api/video/join — handle reserved-but-not-activated rooms
 
-- [ ] 7.1 Update the POST handler in `src/app/api/video/join/route.ts`: after fetching the room row, add a check for `room.streamCallId === null`. If true, query the `sessions` table to resolve `startAt` for the session (`room.sessionId`), and return `{ status: 'too_early', sessionStartAt: session.startAt.toISOString(), psychologistName, psychologistPhotoUrl }` with HTTP 200. This check SHALL come before the existing `availableFrom` and status checks.
-- [ ] 7.2 Write an integration test (`src/__tests__/integration/telepsicologia/video-join-reserved-room.int.test.ts`) that verifies: (a) a POST with a valid token for a reserved room (`stream_call_id=NULL`) returns `{ status: 'too_early' }` with the session start time; (b) a POST with a valid token for an activated room follows the existing behavior; (c) an invalid token still returns 404.
+- [x] 7.1 Update the POST handler in `src/app/api/video/join/route.ts`: after fetching the room row, add a check for `room.streamCallId === null`. If true, query the `sessions` table to resolve `startAt` for the session (`room.sessionId`), and return `{ status: 'too_early', sessionStartAt: session.startAt.toISOString(), psychologistName, psychologistPhotoUrl }` with HTTP 200. This check SHALL come before the existing `availableFrom` and status checks.
+- [x] 7.2 Write an integration test (`src/__tests__/integration/telepsicologia/video-join-reserved-room.int.test.ts`) that verifies: (a) a POST with a valid token for a reserved room (`stream_call_id=NULL`) returns `{ status: 'too_early' }` with the session start time; (b) a POST with a valid token for an activated room follows the existing behavior; (c) an invalid token still returns 404.
 
 ## 8. Session Detail Drawer — copy link section (Frontend)
 
