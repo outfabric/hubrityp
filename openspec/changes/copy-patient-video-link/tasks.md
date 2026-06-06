@@ -18,8 +18,8 @@
 
 ## 4. Modify autoCreateVideoRoom Inngest handler
 
-- [ ] 4.1 Update `findExistingRoom` in `src/modules/telepsicologia/inngest/auto-create-room.ts` to also select `stream_call_id`. Update the guard logic: return `{ action: 'existing' }` only when `stream_call_id IS NOT NULL`. When the room exists with `stream_call_id=NULL`, return `{ action: 'skipped', reason: 'eligible_pending_create' }` to proceed to the deferred activation path.
-- [ ] 4.2 Update existing unit tests for `autoCreateVideoRoom` to cover: (a) reserved-but-not-activated room proceeds to activation; (b) fully activated room is skipped; (c) no existing row triggers full creation (backward compat).
+- [x] 4.1 Update `findExistingRoom` in `src/modules/telepsicologia/inngest/auto-create-room.ts` to also select `stream_call_id`. Update the guard logic: return `{ action: 'existing' }` only when `stream_call_id IS NOT NULL`. When the room exists with `stream_call_id=NULL`, return `{ action: 'skipped', reason: 'eligible_pending_create' }` to proceed to the deferred activation path.
+- [x] 4.2 Update existing unit tests for `autoCreateVideoRoom` to cover: (a) reserved-but-not-activated room proceeds to activation; (b) fully activated room is skipped; (c) no existing row triggers full creation (backward compat).
 
 ## 5. createSessionImpl — eager reservation and patientVideoUrl return
 

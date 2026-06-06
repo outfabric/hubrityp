@@ -74,9 +74,11 @@ const failingHelperResult: CreateVideoRoomHelperResult = {
   message: 'boom',
 };
 
+type ExistingRoomRow = { id: string; streamCallId: string | null };
+
 function makeDeps(
   helperResult: CreateVideoRoomHelperResult,
-  existingRoom: { id: string }[] = [],
+  existingRoom: ExistingRoomRow[] = [],
 ): AutoCreateRoomDeps {
   const db = {
     select: vi.fn().mockReturnValue({
@@ -99,6 +101,12 @@ function makeDeps(
 
   return deps;
 }
+
+const successfulHelperResult: CreateVideoRoomHelperResult = {
+  ok: true,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  room: { id: 'room-created-id' } as any,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -138,5 +146,51 @@ describe('auto-create-room: helper-failure propagation', () => {
     const forbidden: AutoCreateRoomResult['action'] = 'error';
 
     expect(allowedActions).not.toContain(forbidden);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Activation guard — distinguishes a reserved room (streamCallId IS NULL,
+// proceed to activation) from a fully activated room (streamCallId IS NOT
+// NULL, skip) and from no room at all (full creation, backward compat).
+// ---------------------------------------------------------------------------
+
+describe('auto-create-room: activation guard (reserved vs. activated room)', () => {
+  const updatedEvent: SessionUpdatedEvent = {
+    ...baseEvent,
+    previousModality: 'online',
+  };
+
+  it('proceeds to activation when the existing room is reserved (streamCallId IS NULL)', async () => {
+    // A reserved row exists but has no Stream call yet. The guard must NOT
+    // short-circuit; it falls through to createRoom (which UPDATEs the row).
+    const deps = makeDeps(successfulHelperResult, [{ id: 'reserved-room-id', streamCallId: null }]);
+
+    const result = await processSessionUpdated(updatedEvent, deps);
+
+    expect(result).toEqual({ action: 'created', roomId: 'room-created-id' });
+    expect(deps.createVideoRoomHelper).toHaveBeenCalledOnce();
+  });
+
+  it('skips (returns existing) when the room is fully activated (streamCallId IS NOT NULL)', async () => {
+    // A fully activated room already has a Stream call — short-circuit.
+    const deps = makeDeps(successfulHelperResult, [
+      { id: 'activated-room-id', streamCallId: 'stream-call-abc' },
+    ]);
+
+    const result = await processSessionUpdated(updatedEvent, deps);
+
+    expect(result).toEqual({ action: 'existing', roomId: 'activated-room-id' });
+    expect(deps.createVideoRoomHelper).not.toHaveBeenCalled();
+  });
+
+  it('triggers full creation when no existing room row exists (backward compat)', async () => {
+    // No reserved row at all — createRoom falls back to the full INSERT path.
+    const deps = makeDeps(successfulHelperResult, []);
+
+    const result = await processSessionUpdated(updatedEvent, deps);
+
+    expect(result).toEqual({ action: 'created', roomId: 'room-created-id' });
+    expect(deps.createVideoRoomHelper).toHaveBeenCalledOnce();
   });
 });
