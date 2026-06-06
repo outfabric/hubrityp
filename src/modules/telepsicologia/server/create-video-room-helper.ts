@@ -10,6 +10,8 @@ import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms, type VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { logger } from '@/shared/lib/logger';
 
+import { ROOM_AVAILABLE_BEFORE_MINUTES, ROOM_EXPIRES_AFTER_HOURS } from '../lib/room-constants';
+
 // ---------------------------------------------------------------------------
 // Result types
 // ---------------------------------------------------------------------------
@@ -33,16 +35,6 @@ export interface SessionData {
   /** Patient display name (from `patients.fullName`), or `null` when no patient is linked. */
   patientFullName: string | null;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Minutes before session start when the room becomes available. */
-const ROOM_AVAILABLE_BEFORE_MINUTES = 10;
-
-/** Hours after session end when the room expires. */
-const ROOM_EXPIRES_AFTER_HOURS = 1;
 
 // ---------------------------------------------------------------------------
 // Minimal DB type (any Drizzle Postgres client or transaction)
