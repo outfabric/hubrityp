@@ -85,17 +85,22 @@ test.describe('@agenda copy patient video link', () => {
     const dayButton = calendarPopover.locator(`td[data-day="${tomorrowIso}"] button`);
     await dayButton.click();
 
-    // Pick a distinctive start time (15:00) to disambiguate from seeded
-    // sessions for the same patient.
+    // Pick a distinctive start time (13:00) that no other parallel spec uses
+    // for this same seeded patient. The whole seeded suite runs `fullyParallel`
+    // against ONE shared seed user, so two specs scheduling the same patient at
+    // the same tomorrow slot race on `detectConflicts` — the loser gets a
+    // `conflict_warning`, its modal stays open, and the save assertion fails.
+    // `recurring-session-create.spec.ts` already owns tomorrow@15:00 for this
+    // patient, so this online-session spec takes the free 13:00 slot.
     const startTimeSelect = page.getByTestId('session-form-start-time');
     await startTimeSelect.click();
-    await page.getByRole('option', { name: '15:00' }).click();
+    await page.getByRole('option', { name: '13:00' }).click();
 
     const durationSelect = page.getByTestId('session-form-duration');
     await durationSelect.click();
     await page.getByRole('option', { name: '50 min' }).click();
 
-    await expect(page.getByTestId('session-form-end-time')).toContainText('15:50');
+    await expect(page.getByTestId('session-form-end-time')).toContainText('13:50');
 
     // Select the ONLINE modality — this is what makes the flow reserve a video
     // room and return `patientVideoUrl`. The radio item carries an `id`
@@ -124,7 +129,7 @@ test.describe('@agenda copy patient video link', () => {
     const sessionChip = page
       .getByTestId('session-chip')
       .filter({ hasText: patientName })
-      .filter({ hasText: '15:00' })
+      .filter({ hasText: '13:00' })
       .first();
     await expect(sessionChip).toBeVisible({ timeout: 10000 });
 
