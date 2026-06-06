@@ -13,8 +13,8 @@
 
 ## 3. Modify createVideoRoomHelper — activation mode
 
-- [ ] 3.1 Update `createVideoRoomHelper` in `src/modules/telepsicologia/server/create-video-room-helper.ts` to support activation mode: when the existing-room check finds a row with `stream_call_id=NULL`, the helper creates the Stream call, mints the patient JWT, and UPDATEs the existing row (instead of returning it untouched). When the existing row has `stream_call_id IS NOT NULL`, the current behavior is preserved (return the existing room). When no row exists, the full INSERT path runs (backward compat). Update the import of time-window constants to use `room-constants.ts`.
-- [ ] 3.2 Update existing unit/integration tests for `createVideoRoomHelper` to cover the new activation path: (a) reserved row (stream_call_id=NULL) is activated with Stream call ID + JWT via UPDATE; (b) fully activated row (stream_call_id IS NOT NULL) is returned untouched; (c) no existing row triggers the full INSERT path (backward compat).
+- [x] 3.1 Update `createVideoRoomHelper` in `src/modules/telepsicologia/server/create-video-room-helper.ts` to support activation mode: when the existing-room check finds a row with `stream_call_id=NULL`, the helper creates the Stream call, mints the patient JWT, and UPDATEs the existing row (instead of returning it untouched). When the existing row has `stream_call_id IS NOT NULL`, the current behavior is preserved (return the existing room). When no row exists, the full INSERT path runs (backward compat). Update the import of time-window constants to use `room-constants.ts`.
+- [x] 3.2 Update existing unit/integration tests for `createVideoRoomHelper` to cover the new activation path: (a) reserved row (stream_call_id=NULL) is activated with Stream call ID + JWT via UPDATE; (b) fully activated row (stream_call_id IS NOT NULL) is returned untouched; (c) no existing row triggers the full INSERT path (backward compat).
 
 ## 4. Modify autoCreateVideoRoom Inngest handler
 
