@@ -647,7 +647,9 @@ export function SessionFormModal({
             action: {
               label: 'Copiar link',
               onClick: () => {
-                void navigator.clipboard.writeText(patientVideoUrl);
+                void navigator.clipboard.writeText(patientVideoUrl).catch(() => {
+                  toast.error('Nao foi possivel copiar o link. Tente novamente.');
+                });
               },
             },
             duration: 8000,

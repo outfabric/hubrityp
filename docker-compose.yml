@@ -39,6 +39,10 @@ services:
       # Signed Storage URLs are rewritten from the internal hostname to this
       # origin before being returned to the browser (CSP also permits it).
       SUPABASE_PUBLIC_URL: http://localhost:54321
+      # Public origin used to build patient-facing absolute URLs (e.g. the
+      # shareable telepsychology video link). Without it, patientVideoUrl is
+      # null and the copy-link affordances stay silently inert in local dev.
+      APP_URL: http://localhost:3000
       # Gemini API key — fake default for local dev. Replace with a real key
       # when testing AI transcription features end-to-end.
       GEMINI_API_KEY: fake-gemini-key-for-local-dev
