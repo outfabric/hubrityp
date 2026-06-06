@@ -29,8 +29,8 @@
 
 ## 6. listSessionsImpl — extend SessionWithDetails with patientVideoUrl
 
-- [ ] 6.1 Add a LEFT JOIN to `video_rooms` on `sessions.id = video_rooms.session_id` in `listSessionsImpl` (`src/modules/agenda/server/list-sessions.ts`). Select `video_rooms.patient_token`. Extend `SessionWithDetails` with `patientVideoUrl: string | null`. Build the URL server-side using `generatePatientVideoUrl(serverEnv.APP_URL, patientToken)` when both are present; otherwise set to `null`.
-- [ ] 6.2 Write an integration test (`src/__tests__/integration/agenda/list-sessions-video-url.int.test.ts`) that verifies: (a) an online session with a reserved room returns `patientVideoUrl` in `SessionWithDetails`; (b) an in-person session returns `patientVideoUrl: null`; (c) an online session without a `video_rooms` row returns `patientVideoUrl: null`.
+- [x] 6.1 Add a LEFT JOIN to `video_rooms` on `sessions.id = video_rooms.session_id` in `listSessionsImpl` (`src/modules/agenda/server/list-sessions.ts`). Select `video_rooms.patient_token`. Extend `SessionWithDetails` with `patientVideoUrl: string | null`. Build the URL server-side using `generatePatientVideoUrl(serverEnv.APP_URL, patientToken)` when both are present; otherwise set to `null`.
+- [x] 6.2 Write an integration test (`src/__tests__/integration/agenda/list-sessions-video-url.int.test.ts`) that verifies: (a) an online session with a reserved room returns `patientVideoUrl` in `SessionWithDetails`; (b) an in-person session returns `patientVideoUrl: null`; (c) an online session without a `video_rooms` row returns `patientVideoUrl: null`.
 
 ## 7. /api/video/join — handle reserved-but-not-activated rooms
 
