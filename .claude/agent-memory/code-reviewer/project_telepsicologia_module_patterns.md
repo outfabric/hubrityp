@@ -58,137 +58,19 @@ Concurrent `createVideoRoom` calls for the same session both pass the idempotenc
 - Unit: Stream SDK mocked via `vi.mock('@stream-io/video-react-sdk', ...)` returning mock hooks/call objects.
 - Negative-auth integration test for middleware: `sessao-route-gating.int.test.ts` with `vi.mock('@/modules/registration/edge')` and `vi.mock('@/shared/supabase/middleware')`.
 
-## Change 5 patterns (2026-05-23 — call lifecycle, recording, webhook, Inngest crons)
+## Change 3: patient join flow (2026-05-23)
 
-### Fixed from change 2
-- `endVideoSessionImpl`: DB writes now wrapped in `db.transaction()`. Fixed.
-- `admitPatientImpl`: DB writes now wrapped in `db.transaction()`. Fixed.
-
-### New Inngest functions registered in /api/inngest/route.ts
-- `autoCreateVideoRoom` — triggers on `agenda/session.created` and `agenda/session.updated`. Core logic extracted to `processSessionCreated` / `processSessionUpdated` functions for testability. Uses `createVideoRoomHelper` shared with the Server Action.
-- `roomExpiryCron` — runs every 15 min (`TZ=America/Sao_Paulo */15 * * * *`). Two sub-steps: (1) expire rooms past `expires_at`; (2) expire active rooms empty for >5 min. Each expired room: Stream `.end()` outside tx, then `db.transaction(UPDATE + INSERT log)`.
-- `recordingCleanupCron` — runs every hour. Sets `status='discarded', discarded_at=now(), audio_temp_url=null` for recordings older than 24h. Enforces RNF-09.08.
-
-### Stream webhook handler pattern
-- Route: `POST /api/webhooks/stream/video` — public route (no Supabase session), HMAC-SHA256 authenticated.
-- `STREAM_WEBHOOK_SECRET` read from `serverEnv` (never `NEXT_PUBLIC_*`).
-- Signature verification: reads raw body BEFORE JSON parse (prevents length-extension attacks), uses `crypto.timingSafeEqual` with Buffer coercion + try/catch for length mismatch.
-- Returns 200 on all processed events (including handler errors), to prevent Stream infinite retries. Internal errors are logged without PII.
-- Event routing: `call.session_ended` → UPDATE room status + INSERT log; `call.session_participant_joined/left` → INSERT log; `call.recording_started/stopped` → UPDATE video_recordings status.
-- Uses service-role Drizzle client (no user session exists in webhook context). Justified and commented.
-
-### toggleRecording Server Action pattern
-- Auth: `getUser()` first.
-- Zod input: `{ room_id: uuid, action: 'start' | 'stop' }`.
-- IDOR prevention: Drizzle predicate `eq(videoRooms.userId, userId)` on all room queries.
-- Consent check (start only): `INNER JOIN sessions JOIN patients WHERE recording_consent_signed_at IS NOT NULL AND recording_consent_revoked_at IS NULL`. If session has no patient, INNER JOIN returns null → `CONSENT_REQUIRED`. This is correct.
-- Stream call (`.startRecording({ recording_type: 'audio' })`) happens OUTSIDE the DB transaction — it's a remote call that can't be rolled back.
-- `recording_type: 'audio'` IS the correct Stream Node SDK parameter — it's a URL path segment in `/api/v2/video/call/{type}/{id}/recordings/{recording_type}/start`.
-- DB writes (UPSERT video_recordings + UPDATE video_rooms recording_enabled + INSERT log) are wrapped in `db.transaction()`.
-
-### extendSession Server Action pattern
-- Auth: `getUser()` first.
-- Zod input: `{ room_id: uuid }`.
-- IDOR prevention: Drizzle predicate `eq(videoRooms.userId, userId)`.
-- Status guard: room must be `'active'` (not pending/ended/expired).
-- DB writes: `UPDATE expires_at = expires_at + interval '15 minutes'` + INSERT log, inside `db.transaction()`.
-
-### createVideoRoomHelper extraction
-- `src/modules/telepsicologia/server/create-video-room-helper.ts` — shared by Server Action and Inngest `autoCreateVideoRoom`.
-- Marked `server-only`. Does NOT authenticate — caller responsibility.
-- Concurrent race fix: 23505 (unique violation) → re-fetch existing room. If re-fetch also fails → log error + return generic error.
-
-### WhatsApp reminder video link integration
-- `fetchVideoLink(db, sessionId, appUrl)` added to `reminders-dispatcher.ts`. Queries `video_rooms` by `sessionId` only (service-role Drizzle, in cron context — no userId needed, sessionId comes from authenticated psychologist join).
-- `APP_URL` env var: optional (`z.string().url().optional()`), server-only. Graceful degradation when absent.
-- KNOWN ISSUE: `fetchVideoLink` is called sequentially per session in the dispatcher loop — N+1 queries. Should be batched.
-- `fetchVideoLink` is not directly integration-tested (only the template variable layer is unit-tested).
-
-### Patient recording banner gap — BLOCKER (open after change 5)
-- `PatientInCallView` accepts `isRecordingActive?: boolean` prop (new in this PR).
-- The only call site (`patient-video-page.tsx:252`) does NOT pass `isRecordingActive`.
-- Recording state is local to the psychologist's browser; there is no mechanism (Stream custom event, Supabase Realtime, etc.) to push it to the patient's browser.
-- LGPD/Res. CFP 13/2022 compliance defect: patients cannot see when they are being recorded.
-- Recommended fix: emit `call.sendCustomEvent({ type: 'recording_state_changed', data: { isRecording } })` from `RecordingControls.onRecordingChange`, listen in `PatientCallContent`'s `call.on('custom', ...)` handler (same pattern as chat).
-
-### Recording banner text bug
-- `patient-in-call-view.tsx:305`: "Esta sessao esta sendo gravada" — missing cedilla (sessão) and accent (está). Legally significant text.
-
-### env var propagation (STREAM_WEBHOOK_SECRET)
-- Added to: vitest.setup.ts, integration/global-setup.ts, e2e/seeded/start-server.ts, playwright.real.config.ts, ci.yml (both build jobs), .env.example. Complete.
-- APP_URL is optional so no propagation needed in test setups.
-
-## Change 5 fixes confirmed (commit 7b131a3, review-2 iteration 2 — 2026-05-23)
-
-### Patient recording banner (LGPD BLOCKER — FIXED)
-- `RecordingControls.handleToggle` now calls `call.sendCustomEvent({ type: 'recording-state-changed', isRecording: newRecordingState })` after a successful toggle (best-effort `void .catch()`).
-- `PatientCallContent` `call.on('custom')` handler now discriminates on `payload.type === 'recording-state-changed'` and calls `setIsRecording(payload.isRecording)`.
-- `isRecordingActive={false}` is the correct hardcode at the `patient-video-page.tsx` call site — it's the initial state; live state is delivered via custom event.
-- `RecordingStateEventPayload` and `CustomEventPayload` union added to `chat-types.ts`. Not exported from barrel (only used internally) — acceptable.
-- Recording banner text fixed: "Esta sessão está sendo gravada" (cedilla + accent). Confirmed in unit test assertions.
-
-### N+1 batch fetch (HIGH — FIXED)
-- `fetchVideoLinksBatch(db, sessionIds, appUrl)` added to `reminders-dispatcher.ts`. Uses `inArray(videoRooms.sessionId, sessionIds)` — single DB query.
-- `dispatchReminders` now pre-fetches all online session IDs before the session loop, then does `videoLinkMap.get(session.id) ?? null` inside the loop.
-- `fetchVideoLink` (the single-session variant) remains exported and is still used by integration tests directly.
-- Integration tests added for both `fetchVideoLink` (3 cases) and `fetchVideoLinksBatch` (4 cases) in `reminders-dispatcher.int.test.ts`. Thorough.
-
-### Remaining open item after change 5
-- `sendCustomEvent` is NOT asserted in any unit test — `vi.fn().mockResolvedValue(undefined)` is mocked but never checked. The entire real-time notification path to the patient is untested at the unit level.
-- `RecordingStateEventPayload` is not exported from the module barrel (low priority — only used internally).
-
-## Change 4 patterns (2026-05-23 — in-call features: chat, screen share, prontuario, troubleshooting, quality degradation)
-
-### New components
-- `chat-drawer.tsx` / `chat-input.tsx` / `chat-message-list.tsx` — ephemeral chat via `call.sendCustomEvent` / `call.on('custom', …)`.
-- `screen-share-indicator.tsx` — `useScreenShareState().isMute === false` = sharing active.
-- `troubleshooting-popover.tsx` — static popover; `psychologistName` prop changes step 4 for patient view.
-- `prontuario-call-drawer.tsx` / `prontuario-call-content.tsx` — SCAFFOLDED BUT NOT WIRED (see open issue below).
-- `connection-quality-indicator.tsx` — extended with Sonner `toast.warning` + `call.camera.selectTargetResolution({width:320,height:240})` on POOR quality, 30s debounce via module-level timestamp.
-
-### medical-records/client.ts pattern
-Added `client.ts` to `medical-records` module as client-safe entrypoint (mirrors `registration/edge.ts`). Exports only types from `evolution-types.ts`, Zod schemas, template types, and `'use client'` components (`EvolutionEditor`, `TemplateSelector`). Server barrel (`index.ts`) continues to export server-side code. When adding server-only code to a module that client components also need, always create a separate `client.ts` entrypoint.
-
-### isChatOpenRef pattern
-Both `InCallView` and `PatientCallContent` use `isChatOpenRef` (a ref synced in `useEffect`) to avoid stale closure in the `call.on('custom')` listener. This is the correct pattern for Stream SDK listeners — they register once but must read current state. Flag duplication: this pattern is copy-pasted in two places; a `useChatUnreadIndicator` hook would be cleaner.
-
-### Debounce with module-level var + test reset function
-`_resetDegradationDebounce()` is exported from `connection-quality-indicator.tsx` for test cleanup. It resets `lastDegradationToastTimestamp = 0`. Tests call this via `beforeEach`. Pattern is acceptable but leaks test concern into production file.
-
-### Stream SDK: call.camera.selectTargetResolution
-`call.camera.selectTargetResolution({ width: 320, height: 240 })` is the approved API for downgrading video resolution. Returns a Promise, called with `void`.
-
-## Open issues after change 4 (per review-2.md — 2026-05-23)
-
-### Prontuario drawer wiring FIXED (review-2 confirmed)
-Full prop chain confirmed: `page.tsx` → `VideoCallLoader` → `VideoCallClient (CallStateRouter)` → `InCallView` → `CallControlBar` + `<ProntuarioCallDrawer>`. `isPsychologist={true}`, `isProntuarioOpen`, `onProntuarioToggle` are all passed. Two new Server Actions (`createEvolution`, `updateEvolution`) in `actions.ts` delegate to `createEvolutionImpl`/`updateEvolutionImpl` — both auth-checked with `getUser()`.
-
-### Chat message length cap FIXED (review-2 confirmed)
-`MAX_CHAT_MESSAGE_LENGTH = 2_000` constant in `chat-types.ts`. `maxLength={MAX_CHAT_MESSAGE_LENGTH}` on `<Input>` in `chat-input.tsx`. `.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH)` in `chat-drawer.tsx.handleSend`. Both psychologist and patient paths use same `ChatDrawer`/`ChatInput` components — both protected.
-
-### Prontuario button visible but non-functional when patient is null (MEDIUM — open)
-`InCallView` always passes `isPsychologist={true}` and `onProntuarioToggle` to `CallControlBar`, making the prontuario button always visible. But `<ProntuarioCallDrawer>` only renders when `patient !== null`. If `session.patientId` is null, the button appears but does nothing. Fix: pass `onProntuarioToggle={patient ? handleProntuarioToggle : undefined}`.
-
-### MAX_CHAT_MESSAGE_LENGTH cap not unit-tested in chat-drawer.test.tsx (MEDIUM — open)
-The `.slice()` safety cap in `handleSend` has no explicit test. The `maxLength` attribute test works for normal browser input, but the programmatic cap needs a test to prevent silent regression.
-
-### Missing DB transactions (HIGH — from change 2, still not fixed)
-`admitPatientImpl` + `endVideoSessionImpl` still do multi-write without `db.transaction()`. `createEvolutionImpl` and `updateEvolutionImpl` (added in change 4) correctly use `db.transaction()`.
-
-### Still-open from change 1: createVideoRoom concurrent race (medium)
-Concurrent calls hit unique constraint; catch block returns generic error instead of re-fetching.
-
-### Missing DB transactions (HIGH — from change 2, still not fixed)
-`admitPatientImpl` + `endVideoSessionImpl` still do multi-write without `db.transaction()`. Stream call ends before the transaction, so the race is acceptable only for the Stream call — DB writes must be atomic.
-
-### Missing E2E negative-auth test for /sessao (now FIXED in change 4)
-`app-routes-auth-gate.spec.ts:L75` added the test. No longer an open issue.
-
-### Still-open from change 1: createVideoRoom concurrent race (medium)
-Concurrent calls hit unique constraint; catch block returns generic error instead of re-fetching.
-
-### onAdmitPatient wired to UI (now FIXED in change 4)
-The "Admitir" button in `InCallView` now correctly calls `handleAdmitPatient`. No longer an open issue.
+- `/v/[token]` — public RSC shell + `PatientVideoPage` client component. Token is 64-char hex (256-bit, `randomBytes(32)`). Middleware explicitly classifies `/v/*` as `'public'`.
+- `POST /api/video/join` — token-validated (Zod), per-IP rate limit (10/min) BEFORE DB work. Returns status: too_early / waiting / active (with Stream JWT) / 404 / 410. Never leaks internal IDs.
+- `POST /api/video/log` — token-validated (Zod), per-token rate limit (10/min) AFTER parse. Inserts into `video_session_logs` append-only. `participant_role` derived server-side from token column match.
+- Both handlers use the service-role Drizzle client (`db`) intentionally — patient has no Supabase session.
+- `extractUserIdFromJwt` decodes JWT payload (base64url) to get `user_id` for Stream SDK. Safe: malformed JWTs throw, caught with fallback `'patient-unknown'`.
+- **NEW OPEN ISSUE (change 3): Missing indexes on `patient_token` and `partner_token` columns (HIGH, not yet fixed).** Both handlers do `WHERE patient_token = ? OR partner_token = ?` with a full table scan. Need `uniqueIndex on patientToken` and `index on partnerToken` in `tables.ts` + migration.
+- **NEW OPEN ISSUE (change 3): Unbounded `metadata` in log handler (MEDIUM, not yet fixed).** `z.record(z.string(), z.string())` with no key count or value length bounds. Need `max(64)` on keys, `max(512)` on values, `.refine(keys <= 20)`.
+- **NEW OPEN ISSUE (change 3): Rate limit not positively tested (MEDIUM).** Integration tests use IP counter to AVOID rate limit; no test asserts 429 on 11th request.
+- `getInitials()` is duplicated in `too-early-view.tsx` and `waiting-room-view.tsx` — should extract to shared `lib/initials.ts`.
+- Stream JWT is returned ONLY when `status = 'active'` — pre-admission join is correctly prevented.
+- Polling: `WaitingRoomView` polls every 10s (6/min). At 10/min per-IP rate limit on join, legitimate waiting patients use 60% of their rate budget.
 
 **Why:** Telepsicologia PRD 09 — Stream.io video calling, psychologist call UI.
-**How to apply:** When reviewing change 5+ (recording, prontuario wiring), verify: (1) prontuario wiring is complete end-to-end; (2) chat length cap is added; (3) DB transactions in admitPatient/endVideoSession; (4) no new NEXT_PUBLIC_ secrets.
+**How to apply:** When reviewing change 4+ (chat, recording), verify token-indexed DB queries are present, metadata is bounded, and rate-limit tests are positive. Also check if transactions have been added for admitPatient/endVideoSession (still open from change 2). Check if onAdmitPatient is wired to actual UI.
