@@ -8,9 +8,11 @@ import { calculateEndTime, isInPast } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionCreatedEventSchema } from '@/modules/agenda/lib/session-events';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
+import { generatePatientVideoUrl, reserveVideoRoom } from '@/modules/telepsicologia';
 import { db } from '@/shared/db/client';
 import { sessions, sessionHistory, locations } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
+import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -18,7 +20,7 @@ import { logger } from '@/shared/lib/logger';
 // ---------------------------------------------------------------------------
 
 export type CreateSessionResult =
-  | { ok: true; sessionId: string }
+  | { ok: true; sessionId: string; patientVideoUrl?: string }
   | { ok: false; error: 'unauthenticated' }
   | { ok: false; error: 'invalid_input'; fieldErrors: Record<string, string[]> }
   | { ok: false; error: 'past_date'; message: string }
@@ -215,6 +217,30 @@ export async function createSessionImpl(
         },
         'failed to send agenda/session.created event',
       );
+    }
+
+    // Eager video-room reservation for online sessions (D5). Reserving the room
+    // at schedule time lets the patient video link be shared immediately. This
+    // is best-effort: a reservation failure SHALL NOT block session creation —
+    // the room is also auto-created later by the Inngest pipeline.
+    if (data.modality === 'online') {
+      const reservation = await reserveVideoRoom({ id: inserted.id, userId, startAt, endAt }, db);
+
+      if (reservation.ok) {
+        const appUrl = serverEnv.APP_URL;
+        if (appUrl) {
+          return {
+            ok: true,
+            sessionId: inserted.id,
+            patientVideoUrl: generatePatientVideoUrl(appUrl, reservation.patientToken),
+          };
+        }
+      } else {
+        logger.error(
+          { event: 'reserve_video_room_failed', sessionId: inserted.id },
+          'failed to reserve video room for online session',
+        );
+      }
     }
 
     return { ok: true, sessionId: inserted.id };

@@ -138,6 +138,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // No photo/avatar column exists in profiles yet — return null
     const psychologistPhotoUrl: string | null = null;
 
+    // Reserved-but-not-activated room: the room row exists (created at reserve
+    // time) but the Stream call has not been minted yet (`streamCallId IS NULL`).
+    // The patient sees the same "too early" view as a pre-window join — we
+    // resolve the real session start time from the `sessions` table (the room's
+    // `availableFrom` is the 10-minute-early window, not the session start). No
+    // streamToken/apiKey/callId is returned in this state.
+    if (room.streamCallId === null) {
+      const [session] = await db
+        .select({ startAt: sessions.startAt })
+        .from(sessions)
+        .where(eq(sessions.id, room.sessionId))
+        .limit(1);
+
+      return NextResponse.json(
+        {
+          status: 'too_early',
+          sessionStartAt: session?.startAt.toISOString() ?? room.availableFrom.toISOString(),
+          psychologistName,
+          psychologistPhotoUrl,
+        },
+        { status: 200, headers: NO_STORE_HEADERS },
+      );
+    }
+
     const now = new Date();
 
     // Status determination — order matters:

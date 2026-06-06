@@ -34,12 +34,16 @@ export const videoRooms = pgTable(
     // UNIQUE constraint enforces 1:1 relationship (one room per session).
     sessionId: uuid('session_id').notNull(),
 
-    // Stream.io call identifier for the video room.
-    streamCallId: varchar('stream_call_id', { length: 255 }).notNull(),
+    // Stream.io call identifier for the video room. Nullable: a room is
+    // first *reserved* at schedule time (status='pending') without a Stream
+    // call, then *activated* (startAt − 1h, via Inngest) which populates this.
+    streamCallId: varchar('stream_call_id', { length: 255 }),
 
     // Patient access: 64-char hex token for URL lookup + Stream JWT for call.
+    // `patientJwt` is nullable for the same reservation/activation reason as
+    // `streamCallId` — it is minted only when the room is activated.
     patientToken: varchar('patient_token', { length: 64 }).notNull(),
-    patientJwt: text('patient_jwt').notNull(),
+    patientJwt: text('patient_jwt'),
 
     // Partner access (optional): same pattern as patient.
     partnerToken: varchar('partner_token', { length: 64 }),

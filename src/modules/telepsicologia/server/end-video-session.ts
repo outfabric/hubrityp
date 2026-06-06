@@ -95,10 +95,14 @@ export async function endVideoSessionImpl(
 
     // 5. End Stream call — wrapped in try/catch because the call may
     //    already be ended on Stream's side (e.g., timeout, manual end).
+    //    A reserved-but-not-yet-activated room has `streamCallId=NULL` and no
+    //    live Stream call, so there is nothing to end.
     try {
-      const streamClient = getStreamClient();
-      const call = streamClient.video.call('default', room.streamCallId);
-      await call.end();
+      if (room.streamCallId !== null) {
+        const streamClient = getStreamClient();
+        const call = streamClient.video.call('default', room.streamCallId);
+        await call.end();
+      }
     } catch {
       // Log but do not fail — Stream call may already be ended or the
       // service may be temporarily unavailable. Our DB is the source of
