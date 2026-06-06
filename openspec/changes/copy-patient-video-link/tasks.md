@@ -49,4 +49,4 @@
 
 ## 10. E2E test — copy patient video link flow
 
-- [ ] 10.1 Write a seeded E2E test (`src/__tests__/e2e/seeded/agenda/copy-patient-video-link.spec.ts`) that verifies the full flow: (a) psychologist creates an online session; (b) the post-scheduling toast appears with "Copiar link" action; (c) psychologist opens the session detail drawer for the created session; (d) the "Link do paciente" section is visible with a "Copiar link" button; (e) clicking "Copiar link" changes the button text to "Copiado!".
+- [x] 10.1 Write a seeded E2E test (`src/__tests__/e2e/seeded/agenda/copy-patient-video-link.spec.ts`) that verifies the full flow: (a) psychologist creates an online session; (b) the post-scheduling toast appears with "Copiar link" action; (c) psychologist opens the session detail drawer for the created session; (d) the "Link do paciente" section is visible with a "Copiar link" button; (e) clicking "Copiar link" changes the button text to "Copiado!".

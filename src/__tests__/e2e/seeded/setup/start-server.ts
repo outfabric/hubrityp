@@ -136,6 +136,12 @@ async function main(): Promise<void> {
       INNGEST_EVENT_API_BASE_URL: 'http://127.0.0.1:1',
       // Signature hash salt — used for hashing IP/user-agent in consent signing.
       SIGNATURE_HASH_SALT: 'e2e-test-signature-hash-salt-minimum-32-chars',
+      // App base URL — required server-side so `createSessionImpl` /
+      // `listSessionsImpl` can build the patient video link (`patientVideoUrl`)
+      // for online sessions. Without it both return `null`/omit the URL and the
+      // copy-patient-video-link flow has nothing to exercise. Points at the same
+      // origin Playwright drives (`http://127.0.0.1:3000`).
+      APP_URL: 'http://127.0.0.1:3000',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },
