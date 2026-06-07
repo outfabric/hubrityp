@@ -49,9 +49,9 @@ const SECTION_ORDER: ReadonlyArray<{ key: string; label: string }> = [
   { key: 'solicitante', label: 'Solicitante' },
   { key: 'demanda', label: 'Demanda' },
   { key: 'procedimentos', label: 'Procedimentos' },
-  { key: 'analise', label: 'Analise' },
-  { key: 'conclusao', label: 'Conclusao' },
-  { key: 'period', label: 'Periodo' },
+  { key: 'analise', label: 'Análise' },
+  { key: 'conclusao', label: 'Conclusão' },
+  { key: 'period', label: 'Período' },
   { key: 'validity', label: 'Validade' },
 ];
 
@@ -60,11 +60,11 @@ const SECTION_ORDER: ReadonlyArray<{ key: string; label: string }> = [
 // ---------------------------------------------------------------------------
 
 const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
-  declaracao: 'Declaracao Psicologica',
-  atestado: 'Atestado Psicologico',
-  relatorio: 'Relatorio Psicologico',
-  laudo: 'Laudo Psicologico',
-  parecer: 'Parecer Psicologico',
+  declaracao: 'Declaração Psicológica',
+  atestado: 'Atestado Psicológico',
+  relatorio: 'Relatório Psicológico',
+  laudo: 'Laudo Psicológico',
+  parecer: 'Parecer Psicológico',
 };
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export async function buildClinicalDocumentPdf(input: BuildPdfInput): Promise<Bu
     info: {
       Title: DOCUMENT_TYPE_LABELS[documentType],
       Author: psychologistInfo.name,
-      Subject: `${DOCUMENT_TYPE_LABELS[documentType]} - ${title || 'Sem titulo'}`,
+      Subject: `${DOCUMENT_TYPE_LABELS[documentType]} - ${title || 'Sem título'}`,
     },
   });
 

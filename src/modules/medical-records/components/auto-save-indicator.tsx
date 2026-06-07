@@ -56,7 +56,7 @@ export function AutoSaveIndicator({ status, lastSavedAt }: AutoSaveIndicatorProp
       )}
 
       {(status === 'saved' || status === 'idle') && lastSavedAt && (
-        <span className="text-text-tertiary text-xs">Salvo as {format(lastSavedAt, 'HH:mm')}</span>
+        <span className="text-text-tertiary text-xs">Salvo às {format(lastSavedAt, 'HH:mm')}</span>
       )}
     </div>
   );

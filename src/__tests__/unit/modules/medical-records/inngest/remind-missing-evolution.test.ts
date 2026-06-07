@@ -196,7 +196,7 @@ describe('remindMissingEvolutions', () => {
     // Title should contain only first name (not full name) and a formatted date
     expect(notification.title).toContain('Maria');
     expect(notification.title).not.toContain('Silva');
-    expect(notification.title).toContain('ainda nao possui evolucao');
+    expect(notification.title).toContain('ainda não possui evolução');
     // actionUrl should use patientId and correct route prefix (not /dashboard/)
     expect(notification.actionUrl).toBe(
       '/pacientes/patient-1/prontuario/evolucoes/nova?sessionId=session-1',

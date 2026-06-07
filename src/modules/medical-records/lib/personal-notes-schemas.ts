@@ -12,7 +12,7 @@ import { z } from 'zod';
  */
 export const personalNotesPasswordSchema = z
   .string()
-  .min(6, { message: 'A senha deve ter no minimo 6 caracteres.' });
+  .min(6, { message: 'A senha deve ter no mínimo 6 caracteres.' });
 
 // ---------------------------------------------------------------------------
 // Upsert personal notes input
@@ -25,7 +25,7 @@ export const personalNotesPasswordSchema = z
  * ownership server-side (never trusted from client alone).
  */
 export const upsertPersonalNotesInputSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
   content: z.string(),
 });
 
@@ -39,7 +39,7 @@ export type UpsertPersonalNotesInput = z.infer<typeof upsertPersonalNotesInputSc
  * Input for retrieving personal notes (optionally with password unlock).
  */
 export const getPersonalNotesInputSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
   password: z.string().optional(),
 });
 

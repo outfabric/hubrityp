@@ -23,9 +23,9 @@ import { DocumentsEmptyState } from './documents-empty-state';
 
 const TYPE_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'Todos os tipos' },
-  { value: 'declaracao', label: 'Declaracao' },
+  { value: 'declaracao', label: 'Declaração' },
   { value: 'atestado', label: 'Atestado' },
-  { value: 'relatorio', label: 'Relatorio' },
+  { value: 'relatorio', label: 'Relatório' },
   { value: 'laudo', label: 'Laudo' },
   { value: 'parecer', label: 'Parecer' },
 ];
@@ -123,7 +123,7 @@ export function DocumentsTab({
     <div className="space-y-6" data-testid="documents-tab">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-text-primary text-lg font-semibold">Documentos clinicos</h3>
+        <h3 className="text-text-primary text-lg font-semibold">Documentos clínicos</h3>
         <Button asChild data-testid="documents-new-button">
           <Link href={novoDocumentoPath}>
             <FilePlus2 className="mr-2 h-4 w-4" aria-hidden="true" />

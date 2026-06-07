@@ -49,9 +49,9 @@ type FormState =
 // ---------------------------------------------------------------------------
 
 const DOMAIN_LABELS: Record<string, string> = {
-  physical: 'Fisico',
-  psychological: 'Psicologico',
-  social: 'Relacoes Sociais',
+  physical: 'Físico',
+  psychological: 'Psicológico',
+  social: 'Relações Sociais',
   environmental: 'Meio Ambiente',
 };
 
@@ -105,7 +105,7 @@ export function ScaleApplicationForm({
 
       if (!result.ok) {
         if (result.code === 'ALREADY_COMPLETED') {
-          toast.info('Esta escala ja foi respondida anteriormente.');
+          toast.info('Esta escala já foi respondida anteriormente.');
           onCompleted();
           return;
         }
@@ -124,7 +124,7 @@ export function ScaleApplicationForm({
     } catch {
       setFormState({
         status: 'error',
-        message: 'Erro de conexao. Tente novamente.',
+        message: 'Erro de conexão. Tente novamente.',
       });
     }
   }, [allAnswered, applicationId, responses, submitScaleResponses, onCompleted]);
@@ -189,7 +189,7 @@ export function ScaleApplicationForm({
         type="button"
         onClick={() => void handleSubmit()}
         disabled={!allAnswered || formState.status === 'submitting'}
-        aria-label="Salvar no prontuario"
+        aria-label="Salvar no prontuário"
         data-testid="scale-form-submit"
         className="w-full"
       >
@@ -199,7 +199,7 @@ export function ScaleApplicationForm({
             Salvando...
           </>
         ) : (
-          'Salvar no prontuario'
+          'Salvar no prontuário'
         )}
       </Button>
     </div>
@@ -251,7 +251,7 @@ function ScaleResultDisplay({
       data-testid="scale-result-display"
     >
       <CheckCircle2 className="text-success-500 h-10 w-10" aria-hidden="true" />
-      <h3 className="text-text-primary text-lg font-semibold">Escala salva no prontuario</h3>
+      <h3 className="text-text-primary text-lg font-semibold">Escala salva no prontuário</h3>
       <p className="text-text-secondary text-sm">{scaleName}</p>
 
       {isWhoqol && domainScores ? (

@@ -145,8 +145,8 @@ describe('renderCoverPage', () => {
     const textArgs = extractTextArgs(mockDoc);
     // Timestamp is formatted as DD/MM/YYYY as HH:mm
     // (UTC offset means the exact displayed time depends on system timezone,
-    // so we check the "Data/hora da solicitacao: " label appears)
-    expect(textArgs.some((t) => t.includes('Data/hora da solicitacao: '))).toBe(true);
+    // so we check the "Data/hora da solicitação: " label appears)
+    expect(textArgs.some((t) => t.includes('Data/hora da solicitação: '))).toBe(true);
   });
 
   it('writes "Completo (sem filtro de data)" when no date range is set', () => {
@@ -175,7 +175,7 @@ describe('renderCoverPage', () => {
 
     const textArgs = extractTextArgs(mockDoc);
     expect(textArgs.some((t) => t.includes('De '))).toBe(true);
-    expect(textArgs.some((t) => t.includes('Ate '))).toBe(true);
+    expect(textArgs.some((t) => t.includes('Até '))).toBe(true);
   });
 
   it('writes section toggle checklist including [x] and [ ] markers', () => {
@@ -197,9 +197,9 @@ describe('renderCoverPage', () => {
 
     // Enabled sections should have [x]
     expect(textArgs).toContain('[x] Anamnese');
-    expect(textArgs).toContain('[x] Evolucoes');
+    expect(textArgs).toContain('[x] Evoluções');
     // Disabled sections should have [ ]
-    expect(textArgs).toContain('[ ] Documentos clinicos');
+    expect(textArgs).toContain('[ ] Documentos clínicos');
     expect(textArgs).toContain('[ ] Escalas');
   });
 
@@ -215,22 +215,22 @@ describe('renderCoverPage', () => {
     renderCoverPage(asPdfDoc(mockDoc), data);
 
     const textArgs = extractTextArgs(mockDoc);
-    expect(textArgs).toContain('[x] Anotacoes pessoais');
+    expect(textArgs).toContain('[x] Anotações pessoais');
   });
 
-  it('writes title "Prontuario Psicologico"', () => {
+  it('writes title "Prontuário Psicológico"', () => {
     const mockDoc = createMockDoc();
     renderCoverPage(asPdfDoc(mockDoc), makeCoverPageData());
 
     const textArgs = extractTextArgs(mockDoc);
-    expect(textArgs).toContain('Prontuario Psicologico');
+    expect(textArgs).toContain('Prontuário Psicológico');
   });
 
-  it('writes subtitle "Exportacao de Prontuario"', () => {
+  it('writes subtitle "Exportação de Prontuário"', () => {
     const mockDoc = createMockDoc();
     renderCoverPage(asPdfDoc(mockDoc), makeCoverPageData());
 
     const textArgs = extractTextArgs(mockDoc);
-    expect(textArgs).toContain('Exportacao de Prontuario');
+    expect(textArgs).toContain('Exportação de Prontuário');
   });
 });

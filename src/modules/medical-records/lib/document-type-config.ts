@@ -18,32 +18,32 @@ export const DOCUMENT_TYPE_CONFIGS: Record<DocumentType, DocumentTypeConfig> = {
   declaracao: {
     type: 'declaracao',
     icon: FileText,
-    label: 'Declaracao Psicologica',
-    description: 'Informa sobre comparecimento, acompanhamento ou participacao.',
+    label: 'Declaração Psicológica',
+    description: 'Informa sobre comparecimento, acompanhamento ou participação.',
   },
   atestado: {
     type: 'atestado',
     icon: FileBadge,
-    label: 'Atestado Psicologico',
-    description: 'Certifica condicoes clinicas psicologicas do paciente.',
+    label: 'Atestado Psicológico',
+    description: 'Certifica condições clínicas psicológicas do paciente.',
   },
   relatorio: {
     type: 'relatorio',
     icon: FileBarChart,
-    label: 'Relatorio Psicologico',
+    label: 'Relatório Psicológico',
     description: 'Descreve e analisa procedimentos e resultados do atendimento.',
   },
   laudo: {
     type: 'laudo',
     icon: FileSearch,
-    label: 'Laudo Psicologico',
-    description: 'Apresenta analise aprofundada de fatos e conclusao tecnica.',
+    label: 'Laudo Psicológico',
+    description: 'Apresenta análise aprofundada de fatos e conclusão técnica.',
   },
   parecer: {
     type: 'parecer',
     icon: FileEdit,
-    label: 'Parecer Psicologico',
-    description: 'Oferece opiniao tecnica fundamentada sobre questao especifica.',
+    label: 'Parecer Psicológico',
+    description: 'Oferece opinião técnica fundamentada sobre questão específica.',
   },
 };
 
@@ -87,7 +87,7 @@ const SECTIONS: Record<SectionKey, Omit<SectionConfig, 'required'>> = {
   demanda: {
     key: 'demanda',
     label: 'Demanda',
-    placeholder: 'Descreva a demanda ou motivo da solicitacao...',
+    placeholder: 'Descreva a demanda ou motivo da solicitação...',
   },
   procedimentos: {
     key: 'procedimentos',
@@ -96,18 +96,18 @@ const SECTIONS: Record<SectionKey, Omit<SectionConfig, 'required'>> = {
   },
   analise: {
     key: 'analise',
-    label: 'Analise',
-    placeholder: 'Apresente a analise tecnica dos dados coletados...',
+    label: 'Análise',
+    placeholder: 'Apresente a análise técnica dos dados coletados...',
   },
   conclusao: {
     key: 'conclusao',
-    label: 'Conclusao',
-    placeholder: 'Apresente a conclusao ou parecer tecnico...',
+    label: 'Conclusão',
+    placeholder: 'Apresente a conclusão ou parecer técnico...',
   },
   localData: {
     key: 'localData',
     label: 'Local e Data',
-    placeholder: 'Informe o local e data de emissao...',
+    placeholder: 'Informe o local e data de emissão...',
   },
   cid10Codes: {
     key: 'cid10Codes',
@@ -116,8 +116,8 @@ const SECTIONS: Record<SectionKey, Omit<SectionConfig, 'required'>> = {
   },
   period: {
     key: 'period',
-    label: 'Periodo',
-    placeholder: 'Informe o periodo de validade ou abrangencia...',
+    label: 'Período',
+    placeholder: 'Informe o período de validade ou abrangência...',
   },
   validity: {
     key: 'validity',

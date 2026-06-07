@@ -31,12 +31,12 @@ export function HypothesesEmptyState({ onAdd }: HypothesesEmptyStateProps) {
       data-testid="hypotheses-empty-state"
     >
       <ClipboardList className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
-      <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhuma hipotese registrada</h4>
+      <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhuma hipótese registrada</h4>
       <p className="text-text-secondary mb-4 max-w-sm text-sm">
-        Adicione a primeira hipotese ao comecar a trabalhar com este paciente.
+        Adicione a primeira hipótese ao começar a trabalhar com este paciente.
       </p>
       <Button onClick={onAdd} data-testid="hypotheses-empty-cta">
-        Adicionar hipotese
+        Adicionar hipótese
       </Button>
     </div>
   );

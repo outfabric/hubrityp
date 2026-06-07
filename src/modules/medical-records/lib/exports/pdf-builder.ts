@@ -133,9 +133,9 @@ export async function buildProntuarioPdf(input: BuildProntuarioPdfInput): Promis
     size: 'A4',
     margin: 50,
     info: {
-      Title: `Prontuario - ${patient.fullName}`,
+      Title: `Prontuário - ${patient.fullName}`,
       Author: psychologist.name,
-      Subject: 'Exportacao de Prontuario Psicologico',
+      Subject: 'Exportação de Prontuário Psicológico',
     },
   });
 

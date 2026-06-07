@@ -36,7 +36,7 @@ export function SuccessCriteriaEditor({ value, onChange }: SuccessCriteriaEditor
     <div className="flex max-w-[720px] flex-col gap-1.5" data-testid="success-criteria-editor">
       <Label htmlFor={editorId} className="flex items-center gap-1.5">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-        Criterios de sucesso
+        Critérios de sucesso
       </Label>
       <div
         id={editorId}
@@ -49,8 +49,8 @@ export function SuccessCriteriaEditor({ value, onChange }: SuccessCriteriaEditor
         <TiptapEditor
           content={value}
           onChange={onChange}
-          placeholder="Descreva os criterios de sucesso do tratamento..."
-          aria-label="Criterios de sucesso"
+          placeholder="Descreva os critérios de sucesso do tratamento..."
+          aria-label="Critérios de sucesso"
         />
       </div>
     </div>

@@ -130,6 +130,6 @@ test.describe('@prontuario evolution creation happy path', () => {
     await expect(page.getByTestId('version-item-1')).toBeVisible();
 
     // Verify "Versao 1" text is displayed
-    await expect(page.getByTestId('version-item-1')).toContainText('Versao 1');
+    await expect(page.getByTestId('version-item-1')).toContainText('Versão 1');
   });
 });

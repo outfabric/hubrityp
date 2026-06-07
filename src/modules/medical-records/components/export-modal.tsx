@@ -41,12 +41,12 @@ import { Switch } from '@/shared/ui/switch';
 
 const SECTION_ITEMS = [
   { key: 'anamnese', label: 'Anamnese' },
-  { key: 'evolucoes', label: 'Evolucoes' },
-  { key: 'hipoteses', label: 'Hipoteses diagnosticas' },
-  { key: 'planoTerapeutico', label: 'Plano terapeutico' },
+  { key: 'evolucoes', label: 'Evoluções' },
+  { key: 'hipoteses', label: 'Hipóteses diagnósticas' },
+  { key: 'planoTerapeutico', label: 'Plano terapêutico' },
   { key: 'escalas', label: 'Escalas' },
-  { key: 'documentos', label: 'Documentos clinicos' },
-  { key: 'anexosIndex', label: 'Indice de anexos' },
+  { key: 'documentos', label: 'Documentos clínicos' },
+  { key: 'anexosIndex', label: 'Índice de anexos' },
 ] as const;
 
 type SectionKey = (typeof SECTION_ITEMS)[number]['key'];
@@ -75,7 +75,7 @@ const CONFIRMATION_KEYWORD = 'INCLUIR';
  * `exportFiltersSchema.deliveryEmail` (z.string().email().optional()) so
  * the user sees a field-level error BEFORE the Server Action is called.
  */
-const deliveryEmailSchema = z.string().email({ message: 'Email invalido.' });
+const deliveryEmailSchema = z.string().email({ message: 'Email inválido.' });
 
 // ---------------------------------------------------------------------------
 // Props
@@ -193,7 +193,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
     if (trimmedEmail) {
       const emailResult = deliveryEmailSchema.safeParse(trimmedEmail);
       if (!emailResult.success) {
-        setEmailError(emailResult.error.issues[0]?.message ?? 'Email invalido.');
+        setEmailError(emailResult.error.issues[0]?.message ?? 'Email inválido.');
         return;
       }
     }
@@ -214,16 +214,16 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
       })
         .then((result) => {
           if (result.ok) {
-            toast.success('Exportacao solicitada. Voce sera notificado quando estiver pronta.');
+            toast.success('Exportação solicitada. Você será notificado quando estiver pronta.');
             handleOpenChange(false);
           } else if (result.code === 'VALIDATION_ERROR') {
             toast.error('Verifique os campos e tente novamente.');
           } else {
-            toast.error('Erro ao solicitar exportacao. Tente novamente.');
+            toast.error('Erro ao solicitar exportação. Tente novamente.');
           }
         })
         .catch(() => {
-          toast.error('Erro ao solicitar exportacao. Tente novamente.');
+          toast.error('Erro ao solicitar exportação. Tente novamente.');
         });
     });
   }, [
@@ -243,16 +243,16 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
       ? `${format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} - ${format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}`
       : dateRange?.from
         ? `A partir de ${format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })}`
-        : 'Todo o periodo';
+        : 'Todo o período';
 
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-[540px]" data-testid="export-modal">
           <DialogHeader>
-            <DialogTitle>Exportar prontuario</DialogTitle>
+            <DialogTitle>Exportar prontuário</DialogTitle>
             <DialogDescription className="sr-only">
-              Configuracoes para exportacao do prontuario em PDF.
+              Configurações para exportação do prontuário em PDF.
             </DialogDescription>
           </DialogHeader>
 
@@ -260,14 +260,14 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
           <Alert variant="info" data-testid="export-info-alert">
             <Info className="h-4 w-4" aria-hidden="true" />
             <AlertDescription>
-              Esta exportacao sera registrada no log de auditoria. Notas pessoais sao excluidas por
-              padrao.
+              Esta exportação será registrada no log de auditoria. Notas pessoais são excluídas por
+              padrão.
             </AlertDescription>
           </Alert>
 
           {/* Date Range Picker */}
           <div className="space-y-2">
-            <Label>Periodo</Label>
+            <Label>Período</Label>
             <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -306,7 +306,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
                       }}
                       data-testid="export-date-clear"
                     >
-                      Limpar periodo (todo o periodo)
+                      Limpar período (todo o período)
                     </Button>
                   </div>
                 )}
@@ -316,7 +316,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
 
           {/* Sections Checkboxes */}
           <div className="space-y-3">
-            <Label>Secoes incluidas</Label>
+            <Label>Seções incluídas</Label>
             <div className="space-y-2" data-testid="export-sections">
               {SECTION_ITEMS.map((item) => (
                 <div key={item.key} className="flex items-center gap-2">
@@ -345,7 +345,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
               <div className="space-y-0.5">
                 <Label htmlFor="personal-notes-toggle">Incluir notas pessoais</Label>
                 <p className="text-text-secondary text-xs">
-                  Notas pessoais sao de uso exclusivo do(a) psicologo(a).
+                  Notas pessoais são de uso exclusivo do(a) psicólogo(a).
                 </p>
               </div>
               <Switch
@@ -365,7 +365,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
             <Input
               id="delivery-email"
               type="email"
-              placeholder="Para receber exportacoes grandes (>10MB)"
+              placeholder="Para receber exportações grandes (>10MB)"
               value={deliveryEmail}
               onChange={(e) => {
                 setDeliveryEmail(e.target.value);
@@ -403,7 +403,7 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
                   Gerando...
                 </>
               ) : (
-                'Gerar exportacao'
+                'Gerar exportação'
               )}
             </Button>
           </DialogFooter>
@@ -414,15 +414,15 @@ export function ExportModal({ patientId, open, onOpenChange, requestExport }: Ex
       <AlertDialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
         <AlertDialogContent data-testid="personal-notes-confirm-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar inclusao de notas pessoais</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar inclusão de notas pessoais</AlertDialogTitle>
             <AlertDialogDescription>
-              Notas pessoais sao de uso exclusivo do(a) psicologo(a) e nao devem ser entregues ao
+              Notas pessoais são de uso exclusivo do(a) psicólogo(a) e não devem ser entregues ao
               paciente. Digite INCLUIR para confirmar.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="space-y-2">
-            <Label htmlFor="notes-confirmation-input">Confirmacao</Label>
+            <Label htmlFor="notes-confirmation-input">Confirmação</Label>
             <Input
               id="notes-confirmation-input"
               placeholder='Digite "INCLUIR" para confirmar'

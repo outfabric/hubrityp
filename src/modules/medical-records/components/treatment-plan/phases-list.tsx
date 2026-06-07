@@ -122,17 +122,17 @@ export function PhasesList({ phases, onChange }: PhasesListProps) {
               {/* Title + completed row */}
               <div className="flex items-start gap-3">
                 <div className="flex flex-1 flex-col gap-1.5">
-                  <Label htmlFor={titleId}>Titulo da fase</Label>
+                  <Label htmlFor={titleId}>Título da fase</Label>
                   <Input
                     id={titleId}
                     value={phase.title}
                     onChange={(e) => handleUpdate(phase.id, { title: e.target.value })}
-                    placeholder="Ex: Fase de estabilizacao..."
+                    placeholder="Ex: Fase de estabilização..."
                     aria-invalid={hasTitleError}
                   />
                   {hasTitleError && (
                     <span className="text-danger-700 text-xs" role="alert">
-                      Titulo obrigatorio
+                      Título obrigatório
                     </span>
                   )}
                 </div>
@@ -146,14 +146,14 @@ export function PhasesList({ phases, onChange }: PhasesListProps) {
                     }
                   />
                   <Label htmlFor={completedId} className="text-xs">
-                    Concluida
+                    Concluída
                   </Label>
                 </div>
               </div>
 
               {/* Description */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor={descId}>Descricao</Label>
+                <Label htmlFor={descId}>Descrição</Label>
                 <Textarea
                   id={descId}
                   value={phase.description}
@@ -204,7 +204,7 @@ export function PhasesList({ phases, onChange }: PhasesListProps) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Remover fase</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja remover esta fase? Esta acao nao pode ser desfeita.
+                        Tem certeza que deseja remover esta fase? Esta ação não pode ser desfeita.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

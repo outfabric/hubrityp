@@ -185,7 +185,7 @@ test.describe('@prontuario scales', () => {
       });
       await expect(patientPage.getByText('Obrigado!')).toBeVisible();
       await expect(
-        patientPage.getByText('Suas respostas foram enviadas ao seu psicologo.'),
+        patientPage.getByText('Suas respostas foram enviadas ao seu psicólogo.'),
       ).toBeVisible();
 
       // Close the patient context
@@ -202,7 +202,7 @@ test.describe('@prontuario scales', () => {
       // 15. Assert the score appeared in the ScalesTab (PHQ-9 summary card)
       const summaryCard = page.getByTestId('scale-summary-card-phq9');
       await expect(summaryCard).toBeVisible({ timeout: 15_000 });
-      await expect(summaryCard).toContainText('Pontuacao: 9');
+      await expect(summaryCard).toContainText('Pontuação: 9');
     });
   });
 

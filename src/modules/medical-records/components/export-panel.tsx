@@ -41,7 +41,7 @@ export function ExportPanel({ patientId, requestExport }: ExportPanelProps) {
         data-testid="export-prontuario-button"
       >
         <Download className="h-4 w-4" aria-hidden="true" />
-        Exportar prontuario
+        Exportar prontuário
       </Button>
 
       <ExportModal

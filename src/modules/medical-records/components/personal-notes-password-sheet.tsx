@@ -79,8 +79,8 @@ export function PersonalNotesPasswordSheet({
           </SheetTitle>
           <SheetDescription>
             {mode === 'set'
-              ? 'Adicione uma senha para proteger suas notas pessoais neste prontuario.'
-              : 'Remova a senha de protecao das notas pessoais.'}
+              ? 'Adicione uma senha para proteger suas notas pessoais neste prontuário.'
+              : 'Remova a senha de proteção das notas pessoais.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -128,10 +128,10 @@ function SetPasswordForm({ patientId, setPassword, onSuccess }: SetPasswordFormP
 
   const validate = useCallback((): string | null => {
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      return `A senha deve ter no minimo ${MIN_PASSWORD_LENGTH} caracteres.`;
+      return `A senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres.`;
     }
     if (newPassword !== confirmPassword) {
-      return 'As senhas nao coincidem.';
+      return 'As senhas não coincidem.';
     }
     return null;
   }, [newPassword, confirmPassword]);
@@ -171,7 +171,7 @@ function SetPasswordForm({ patientId, setPassword, onSuccess }: SetPasswordFormP
       {/* No-recovery warning */}
       <Alert variant="default" data-testid="password-no-recovery-warning">
         <AlertDescription>
-          Se voce esquecer esta senha, nao sera possivel recupera-la automaticamente.
+          Se você esquecer esta senha, não será possível recuperá-la automaticamente.
         </AlertDescription>
       </Alert>
 
@@ -185,7 +185,7 @@ function SetPasswordForm({ patientId, setPassword, onSuccess }: SetPasswordFormP
             setNewPassword(e.target.value);
             setError(null);
           }}
-          placeholder="Minimo 6 caracteres"
+          placeholder="Mínimo 6 caracteres"
           disabled={submitting}
           data-testid="password-new-input"
         />

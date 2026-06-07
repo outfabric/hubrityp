@@ -118,7 +118,7 @@ export async function remindMissingEvolutions(deps: RemindMissingEvolutionDeps):
     await notify(db, {
       userId: match.userId,
       type: 'missing_evolution',
-      title: `Sessao de ${sessionDate} com ${match.patientFirstName} ainda nao possui evolucao`,
+      title: `Sessão de ${sessionDate} com ${match.patientFirstName} ainda não possui evolução`,
       actionUrl: `/pacientes/${match.patientId}/prontuario/evolucoes/nova?sessionId=${match.sessionId}`,
     });
 

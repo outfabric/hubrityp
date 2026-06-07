@@ -23,7 +23,7 @@ const STATUS_BADGE_MAP: Record<
   HypothesisStatus,
   { variant: 'warning' | 'success' | 'neutral'; label: string }
 > = {
-  investigating: { variant: 'warning', label: 'Em investigacao' },
+  investigating: { variant: 'warning', label: 'Em investigação' },
   confirmed: { variant: 'success', label: 'Confirmada' },
   discarded: { variant: 'neutral', label: 'Descartada' },
 };
@@ -94,7 +94,7 @@ export function HypothesisCard({ hypothesis, onEdit, onConfirm, onDiscard }: Hyp
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Opcoes da hipotese"
+                aria-label="Opções da hipótese"
                 data-testid={`hypothesis-card-menu-${id}`}
               >
                 <MoreHorizontal className="h-4 w-4" />

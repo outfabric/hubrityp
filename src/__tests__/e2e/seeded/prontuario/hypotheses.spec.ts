@@ -58,7 +58,7 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     // 3. Verify the educational banner is visible
     await expect(page.getByTestId('hypotheses-educational-banner')).toBeVisible();
     await expect(page.getByTestId('hypotheses-educational-banner')).toContainText(
-      'Hipotese diagnostica em psicologia tem natureza de orientacao clinica',
+      'Hipótese diagnóstica em psicologia tem natureza de orientação clínica',
     );
 
     // 4. Click "Adicionar hipotese" button
@@ -99,7 +99,7 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     await page.getByTestId('hypothesis-form-submit').click();
 
     // 11. Wait for success toast
-    await expect(page.getByText('Hipotese criada com sucesso.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Hipótese criada com sucesso.')).toBeVisible({ timeout: 10_000 });
 
     // 12. Sheet should close and card should appear in list
     await expect(page.getByTestId('hypothesis-form-sheet')).not.toBeVisible();
@@ -115,7 +115,7 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
       hasText: 'F32.0',
     });
     await expect(cidCard).toBeVisible();
-    await expect(cidCard.getByText('Em investigacao')).toBeVisible();
+    await expect(cidCard.getByText('Em investigação')).toBeVisible();
   });
 
   test('confirms a hypothesis via dropdown menu and badge changes to Confirmada', async ({
@@ -151,7 +151,7 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     await expect(card).toBeVisible({ timeout: 5_000 });
 
     // 3. Verify it currently shows "Em investigacao" badge
-    await expect(card.getByText('Em investigacao')).toBeVisible();
+    await expect(card.getByText('Em investigação')).toBeVisible();
 
     // 4. Open the dropdown menu on the card
     await page.getByTestId(`hypothesis-card-menu-${hypothesisId}`).click();
@@ -160,11 +160,11 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     await page.getByTestId(`hypothesis-action-confirm-${hypothesisId}`).click();
 
     // 6. Wait for success toast
-    await expect(page.getByText('Hipotese confirmada.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Hipótese confirmada.')).toBeVisible({ timeout: 10_000 });
 
     // 7. Assert badge changes to "Confirmada" (success variant)
     await expect(card.getByText('Confirmada')).toBeVisible();
-    await expect(card.getByText('Em investigacao')).not.toBeVisible();
+    await expect(card.getByText('Em investigação')).not.toBeVisible();
   });
 
   test('adds a descriptive hypothesis without CID-10 and verifies card appears', async ({
@@ -194,7 +194,7 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
     await page.getByTestId('hypothesis-form-submit').click();
 
     // 6. Wait for success toast
-    await expect(page.getByText('Hipotese criada com sucesso.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Hipótese criada com sucesso.')).toBeVisible({ timeout: 10_000 });
 
     // 7. Sheet should close
     await expect(page.getByTestId('hypothesis-form-sheet')).not.toBeVisible();
@@ -211,6 +211,6 @@ test.describe('@prontuario diagnostic hypotheses tab', () => {
       hasText: descriptionText,
     });
     await expect(ourCard).toBeVisible();
-    await expect(ourCard.getByText('Em investigacao')).toBeVisible();
+    await expect(ourCard.getByText('Em investigação')).toBeVisible();
   });
 });

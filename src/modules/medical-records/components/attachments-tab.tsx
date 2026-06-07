@@ -36,7 +36,7 @@ const FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'exam', label: 'Exame externo' },
   { value: 'image', label: 'Imagem' },
   { value: 'drawing', label: 'Desenho' },
-  { value: 'audio', label: 'Audio' },
+  { value: 'audio', label: 'Áudio' },
   { value: 'other', label: 'Outro' },
 ];
 
@@ -167,7 +167,7 @@ export function AttachmentsTab({
           setPreviewAttachmentId(attachmentId);
         }
       } else {
-        toast.error('Nao foi possivel gerar a visualizacao. Tente novamente.');
+        toast.error('Não foi possível gerar a visualização. Tente novamente.');
       }
     },
     [attachments, getAttachmentSignedUrl, previewAttachmentId],
@@ -185,7 +185,7 @@ export function AttachmentsTab({
     setDeleting(false);
 
     if (result.ok) {
-      toast.success('Arquivo removido do prontuario.');
+      toast.success('Arquivo removido do prontuário.');
       // Close preview if the deleted attachment was being previewed
       if (previewAttachmentId === deleteTarget) {
         setPreviewUrl(null);
@@ -260,7 +260,7 @@ export function AttachmentsTab({
                   {previewMimeType === 'application/pdf' ? (
                     <iframe
                       src={previewUrl}
-                      title={`Visualizacao de ${attachment.displayName}`}
+                      title={`Visualização de ${attachment.displayName}`}
                       className="h-[500px] w-full"
                     />
                   ) : previewMimeType?.startsWith('image/') ? (
@@ -294,7 +294,7 @@ export function AttachmentsTab({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir arquivo</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza? O arquivo sera removido do prontuario (mantemos uma copia auditavel por 5
+              Tem certeza? O arquivo será removido do prontuário (mantemos uma cópia auditável por 5
               anos).
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -346,7 +346,7 @@ function AttachmentsEmptyState({ onUpload }: AttachmentsEmptyStateProps) {
       <Upload className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
       <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhum anexo</h4>
       <p className="text-text-secondary mb-4 max-w-sm text-sm">
-        Adicione documentos, imagens ou audios para manter o prontuario do paciente completo.
+        Adicione documentos, imagens ou áudios para manter o prontuário do paciente completo.
       </p>
       <Button onClick={onUpload} data-testid="attachments-empty-cta">
         Anexar arquivo

@@ -192,8 +192,8 @@ export function PersonalNotesTab({
       >
         <Lock className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
         <p className="text-sm">
-          Estas notas sao pessoais do(a) psicologo(a) e NAO fazem parte do prontuario oficial que o
-          paciente pode acessar (Resolucao CFP 001/2009, art. 5).
+          Estas notas são pessoais do(a) psicólogo(a) e NÃO fazem parte do prontuário oficial que o
+          paciente pode acessar (Resolução CFP 001/2009, art. 5).
         </p>
       </div>
 
@@ -258,8 +258,8 @@ export function PersonalNotesTab({
             >
               <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <p>
-                Estas notas NAO entram na exportacao padrao. Para incluir explicitamente, marque a
-                opcao ao exportar.
+                Estas notas NÃO entram na exportação padrão. Para incluir explicitamente, marque a
+                opção ao exportar.
               </p>
             </div>
           </div>

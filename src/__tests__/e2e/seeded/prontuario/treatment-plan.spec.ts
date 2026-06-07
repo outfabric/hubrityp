@@ -69,7 +69,7 @@ test.describe('@prontuario treatment plan tab', () => {
 
     // 3. Verify empty state is displayed
     await expect(page.getByTestId('treatment-plan-empty-state')).toBeVisible();
-    await expect(page.getByText('Plano terapeutico ainda nao criado')).toBeVisible();
+    await expect(page.getByText('Plano terapêutico ainda não criado')).toBeVisible();
 
     // 4. Click "Criar plano terapeutico" CTA
     await page.getByTestId('treatment-plan-create-cta').click();
@@ -117,7 +117,7 @@ test.describe('@prontuario treatment plan tab', () => {
     // 10. Wait for auto-save indicator to show "Salvo as HH:MM"
     //     Auto-save debounce is 10s — wait with generous timeout.
     const autoSaveIndicator = page.getByTestId('auto-save-indicator');
-    await expect(autoSaveIndicator).toContainText(/Salvo as \d{2}:\d{2}/, { timeout: 30_000 });
+    await expect(autoSaveIndicator).toContainText(/Salvo às \d{2}:\d{2}/, { timeout: 30_000 });
 
     // 11. Reload page and re-navigate to Plano tab to verify persistence
     await page.reload();
@@ -236,7 +236,7 @@ test.describe('@prontuario treatment plan tab', () => {
 
     // 5. Wait for auto-save indicator to show "Salvo as HH:MM" (10s debounce + save)
     const autoSaveIndicator = page.getByTestId('auto-save-indicator');
-    await expect(autoSaveIndicator).toContainText(/Salvo as \d{2}:\d{2}/, { timeout: 30_000 });
+    await expect(autoSaveIndicator).toContainText(/Salvo às \d{2}:\d{2}/, { timeout: 30_000 });
 
     // 6. Open version history sheet
     await page.getByTestId('treatment-plan-version-history-trigger').click();
@@ -258,7 +258,7 @@ test.describe('@prontuario treatment plan tab', () => {
     await expect(versionItem2).toContainText('v2');
 
     // 8. Click Eye on v1 to view read-only snapshot
-    const eyeButtonV1 = versionItem1.getByRole('button', { name: 'Ver versao 1' });
+    const eyeButtonV1 = versionItem1.getByRole('button', { name: 'Ver versão 1' });
     await eyeButtonV1.click();
 
     // 9. Assert the v1 snapshot shows the original goal description

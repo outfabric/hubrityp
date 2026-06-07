@@ -35,7 +35,7 @@ export function DocumentsEmptyState({ onAdd }: DocumentsEmptyStateProps) {
       <FileText className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
       <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhum documento</h4>
       <p className="text-text-secondary mb-4 max-w-sm text-sm">
-        Crie declaracoes, atestados, laudos e outros documentos formais.
+        Crie declarações, atestados, laudos e outros documentos formais.
       </p>
       <Button onClick={onAdd} data-testid="documents-empty-cta">
         Novo documento

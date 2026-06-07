@@ -17,7 +17,7 @@ import { z } from 'zod';
  */
 export const goalSchema = z.object({
   id: z.string().uuid(),
-  description: z.string().min(1, 'Descricao obrigatoria').max(5_000),
+  description: z.string().min(1, 'Descrição obrigatória').max(5_000),
   targetDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')
@@ -30,7 +30,7 @@ export const goalSchema = z.object({
  */
 export const phaseSchema = z.object({
   id: z.string().uuid(),
-  title: z.string().min(1, 'Titulo obrigatorio').max(500),
+  title: z.string().min(1, 'Título obrigatório').max(500),
   description: z.string().max(5_000),
   order: z.number().int().nonnegative(),
   completed: z.boolean(),
@@ -44,7 +44,7 @@ export const phaseSchema = z.object({
  * Input for creating or updating a treatment plan (upsert).
  */
 export const upsertTreatmentPlanInputSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
   goals: z.array(goalSchema).max(100),
   phases: z.array(phaseSchema).max(100),
   resources: z.string().max(50_000).nullable(),
@@ -55,14 +55,14 @@ export const upsertTreatmentPlanInputSchema = z.object({
  * Input for fetching a treatment plan by patient.
  */
 export const getTreatmentPlanInputSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
 });
 
 /**
  * Input for listing treatment plan versions.
  */
 export const listTreatmentPlanVersionsInputSchema = z.object({
-  planId: z.string().uuid({ message: 'planId deve ser um UUID valido.' }),
+  planId: z.string().uuid({ message: 'planId deve ser um UUID válido.' }),
 });
 
 // ---------------------------------------------------------------------------

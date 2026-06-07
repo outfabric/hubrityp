@@ -311,7 +311,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 7. Assert: toast appears with success message
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 8. Navigate to exportacoes page via the "Ver exportacoes" link
     await page.getByTestId('prontuario-exports-link').click();
@@ -412,7 +412,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 12. Wait for the success toast
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 13. Verify the export row in the DB includes personal notes in filters.
     //     PDF content verification of personal notes inclusion/exclusion is
@@ -489,7 +489,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 5. Wait for the success toast
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 6. Verify the export row in the DB has a date range filter
     //    covering January 2026 (which excludes our March 2026 evolutions)

@@ -167,7 +167,7 @@ test.describe('@prontuario clinical documents', () => {
       // ensure the latest content is persisted.
       await page.getByTestId('document-save-draft-button').click();
       // Wait for the auto-save indicator to confirm the save completed
-      await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo as/i, {
+      await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo às/i, {
         timeout: 15_000,
       });
 
@@ -207,7 +207,7 @@ test.describe('@prontuario clinical documents', () => {
 
       // 24. Verify the immutability notice is shown
       await expect(
-        page.getByText('Este documento foi finalizado e nao pode ser editado.'),
+        page.getByText('Este documento foi finalizado e não pode ser editado.'),
       ).toBeVisible();
     });
 
@@ -359,7 +359,7 @@ test.describe('@prontuario clinical documents', () => {
 
       // Verify the immutability notice
       await expect(
-        page.getByText('Este documento foi finalizado e nao pode ser editado.'),
+        page.getByText('Este documento foi finalizado e não pode ser editado.'),
       ).toBeVisible();
 
       // Verify NO editable inputs exist (no contenteditable, no input fields for sections)

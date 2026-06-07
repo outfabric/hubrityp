@@ -248,13 +248,13 @@ export function TreatmentPlanTab({
       >
         <Target className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
         <h4 className="text-text-primary mb-1 text-lg font-semibold">
-          Plano terapeutico ainda nao criado
+          Plano terapêutico ainda não criado
         </h4>
         <p className="text-text-secondary mb-4 max-w-sm text-sm">
-          Comece definindo objetivos para guiar o trabalho terapeutico.
+          Comece definindo objetivos para guiar o trabalho terapêutico.
         </p>
         <Button onClick={handleCreate} data-testid="treatment-plan-create-cta">
-          Criar plano terapeutico
+          Criar plano terapêutico
         </Button>
       </div>
     );
@@ -266,7 +266,7 @@ export function TreatmentPlanTab({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-text-primary text-xl font-semibold">Plano terapeutico</h2>
+          <h2 className="text-text-primary text-xl font-semibold">Plano terapêutico</h2>
           <VersionHistorySheet
             versions={versions}
             open={versionHistoryOpen}
@@ -311,7 +311,7 @@ export function TreatmentPlanTab({
       {/* Recursos terapeuticos */}
       <Card data-testid="treatment-plan-resources-card">
         <CardHeader>
-          <CardTitle>Recursos terapeuticos</CardTitle>
+          <CardTitle>Recursos terapêuticos</CardTitle>
         </CardHeader>
         <CardContent>
           <ResourcesEditor value={content.resources} onChange={handleResourcesChange} />
@@ -321,7 +321,7 @@ export function TreatmentPlanTab({
       {/* Criterios de sucesso */}
       <Card data-testid="treatment-plan-criteria-card">
         <CardHeader>
-          <CardTitle>Criterios de sucesso</CardTitle>
+          <CardTitle>Critérios de sucesso</CardTitle>
         </CardHeader>
         <CardContent>
           <SuccessCriteriaEditor
