@@ -102,7 +102,7 @@ test.describe('@whatsapp-inbox risk alert flow', () => {
     await expect(page.getByText(RISK_PATIENT.name)).toBeVisible({ timeout: 10000 });
 
     // Verify AlertTriangle icon is visible next to the patient name
-    const riskIcon = page.locator('[aria-label="Conteudo de risco"]');
+    const riskIcon = page.locator('[aria-label="Conteúdo de risco"]');
     await expect(riskIcon.first()).toBeVisible({ timeout: 5000 });
 
     // Click on the conversation
@@ -112,13 +112,13 @@ test.describe('@whatsapp-inbox risk alert flow', () => {
     await conversationRow.click();
 
     // Wait for thread — scope to <main>
-    const messageLog = page.locator('main').getByLabel('Historico de mensagens');
+    const messageLog = page.locator('main').getByLabel('Histórico de mensagens');
     await expect(messageLog).toBeVisible({ timeout: 10000 });
 
     // Verify the danger banner is visible in the thread
     const dangerBanner = page.locator('main [aria-live="assertive"]');
     await expect(dangerBanner).toBeVisible();
-    await expect(dangerBanner).toContainText('conteudo de risco');
+    await expect(dangerBanner).toContainText('conteúdo de risco');
 
     // Verify the risk-flagged message is visible in the thread
     const riskMessage = messageLog.getByText('Eu nao aguento mais, quero me matar');

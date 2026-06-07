@@ -119,7 +119,7 @@ test.describe('@whatsapp-inbox send reply inside 24h window', () => {
     const main = page.locator('main');
 
     // Wait for thread
-    const messageLog = main.getByLabel('Historico de mensagens');
+    const messageLog = main.getByLabel('Histórico de mensagens');
     await expect(messageLog).toBeVisible({ timeout: 10000 });
 
     // Verify Textarea is enabled (inside 24h window — not readonly)
@@ -161,7 +161,7 @@ test.describe('@whatsapp-inbox send reply inside 24h window', () => {
 
     // Wait for thread (re-scope to main)
     const main2 = page.locator('main');
-    const messageLog2 = main2.getByLabel('Historico de mensagens');
+    const messageLog2 = main2.getByLabel('Histórico de mensagens');
     await expect(messageLog2).toBeVisible({ timeout: 10000 });
 
     // Verify the new outbound bubble appears

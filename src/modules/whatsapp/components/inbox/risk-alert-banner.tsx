@@ -37,8 +37,8 @@ export function RiskAlertBanner({ hasRisk }: RiskAlertBannerProps) {
     <Alert variant="danger" className="border-danger-500 border-l-4" aria-live="assertive">
       <AlertTriangle size={24} />
       <AlertDescription>
-        Mensagem com conteudo de risco detectado. Atencao: avalie pessoalmente. O sistema NAO
-        substitui escuta clinica.{' '}
+        Mensagem com conteúdo de risco detectado. Atenção: avalie pessoalmente. O sistema NÃO
+        substitui escuta clínica.{' '}
         <a href="#" className="text-danger-700 underline-offset-2 hover:underline">
           Saiba mais
         </a>

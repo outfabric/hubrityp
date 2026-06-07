@@ -14,10 +14,10 @@ import {
  *   2. Navigate to /configuracoes/lembretes/historico.
  *   3. Verify the page title "Historico de Lembretes".
  *   4. Verify summary cards are visible and show non-zero values.
- *   5. Change the period filter to "Mes anterior".
+ *   5. Change the period filter to "Mês anterior".
  *   6. Verify the "sent" card updates (should show 0 since all messages
  *      are current-month only).
- *   7. Switch back to "Mes corrente" to verify cards restore.
+ *   7. Switch back to "Mês corrente" to verify cards restore.
  *
  * Prerequisites:
  *   - storageState provides an authenticated psychologist.
@@ -116,18 +116,18 @@ test.describe('@whatsapp-inbox history and analytics dashboard', () => {
     const initialSentCount = sentCountMatch ? parseInt(sentCountMatch[1]!, 10) : 0;
     expect(initialSentCount).toBeGreaterThanOrEqual(4);
 
-    // Change period to "Mes anterior"
+    // Change period to "Mês anterior"
     const periodSelect = page.getByTestId('analytics-period-select');
     await periodSelect.click();
-    await page.getByRole('option', { name: 'Mes anterior' }).click();
+    await page.getByRole('option', { name: 'Mês anterior' }).click();
 
-    // Wait for the sent card to update — "Mes anterior" should show 0
+    // Wait for the sent card to update — "Mês anterior" should show 0
     // since all our seeded messages are within the current month.
     await expect(sentCard).toContainText('0', { timeout: 10000 });
 
-    // Change back to "Mes corrente" and verify the count is >= 4 again
+    // Change back to "Mês corrente" and verify the count is >= 4 again
     await periodSelect.click();
-    await page.getByRole('option', { name: 'Mes corrente' }).click();
+    await page.getByRole('option', { name: 'Mês corrente' }).click();
 
     // Wait for the card to reload with a non-zero value
     await expect(async () => {

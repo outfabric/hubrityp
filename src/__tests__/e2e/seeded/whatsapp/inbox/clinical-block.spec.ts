@@ -97,7 +97,7 @@ test.describe('@whatsapp-inbox clinical content blocker', () => {
     await conversationRow.click();
 
     // Wait for thread
-    const messageLog = page.locator('main').getByLabel('Historico de mensagens');
+    const messageLog = page.locator('main').getByLabel('Histórico de mensagens');
     await expect(messageLog).toBeVisible({ timeout: 10000 });
 
     // Close the mobile Sheet overlay that was opened when we clicked the
@@ -124,7 +124,7 @@ test.describe('@whatsapp-inbox clinical content blocker', () => {
     // Verify the warning Alert appears
     const warningAlert = main
       .getByText('conteudo parece ser clinico')
-      .or(main.getByText('Esse conteudo parece ser clinico'));
+      .or(main.getByText('Esse conteúdo parece ser clínico'));
     await expect(warningAlert).toBeVisible({ timeout: 5000 });
 
     // Verify the Send button is disabled

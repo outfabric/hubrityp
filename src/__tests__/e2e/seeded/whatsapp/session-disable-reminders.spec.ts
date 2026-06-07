@@ -5,14 +5,14 @@ import { isoDate, nowInBrt, tomorrowInBrt } from '../_shared/brt-date';
 import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
- * @whatsapp -- Session creation with "Nao enviar lembretes" checkbox E2E test.
+ * @whatsapp -- Session creation with "Não enviar lembretes" checkbox E2E test.
  *
  * Flow:
  *   1. Navigate to /agenda
  *   2. Click "+ Agendar" to open session form modal
  *   3. Search and select a patient with phone (eligible for WhatsApp reminders)
  *   4. Pick tomorrow's date and 18:00 time
- *   5. Check the "Nao enviar lembretes WhatsApp para esta sessao" checkbox
+ *   5. Check the "Não enviar lembretes WhatsApp para esta sessão" checkbox
  *   6. Save the session
  *   7. Verify the session was created with reminders_disabled=true by navigating
  *      to the session detail and verifying the edit modal shows the checkbox checked
@@ -78,12 +78,12 @@ test.describe('@whatsapp session disable reminders', () => {
     await durationSelect.click();
     await page.getByRole('option', { name: '50 min' }).click();
 
-    // The "Nao enviar lembretes" checkbox should be visible because the
+    // The "Não enviar lembretes" checkbox should be visible because the
     // patient has a phone number and has not opted out
     const remindersDisabledSection = page.getByTestId('session-form-reminders-disabled');
     await expect(remindersDisabledSection).toBeVisible({ timeout: 5000 });
 
-    // Check the "Nao enviar lembretes" checkbox
+    // Check the "Não enviar lembretes" checkbox
     const remindersCheckbox = remindersDisabledSection.locator('#session-reminders-disabled');
     await remindersCheckbox.click();
 

@@ -100,7 +100,7 @@ export function RiskKeywordConfig({ initialKeywords, onSave }: RiskKeywordConfig
               aria-label="Palavras-chave de risco, uma por linha"
             />
             <p className="text-text-tertiary text-[13px]">
-              Heuristica — nunca substitui escuta clinica.
+              Heurística — nunca substitui escuta clínica.
             </p>
           </div>
 

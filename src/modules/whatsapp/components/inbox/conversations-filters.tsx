@@ -31,7 +31,7 @@ const DEBOUNCE_MS = 300;
 /**
  * Filter bar for the inbox conversation list.
  *
- * Renders underline Tabs ("Todas" | "Nao lidas" | "Risco") and a debounced
+ * Renders underline Tabs ("Todas" | "Não lidas" | "Risco") and a debounced
  * search input. Mobile: tabs stack above search (vertical).
  */
 export function ConversationsFilters({
@@ -73,7 +73,7 @@ export function ConversationsFilters({
       <Tabs value={activeFilter} onValueChange={(value) => onFilterChange(value as InboxFilter)}>
         <TabsList>
           <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="unread">Nao lidas</TabsTrigger>
+          <TabsTrigger value="unread">Não lidas</TabsTrigger>
           <TabsTrigger value="risk">Risco</TabsTrigger>
         </TabsList>
       </Tabs>

@@ -47,16 +47,16 @@ function useMediaQuery(query: string): boolean {
 const step1Schema = z.object({
   phone: z
     .string()
-    .min(1, { message: 'Telefone e obrigatorio.' })
+    .min(1, { message: 'Telefone é obrigatório.' })
     .regex(/^\+[1-9]\d{6,14}$/, {
-      message: 'Telefone invalido. Use o formato +55 DD NNNNN-NNNN.',
+      message: 'Telefone inválido. Use o formato +55 DD NNNNN-NNNN.',
     }),
   displayName: z
     .string()
-    .min(1, { message: 'Nome de exibicao e obrigatorio.' })
-    .max(120, { message: 'Nome de exibicao deve ter no maximo 120 caracteres.' }),
+    .min(1, { message: 'Nome de exibição é obrigatório.' })
+    .max(120, { message: 'Nome de exibição deve ter no máximo 120 caracteres.' }),
   consent: z.literal(true, {
-    message: 'Voce precisa confirmar o consentimento LGPD para continuar.',
+    message: 'Você precisa confirmar o consentimento LGPD para continuar.',
   }),
 });
 
@@ -65,7 +65,7 @@ type Step1Values = z.infer<typeof step1Schema>;
 const step2Schema = z.object({
   verificationCode: z
     .string()
-    .regex(/^\d{6}$/, { message: 'Codigo de verificacao deve ter 6 digitos.' }),
+    .regex(/^\d{6}$/, { message: 'Código de verificação deve ter 6 dígitos.' }),
 });
 
 type Step2Values = z.infer<typeof step2Schema>;
@@ -212,7 +212,7 @@ export function ConnectWhatsappDialog({
               }
             }
           } else {
-            toast.error(result.message ?? 'Erro ao iniciar conexao. Tente novamente.');
+            toast.error(result.message ?? 'Erro ao iniciar conexão. Tente novamente.');
           }
         }
       });
@@ -238,7 +238,7 @@ export function ConnectWhatsappDialog({
               message: result.fieldErrors.verificationCode[0],
             });
           } else {
-            toast.error(result.message ?? 'Erro ao verificar codigo. Tente novamente.');
+            toast.error(result.message ?? 'Erro ao verificar código. Tente novamente.');
           }
         }
       });
@@ -256,9 +256,9 @@ export function ConnectWhatsappDialog({
 
       if (result.ok) {
         setSenderSid(result.senderSid);
-        toast.success('Codigo reenviado com sucesso.');
+        toast.success('Código reenviado com sucesso.');
       } else {
-        toast.error(result.message ?? 'Erro ao reenviar codigo. Tente novamente.');
+        toast.error(result.message ?? 'Erro ao reenviar código. Tente novamente.');
       }
     });
   }, [onStartConnection, phoneForStep2, displayNameForStep2]);
@@ -305,7 +305,7 @@ export function ConnectWhatsappDialog({
           name="displayName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome de exibicao</FormLabel>
+              <FormLabel>Nome de exibição</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -334,7 +334,7 @@ export function ConnectWhatsappDialog({
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel className="text-text-secondary text-[13px] font-normal">
-                  Confirmo que tenho base legal para enviar lembretes de sessao aos meus pacientes
+                  Confirmo que tenho base legal para enviar lembretes de sessão aos meus pacientes
                   via WhatsApp (LGPD art. 7, II e IX)
                 </FormLabel>
                 <FormMessage />
@@ -374,7 +374,7 @@ export function ConnectWhatsappDialog({
         data-testid="connect-whatsapp-step2-form"
       >
         <p className="text-text-secondary text-[15px]">
-          Enviamos um codigo de verificacao para o numero informado.
+          Enviamos um código de verificação para o número informado.
         </p>
 
         <FormField
@@ -382,7 +382,7 @@ export function ConnectWhatsappDialog({
           name="verificationCode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Codigo de verificacao</FormLabel>
+              <FormLabel>Código de verificação</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -407,7 +407,7 @@ export function ConnectWhatsappDialog({
           data-testid="connect-whatsapp-resend-button"
         >
           {isResending && <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />}
-          Reenviar codigo
+          Reenviar código
         </Button>
 
         <DialogFooter>

@@ -76,7 +76,7 @@ test.describe('@whatsapp reminder settings', () => {
     await page.getByTestId('reminder-settings-save').click();
 
     // Verify success toast
-    await expect(page.getByText('Configuracoes de lembretes salvas')).toBeVisible({
+    await expect(page.getByText('Configurações de lembretes salvas')).toBeVisible({
       timeout: 10000,
     });
 

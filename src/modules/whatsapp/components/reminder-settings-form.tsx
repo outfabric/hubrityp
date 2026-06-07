@@ -25,14 +25,14 @@ import { Switch } from '@/shared/ui/switch';
 // ---------------------------------------------------------------------------
 
 const EARLY_REMINDER_OPTIONS = [
-  { value: 'none', label: 'Nao enviar', hours: null },
+  { value: 'none', label: 'Não enviar', hours: null },
   { value: '48', label: '48 horas antes', hours: 48 },
   { value: '24', label: '24 horas antes', hours: 24 },
   { value: '12', label: '12 horas antes', hours: 12 },
 ] as const;
 
 const FINAL_REMINDER_OPTIONS = [
-  { value: 'none', label: 'Nao enviar', hours: null },
+  { value: 'none', label: 'Não enviar', hours: null },
   { value: '2', label: '2 horas antes', hours: 2 },
   { value: '1', label: '1 hora antes', hours: 1 },
   { value: '0.5', label: '30 minutos antes', hours: 0.5 },
@@ -112,10 +112,10 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
       const result = await saveReminderSettings(data);
 
       if (result.ok) {
-        toast.success('Configuracoes de lembretes salvas');
+        toast.success('Configurações de lembretes salvas');
       } else if (result.error === 'invalid_input' && 'fieldErrors' in result) {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {
-          const msg = messages[0] ?? 'Campo invalido.';
+          const msg = messages[0] ?? 'Campo inválido.';
           form.setError(field as keyof ReminderSettingsInput, { message: msg });
         }
       } else {
@@ -162,7 +162,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
               ))}
             </RadioGroup>
             <p className="text-text-tertiary text-sm">
-              Enviado com antecedencia para o paciente confirmar presenca
+              Enviado com antecedência para o paciente confirmar presença
             </p>
           </div>
 
@@ -193,7 +193,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
                 </div>
               ))}
             </RadioGroup>
-            <p className="text-text-tertiary text-sm">Ultimo lembrete antes da sessao</p>
+            <p className="text-text-tertiary text-sm">Último lembrete antes da sessão</p>
           </div>
 
           <Separator />
@@ -201,7 +201,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
           {/* ---- Section 3: Video link timing ---- */}
           <div className="space-y-2">
             <Label htmlFor="video-link-minutes" className="text-[15px] font-normal">
-              Aviso de link de video (sessoes online)
+              Aviso de link de vídeo (sessões online)
             </Label>
             <Select
               value={String(form.watch('video_link_minutes'))}
@@ -223,7 +223,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
               </SelectContent>
             </Select>
             <p className="text-text-tertiary text-sm">
-              Envia o link da sala virtual antes da sessao online
+              Envia o link da sala virtual antes da sessão online
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
               </Label>
             </div>
             <p className="text-text-tertiary text-sm">
-              Por padrao, lembretes que cairiam entre 22h e 7h sao enviados as 7h da manha
+              Por padrão, lembretes que cairiam entre 22h e 7h são enviados às 7h da manhã
             </p>
           </div>
 

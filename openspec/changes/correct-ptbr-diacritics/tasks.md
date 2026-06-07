@@ -29,10 +29,10 @@
 
 ## 5. WhatsApp — display copy + coupled tests
 
-- [ ] 5.1 Correct display copy under `src/modules/whatsapp/components/**` (inbox, analytics dashboard, connect dialog, health banner, reminder settings)
-- [ ] 5.2 Update coupled e2e assertions: `whatsapp/inbox/inbox-list-and-open.spec.ts`, `whatsapp/inbox/risk-alert-flow.spec.ts`, `whatsapp/session-disable-reminders.spec.ts`
-- [ ] 5.3 Update coupled integration/unit assertions: `integration/whatsapp/inbox/risk-flow.int.test.ts`, `unit/.../lib/inbox/detect-risk-keywords.test.ts` (only if asserting on display copy, not on stored keyword tokens)
-- [ ] 5.4 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 5.1 Correct display copy under `src/modules/whatsapp/components/**` (inbox, analytics dashboard, connect dialog, health banner, reminder settings)
+- [x] 5.2 Update coupled e2e assertions: `whatsapp/inbox/inbox-list-and-open.spec.ts`, `whatsapp/inbox/risk-alert-flow.spec.ts`, `whatsapp/session-disable-reminders.spec.ts`
+- [x] 5.3 Update coupled integration/unit assertions: `integration/whatsapp/inbox/risk-flow.int.test.ts`, `unit/.../lib/inbox/detect-risk-keywords.test.ts` (only if asserting on display copy, not on stored keyword tokens)
+- [x] 5.4 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 6. Sessions — display copy + coupled tests
 

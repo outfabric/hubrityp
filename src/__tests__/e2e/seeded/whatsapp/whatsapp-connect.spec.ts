@@ -6,7 +6,7 @@ import { readSeedState, STORAGE_STATE_PATH } from '../setup/seed-state';
  *
  * Exercises both UI states of the WhatsApp integration page:
  *
- *   Phase 1 — Disconnected state: badge "Nao conectado", "Conectar WhatsApp"
+ *   Phase 1 — Disconnected state: badge "Não conectado", "Conectar WhatsApp"
  *     button, dialog form with phone/display-name/LGPD-consent fields.
  *
  *   Phase 2 — Connected state: badge "Conectado", formatted phone number,
@@ -47,20 +47,20 @@ test.describe('@whatsapp WhatsApp connection page', () => {
 
       const badge = page.getByTestId('whatsapp-status-badge');
       const text = await badge.textContent();
-      if (text === 'Nao conectado') break;
+      if (text === 'Não conectado') break;
       if (attempt === MAX_DISCONNECT_ATTEMPTS) {
         // Final attempt failed — let Playwright's assertion produce a
         // clear error message.
-        await expect(badge).toHaveText('Nao conectado');
+        await expect(badge).toHaveText('Não conectado');
       }
     }
 
     // Verify page title
     await expect(page.getByTestId('whatsapp-integration-page-title')).toHaveText('WhatsApp');
 
-    // Verify the "Nao conectado" badge
+    // Verify the "Não conectado" badge
     await expect(page.getByTestId('whatsapp-status-badge')).toBeVisible();
-    await expect(page.getByTestId('whatsapp-status-badge')).toHaveText('Nao conectado');
+    await expect(page.getByTestId('whatsapp-status-badge')).toHaveText('Não conectado');
 
     // Click "Conectar WhatsApp" to open the dialog
     await page.getByTestId('whatsapp-connect-button').click();

@@ -176,7 +176,7 @@ test.describe('@whatsapp-inbox inbox list and conversation thread', () => {
     await aliceRow.click();
 
     // Wait for the thread to load (desktop panel inside <main>)
-    const messageLog = page.locator('main').getByLabel('Historico de mensagens');
+    const messageLog = page.locator('main').getByLabel('Histórico de mensagens');
     await expect(messageLog).toBeVisible({ timeout: 10000 });
 
     // Verify thread header shows patient name

@@ -49,7 +49,7 @@ export function ConversationListItem({
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Conversa com ${conversation.patientName}${isUnread ? ', mensagens nao lidas' : ''}${conversation.hasRisk ? ', conteudo de risco' : ''}`}
+      aria-label={`Conversa com ${conversation.patientName}${isUnread ? ', mensagens não lidas' : ''}${conversation.hasRisk ? ', conteúdo de risco' : ''}`}
       className={cn(
         'border-border-subtle flex cursor-pointer items-center gap-3 border-b px-4 py-3 transition-colors',
         isSelected ? 'bg-brand-50' : 'hover:bg-surface-muted',
@@ -91,7 +91,7 @@ export function ConversationListItem({
             <AlertTriangle
               size={16}
               className="text-danger-500 shrink-0"
-              aria-label="Conteudo de risco"
+              aria-label="Conteúdo de risco"
             />
           )}
         </div>
