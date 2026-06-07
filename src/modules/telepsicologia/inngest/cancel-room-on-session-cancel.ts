@@ -120,11 +120,15 @@ export async function processSessionCancelled(
 
   // 1. End the Stream call — wrapped in try/catch because the call may already
   //    be ended or Stream may be temporarily unavailable. A Stream failure must
-  //    NOT prevent the DB cleanup below.
+  //    NOT prevent the DB cleanup below. A reserved-but-not-yet-activated room
+  //    has `streamCallId=NULL` and no live Stream call, so there is nothing to
+  //    end — skip straight to the DB cleanup.
   const streamClient = deps.getStreamClient();
   try {
-    const call = streamClient.video.call('default', room.streamCallId);
-    await call.end();
+    if (room.streamCallId !== null) {
+      const call = streamClient.video.call('default', room.streamCallId);
+      await call.end();
+    }
   } catch (error) {
     // Log presence, not value — no PII or clinical content. The room UUID is an
     // internal identifier; the error message is not surfaced to any client.

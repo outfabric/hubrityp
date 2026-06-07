@@ -8,6 +8,7 @@ import { calculateEndTime } from '@/modules/agenda/lib/date-helpers';
 import { type ConflictResult, detectConflicts } from '@/modules/agenda/lib/detect-conflicts';
 import { sessionUpdatedEventSchema } from '@/modules/agenda/lib/session-events';
 import { sessionInputSchema } from '@/modules/agenda/lib/session-input-schema';
+import { reserveVideoRoom } from '@/modules/telepsicologia';
 import { db } from '@/shared/db/client';
 import {
   sessions,
@@ -274,6 +275,23 @@ export async function updateSessionImpl(
         changes: diff,
       });
     });
+
+    // Eager video-room reservation when the session BECOMES online (modality
+    // changed to 'online' from a non-online value). `reserveVideoRoom` is
+    // idempotent, so a no-op for sessions already online is harmless — but we
+    // gate on the transition to avoid reserving for unrelated edits. This is
+    // best-effort: a failure SHALL NOT block the update (the Inngest pipeline
+    // also auto-creates the room). The update result intentionally does not
+    // carry `patientVideoUrl` — the drawer reads it from `SessionWithDetails`.
+    if (data.modality === 'online' && existing.modality !== 'online') {
+      const reservation = await reserveVideoRoom({ id: sessionId, userId, startAt, endAt }, db);
+      if (!reservation.ok) {
+        logger.error(
+          { event: 'reserve_video_room_failed', sessionId },
+          'failed to reserve video room for session updated to online',
+        );
+      }
+    }
 
     // Fire-and-forget: emit Inngest event for downstream consumers.
     // Wrapped in try/catch so a transient Inngest failure never fails the user operation.

@@ -7,7 +7,12 @@
  * Guard conditions:
  *   1. modality must be 'online'
  *   2. status must be 'scheduled' or 'confirmed'
- *   3. no existing video_rooms for this session (idempotent — delegated to helper)
+ *   3. no *fully activated* video_room for this session. A room is "fully
+ *      activated" when `stream_call_id IS NOT NULL`; such a room short-circuits
+ *      creation (idempotent). A *reserved* room (`stream_call_id IS NULL`,
+ *      created at schedule time) is NOT a short-circuit — it proceeds through
+ *      the deferred activation path, where `createVideoRoomHelper` UPDATEs the
+ *      reserved row in place.
  *
  * Deferred creation: the room is NOT created at event time. Instead the
  * function sleeps until ~1 hour before the session's `startAt`, then creates
@@ -100,14 +105,20 @@ export type AutoCreateRoomResult =
  * Returns the existing video room for the (session, user) pair, or `null`.
  * Scoped by `userId` so a forged event for someone else's session cannot
  * reference another user's room.
+ *
+ * Selects `streamCallId` so callers can distinguish a *reserved* room
+ * (`streamCallId IS NULL` — reserved at schedule time, not yet activated) from
+ * a *fully activated* room (`streamCallId IS NOT NULL`). Only the latter short-
+ * circuits room creation; a reserved room must still proceed through the
+ * deferred activation path.
  */
 async function findExistingRoom(
   db: AutoCreateRoomDeps['db'],
   sessionId: string,
   userId: string,
-): Promise<{ id: string } | null> {
+): Promise<{ id: string; streamCallId: string | null } | null> {
   const [room] = await db
-    .select({ id: videoRooms.id })
+    .select({ id: videoRooms.id, streamCallId: videoRooms.streamCallId })
     .from(videoRooms)
     .where(and(eq(videoRooms.sessionId, sessionId), eq(videoRooms.userId, userId)))
     .limit(1);
@@ -266,10 +277,12 @@ export async function processSessionUpdated(
     return { action: 'skipped', reason: 'not_schedulable' };
   }
 
-  // If a room already exists for this session, leave it untouched. Deferred
-  // (re)creation only applies when no room exists yet.
+  // If a room already exists AND is fully activated (`streamCallId IS NOT
+  // NULL`), leave it untouched. A *reserved* room (`streamCallId IS NULL`)
+  // still needs to be activated, so fall through to createRoom, which now
+  // handles both the INSERT (no row) and UPDATE (reserved row) paths.
   const existing = await findExistingRoom(db, data.sessionId, data.userId);
-  if (existing) {
+  if (existing && existing.streamCallId !== null) {
     return { action: 'existing', roomId: existing.id };
   }
 
@@ -339,9 +352,12 @@ export const autoCreateVideoRoom = inngest.createFunction(
             return { action: 'skipped', reason: 'not_schedulable' };
           }
 
-          // If a room already exists, do not defer/recreate — return it.
+          // If a fully activated room already exists (`streamCallId IS NOT
+          // NULL`), do not defer/recreate — return it. A reserved room
+          // (`streamCallId IS NULL`) must still flow through the deferred
+          // activation path, so we fall through to 'eligible_pending_create'.
           const existing = await findExistingRoom(deps.db, data.sessionId, data.userId);
-          if (existing) {
+          if (existing && existing.streamCallId !== null) {
             return { action: 'existing', roomId: existing.id };
           }
 

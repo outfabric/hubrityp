@@ -84,17 +84,21 @@ const PARTICIPANT_EVENTS = [...JOINED_EVENTS, ...LEFT_EVENTS] as const;
 async function expireSingleRoom(
   db: DrizzleDb,
   streamClient: StreamVideoClient,
-  room: { id: string; sessionId: string; userId: string; streamCallId: string },
+  room: { id: string; sessionId: string; userId: string; streamCallId: string | null },
 ): Promise<{ streamError: boolean }> {
   let streamError = false;
 
   // 1. End Stream call — wrapped in try/catch because the call may
   //    already be ended or Stream may be temporarily unavailable.
-  try {
-    const call = streamClient.video.call('default', room.streamCallId);
-    await call.end();
-  } catch {
-    streamError = true;
+  //    A reserved-but-not-yet-activated room has `streamCallId=NULL` and
+  //    no live Stream call, so there is nothing to end.
+  if (room.streamCallId !== null) {
+    try {
+      const call = streamClient.video.call('default', room.streamCallId);
+      await call.end();
+    } catch {
+      streamError = true;
+    }
   }
 
   // 2. Update room status + insert log entry atomically.

@@ -3,9 +3,12 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, asc, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 
+import { generatePatientVideoUrl } from '@/modules/telepsicologia';
 import { db } from '@/shared/db/client';
 import { locations, sessions, type Session } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
+import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
+import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -74,6 +77,12 @@ export interface SessionWithDetails extends Session {
   locationAddress: string | null;
   /** "Ana & Carlos" format for couple sessions (patient_ids.length === 2). */
   coupleDisplayName: string | null;
+  /**
+   * Public patient-facing video URL for online sessions with a reserved room.
+   * Built server-side from `APP_URL` + the room's `patient_token`. `null` when
+   * the session has no reserved room or `APP_URL` is not configured.
+   */
+  patientVideoUrl: string | null;
 }
 
 export type ListSessionsResult =
@@ -120,10 +129,12 @@ export async function listSessionsImpl(
         locationName: locations.name,
         locationType: locations.type,
         locationAddress: locations.address,
+        patientToken: videoRooms.patientToken,
       })
       .from(sessions)
       .leftJoin(patients, eq(sessions.patientId, patients.id))
       .leftJoin(locations, eq(sessions.locationId, locations.id))
+      .leftJoin(videoRooms, eq(videoRooms.sessionId, sessions.id))
       .where(
         and(
           eq(sessions.userId, user.id),
@@ -142,6 +153,9 @@ export async function listSessionsImpl(
     }));
     const coupleNames = await resolveCoupleDisplayNames(coupleInputs);
 
+    // Built once: APP_URL is process-static, so reading it per row is wasteful.
+    const appUrl = serverEnv.APP_URL;
+
     const result: SessionWithDetails[] = rows.map((row) => ({
       ...row.session,
       patientName: row.patientName,
@@ -151,6 +165,8 @@ export async function listSessionsImpl(
       locationType: row.locationType,
       locationAddress: row.locationAddress,
       coupleDisplayName: coupleNames.get(row.session.id) ?? null,
+      patientVideoUrl:
+        appUrl && row.patientToken ? generatePatientVideoUrl(appUrl, row.patientToken) : null,
     }));
 
     return { ok: true, sessions: result };

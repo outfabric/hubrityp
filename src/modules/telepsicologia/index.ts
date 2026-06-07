@@ -43,6 +43,11 @@ export {
   type OnlineSessionStatsInput,
 } from './server/get-online-session-stats';
 export { getVideoTokenImpl, type GetVideoTokenResult } from './server/get-video-token';
+export {
+  reserveVideoRoom,
+  type ReserveVideoRoomResult,
+  type ReserveSessionData,
+} from './server/reserve-video-room';
 export { toggleRecordingImpl, type ToggleRecordingResult } from './server/toggle-recording';
 
 // ---- Zod Schemas -------------------------------------------------------------

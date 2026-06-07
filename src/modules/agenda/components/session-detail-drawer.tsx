@@ -2,7 +2,18 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Building2, Calendar, Clock, Pencil, Repeat, Trash2, Video, X } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  Check,
+  Clock,
+  Copy,
+  Pencil,
+  Repeat,
+  Trash2,
+  Video,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -234,6 +245,66 @@ function AlertDialogForBlocking({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Patient video link — copy section
+// ---------------------------------------------------------------------------
+
+/**
+ * "Link do paciente" section for online sessions with a reserved room.
+ *
+ * Renders the patient-facing video URL (truncated) and a "Copiar link" button
+ * that copies the full URL to the clipboard via `navigator.clipboard`. On
+ * success, the button briefly shows a `Check` icon + "Copiado!" for 2 seconds;
+ * on failure, a Sonner error toast is shown.
+ */
+function CopyPatientLinkSection({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  const revertTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (revertTimeout.current) clearTimeout(revertTimeout.current);
+    };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      if (revertTimeout.current) clearTimeout(revertTimeout.current);
+      revertTimeout.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Nao foi possivel copiar o link. Tente novamente.');
+    }
+  }, [url]);
+
+  return (
+    <div data-testid="patient-video-link-section">
+      <p className="text-text-secondary mb-1 text-[12px] font-medium tracking-wide uppercase">
+        Link do paciente
+      </p>
+      <div className="flex items-center gap-2">
+        <span className="text-text-secondary min-w-0 flex-1 truncate text-[13px]" title={url}>
+          {url}
+        </span>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => void handleCopy()}
+          data-testid="copy-patient-link-button"
+        >
+          {copied ? (
+            <Check className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Copy className="h-4 w-4" aria-hidden="true" />
+          )}
+          {copied ? 'Copiado!' : 'Copiar link'}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -496,6 +567,17 @@ export function SessionDetailDrawer({
                 </div>
               </>
             )}
+
+            {/* Patient video link — copy section */}
+            {!isBlocking &&
+              session.modality === 'online' &&
+              (sessionStatus === 'scheduled' || sessionStatus === 'confirmed') &&
+              session.patientVideoUrl && (
+                <>
+                  <Separator />
+                  <CopyPatientLinkSection url={session.patientVideoUrl} />
+                </>
+              )}
 
             {/* Amount */}
             {!isBlocking && session.amount && (

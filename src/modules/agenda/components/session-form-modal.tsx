@@ -171,6 +171,12 @@ interface MutationResult {
   fieldErrors?: Record<string, string[]>;
   message?: string;
   conflicts?: ConflictResult[];
+  /**
+   * Patient-facing video link, present only on a successful create of an
+   * online session when `APP_URL` is configured. Surfaced to the user via a
+   * "copy link" action in the post-scheduling success toast.
+   */
+  patientVideoUrl?: string;
 }
 
 interface SessionFormModalProps {
@@ -632,12 +638,30 @@ export function SessionFormModal({
       }
 
       if (result.ok) {
-        const successMsg = isEdit
-          ? 'Sessao atualizada com sucesso.'
-          : result.sessionCount && result.sessionCount > 1
-            ? `${result.sessionCount} sessoes agendadas com sucesso.`
-            : 'Sessao agendada com sucesso.';
-        toast.success(successMsg);
+        const patientVideoUrl = result.patientVideoUrl;
+        if (!isEdit && patientVideoUrl) {
+          // Online session created with a shareable patient link — offer a
+          // one-click copy action directly from the success toast.
+          toast.success('Sessão agendada com sucesso.', {
+            description: 'Link do paciente disponível para cópia.',
+            action: {
+              label: 'Copiar link',
+              onClick: () => {
+                void navigator.clipboard.writeText(patientVideoUrl).catch(() => {
+                  toast.error('Nao foi possivel copiar o link. Tente novamente.');
+                });
+              },
+            },
+            duration: 8000,
+          });
+        } else {
+          const successMsg = isEdit
+            ? 'Sessao atualizada com sucesso.'
+            : result.sessionCount && result.sessionCount > 1
+              ? `${result.sessionCount} sessoes agendadas com sucesso.`
+              : 'Sessao agendada com sucesso.';
+          toast.success(successMsg);
+        }
         onOpenChange(false);
         onSuccess();
       } else if (result.error === 'conflict_warning' && result.conflicts) {

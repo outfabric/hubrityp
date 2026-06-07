@@ -10,6 +10,38 @@ Core session (appointment) management for the psychologist's agenda: create, edi
 
 The system SHALL allow the psychologist to create a session with: patient (required), date, start time, duration (default from agenda_settings), auto-calculated end time, location (default from is_default location), modality (in_person/online), value (optional), notes (optional), and color (optional). The session status defaults to `scheduled`.
 
+When the session modality is `online`, the system SHALL eagerly reserve a video room (via `reserveVideoRoom`) immediately after inserting the session row. If `APP_URL` is configured, the `CreateSessionResult` SHALL include `patientVideoUrl` with the patient's video join URL. If `APP_URL` is not configured or the reservation fails, `patientVideoUrl` SHALL be omitted (graceful degradation — session creation still succeeds).
+
+The video room reservation SHALL NOT block or fail the session creation: if `reserveVideoRoom` fails, the error SHALL be logged and session creation SHALL succeed without `patientVideoUrl` (the Inngest deferred-creation flow serves as fallback).
+
+#### Scenario: Create online session reserves video room and returns patient URL
+
+- **WHEN** psychologist creates a session with `modality='online'` and `APP_URL` is configured
+- **THEN** the session is created with status "scheduled"
+- **AND** a `video_rooms` row is inserted with `patient_token`, `stream_call_id=NULL`, `patient_jwt=NULL`
+- **AND** the result includes `patientVideoUrl` set to `{APP_URL}/v/{patient_token}`
+
+#### Scenario: Create online session without APP_URL
+
+- **WHEN** psychologist creates a session with `modality='online'` and `APP_URL` is not configured
+- **THEN** the session is created with status "scheduled"
+- **AND** a `video_rooms` row is inserted with `patient_token`
+- **AND** the result does not include `patientVideoUrl`
+
+#### Scenario: Create in-person session does not reserve video room
+
+- **WHEN** psychologist creates a session with `modality='in_person'`
+- **THEN** the session is created with status "scheduled"
+- **AND** no `video_rooms` row is created
+- **AND** the result does not include `patientVideoUrl`
+
+#### Scenario: Video room reservation failure does not block session creation
+
+- **WHEN** psychologist creates a session with `modality='online'` and `reserveVideoRoom` fails
+- **THEN** the session is created successfully
+- **AND** the error is logged
+- **AND** the result does not include `patientVideoUrl`
+
 #### Scenario: Create session with all fields
 
 - **WHEN** psychologist fills all fields (patient "Marina Silva", date 2026-05-15, start 14:00, duration 50min, location "Consultorio Vila Mariana", modality "in_person", value 200.00) and clicks "Salvar"
