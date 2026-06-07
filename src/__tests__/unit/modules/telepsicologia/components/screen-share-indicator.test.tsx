@@ -50,7 +50,7 @@ describe('ScreenShareIndicator', () => {
     render(<ScreenShareIndicator />);
 
     expect(screen.queryByTestId('screen-share-indicator')).not.toBeInTheDocument();
-    expect(screen.queryByText('Voce esta compartilhando sua tela')).not.toBeInTheDocument();
+    expect(screen.queryByText('Você está compartilhando sua tela')).not.toBeInTheDocument();
   });
 
   it('is visible when the user is sharing their screen', () => {
@@ -59,7 +59,7 @@ describe('ScreenShareIndicator', () => {
     render(<ScreenShareIndicator />);
 
     expect(screen.getByTestId('screen-share-indicator')).toBeInTheDocument();
-    expect(screen.getByText('Voce esta compartilhando sua tela')).toBeInTheDocument();
+    expect(screen.getByText('Você está compartilhando sua tela')).toBeInTheDocument();
     expect(screen.getByTestId('stop-screen-share-button')).toBeInTheDocument();
     expect(screen.getByText('Parar de compartilhar')).toBeInTheDocument();
   });

@@ -93,7 +93,7 @@ export async function completeRescheduleImpl(
       return {
         ok: false,
         error: 'invalid_transition',
-        message: `Transicao de "${fromStatus}" para "cancelled" nao e permitida para remarcar.`,
+        message: `Transição de "${fromStatus}" para "cancelled" não é permitida para remarcar.`,
       };
     }
 
@@ -209,7 +209,7 @@ export async function completeRescheduleImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao remarcar sessao. Tente novamente.',
+      message: 'Erro inesperado ao remarcar sessão. Tente novamente.',
     };
   }
 }

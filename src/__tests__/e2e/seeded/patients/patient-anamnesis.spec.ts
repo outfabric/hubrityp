@@ -45,7 +45,7 @@ test.describe('@patients patient anamnesis tab', () => {
     // Wait for the save to complete — the auto-save indicator should show "Salvo as HH:MM"
     const savedIndicator = page.getByTestId('anamnesis-autosave-saved');
     await expect(savedIndicator).toBeVisible({ timeout: 10_000 });
-    await expect(savedIndicator).toContainText('Salvo as');
+    await expect(savedIndicator).toContainText('Salvo às');
 
     // Reload the page to confirm persistence
     await page.reload();

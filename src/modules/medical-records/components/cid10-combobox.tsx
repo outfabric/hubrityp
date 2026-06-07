@@ -156,7 +156,7 @@ export function Cid10Combobox({ value, onChange, onSearch, disabled }: Cid10Comb
           className="h-6 w-6 shrink-0"
           onClick={handleClear}
           disabled={disabled}
-          aria-label="Limpar selecao"
+          aria-label="Limpar seleção"
           data-testid="cid10-combobox-clear"
         >
           <X className="h-3 w-3" />
@@ -168,14 +168,14 @@ export function Cid10Combobox({ value, onChange, onSearch, disabled }: Cid10Comb
   return (
     <div data-testid="cid10-combobox">
       <span id={labelId} className="sr-only">
-        Buscar codigo CID-10
+        Buscar código CID-10
       </span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Buscar codigo ou descricao..."
+            placeholder="Buscar código ou descrição..."
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);

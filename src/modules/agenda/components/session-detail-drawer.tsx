@@ -119,7 +119,7 @@ function formatAmount(amount: string | null | undefined): string {
 /** Maps cancellation reason values to pt-BR labels. */
 const CANCELLATION_REASON_LABEL: Record<string, string> = {
   patient_cancelled: 'Paciente cancelou',
-  therapist_cancelled: 'Psicologo cancelou',
+  therapist_cancelled: 'Psicólogo cancelou',
   unforeseen: 'Imprevisto',
   other: 'Outro',
 };
@@ -153,7 +153,7 @@ function formatHistoryEntry(entry: SessionHistory): string {
   }
 
   if (entry.action === 'deleted') {
-    return `Excluida em ${dateStr}`;
+    return `Excluída em ${dateStr}`;
   }
 
   // Status changed — derive label from the target status
@@ -172,10 +172,10 @@ function formatHistoryEntry(entry: SessionHistory): string {
 
     switch (statusChange.new) {
       case 'confirmed':
-        return `Confirmada pelo psicologo em ${dateStr}`;
+        return `Confirmada pelo psicólogo em ${dateStr}`;
 
       case 'cancelled': {
-        const cancelledByLabel = cancellation?.cancelledBy === 'patient' ? 'paciente' : 'psicologo';
+        const cancelledByLabel = cancellation?.cancelledBy === 'patient' ? 'paciente' : 'psicólogo';
         const reasonLabel = cancellation?.reason
           ? (CANCELLATION_REASON_LABEL[cancellation.reason] ?? cancellation.reason)
           : '';
@@ -229,7 +229,7 @@ function AlertDialogForBlocking({
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir bloqueio</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir o bloqueio &quot;{title}&quot;? Esta acao nao pode ser
+            Tem certeza que deseja excluir o bloqueio &quot;{title}&quot;? Esta ação não pode ser
             desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -277,7 +277,7 @@ function CopyPatientLinkSection({ url }: { url: string }) {
       if (revertTimeout.current) clearTimeout(revertTimeout.current);
       revertTimeout.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Nao foi possivel copiar o link. Tente novamente.');
+      toast.error('Não foi possível copiar o link. Tente novamente.');
     }
   }, [url]);
 
@@ -384,7 +384,7 @@ export function SessionDetailDrawer({
       void import('@/app/(app)/agenda/actions').then(({ deleteSession }) =>
         deleteSession(session.id).then((result) => {
           if (result.ok) {
-            toast.success('Bloqueio excluido');
+            toast.success('Bloqueio excluído');
             setDeleteDialogOpen(false);
             onSessionMutated();
           } else {
@@ -407,10 +407,10 @@ export function SessionDetailDrawer({
           const { confirmSession } = await import('@/app/(app)/agenda/actions');
           const result = await confirmSession(session.id);
           if (result.ok) {
-            toast.success('Sessao confirmada');
+            toast.success('Sessão confirmada');
             onSessionMutated();
           } else {
-            const msg = 'message' in result ? result.message : 'Erro ao confirmar sessao.';
+            const msg = 'message' in result ? result.message : 'Erro ao confirmar sessão.';
             toast.error(msg);
           }
           break;
@@ -429,11 +429,11 @@ export function SessionDetailDrawer({
           const { markSessionDone } = await import('@/app/(app)/agenda/actions');
           const result = await markSessionDone(session.id);
           if (result.ok) {
-            toast.success('Sessao marcada como realizada');
+            toast.success('Sessão marcada como realizada');
             onSessionMutated();
           } else {
             const msg =
-              'message' in result ? result.message : 'Erro ao marcar sessao como realizada.';
+              'message' in result ? result.message : 'Erro ao marcar sessão como realizada.';
             toast.error(msg);
           }
           break;
@@ -443,10 +443,10 @@ export function SessionDetailDrawer({
           const { markSessionNoShow } = await import('@/app/(app)/agenda/actions');
           const result = await markSessionNoShow(session.id);
           if (result.ok) {
-            toast.success('Sessao marcada como falta');
+            toast.success('Sessão marcada como falta');
             onSessionMutated();
           } else {
-            const msg = 'message' in result ? result.message : 'Erro ao marcar sessao como falta.';
+            const msg = 'message' in result ? result.message : 'Erro ao marcar sessão como falta.';
             toast.error(msg);
           }
           break;
@@ -456,10 +456,10 @@ export function SessionDetailDrawer({
           const { reactivateSession } = await import('@/app/(app)/agenda/actions');
           const result = await reactivateSession(session.id);
           if (result.ok) {
-            toast.success('Sessao reativada');
+            toast.success('Sessão reativada');
             onSessionMutated();
           } else {
-            const msg = 'message' in result ? result.message : 'Erro ao reativar sessao.';
+            const msg = 'message' in result ? result.message : 'Erro ao reativar sessão.';
             toast.error(msg);
           }
           break;
@@ -478,7 +478,7 @@ export function SessionDetailDrawer({
           break;
 
         case 'charge_no_show':
-          toast.info('Funcionalidade de cobranca em desenvolvimento.');
+          toast.info('Funcionalidade de cobrança em desenvolvimento.');
           break;
       }
     },
@@ -513,7 +513,7 @@ export function SessionDetailDrawer({
                 {title}
               </SheetTitle>
               <SheetDescription className="sr-only">
-                {isBlocking ? 'Detalhes do bloqueio' : 'Detalhes da sessao'}
+                {isBlocking ? 'Detalhes do bloqueio' : 'Detalhes da sessão'}
               </SheetDescription>
             </div>
             {!isBlocking && (
@@ -606,7 +606,7 @@ export function SessionDetailDrawer({
                 <Separator />
                 <div>
                   <p className="text-text-secondary mb-2 text-[12px] font-medium tracking-wide uppercase">
-                    Historico
+                    Histórico
                   </p>
                   {historyLoading ? (
                     <p className="text-text-tertiary text-[12px]">Carregando...</p>
@@ -638,7 +638,7 @@ export function SessionDetailDrawer({
               <Separator />
               <div className="flex items-center gap-2">
                 <Repeat className="text-text-tertiary h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="text-text-secondary text-[13px]">Sessao recorrente</span>
+                <span className="text-text-secondary text-[13px]">Sessão recorrente</span>
               </div>
             </>
           )}
@@ -676,7 +676,7 @@ export function SessionDetailDrawer({
                   <Button variant="secondary" asChild data-testid="start-video-button">
                     <Link href={`/sessao/${session.id}/video`}>
                       <Video className="h-4 w-4" aria-hidden="true" />
-                      Iniciar video
+                      Iniciar vídeo
                     </Link>
                   </Button>
                 )}
@@ -704,7 +704,7 @@ export function SessionDetailDrawer({
                       data-testid="session-cancel-recurring-button"
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
-                      Cancelar recorrencia
+                      Cancelar recorrência
                     </Button>
                   )}
               </div>

@@ -56,7 +56,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
         await camera.enable();
       } catch {
         setPermissionError(
-          'Nao foi possivel acessar a camera. Verifique as permissoes do navegador.',
+          'Não foi possível acessar a câmera. Verifique as permissões do navegador.',
         );
       }
 
@@ -64,7 +64,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
         await microphone.enable();
       } catch {
         setPermissionError(
-          'Nao foi possivel acessar o microfone. Verifique as permissoes do navegador.',
+          'Não foi possível acessar o microfone. Verifique as permissões do navegador.',
         );
       }
     }
@@ -123,7 +123,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
     void call.join().catch((err) => {
       console.error('[telepsicologia] call.join failed', err);
       setIsJoining(false);
-      setPermissionError('Nao foi possivel entrar na sessao. Tente novamente.');
+      setPermissionError('Não foi possível entrar na sessão. Tente novamente.');
     });
   }, [call]);
 
@@ -135,7 +135,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
       })
       .catch(() => {
         setPermissionError(
-          'Nao foi possivel acessar a camera. Verifique as permissoes do navegador.',
+          'Não foi possível acessar a câmera. Verifique as permissões do navegador.',
         );
       });
   }, [camera]);
@@ -148,7 +148,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
       })
       .catch(() => {
         setPermissionError(
-          'Nao foi possivel acessar o microfone. Verifique as permissoes do navegador.',
+          'Não foi possível acessar o microfone. Verifique as permissões do navegador.',
         );
       });
   }, [microphone]);
@@ -157,7 +157,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <Card className="w-full max-w-lg rounded-xl">
         <CardHeader>
-          <CardTitle>Preparar para sessao</CardTitle>
+          <CardTitle>Preparar para sessão</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Camera preview */}
@@ -165,7 +165,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
             {isCameraMuted ? (
               <div className="flex h-full items-center justify-center">
                 <VideoOff className="text-text-tertiary h-12 w-12" aria-hidden="true" />
-                <span className="sr-only">Camera desligada</span>
+                <span className="sr-only">Câmera desligada</span>
               </div>
             ) : (
               <video
@@ -174,7 +174,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
                 playsInline
                 muted
                 className="h-full w-full object-cover"
-                aria-label="Previa da camera"
+                aria-label="Prévia da câmera"
               />
             )}
           </div>
@@ -199,7 +199,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
               <div
                 className="bg-surface-muted h-2 w-24 overflow-hidden rounded-full"
                 role="meter"
-                aria-label="Nivel do microfone"
+                aria-label="Nível do microfone"
                 aria-valuenow={micLevel}
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -215,7 +215,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
               variant={isCameraMuted ? 'outline' : 'ghost'}
               size="icon"
               onClick={toggleCamera}
-              aria-label={isCameraMuted ? 'Ligar camera' : 'Desligar camera'}
+              aria-label={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
             >
               {isCameraMuted ? (
                 <VideoOff className="h-5 w-5" aria-hidden="true" />
@@ -228,7 +228,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
           {/* Patient waiting indicator */}
           {participantCount > 0 && (
             <div className="flex justify-center">
-              <Badge variant="info">{patient?.fullName ?? 'Paciente'} esta aguardando</Badge>
+              <Badge variant="info">{patient?.fullName ?? 'Paciente'} está aguardando</Badge>
             </div>
           )}
 
@@ -239,7 +239,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
               <div className="space-y-1">
                 <p className="text-danger-700 text-sm">{permissionError}</p>
                 <p className="text-text-tertiary text-xs">
-                  Verifique as configuracoes do navegador e permita o acesso a camera e microfone
+                  Verifique as configurações do navegador e permita o acesso à câmera e microfone
                   para este site.
                 </p>
               </div>
@@ -254,7 +254,7 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
             disabled={isJoining}
             data-testid="join-call-button"
           >
-            {isJoining ? 'Entrando...' : 'Entrar na sessao'}
+            {isJoining ? 'Entrando...' : 'Entrar na sessão'}
           </Button>
         </CardContent>
       </Card>

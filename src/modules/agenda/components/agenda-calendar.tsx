@@ -403,11 +403,11 @@ export function AgendaCalendar({
             scope,
           }).then((result) => {
             if (result.ok) {
-              toast.success(`Recorrencia cancelada (${result.cancelledCount} sessao(es)).`);
+              toast.success(`Recorrência cancelada (${result.cancelledCount} sessão(es)).`);
               refreshSessions();
               handleDrawerClose();
             } else {
-              const msg = 'message' in result ? result.message : 'Erro ao cancelar recorrencia.';
+              const msg = 'message' in result ? result.message : 'Erro ao cancelar recorrência.';
               toast.error(msg);
             }
             setPendingRecurringSession(null);
@@ -500,7 +500,7 @@ export function AgendaCalendar({
       <div className="flex items-center justify-end gap-3">
         <Button variant="secondary" data-testid="block-time-button" onClick={handleOpenBlockModal}>
           <Lock className="h-4 w-4" />
-          Bloquear horario
+          Bloquear horário
         </Button>
         <Button data-testid="schedule-button" onClick={handleOpenScheduleModal}>
           <Plus className="h-4 w-4" />
@@ -617,7 +617,7 @@ export function AgendaCalendar({
             return {
               ok: false,
               error: result.error,
-              message: 'message' in result ? result.message : 'Erro ao editar sessao recorrente.',
+              message: 'message' in result ? result.message : 'Erro ao editar sessão recorrente.',
             };
           }
           const { updateSession } = await import('@/app/(app)/agenda/actions');
@@ -660,12 +660,12 @@ export function AgendaCalendar({
         }}
         onSelect={handleEditScopeSelect}
         title={
-          editScopeMode === 'cancel' ? 'Cancelar sessao recorrente' : 'Editar sessao recorrente'
+          editScopeMode === 'cancel' ? 'Cancelar sessão recorrente' : 'Editar sessão recorrente'
         }
         description={
           editScopeMode === 'cancel'
-            ? 'Escolha o escopo do cancelamento para esta sessao recorrente.'
-            : 'Escolha o escopo da alteracao para esta sessao recorrente.'
+            ? 'Escolha o escopo do cancelamento para esta sessão recorrente.'
+            : 'Escolha o escopo da alteração para esta sessão recorrente.'
         }
       />
     </div>

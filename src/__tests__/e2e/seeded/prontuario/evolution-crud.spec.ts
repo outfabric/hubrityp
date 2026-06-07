@@ -58,7 +58,7 @@ test.describe('@prontuario evolution creation happy path', () => {
 
     // 3. Should navigate to the "nova evolucao" page
     await expect(page.getByTestId('nova-evolucao-page-title')).toBeVisible();
-    await expect(page.getByTestId('nova-evolucao-page-title')).toHaveText('Nova evolucao');
+    await expect(page.getByTestId('nova-evolucao-page-title')).toHaveText('Nova evolução');
 
     // 4. Select TCC template from the "Abordagem" dropdown
     const templateTrigger = page.locator('#template-type-select');
@@ -116,7 +116,7 @@ test.describe('@prontuario evolution creation happy path', () => {
     // 6. Wait for auto-save to fire (10s debounce) — the creation succeeds
     //    and redirects to the evolution detail page.
     //    We detect success by waiting for the toast + URL change.
-    await expect(page.getByText('Evolucao criada com sucesso')).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText('Evolução criada com sucesso')).toBeVisible({ timeout: 20_000 });
 
     // After successful creation, the page redirects to the detail view
     await page.waitForURL('**/prontuario/evolucoes/**', { timeout: 10_000 });
@@ -130,6 +130,6 @@ test.describe('@prontuario evolution creation happy path', () => {
     await expect(page.getByTestId('version-item-1')).toBeVisible();
 
     // Verify "Versao 1" text is displayed
-    await expect(page.getByTestId('version-item-1')).toContainText('Versao 1');
+    await expect(page.getByTestId('version-item-1')).toContainText('Versão 1');
   });
 });

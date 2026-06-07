@@ -124,7 +124,7 @@ export async function reserveVideoRoom(
     );
     return {
       ok: false,
-      message: 'Erro inesperado ao reservar sala de video. Tente novamente.',
+      message: 'Erro inesperado ao reservar sala de vídeo. Tente novamente.',
     };
   }
 }

@@ -36,7 +36,7 @@ const hypothesisFormSchema = z
     mode: z.enum(['cid10', 'descriptive']),
     cid10Code: z.string().optional(),
     cid10Description: z.string().optional(),
-    description: z.string().max(500, 'Descricao deve ter no maximo 500 caracteres.').optional(),
+    description: z.string().max(500, 'Descrição deve ter no máximo 500 caracteres.').optional(),
     status: z.enum(['investigating', 'confirmed', 'discarded']),
     notes: z.string().optional(),
   })
@@ -44,13 +44,13 @@ const hypothesisFormSchema = z
     if (data.mode === 'cid10' && !data.cid10Code) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Preencha o campo obrigatorio do modo selecionado.',
+        message: 'Preencha o campo obrigatório do modo selecionado.',
         path: ['cid10Code'],
       });
     } else if (data.mode === 'descriptive' && !data.description?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Preencha o campo obrigatorio do modo selecionado.',
+        message: 'Preencha o campo obrigatório do modo selecionado.',
         path: ['description'],
       });
     }
@@ -146,10 +146,10 @@ export function HypothesisFormSheet({
         });
 
         if (result.ok) {
-          toast.success('Hipotese atualizada com sucesso.');
+          toast.success('Hipótese atualizada com sucesso.');
           onOpenChange(false);
         } else {
-          toast.error('Erro ao atualizar hipotese. Tente novamente.');
+          toast.error('Erro ao atualizar hipótese. Tente novamente.');
         }
       } else {
         const result = await onCreate({
@@ -161,10 +161,10 @@ export function HypothesisFormSheet({
         });
 
         if (result.ok) {
-          toast.success('Hipotese criada com sucesso.');
+          toast.success('Hipótese criada com sucesso.');
           onOpenChange(false);
         } else {
-          toast.error('Erro ao criar hipotese. Tente novamente.');
+          toast.error('Erro ao criar hipótese. Tente novamente.');
         }
       }
     },
@@ -177,11 +177,11 @@ export function HypothesisFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" data-testid="hypothesis-form-sheet">
         <SheetHeader>
-          <SheetTitle>{isEditing ? 'Editar hipotese' : 'Adicionar hipotese'}</SheetTitle>
+          <SheetTitle>{isEditing ? 'Editar hipótese' : 'Adicionar hipótese'}</SheetTitle>
           <SheetDescription>
             {isEditing
               ? 'Altere os campos desejados e salve.'
-              : 'Preencha os dados da nova hipotese diagnostica.'}
+              : 'Preencha os dados da nova hipótese diagnóstica.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -196,7 +196,7 @@ export function HypothesisFormSheet({
               name="mode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo de hipotese</FormLabel>
+                  <FormLabel>Tipo de hipótese</FormLabel>
                   <FormControl>
                     <RadioGroup
                       value={field.value}
@@ -229,7 +229,7 @@ export function HypothesisFormSheet({
                 name="cid10Code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Codigo CID-10</FormLabel>
+                    <FormLabel>Código CID-10</FormLabel>
                     <FormControl>
                       <Cid10Combobox
                         value={
@@ -266,11 +266,11 @@ export function HypothesisFormSheet({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descricao da hipotese</FormLabel>
+                    <FormLabel>Descrição da hipótese</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
-                        placeholder="Descreva a hipotese diagnostica..."
+                        placeholder="Descreva a hipótese diagnóstica..."
                         maxLength={500}
                         data-testid="hypothesis-description-input"
                       />
@@ -295,7 +295,7 @@ export function HypothesisFormSheet({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="investigating">Em investigacao</SelectItem>
+                      <SelectItem value="investigating">Em investigação</SelectItem>
                       <SelectItem value="confirmed">Confirmada</SelectItem>
                       <SelectItem value="discarded">Descartada</SelectItem>
                     </SelectContent>
@@ -311,11 +311,11 @@ export function HypothesisFormSheet({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observacoes (opcional)</FormLabel>
+                  <FormLabel>Observações (opcional)</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="Adicione observacoes ou justificativas..."
+                      placeholder="Adicione observações ou justificativas..."
                       data-testid="hypothesis-notes-input"
                     />
                   </FormControl>
@@ -340,7 +340,7 @@ export function HypothesisFormSheet({
                 data-testid="hypothesis-form-submit"
               >
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar hipotese
+                Salvar hipótese
               </Button>
             </SheetFooter>
           </form>

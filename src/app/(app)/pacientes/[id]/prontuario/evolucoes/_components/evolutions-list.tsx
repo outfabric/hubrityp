@@ -71,15 +71,15 @@ export function EvolutionsList({
       >
         <FileText className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
         <h4 className="text-text-primary mb-1 text-lg font-semibold">
-          Nenhuma evolucao registrada
+          Nenhuma evolução registrada
         </h4>
         <p className="text-text-secondary mb-4 max-w-sm text-sm">
-          Registre a primeira evolucao clinica deste paciente para comecar o prontuario.
+          Registre a primeira evolução clínica deste paciente para começar o prontuário.
         </p>
         <Link href={`/pacientes/${id}/prontuario/evolucoes/nova`}>
           <Button data-testid="evolutions-empty-cta">
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Registrar evolucao
+            Registrar evolução
           </Button>
         </Link>
       </div>
@@ -91,12 +91,12 @@ export function EvolutionsList({
       {/* Header with CTA */}
       <div className="flex items-center justify-between">
         <p className="text-text-secondary text-sm">
-          {initialEvolutions.length} {initialEvolutions.length === 1 ? 'evolucao' : 'evolucoes'}
+          {initialEvolutions.length} {initialEvolutions.length === 1 ? 'evolução' : 'evoluções'}
         </p>
         <Link href={`/pacientes/${id}/prontuario/evolucoes/nova`}>
           <Button size="sm" data-testid="evolutions-new-btn">
             <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Nova evolucao
+            Nova evolução
           </Button>
         </Link>
       </div>
@@ -109,7 +109,7 @@ export function EvolutionsList({
       {/* Load more hint (cursor-based) */}
       {initialNextCursor && (
         <p className="text-text-tertiary py-4 text-center text-xs" data-testid="evolutions-cursor">
-          Role para carregar mais evolucoes
+          Role para carregar mais evoluções
         </p>
       )}
     </div>
@@ -150,7 +150,7 @@ function EvolutionCard({ evolution, patientId }: EvolutionCardProps) {
           </div>
           <span className="text-text-secondary text-xs">{createdDate}</span>
           {evolution.sessionId && (
-            <span className="text-text-tertiary text-xs">Vinculada a sessao</span>
+            <span className="text-text-tertiary text-xs">Vinculada à sessão</span>
           )}
         </div>
         <span className="text-text-tertiary text-xs">v{evolution.currentVersion}</span>

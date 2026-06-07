@@ -59,7 +59,7 @@ export function ElapsedTime() {
     <span
       className="text-text-tertiary text-xs font-medium tabular-nums select-none"
       role="timer"
-      aria-label="Tempo de sessao"
+      aria-label="Tempo de sessão"
       data-testid="elapsed-time"
     >
       {formatElapsed(elapsed)}

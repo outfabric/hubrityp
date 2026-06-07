@@ -65,7 +65,7 @@ export default async function EvolutionDetailPage({ params }: EvolutionDetailPag
         <Link href={`/pacientes/${patientId}/prontuario`}>
           <Button variant="ghost" size="sm" data-testid="evolution-detail-back">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao prontuario
+            Voltar ao prontuário
           </Button>
         </Link>
       </div>
@@ -75,7 +75,7 @@ export default async function EvolutionDetailPage({ params }: EvolutionDetailPag
         className="text-text-primary mb-6 text-[28px] leading-[1.25] font-semibold"
         data-testid="evolution-detail-page-title"
       >
-        Evolucao
+        Evolução
       </h1>
 
       {/* Detail view with editor and version history */}

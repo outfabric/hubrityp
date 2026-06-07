@@ -116,7 +116,7 @@ test.describe('@agenda session creation', () => {
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 10000 });
 
     // Verify a success toast appeared
-    await expect(page.getByText('Sessao agendada com sucesso.')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Sessão agendada com sucesso.')).toBeVisible({ timeout: 5000 });
 
     // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
     // land on today (BRT), then click "next" once to advance one day.

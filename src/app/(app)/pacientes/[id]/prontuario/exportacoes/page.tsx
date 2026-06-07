@@ -67,7 +67,7 @@ export default async function ExportacoesPage({ params }: ExportacoesPageProps) 
         <Link href={`/pacientes/${patientId}/prontuario`}>
           <Button variant="ghost" size="sm" data-testid="exportacoes-back">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao prontuario
+            Voltar ao prontuário
           </Button>
         </Link>
       </div>
@@ -78,10 +78,10 @@ export default async function ExportacoesPage({ params }: ExportacoesPageProps) 
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="exportacoes-page-title"
         >
-          Exportacoes
+          Exportações
         </h1>
         <p className="text-text-secondary mt-1 text-sm">
-          Historico de exportacoes do prontuario em PDF.
+          Histórico de exportações do prontuário em PDF.
         </p>
       </div>
 

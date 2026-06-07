@@ -82,7 +82,7 @@ export async function setLocationDefaultImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao marcar local como padrao. Tente novamente.',
+      message: 'Erro inesperado ao marcar local como padrão. Tente novamente.',
     };
   }
 }

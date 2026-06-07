@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "pt-BR,en",
+  "import": ["@cspell/dict-pt-br/cspell-ext.json"],
+  "allowCompoundWords": true,
+  "files": ["src/**/*.{ts,tsx}"],
+  "ignorePaths": [
+    "node_modules/**",
+    ".next/**",
+    ".dev-cycle/**",
+    "coverage/**",
+    "playwright-report/**",
+    "playwright-report-real/**",
+    "test-results/**",
+    "**/*.d.ts",
+    "src/shared/db/migrations/**",
+    "**/*.snap",
+    "**/*.lock",
+    "src/__tests__/**"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./.cspell/project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
+  "ignoreRegExpList": ["/0x[0-9a-fA-F]+/", "/https?:\\/\\/\\S+/"]
+}

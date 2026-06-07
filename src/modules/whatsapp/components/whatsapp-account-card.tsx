@@ -115,7 +115,7 @@ export function WhatsappAccountCard({
           <div className="flex items-center gap-3">
             <MessageCircle className="text-text-tertiary h-6 w-6 shrink-0" aria-hidden="true" />
             <h3 className="text-text-primary text-[18px] leading-[1.25] font-semibold">
-              Integracao WhatsApp
+              Integração WhatsApp
             </h3>
           </div>
         </CardHeader>
@@ -151,7 +151,7 @@ export function WhatsappAccountCard({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Desconectar WhatsApp?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Templates serao preservados, mas lembretes deixarao de ser enviados.
+                      Templates serão preservados, mas lembretes deixarão de ser enviados.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -178,10 +178,10 @@ export function WhatsappAccountCard({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Badge variant="danger" data-testid="whatsapp-status-badge">
-                  Erro de conexao
+                  Erro de conexão
                 </Badge>
                 <p className="text-text-secondary text-[15px]">
-                  Houve um problema com a conexao do WhatsApp. Reconecte para voltar a enviar
+                  Houve um problema com a conexão do WhatsApp. Reconecte para voltar a enviar
                   lembretes.
                 </p>
               </div>
@@ -200,10 +200,10 @@ export function WhatsappAccountCard({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Badge variant="neutral" data-testid="whatsapp-status-badge">
-                  Nao conectado
+                  Não conectado
                 </Badge>
                 <p className="text-text-secondary text-[15px]">
-                  Conecte seu WhatsApp para enviar lembretes automaticos de sessao aos seus
+                  Conecte seu WhatsApp para enviar lembretes automáticos de sessão aos seus
                   pacientes.
                 </p>
               </div>

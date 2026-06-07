@@ -77,13 +77,13 @@ export function CallControlBar({
       <div
         className="bg-surface-muted flex items-center justify-center gap-2 rounded-2xl px-4 py-3"
         role="toolbar"
-        aria-label="Controles da sessao de video"
+        aria-label="Controles da sessão de vídeo"
       >
         {/* Mic toggle — Stream's built-in button with custom aria-label */}
         <ToggleAudioPublishingButton caption="Microfone" />
 
         {/* Camera toggle */}
-        <ToggleVideoPublishingButton caption="Camera" />
+        <ToggleVideoPublishingButton caption="Câmera" />
 
         {/* Screen share — psychologist only (always shown for the host) */}
         <ScreenShareButton caption="Compartilhar tela" />
@@ -103,7 +103,7 @@ export function CallControlBar({
           {hasUnreadMessages && !isChatOpen && (
             <span
               className="bg-danger-500 absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
-              aria-label="Mensagens nao lidas"
+              aria-label="Mensagens não lidas"
               data-testid="chat-unread-badge"
             />
           )}
@@ -114,7 +114,7 @@ export function CallControlBar({
           <Button
             variant={isProntuarioOpen ? 'outline' : 'ghost'}
             size="icon"
-            aria-label={isProntuarioOpen ? 'Fechar prontuario' : 'Abrir prontuario'}
+            aria-label={isProntuarioOpen ? 'Fechar prontuário' : 'Abrir prontuário'}
             onClick={onProntuarioToggle}
             data-testid="prontuario-toggle-button"
           >
@@ -141,7 +141,7 @@ export function CallControlBar({
           variant="destructive"
           size="icon"
           onClick={() => setShowEndDialog(true)}
-          aria-label="Encerrar sessao"
+          aria-label="Encerrar sessão"
           data-testid="end-call-button"
         >
           <PhoneOff className="h-5 w-5" aria-hidden="true" />

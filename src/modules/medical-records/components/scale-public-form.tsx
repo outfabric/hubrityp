@@ -71,14 +71,14 @@ export function ScalePublicForm({ questions, token }: ScalePublicFormProps) {
         } else {
           setFormState({
             status: 'error',
-            message: 'Nao foi possivel enviar suas respostas. Tente novamente.',
+            message: 'Não foi possível enviar suas respostas. Tente novamente.',
           });
         }
       })
       .catch(() => {
         setFormState({
           status: 'error',
-          message: 'Erro de conexao. Verifique sua internet e tente novamente.',
+          message: 'Erro de conexão. Verifique sua internet e tente novamente.',
         });
       });
   }, [allAnswered, token, responses]);
@@ -95,7 +95,7 @@ export function ScalePublicForm({ questions, token }: ScalePublicFormProps) {
         <CheckCircle2 className="text-success-500 h-12 w-12" aria-hidden="true" />
         <h2 className="text-text-primary text-lg leading-tight font-semibold">Obrigado!</h2>
         <p className="text-text-secondary text-[15px]">
-          Suas respostas foram enviadas ao seu psicologo.
+          Suas respostas foram enviadas ao seu psicólogo.
         </p>
       </div>
     );

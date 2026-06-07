@@ -33,8 +33,8 @@ export function PostCallView({ patientId }: PostCallViewProps) {
     <AlertDialog open>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Sessao encerrada</AlertDialogTitle>
-          <AlertDialogDescription>Deseja registrar a evolucao agora?</AlertDialogDescription>
+          <AlertDialogTitle>Sessão encerrada</AlertDialogTitle>
+          <AlertDialogDescription>Deseja registrar a evolução agora?</AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
@@ -50,13 +50,13 @@ export function PostCallView({ patientId }: PostCallViewProps) {
           {patientId ? (
             <Link href={`/pacientes/${patientId}/prontuario/evolucoes`}>
               <AlertDialogAction data-testid="post-call-register">
-                Registrar evolucao
+                Registrar evolução
               </AlertDialogAction>
             </Link>
           ) : (
             <Link href="/agenda">
               <AlertDialogAction data-testid="post-call-register">
-                Registrar evolucao
+                Registrar evolução
               </AlertDialogAction>
             </Link>
           )}

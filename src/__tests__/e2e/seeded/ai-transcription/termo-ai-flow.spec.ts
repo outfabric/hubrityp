@@ -99,7 +99,7 @@ test.describe.serial('@ai-transcription AI consent signing page', () => {
 
     const alreadySigned = page.getByTestId('ai-consent-already-signed');
     await expect(alreadySigned).toBeVisible();
-    await expect(alreadySigned).toContainText('Este termo ja foi assinado');
+    await expect(alreadySigned).toContainText('Este termo já foi assinado');
   });
 
   test('after signing, reloading shows the already-signed state', async ({ page }) => {
@@ -125,7 +125,7 @@ test.describe.serial('@ai-transcription AI consent signing page', () => {
 
     const alreadySigned = page.getByTestId('ai-consent-already-signed');
     await expect(alreadySigned).toBeVisible();
-    await expect(alreadySigned).toContainText('Este termo ja foi assinado');
+    await expect(alreadySigned).toContainText('Este termo já foi assinado');
   });
 
   test('name confirmation input has patient name as placeholder', async ({ page }) => {

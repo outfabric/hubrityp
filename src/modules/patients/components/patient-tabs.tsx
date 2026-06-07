@@ -22,19 +22,19 @@ interface TabDefinition {
 const TABS: TabDefinition[] = [
   {
     value: 'overview',
-    label: 'Visao geral',
+    label: 'Visão geral',
     icon: null,
     placeholder: false,
   },
   {
     value: 'sessions',
-    label: 'Historico de sessoes',
+    label: 'Histórico de sessões',
     icon: <Calendar className="h-4 w-4" aria-hidden="true" />,
     placeholder: true,
   },
   {
     value: 'records',
-    label: 'Prontuario',
+    label: 'Prontuário',
     icon: <FileText className="h-4 w-4" aria-hidden="true" />,
     placeholder: false,
   },
@@ -95,13 +95,13 @@ export function PatientTabs({ patientId, overviewContent, anamnesisContent }: Pa
       <TabsContent value="records" data-testid="patient-tab-content-records">
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <FileText className="text-text-tertiary mb-3 h-8 w-8" aria-hidden="true" />
-          <h3 className="text-text-primary mb-1 text-base font-semibold">Prontuario</h3>
+          <h3 className="text-text-primary mb-1 text-base font-semibold">Prontuário</h3>
           <p className="text-text-secondary mb-4 max-w-sm text-sm">
-            Evolucoes, hipoteses diagnosticas, escalas, plano terapeutico e documentos clinicos
-            estao disponiveis na pagina dedicada do prontuario.
+            Evoluções, hipóteses diagnósticas, escalas, plano terapêutico e documentos clínicos
+            estão disponíveis na página dedicada do prontuário.
           </p>
           <Button asChild data-testid="patient-tab-records-open-prontuario">
-            <Link href={`/pacientes/${patientId}/prontuario`}>Abrir prontuario</Link>
+            <Link href={`/pacientes/${patientId}/prontuario`}>Abrir prontuário</Link>
           </Button>
         </div>
       </TabsContent>

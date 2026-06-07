@@ -222,7 +222,7 @@ test.describe('@prontuario attachments tab', () => {
 
     // Assert consent warning Alert is visible
     await expect(page.getByTestId('attachment-consent-warning')).toBeVisible();
-    await expect(page.getByText(/Gravacoes requerem termo de consentimento/i)).toBeVisible();
+    await expect(page.getByText(/Gravações requerem termo de consentimento/i)).toBeVisible();
 
     // The submit button should be disabled
     await expect(page.getByTestId('attachment-submit-button')).toBeDisabled();
@@ -329,13 +329,13 @@ test.describe('@prontuario attachments tab', () => {
     // Confirm dialog should appear
     await expect(page.getByTestId('attachment-delete-dialog')).toBeVisible();
     await expect(page.getByText(/Tem certeza/i)).toBeVisible();
-    await expect(page.getByText(/copia auditavel/i)).toBeVisible();
+    await expect(page.getByText(/cópia auditável/i)).toBeVisible();
 
     // Click "Excluir" to confirm
     await page.getByTestId('attachment-delete-confirm').click();
 
     // Wait for success toast
-    await expect(page.getByText('Arquivo removido do prontuario.')).toBeVisible({
+    await expect(page.getByText('Arquivo removido do prontuário.')).toBeVisible({
       timeout: 10_000,
     });
 
@@ -373,10 +373,10 @@ test.describe('@prontuario personal notes tab', () => {
     // Verify the regulatory banner is visible with the expected text
     await expect(page.getByTestId('personal-notes-banner')).toBeVisible();
     await expect(page.getByTestId('personal-notes-banner')).toContainText(
-      'Resolucao CFP 001/2009, art. 5',
+      'Resolução CFP 001/2009, art. 5',
     );
     await expect(page.getByTestId('personal-notes-banner')).toContainText(
-      'NAO fazem parte do prontuario oficial',
+      'NÃO fazem parte do prontuário oficial',
     );
   });
 
@@ -396,7 +396,7 @@ test.describe('@prontuario personal notes tab', () => {
     await editor.fill('Notas pessoais do teste E2E — paciente apresenta melhora significativa');
 
     // Wait for auto-save indicator to show "Salvo as HH:MM"
-    await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo as/i, {
+    await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo às/i, {
       timeout: 30_000,
     });
 
@@ -430,7 +430,7 @@ test.describe('@prontuario personal notes tab', () => {
     await editor.fill('Conteudo secreto que deve estar protegido por senha');
 
     // Wait for auto-save
-    await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo as/i, {
+    await expect(page.getByTestId('auto-save-indicator')).toContainText(/Salvo às/i, {
       timeout: 30_000,
     });
 

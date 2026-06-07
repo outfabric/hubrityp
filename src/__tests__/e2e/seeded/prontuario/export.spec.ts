@@ -25,7 +25,7 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  *   11.3 Date range exclusion: filter date range that excludes all evolutions
  *        -> export request is submitted -> invoke buildProntuarioPdf with empty
  *        evolutions -> download the produced PDF -> assert it contains
- *        "Nenhuma evolucao no periodo selecionado." text.
+ *        "Nenhuma evolução no período selecionado." text.
  *
  * Background job simulation: The seeded e2e environment has no Inngest dev
  * server. Instead of bypassing the PDF generation entirely via a DB UPDATE,
@@ -311,7 +311,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 7. Assert: toast appears with success message
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 8. Navigate to exportacoes page via the "Ver exportacoes" link
     await page.getByTestId('prontuario-exports-link').click();
@@ -412,7 +412,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 12. Wait for the success toast
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 13. Verify the export row in the DB includes personal notes in filters.
     //     PDF content verification of personal notes inclusion/exclusion is
@@ -445,7 +445,7 @@ test.describe('@prontuario export', () => {
     // in January 2026 which excludes all evolutions. After the export request,
     // we invoke buildProntuarioPdf with an empty evolutions array (matching
     // what the Inngest job would produce with the January filter) and verify
-    // the PDF contains the "Nenhuma evolucao no periodo selecionado." message.
+    // the PDF contains the "Nenhuma evolução no período selecionado." message.
 
     // 1. Navigate to patient prontuario
     await page.goto(`/pacientes/${patientId}/prontuario`);
@@ -489,7 +489,7 @@ test.describe('@prontuario export', () => {
     await page.getByTestId('export-submit').click();
 
     // 5. Wait for the success toast
-    await expect(page.getByText(/Exportacao solicitada/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Exportação solicitada/i)).toBeVisible({ timeout: 15_000 });
 
     // 6. Verify the export row in the DB has a date range filter
     //    covering January 2026 (which excludes our March 2026 evolutions)
@@ -537,7 +537,7 @@ test.describe('@prontuario export', () => {
     // range filters out all evolutions, so renderEvolutionsSection renders
     // the placeholder message.
     const pdfText = extractPdfText(pdfBuffer);
-    expect(pdfText).toContain('Nenhuma evolucao no periodo selecionado.');
+    expect(pdfText).toContain('Nenhuma evolução no período selecionado.');
 
     // 9. Complete the export and verify the UI download flow works
     await completeExportWithPdf(db.sql, exportId, pdfBuffer);

@@ -169,10 +169,10 @@ function renderAiConsent(
       >
         <Info className="text-info-500 h-12 w-12" aria-hidden="true" />
         <h3 className="text-text-primary text-lg leading-tight font-semibold">
-          Este termo ja foi assinado
+          Este termo já foi assinado
         </h3>
         <p className="text-text-secondary text-[15px]">
-          O consentimento para gravacao e transcricao por IA ja foi registrado.
+          O consentimento para gravação e transcrição por IA já foi registrado.
         </p>
       </div>
     );

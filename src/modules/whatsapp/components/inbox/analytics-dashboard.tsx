@@ -225,12 +225,12 @@ export function AnalyticsDashboard({
       <div className="flex flex-wrap items-center gap-4">
         <Select value={period} onValueChange={handlePeriodChange}>
           <SelectTrigger className="w-[220px]" data-testid="analytics-period-select">
-            <SelectValue placeholder="Selecione o periodo" />
+            <SelectValue placeholder="Selecione o período" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="current_month">Mes corrente</SelectItem>
-            <SelectItem value="previous_month">Mes anterior</SelectItem>
-            <SelectItem value="last_90_days">Ultimos 90 dias</SelectItem>
+            <SelectItem value="current_month">Mês corrente</SelectItem>
+            <SelectItem value="previous_month">Mês anterior</SelectItem>
+            <SelectItem value="last_90_days">Últimos 90 dias</SelectItem>
             <SelectItem value="custom">Personalizado</SelectItem>
           </SelectContent>
         </Select>
@@ -242,7 +242,7 @@ export function AnalyticsDashboard({
                 <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                 {customRange?.from && customRange?.to
                   ? `${format(customRange.from, 'dd/MM/yyyy')} - ${format(customRange.to, 'dd/MM/yyyy')}`
-                  : 'Selecionar periodo'}
+                  : 'Selecionar período'}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -266,7 +266,7 @@ export function AnalyticsDashboard({
       {/* Summary cards — 4 cols desktop, 2 cols mobile */}
       <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
         <SummaryCard
-          label="Enviadas no mes"
+          label="Enviadas no mês"
           value={String(data.totalSent)}
           testId="analytics-card-sent"
         />
@@ -283,7 +283,7 @@ export function AnalyticsDashboard({
           testId="analytics-card-read"
         />
         <SummaryCard
-          label="Taxa de confirmacao"
+          label="Taxa de confirmação"
           value={formatPercentage(data.totalConfirmed, data.totalSent)}
           helperText={`${data.totalConfirmed} confirmadas`}
           testId="analytics-card-confirmation"
@@ -313,7 +313,7 @@ export function AnalyticsDashboard({
               {messages.length === 0 && !isLoadingMessages ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-text-tertiary py-8 text-center text-sm">
-                    Nenhuma mensagem encontrada para o periodo selecionado.
+                    Nenhuma mensagem encontrada para o período selecionado.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -343,7 +343,7 @@ export function AnalyticsDashboard({
         <div className="space-y-3 md:hidden">
           {messages.length === 0 && !isLoadingMessages ? (
             <div className="text-text-tertiary py-8 text-center text-sm">
-              Nenhuma mensagem encontrada para o periodo selecionado.
+              Nenhuma mensagem encontrada para o período selecionado.
             </div>
           ) : (
             messages.map((item) => {
@@ -383,7 +383,7 @@ export function AnalyticsDashboard({
               size="sm"
               disabled={currentPage <= 1 || isLoadingMessages}
               onClick={() => handlePageChange(currentPage - 1)}
-              aria-label="Pagina anterior"
+              aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -395,7 +395,7 @@ export function AnalyticsDashboard({
               size="sm"
               disabled={currentPage >= totalPages || isLoadingMessages}
               onClick={() => handlePageChange(currentPage + 1)}
-              aria-label="Proxima pagina"
+              aria-label="Próxima página"
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>

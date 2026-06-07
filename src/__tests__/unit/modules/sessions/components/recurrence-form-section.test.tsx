@@ -51,10 +51,10 @@ function renderWithForm() {
 // ---------------------------------------------------------------------------
 
 describe('RecurrenceFormSection', () => {
-  it('renders the "Sessao recorrente" checkbox', () => {
+  it('renders the "Sessão recorrente" checkbox', () => {
     renderWithForm();
     expect(screen.getByTestId('recurrence-toggle')).toBeInTheDocument();
-    expect(screen.getByText('Sessao recorrente')).toBeInTheDocument();
+    expect(screen.getByText('Sessão recorrente')).toBeInTheDocument();
   });
 
   it('checkbox toggles collapsible visibility', async () => {
@@ -129,11 +129,11 @@ describe('RecurrenceFormSection', () => {
     // Verify aria-labels for full day names
     expect(screen.getByLabelText('Domingo')).toBeInTheDocument();
     expect(screen.getByLabelText('Segunda-feira')).toBeInTheDocument();
-    expect(screen.getByLabelText('Terca-feira')).toBeInTheDocument();
+    expect(screen.getByLabelText('Terça-feira')).toBeInTheDocument();
     expect(screen.getByLabelText('Quarta-feira')).toBeInTheDocument();
     expect(screen.getByLabelText('Quinta-feira')).toBeInTheDocument();
     expect(screen.getByLabelText('Sexta-feira')).toBeInTheDocument();
-    expect(screen.getByLabelText('Sabado')).toBeInTheDocument();
+    expect(screen.getByLabelText('Sábado')).toBeInTheDocument();
   });
 
   it('selecting "Mensal" hides days-of-week', async () => {
@@ -160,7 +160,7 @@ describe('RecurrenceFormSection', () => {
     });
   });
 
-  it('end condition "Numero de sessoes" reveals number input', async () => {
+  it('end condition "Número de sessões" reveals number input', async () => {
     renderWithForm();
 
     // Expand the collapsible
@@ -173,7 +173,7 @@ describe('RecurrenceFormSection', () => {
     // Number input should NOT be visible initially (default is indefinite)
     expect(screen.queryByTestId('occurrence-count-input')).not.toBeInTheDocument();
 
-    // Select "Numero de sessoes"
+    // Select "Número de sessões"
     fireEvent.click(screen.getByTestId('end-condition-count'));
 
     await waitFor(() => {
@@ -200,11 +200,11 @@ describe('RecurrenceFormSection', () => {
     // Default end condition is "indefinite" — helper should be visible
     expect(screen.getByTestId('indefinite-helper')).toBeInTheDocument();
     expect(screen.getByTestId('indefinite-helper')).toHaveTextContent(
-      'As sessoes serao geradas continuamente ate que voce cancele a recorrencia.',
+      'As sessões serão geradas continuamente até que você cancele a recorrência.',
     );
   });
 
-  it('switching end condition from "Indefinido" to "Data especifica" hides helper and shows date picker', async () => {
+  it('switching end condition from "Indefinido" to "Data específica" hides helper and shows date picker', async () => {
     renderWithForm();
 
     // Expand the collapsible
@@ -247,7 +247,7 @@ describe('RecurrenceFormSection', () => {
 
     await waitFor(() => {
       const group = screen.getByTestId('frequency-radio-group');
-      expect(group).toHaveAttribute('aria-label', 'Frequencia da recorrencia');
+      expect(group).toHaveAttribute('aria-label', 'Frequência da recorrência');
     });
   });
 });

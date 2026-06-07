@@ -95,11 +95,11 @@ function renderRichTextSection(doc: PdfDoc, heading: string, htmlContent: string
 // ---------------------------------------------------------------------------
 
 export function renderTreatmentPlanSection(doc: PdfDoc, data: TreatmentPlanData): void {
-  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Plano Terapeutico');
+  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Plano Terapêutico');
   doc.moveDown(0.8);
 
   if (!data.current) {
-    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhum plano terapeutico registrado.');
+    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhum plano terapêutico registrado.');
     doc.moveDown(1);
     return;
   }
@@ -109,12 +109,12 @@ export function renderTreatmentPlanSection(doc: PdfDoc, data: TreatmentPlanData)
   renderListSection(doc, 'Objetivos', plan.goals);
   renderListSection(doc, 'Fases', plan.phases);
   renderRichTextSection(doc, 'Recursos', plan.resources);
-  renderRichTextSection(doc, 'Criterios de sucesso', plan.successCriteria);
+  renderRichTextSection(doc, 'Critérios de sucesso', plan.successCriteria);
 
   // Version footer
   doc
     .font(FONT_ITALIC)
     .fontSize(FOOTER_FONT_SIZE)
-    .text(`Versao atual: ${plan.currentVersion} — Total de revisoes: ${data.versionCount}`);
+    .text(`Versão atual: ${plan.currentVersion} — Total de revisões: ${data.versionCount}`);
   doc.moveDown(1);
 }

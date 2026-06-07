@@ -67,7 +67,7 @@ export async function deleteSessionImpl(
       return {
         ok: false,
         error: 'not_scheduled',
-        message: 'Apenas sessoes com status "agendada" podem ser excluidas.',
+        message: 'Apenas sessões com status "agendada" podem ser excluídas.',
       };
     }
 
@@ -84,7 +84,7 @@ export async function deleteSessionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao excluir sessao. Tente novamente.',
+      message: 'Erro inesperado ao excluir sessão. Tente novamente.',
     };
   }
 }

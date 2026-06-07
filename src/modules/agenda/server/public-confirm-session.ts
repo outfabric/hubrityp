@@ -86,7 +86,7 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
       return {
         ok: false,
         error: 'invalid_transition',
-        message: `Transicao de "${status}" para "confirmed" nao e permitida.`,
+        message: `Transição de "${status}" para "confirmed" não é permitida.`,
       };
     }
 
@@ -127,7 +127,7 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
         ok: false,
         error: 'concurrent_modification',
         message:
-          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+          'O status da sessão foi alterado por outra operação. Atualize a página e tente novamente.',
       };
     }
 
@@ -169,7 +169,7 @@ export async function publicConfirmSessionImpl(token: string): Promise<PublicCon
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao confirmar sessao. Tente novamente.',
+      message: 'Erro inesperado ao confirmar sessão. Tente novamente.',
     };
   }
 }

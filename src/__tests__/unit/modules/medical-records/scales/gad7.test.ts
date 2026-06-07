@@ -55,7 +55,7 @@ describe('GAD-7 — questions', () => {
     const labels = gad7.questions[0]!.options.map((o) => o.label);
     expect(labels).toEqual([
       'Nenhuma vez',
-      'Varios dias',
+      'Vários dias',
       'Mais da metade dos dias',
       'Quase todos os dias',
     ]);
@@ -98,12 +98,12 @@ describe('GAD-7 — scoring', () => {
 // ---------------------------------------------------------------------------
 
 describe('GAD-7 — classification', () => {
-  it('score 0 -> Minimo / minimal', () => {
-    expect(gad7.classify(0)).toEqual({ label: 'Minimo', severity: 'minimal' });
+  it('score 0 -> Mínimo / minimal', () => {
+    expect(gad7.classify(0)).toEqual({ label: 'Mínimo', severity: 'minimal' });
   });
 
-  it('score 4 -> Minimo / minimal (upper boundary)', () => {
-    expect(gad7.classify(4)).toEqual({ label: 'Minimo', severity: 'minimal' });
+  it('score 4 -> Mínimo / minimal (upper boundary)', () => {
+    expect(gad7.classify(4)).toEqual({ label: 'Mínimo', severity: 'minimal' });
   });
 
   it('score 5 -> Leve / mild (lower boundary)', () => {
@@ -136,9 +136,9 @@ describe('GAD-7 — classification', () => {
     expect(gad7.classify(21)).toEqual({ label: 'Grave', severity: 'severe' });
   });
 
-  it('null score defaults to Minimo / minimal', () => {
+  it('null score defaults to Mínimo / minimal', () => {
     expect(gad7.classify(null)).toEqual({
-      label: 'Minimo',
+      label: 'Mínimo',
       severity: 'minimal',
     });
   });
@@ -150,7 +150,7 @@ describe('GAD-7 — classification', () => {
 
 describe('GAD-7 — score then classify (integration)', () => {
   it.each([
-    { total: 4, label: 'Minimo', severity: 'minimal' },
+    { total: 4, label: 'Mínimo', severity: 'minimal' },
     { total: 5, label: 'Leve', severity: 'mild' },
     { total: 9, label: 'Leve', severity: 'mild' },
     { total: 10, label: 'Moderado', severity: 'moderate' },

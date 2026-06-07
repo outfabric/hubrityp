@@ -107,7 +107,7 @@ export function DocumentViewer({
     void createDocument({
       patientId,
       document_type: documentType,
-      title: `${title} (copia)`,
+      title: `${title} (cópia)`,
       content,
     })
       .then((result) => {
@@ -137,7 +137,7 @@ export function DocumentViewer({
           {title || typeConfig?.label || 'Documento'}
         </h2>
         <p className="text-text-secondary text-sm">
-          Este documento foi finalizado e nao pode ser editado.
+          Este documento foi finalizado e não pode ser editado.
         </p>
       </div>
 

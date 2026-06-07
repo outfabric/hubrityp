@@ -72,9 +72,9 @@ export function ProntuarioCallDrawer({
         data-testid="prontuario-drawer"
       >
         <SheetHeader>
-          <SheetTitle className="text-[16px] font-medium">Prontuario de {patientName}</SheetTitle>
+          <SheetTitle className="text-[16px] font-medium">Prontuário de {patientName}</SheetTitle>
           <SheetDescription className="sr-only">
-            Prontuario clinico do paciente durante a sessao de video
+            Prontuário clínico do paciente durante a sessão de vídeo
           </SheetDescription>
         </SheetHeader>
 
@@ -99,7 +99,7 @@ export function ProntuarioCallDrawer({
             rel="noopener noreferrer"
             data-testid="open-full-prontuario-link"
           >
-            Abrir prontuario completo
+            Abrir prontuário completo
             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>

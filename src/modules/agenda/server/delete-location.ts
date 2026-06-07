@@ -72,7 +72,7 @@ export async function deleteLocationImpl(
     return {
       ok: false,
       error: 'has_linked_sessions',
-      message: 'Este local esta vinculado a sessoes. Remova o vinculo antes de excluir.',
+      message: 'Este local está vinculado a sessões. Remova o vínculo antes de excluir.',
     };
   }
 

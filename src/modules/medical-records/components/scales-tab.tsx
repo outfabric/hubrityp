@@ -166,7 +166,7 @@ function ScalesEmptyState({ onApply }: ScalesEmptyStateProps) {
       <Scale className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
       <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhuma escala aplicada</h4>
       <p className="text-text-secondary mb-4 max-w-sm text-sm">
-        Aplique escalas psicometricas para acompanhar a evolucao do paciente ao longo do tratamento.
+        Aplique escalas psicométricas para acompanhar a evolução do paciente ao longo do tratamento.
       </p>
       <Button onClick={onApply} data-testid="scales-empty-cta">
         Aplicar nova escala

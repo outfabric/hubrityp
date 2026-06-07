@@ -704,7 +704,7 @@ export const prontuarioExportPdfFunction = inngest.createFunction(
       await notify(db, {
         userId,
         type: 'prontuario_export_ready',
-        title: `Exportacao do prontuario de ${patientFirstName} esta pronta para download`,
+        title: `Exportação do prontuário de ${patientFirstName} está pronta para download`,
         actionUrl: `/pacientes/${patientId}/prontuario/exportacoes`,
       });
 
@@ -738,7 +738,7 @@ export const prontuarioExportPdfFunction = inngest.createFunction(
 
         await sendEmailViaResend({
           to: recipientEmail,
-          subject: `Exportacao de prontuario pronta (${fileSizeMb} MB)`,
+          subject: `Exportação de prontuário pronta (${fileSizeMb} MB)`,
           html: buildExportEmailHtml({
             patientFirstName,
             fileSizeMb,
@@ -815,13 +815,13 @@ function buildExportEmailHtml(params: ExportEmailParams): string {
 <html lang="pt-BR">
 <head><meta charset="UTF-8"></head>
 <body style="font-family: sans-serif; color: #1a1a1a; line-height: 1.6;">
-  <h2>Exportacao de prontuario pronta</h2>
-  <p>Ola,</p>
-  <p>A exportacao do prontuario de <strong>${name}</strong> foi concluida com sucesso.</p>
+  <h2>Exportação de prontuário pronta</h2>
+  <p>Olá,</p>
+  <p>A exportação do prontuário de <strong>${name}</strong> foi concluída com sucesso.</p>
   <p>Tamanho do arquivo: <strong>${size} MB</strong></p>
   <p>O link para download expira em <strong>${expiry}</strong>.</p>
-  <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Baixar prontuario</a></p>
-  <p style="font-size: 0.85em; color: #666;">Se voce nao solicitou esta exportacao, por favor desconsidere este e-mail.</p>
+  <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Baixar prontuário</a></p>
+  <p style="font-size: 0.85em; color: #666;">Se você não solicitou esta exportação, por favor desconsidere este e-mail.</p>
   <br/>
   <p>— Equipe HubrityP</p>
 </body>
@@ -830,17 +830,17 @@ function buildExportEmailHtml(params: ExportEmailParams): string {
 
 function buildExportEmailText(params: ExportEmailParams): string {
   return [
-    'Exportacao de prontuario pronta',
+    'Exportação de prontuário pronta',
     '',
-    'Ola,',
+    'Olá,',
     '',
-    `A exportacao do prontuario de ${params.patientFirstName} foi concluida com sucesso.`,
+    `A exportação do prontuário de ${params.patientFirstName} foi concluída com sucesso.`,
     `Tamanho do arquivo: ${params.fileSizeMb} MB`,
     `O link para download expira em ${params.expiryDate}.`,
     '',
     `Link para download: ${params.downloadUrl}`,
     '',
-    'Se voce nao solicitou esta exportacao, por favor desconsidere este e-mail.',
+    'Se você não solicitou esta exportação, por favor desconsidere este e-mail.',
     '',
     '— Equipe HubrityP',
   ].join('\n');

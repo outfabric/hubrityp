@@ -8,11 +8,11 @@ import { readSeedState, SEED_SESSIONS } from '../setup/seed-state';
  *
  * Tests the patient-facing public confirmation page at `/confirmar-sessao/:token`:
  *   1. Navigate to the page (no auth context)
- *   2. Click "Nao posso comparecer"
+ *   2. Click "Não posso comparecer"
  *   3. Enter optional reason in textarea
  *   4. Click "Confirmar cancelamento"
  *   5. Verify "Cancelamento registrado" message
- *   6. Revisit the same URL -> "Voce ja respondeu"
+ *   6. Revisit the same URL -> "Você já respondeu"
  *
  * Prerequisites:
  *   - Seeded session with confirmation_token in global-setup.ts
@@ -58,7 +58,7 @@ test.describe.serial('@agenda public confirmation — decline', () => {
     const form = page.getByTestId('confirmation-form');
     await expect(form).toBeVisible();
 
-    // Click "Nao posso comparecer" to expand decline form
+    // Click "Não posso comparecer" to expand decline form
     const declineButton = page.getByTestId('decline-button');
     await expect(declineButton).toBeVisible();
     await declineButton.click();
@@ -81,7 +81,7 @@ test.describe.serial('@agenda public confirmation — decline', () => {
     const declined = page.getByTestId('confirmation-declined');
     await expect(declined).toBeVisible({ timeout: 10000 });
     await expect(declined).toContainText('Cancelamento registrado');
-    await expect(declined).toContainText('Sua psicologa foi notificada sobre o cancelamento');
+    await expect(declined).toContainText('Sua psicóloga foi notificada sobre o cancelamento');
   });
 
   test('revisiting after decline shows already-responded', async ({ page }) => {
@@ -100,11 +100,11 @@ test.describe.serial('@agenda public confirmation — decline', () => {
     const declined = page.getByTestId('confirmation-declined');
     await expect(declined).toBeVisible({ timeout: 10000 });
 
-    // Revisit the same URL — should see "Voce ja respondeu"
+    // Revisit the same URL — should see "Você já respondeu"
     await page.goto(`/confirmar-sessao/${token}`);
     const alreadyResponded = page.getByTestId('confirmation-already-responded');
     await expect(alreadyResponded).toBeVisible();
-    await expect(alreadyResponded).toContainText('Voce ja respondeu');
+    await expect(alreadyResponded).toContainText('Você já respondeu');
   });
 
   test('declines a session without providing a reason', async ({ page }) => {
@@ -112,7 +112,7 @@ test.describe.serial('@agenda public confirmation — decline', () => {
 
     await page.goto(`/confirmar-sessao/${token}`);
 
-    // Click "Nao posso comparecer"
+    // Click "Não posso comparecer"
     const declineButton = page.getByTestId('decline-button');
     await declineButton.click();
 

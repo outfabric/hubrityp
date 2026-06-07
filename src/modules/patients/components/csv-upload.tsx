@@ -168,7 +168,7 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
             handleClick();
           }
         }}
-        aria-label="Area de upload de CSV"
+        aria-label="Área de upload de CSV"
         data-testid="csv-dropzone"
       >
         {isParsing ? (

@@ -99,8 +99,8 @@ test.describe('@whatsapp health banner', () => {
     await expect(banner).toBeVisible({ timeout: 5000 });
 
     // Verify the banner text
-    await expect(banner).toContainText('Sua conexao com WhatsApp expirou');
-    await expect(banner).toContainText('Lembretes nao estao sendo enviados');
+    await expect(banner).toContainText('Sua conexão com WhatsApp expirou');
+    await expect(banner).toContainText('Lembretes não estão sendo enviados');
 
     // Verify the "Reconectar" link is present
     const reconnectLink = banner.getByRole('link', { name: 'Reconectar' });

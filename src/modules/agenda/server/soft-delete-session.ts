@@ -8,7 +8,7 @@ import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
 
-const sessionIdSchema = z.string().uuid({ message: 'ID da sessao invalido.' });
+const sessionIdSchema = z.string().uuid({ message: 'ID da sessão inválido.' });
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -50,7 +50,7 @@ export async function softDeleteSessionImpl(
     return {
       ok: false,
       error: 'invalid_input',
-      message: parsed.error.issues[0]?.message ?? 'Input invalido.',
+      message: parsed.error.issues[0]?.message ?? 'Input inválido.',
     };
   }
   const validSessionId = parsed.data;
@@ -69,7 +69,7 @@ export async function softDeleteSessionImpl(
     return {
       ok: false,
       error: 'not_confirmed',
-      message: 'A exclusao definitiva requer confirmacao explicita.',
+      message: 'A exclusão definitiva requer confirmação explícita.',
     };
   }
 
@@ -91,7 +91,7 @@ export async function softDeleteSessionImpl(
       return {
         ok: false,
         error: 'not_cancelled',
-        message: 'Apenas sessoes canceladas podem ser excluidas definitivamente.',
+        message: 'Apenas sessões canceladas podem ser excluídas definitivamente.',
       };
     }
 
@@ -113,7 +113,7 @@ export async function softDeleteSessionImpl(
         ok: false,
         error: 'has_done_or_no_show_history',
         message:
-          'Sessao com historico de realizada ou falta nao pode ser excluida definitivamente.',
+          'Sessão com histórico de realizada ou falta não pode ser excluída definitivamente.',
       };
     }
 
@@ -142,7 +142,7 @@ export async function softDeleteSessionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao excluir sessao. Tente novamente.',
+      message: 'Erro inesperado ao excluir sessão. Tente novamente.',
     };
   }
 }

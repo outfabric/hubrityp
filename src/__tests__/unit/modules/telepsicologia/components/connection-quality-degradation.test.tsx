@@ -85,7 +85,7 @@ describe('ConnectionQualityIndicator — degradation controls', () => {
 
     expect(mockToastWarning).toHaveBeenCalledOnce();
     expect(mockToastWarning).toHaveBeenCalledWith(
-      'Sua conexao esta instavel',
+      'Sua conexão está instável',
       expect.objectContaining({
         action: expect.objectContaining({
           label: 'Reduzir qualidade',
@@ -168,7 +168,7 @@ describe('ConnectionQualityIndicator — degradation controls', () => {
     render(<ConnectionQualityIndicator />);
 
     // The banner should still be visible
-    expect(screen.getByRole('alert')).toHaveTextContent('Sua conexao esta instavel');
+    expect(screen.getByRole('alert')).toHaveTextContent('Sua conexão está instável');
     // And the toast should have been fired
     expect(mockToastWarning).toHaveBeenCalledOnce();
   });

@@ -159,7 +159,7 @@ test.describe('@sessions recurring session creation', () => {
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 15000 });
 
     // Verify a success toast appeared mentioning multiple sessions
-    await expect(page.getByText(/sessoes agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/sessões agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
 
     // Navigate to tomorrow's date. Switch to day view, click "Hoje" to
     // land on today (BRT), then click "next" once to advance one day.

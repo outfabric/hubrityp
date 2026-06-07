@@ -29,11 +29,11 @@ import { ScaleHistoryChart } from './scale-history-chart';
  * WHOQOL-Bref stores JSON domain scores — show "4 dominios" instead.
  */
 function formatClassificationLabel(classification: string | null): string {
-  if (!classification) return 'Sem classificacao';
+  if (!classification) return 'Sem classificação';
   try {
     const parsed: unknown = JSON.parse(classification);
     if (typeof parsed === 'object' && parsed !== null && 'physical' in parsed) {
-      return '4 dominios';
+      return '4 domínios';
     }
   } catch {
     // Not JSON — return as-is
@@ -77,7 +77,7 @@ export function ScaleSummaryCard({ summary, timeseries }: ScaleSummaryCardProps)
   const formattedDate = format(parseISO(summary.lastDate), 'dd/MM/yyyy', { locale: ptBR });
 
   const scoreDisplay =
-    summary.lastScore !== null ? `Pontuacao: ${summary.lastScore}` : 'Sem pontuacao total';
+    summary.lastScore !== null ? `Pontuação: ${summary.lastScore}` : 'Sem pontuação total';
 
   return (
     <>
@@ -93,7 +93,7 @@ export function ScaleSummaryCard({ summary, timeseries }: ScaleSummaryCardProps)
 
         {/* Meta row */}
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-text-tertiary text-xs">Ultima aplicacao: {formattedDate}</span>
+          <span className="text-text-tertiary text-xs">Última aplicação: {formattedDate}</span>
           <Button
             variant="ghost"
             size="sm"
@@ -101,7 +101,7 @@ export function ScaleSummaryCard({ summary, timeseries }: ScaleSummaryCardProps)
             data-testid={`scale-history-btn-${summary.scaleKey}`}
           >
             <History className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Ver historico completo
+            Ver histórico completo
           </Button>
         </div>
       </Card>
@@ -110,8 +110,8 @@ export function ScaleSummaryCard({ summary, timeseries }: ScaleSummaryCardProps)
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
         <SheetContent side="right" className="overflow-y-auto sm:max-w-[560px]">
           <SheetHeader className="px-6 pt-6">
-            <SheetTitle>Historico — {scaleLabel}</SheetTitle>
-            <SheetDescription>Evolucao das aplicacoes ao longo do tempo.</SheetDescription>
+            <SheetTitle>Histórico — {scaleLabel}</SheetTitle>
+            <SheetDescription>Evolução das aplicações ao longo do tempo.</SheetDescription>
           </SheetHeader>
           <div className="px-6 py-4">
             <ScaleHistoryChart scaleKey={summary.scaleKey} timeseries={timeseries} />

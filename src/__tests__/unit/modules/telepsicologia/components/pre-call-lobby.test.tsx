@@ -91,7 +91,7 @@ describe('PreCallLobby', () => {
     render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
 
     // Camera preview is a <video> element with the aria-label
-    expect(screen.getByLabelText('Previa da camera')).toBeInTheDocument();
+    expect(screen.getByLabelText('Prévia da câmera')).toBeInTheDocument();
   });
 
   it('shows the camera-off placeholder when camera is muted', () => {
@@ -99,8 +99,8 @@ describe('PreCallLobby', () => {
 
     render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
 
-    expect(screen.getByText('Camera desligada')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Previa da camera')).not.toBeInTheDocument();
+    expect(screen.getByText('Câmera desligada')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Prévia da câmera')).not.toBeInTheDocument();
   });
 
   it('shows an inline permission error when camera.enable() rejects', async () => {
@@ -112,7 +112,7 @@ describe('PreCallLobby', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
     expect(
-      screen.getByText('Nao foi possivel acessar a camera. Verifique as permissoes do navegador.'),
+      screen.getByText('Não foi possível acessar a câmera. Verifique as permissões do navegador.'),
     ).toBeInTheDocument();
   });
 
@@ -126,18 +126,18 @@ describe('PreCallLobby', () => {
     });
     expect(
       screen.getByText(
-        'Nao foi possivel acessar o microfone. Verifique as permissoes do navegador.',
+        'Não foi possível acessar o microfone. Verifique as permissões do navegador.',
       ),
     ).toBeInTheDocument();
   });
 
-  it('calls call.join() when "Entrar na sessao" button is clicked', async () => {
+  it('calls call.join() when "Entrar na sessão" button is clicked', async () => {
     const user = userEvent.setup();
 
     render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
 
     const joinButton = screen.getByTestId('join-call-button');
-    expect(joinButton).toHaveTextContent('Entrar na sessao');
+    expect(joinButton).toHaveTextContent('Entrar na sessão');
 
     await user.click(joinButton);
 
@@ -190,6 +190,6 @@ describe('PreCallLobby', () => {
 
     render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
 
-    expect(screen.getByText('Joana Silva esta aguardando')).toBeInTheDocument();
+    expect(screen.getByText('Joana Silva está aguardando')).toBeInTheDocument();
   });
 });

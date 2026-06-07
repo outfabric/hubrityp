@@ -122,7 +122,7 @@ export function PatientOverviewTab({
           {patient.notes && (
             <div className="md:col-span-2" data-testid="patient-field-notes">
               <dt className="text-text-tertiary text-xs font-medium tracking-wide uppercase">
-                Anotacoes
+                Anotações
               </dt>
               <dd className="text-text-primary mt-1 max-w-[720px] text-[15px] whitespace-pre-wrap">
                 {patient.notes}
@@ -143,13 +143,13 @@ export function PatientOverviewTab({
           />
 
           <DataField
-            label="Genero"
+            label="Gênero"
             value={patient.gender ? (GENDER_LABELS[patient.gender] ?? patient.gender) : null}
             testId="patient-field-gender"
           />
 
           <DataField
-            label="Profissao"
+            label="Profissão"
             value={patient.profession}
             testId="patient-field-profession"
           />
@@ -180,7 +180,7 @@ export function PatientOverviewTab({
             testId="patient-field-cpf"
           />
 
-          <DataField label="Endereco" value={patient.address} testId="patient-field-address" />
+          <DataField label="Endereço" value={patient.address} testId="patient-field-address" />
 
           <DataField
             label="Cadastrado em"

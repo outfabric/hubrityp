@@ -12,7 +12,7 @@ import { db } from '@/shared/db/client';
 import { sessions, sessionHistory } from '@/shared/db/schema/agenda/tables';
 import { logger } from '@/shared/lib/logger';
 
-const sessionIdSchema = z.string().uuid({ message: 'ID da sessao invalido.' });
+const sessionIdSchema = z.string().uuid({ message: 'ID da sessão inválido.' });
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -55,7 +55,7 @@ export async function markSessionDoneImpl(
     return {
       ok: false,
       error: 'invalid_input',
-      message: parsed.error.issues[0]?.message ?? 'Input invalido.',
+      message: parsed.error.issues[0]?.message ?? 'Input inválido.',
     };
   }
   const validSessionId = parsed.data;
@@ -87,7 +87,7 @@ export async function markSessionDoneImpl(
       return {
         ok: false,
         error: 'session_locked',
-        message: 'Esta sessao esta bloqueada para edicao apos 7 dias.',
+        message: 'Esta sessão está bloqueada para edição após 7 dias.',
       };
     }
 
@@ -97,7 +97,7 @@ export async function markSessionDoneImpl(
       return {
         ok: false,
         error: 'invalid_transition',
-        message: `Transicao de "${fromStatus}" para "done" nao e permitida.`,
+        message: `Transição de "${fromStatus}" para "done" não é permitida.`,
       };
     }
 
@@ -130,7 +130,7 @@ export async function markSessionDoneImpl(
         ok: false,
         error: 'concurrent_modification',
         message:
-          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+          'O status da sessão foi alterado por outra operação. Atualize a página e tente novamente.',
       };
     }
 
@@ -171,7 +171,7 @@ export async function markSessionDoneImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao marcar sessao como realizada. Tente novamente.',
+      message: 'Erro inesperado ao marcar sessão como realizada. Tente novamente.',
     };
   }
 }

@@ -49,17 +49,17 @@ export function VersionHistoryPanel({ versions }: VersionHistoryPanelProps) {
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-1.5" data-testid="version-history-trigger">
           <History className="h-4 w-4" aria-hidden="true" />
-          Historico
+          Histórico
         </Button>
       </SheetTrigger>
 
       <SheetContent side="right" data-testid="version-history-panel">
         <SheetHeader>
-          <SheetTitle>Historico de Versoes</SheetTitle>
+          <SheetTitle>Histórico de Versões</SheetTitle>
           <SheetDescription>
             {versions.length === 0
-              ? 'Nenhuma versao registrada.'
-              : `${versions.length} ${versions.length === 1 ? 'versao' : 'versoes'} encontrada${versions.length === 1 ? '' : 's'}.`}
+              ? 'Nenhuma versão registrada.'
+              : `${versions.length} ${versions.length === 1 ? 'versão' : 'versões'} encontrada${versions.length === 1 ? '' : 's'}.`}
           </SheetDescription>
         </SheetHeader>
 
@@ -76,7 +76,7 @@ export function VersionHistoryPanel({ versions }: VersionHistoryPanelProps) {
             >
               <div className="flex items-center gap-2">
                 <span className="text-text-primary text-sm font-medium">
-                  Versao {version.versionNumber}
+                  Versão {version.versionNumber}
                 </span>
                 {version.isAddendum && (
                   <Badge variant="warning" data-testid="addendum-badge">
@@ -100,7 +100,7 @@ export function VersionHistoryPanel({ versions }: VersionHistoryPanelProps) {
         {selectedVersion && (
           <div className="border-border mt-4 border-t pt-4">
             <h4 className="text-text-primary mb-2 text-sm font-medium">
-              Conteudo da Versao {selectedVersion.versionNumber}
+              Conteúdo da Versão {selectedVersion.versionNumber}
             </h4>
             {selectedVersion.reason && (
               <p className="text-text-secondary mb-2 text-xs">Motivo: {selectedVersion.reason}</p>

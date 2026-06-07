@@ -39,7 +39,7 @@ test.describe('@whatsapp reminder settings', () => {
     // Verify page title
     await expect(page.getByTestId('reminder-settings-page-title')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('reminder-settings-page-title')).toHaveText(
-      'Configuracoes de Lembretes',
+      'Configurações de Lembretes',
     );
 
     // Verify form card is visible
@@ -76,7 +76,7 @@ test.describe('@whatsapp reminder settings', () => {
     await page.getByTestId('reminder-settings-save').click();
 
     // Verify success toast
-    await expect(page.getByText('Configuracoes de lembretes salvas')).toBeVisible({
+    await expect(page.getByText('Configurações de lembretes salvas')).toBeVisible({
       timeout: 10000,
     });
 

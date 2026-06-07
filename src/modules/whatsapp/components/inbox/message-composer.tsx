@@ -172,8 +172,8 @@ export function MessageComposer({
         <Alert variant="warning">
           <AlertTriangle size={16} />
           <AlertDescription>
-            Esse conteudo parece ser clinico. Por politica do WhatsApp e LGPD, conversas clinicas
-            devem ficar no prontuario. Use mensagens administrativas apenas.
+            Esse conteúdo parece ser clínico. Por política do WhatsApp e LGPD, conversas clínicas
+            devem ficar no prontuário. Use mensagens administrativas apenas.
           </AlertDescription>
         </Alert>
       )}

@@ -117,8 +117,8 @@ export default async function globalSetup() {
     // WhatsApp tables — delete in FK order (conversations → messages →
     // templates → settings → accounts). Stale whatsapp_accounts rows
     // (especially with status='error') from previous runs cause the
-    // whatsapp-connect E2E to see "Erro de conexao" instead of
-    // "Nao conectado" when running in parallel with tests that seed
+    // whatsapp-connect E2E to see "Erro de conexão" instead of
+    // "Não conectado" when running in parallel with tests that seed
     // the same user's account.
     await sql`DELETE FROM public.whatsapp_conversations WHERE user_id = ${seed.userId}`;
     await sql`DELETE FROM public.whatsapp_messages WHERE user_id = ${seed.userId}`;

@@ -6,7 +6,7 @@ import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion 
 
 const GAD7_OPTIONS: ScaleOption[] = [
   { value: 0, label: 'Nenhuma vez' },
-  { value: 1, label: 'Varios dias' },
+  { value: 1, label: 'Vários dias' },
   { value: 2, label: 'Mais da metade dos dias' },
   { value: 3, label: 'Quase todos os dias' },
 ];
@@ -23,7 +23,7 @@ const GAD7_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q2',
-    prompt: 'Nao ser capaz de impedir ou de controlar as preocupacoes',
+    prompt: 'Não ser capaz de impedir ou de controlar as preocupações',
     options: GAD7_OPTIONS,
   },
   {
@@ -38,7 +38,7 @@ const GAD7_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q5',
-    prompt: 'Ficar tao inquieto(a) que e dificil ficar sentado(a)',
+    prompt: 'Ficar tão inquieto(a) que é difícil ficar sentado(a)',
     options: GAD7_OPTIONS,
   },
   {
@@ -48,7 +48,7 @@ const GAD7_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q7',
-    prompt: 'Sentir medo como se algo horrivel pudesse acontecer',
+    prompt: 'Sentir medo como se algo horrível pudesse acontecer',
     options: GAD7_OPTIONS,
   },
 ];
@@ -71,10 +71,10 @@ function scoreGAD7(responses: Record<string, number>): number {
 
 function classifyGAD7(score: number | null): ClassificationResult {
   if (score === null) {
-    return { label: 'Minimo', severity: 'minimal' };
+    return { label: 'Mínimo', severity: 'minimal' };
   }
 
-  if (score <= 4) return { label: 'Minimo', severity: 'minimal' };
+  if (score <= 4) return { label: 'Mínimo', severity: 'minimal' };
   if (score <= 9) return { label: 'Leve', severity: 'mild' };
   if (score <= 14) return { label: 'Moderado', severity: 'moderate' };
 

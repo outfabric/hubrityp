@@ -107,7 +107,7 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
         {isRecurring && (
           <Repeat
             className="text-text-tertiary absolute right-1 bottom-0.5 h-3 w-3 shrink-0"
-            aria-label="Sessao recorrente"
+            aria-label="Sessão recorrente"
             data-testid="recurring-indicator"
           />
         )}
@@ -159,7 +159,7 @@ export function SessionEventChip({ eventInfo }: SessionEventChipProps) {
       {isRecurring && (
         <Repeat
           className="text-text-tertiary absolute right-1 bottom-1 h-3 w-3 shrink-0"
-          aria-label="Sessao recorrente"
+          aria-label="Sessão recorrente"
           data-testid="recurring-indicator"
         />
       )}

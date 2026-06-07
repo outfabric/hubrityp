@@ -27,7 +27,7 @@ const CATEGORY_OPTIONS: { value: AttachmentCategory; label: string }[] = [
   { value: 'exam', label: 'Exame externo' },
   { value: 'image', label: 'Imagem' },
   { value: 'drawing', label: 'Desenho' },
-  { value: 'audio', label: 'Audio' },
+  { value: 'audio', label: 'Áudio' },
   { value: 'other', label: 'Outro' },
 ];
 
@@ -35,11 +35,11 @@ const FILE_TYPE_LEGEND = 'PDF, JPG, PNG, MP3, MP4, DOC, DOCX';
 
 const ERROR_MESSAGES: Record<string, string> = {
   FILE_TOO_LARGE: 'Arquivo excede o limite de 50MB.',
-  INVALID_INPUT: 'Dados invalidos. Verifique o arquivo e a categoria.',
-  INVALID_MIME: 'Tipo de arquivo nao permitido para esta categoria.',
-  CONSENT_REQUIRED: 'Gravacoes requerem termo de consentimento assinado (CFP 13/2022).',
-  UNAUTHORIZED: 'Voce nao tem permissao para realizar esta acao.',
-  NOT_FOUND: 'Paciente nao encontrado.',
+  INVALID_INPUT: 'Dados inválidos. Verifique o arquivo e a categoria.',
+  INVALID_MIME: 'Tipo de arquivo não permitido para esta categoria.',
+  CONSENT_REQUIRED: 'Gravações requerem termo de consentimento assinado (CFP 13/2022).',
+  UNAUTHORIZED: 'Você não tem permissão para realizar esta ação.',
+  NOT_FOUND: 'Paciente não encontrado.',
 };
 
 // ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ export function AttachmentUploadSheet({
         <SheetHeader className="px-6 pt-6">
           <SheetTitle>Anexar arquivo</SheetTitle>
           <SheetDescription>
-            Adicione documentos, imagens ou audios ao prontuario do paciente.
+            Adicione documentos, imagens ou áudios ao prontuário do paciente.
           </SheetDescription>
         </SheetHeader>
 
@@ -270,7 +270,7 @@ export function AttachmentUploadSheet({
             <Alert variant="warning" data-testid="attachment-consent-warning">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Gravacoes requerem termo de consentimento assinado (CFP 13/2022).{' '}
+                Gravações requerem termo de consentimento assinado (CFP 13/2022).{' '}
                 <button
                   type="button"
                   className="text-warning-700 font-medium underline underline-offset-2"

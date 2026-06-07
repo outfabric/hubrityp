@@ -41,8 +41,8 @@ function maxScoreForScale(scaleKey: string): number {
 
 const WHOQOL_DOMAIN_KEYS = ['physical', 'psychological', 'social', 'environmental'] as const;
 const WHOQOL_DOMAIN_LABELS: Record<string, string> = {
-  physical: 'Fisico',
-  psychological: 'Psicologico',
+  physical: 'Físico',
+  psychological: 'Psicológico',
   social: 'Social',
   environmental: 'Ambiental',
 };
@@ -187,7 +187,7 @@ function StandardChartTooltip({ active, payload }: ChartTooltipProps) {
       <p className="text-text-primary text-sm font-medium">
         {format(parseISO(data.appliedAt), 'dd/MM/yyyy', { locale: ptBR })}
       </p>
-      <p className="text-text-secondary text-sm">Pontuacao: {data.totalScore}</p>
+      <p className="text-text-secondary text-sm">Pontuação: {data.totalScore}</p>
       {data.classification && <p className="text-text-tertiary text-xs">{data.classification}</p>}
     </div>
   );
@@ -242,7 +242,7 @@ export function ScaleHistoryChart({ scaleKey, timeseries }: ScaleHistoryChartPro
   if (timeseries.length === 0) {
     return (
       <div className="flex items-center justify-center py-8">
-        <p className="text-text-tertiary text-sm">Nenhum dado disponivel para o grafico.</p>
+        <p className="text-text-tertiary text-sm">Nenhum dado disponível para o gráfico.</p>
       </div>
     );
   }
@@ -252,7 +252,7 @@ export function ScaleHistoryChart({ scaleKey, timeseries }: ScaleHistoryChartPro
     if (data.length === 0) {
       return (
         <div className="flex items-center justify-center py-8">
-          <p className="text-text-tertiary text-sm">Nenhum dado disponivel para o grafico.</p>
+          <p className="text-text-tertiary text-sm">Nenhum dado disponível para o gráfico.</p>
         </div>
       );
     }
@@ -290,7 +290,7 @@ export function ScaleHistoryChart({ scaleKey, timeseries }: ScaleHistoryChartPro
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center py-8">
-        <p className="text-text-tertiary text-sm">Nenhum dado disponivel para o grafico.</p>
+        <p className="text-text-tertiary text-sm">Nenhum dado disponível para o gráfico.</p>
       </div>
     );
   }

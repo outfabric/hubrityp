@@ -31,7 +31,7 @@ export default function TermoLayout({ children }: { children: React.ReactNode })
       {/* Footer — minimal caption text */}
       <footer className="px-4 py-6 text-center">
         <p className="text-text-tertiary text-xs font-medium">
-          HubrityP — Plataforma para psicologos
+          HubrityP — Plataforma para psicólogos
         </p>
       </footer>
     </div>

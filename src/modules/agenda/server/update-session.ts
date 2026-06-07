@@ -179,7 +179,7 @@ export async function updateSessionImpl(
         return {
           ok: false,
           error: 'invalid_input',
-          fieldErrors: { patient_id: ['Paciente nao encontrado.'] },
+          fieldErrors: { patient_id: ['Paciente não encontrado.'] },
         };
       }
     }
@@ -194,7 +194,7 @@ export async function updateSessionImpl(
         return {
           ok: false,
           error: 'invalid_input',
-          fieldErrors: { location_id: ['Local nao encontrado.'] },
+          fieldErrors: { location_id: ['Local não encontrado.'] },
         };
       }
     }
@@ -334,7 +334,7 @@ export async function updateSessionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao atualizar sessao. Tente novamente.',
+      message: 'Erro inesperado ao atualizar sessão. Tente novamente.',
     };
   }
 }

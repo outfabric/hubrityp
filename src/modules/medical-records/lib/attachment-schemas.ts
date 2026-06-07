@@ -50,7 +50,7 @@ export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
  * ownership server-side (never trusted from client alone).
  */
 export const uploadAttachmentInputSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
   category: attachmentCategorySchema,
 });
 

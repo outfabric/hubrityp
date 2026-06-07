@@ -69,11 +69,11 @@ const EXPIRATION_OPTIONS = [
 function errorMessage(code: string): string {
   switch (code) {
     case 'INVALID_SCALE':
-      return 'Escala invalida. Tente novamente.';
+      return 'Escala inválida. Tente novamente.';
     case 'PATIENT_NOT_FOUND':
-      return 'Paciente nao encontrado. Verifique e tente novamente.';
+      return 'Paciente não encontrado. Verifique e tente novamente.';
     case 'UNAUTHORIZED':
-      return 'Sessao expirada. Faca login novamente.';
+      return 'Sessão expirada. Faça login novamente.';
     default:
       return 'Erro inesperado. Tente novamente.';
   }
@@ -172,7 +172,7 @@ export function ScaleSelectModal({
         onCompleted();
       }
     } catch {
-      toast.error('Erro ao criar aplicacao de escala. Tente novamente.');
+      toast.error('Erro ao criar aplicação de escala. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -262,7 +262,7 @@ function ScaleSelectionStep({
     <>
       <DialogHeader>
         <DialogTitle>Selecione uma escala</DialogTitle>
-        <DialogDescription>Escolha o instrumento psicometrico a ser aplicado.</DialogDescription>
+        <DialogDescription>Escolha o instrumento psicométrico a ser aplicado.</DialogDescription>
       </DialogHeader>
 
       <RadioGroup
@@ -345,7 +345,7 @@ function ModeSelectionStep({
     <>
       <DialogHeader>
         <DialogTitle>Como aplicar?</DialogTitle>
-        <DialogDescription>{scaleName} — escolha o modo de aplicacao.</DialogDescription>
+        <DialogDescription>{scaleName} — escolha o modo de aplicação.</DialogDescription>
       </DialogHeader>
 
       <RadioGroup
@@ -367,7 +367,7 @@ function ModeSelectionStep({
           <div className="flex-1">
             <span className="text-text-primary flex items-center gap-2 text-sm font-medium">
               <Monitor className="h-4 w-4" aria-hidden="true" />
-              Aplicar agora (na sessao)
+              Aplicar agora (na sessão)
             </span>
             <p className="text-text-secondary mt-0.5 text-xs">
               Preencha as respostas junto ao paciente durante a consulta.
@@ -501,11 +501,11 @@ function RemoteLinkDisplay({ remoteUrl, onClose }: RemoteLinkDisplayProps) {
     try {
       await navigator.clipboard.writeText(remoteUrl);
       setCopied(true);
-      toast.success('Link copiado para a area de transferencia.');
+      toast.success('Link copiado para a área de transferência.');
       // Reset the check icon after 2 seconds
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Nao foi possivel copiar. Selecione e copie manualmente.');
+      toast.error('Não foi possível copiar. Selecione e copie manualmente.');
     }
   }, [remoteUrl]);
 

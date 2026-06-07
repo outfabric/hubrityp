@@ -148,7 +148,7 @@ describe('ScalePublicForm', () => {
       });
 
       expect(
-        screen.getByText('Suas respostas foram enviadas ao seu psicologo.'),
+        screen.getByText('Suas respostas foram enviadas ao seu psicólogo.'),
       ).toBeInTheDocument();
 
       // Verify fetch was called with correct URL and body
@@ -190,7 +190,7 @@ describe('ScalePublicForm', () => {
       });
 
       expect(
-        screen.getByText('Nao foi possivel enviar suas respostas. Tente novamente.'),
+        screen.getByText('Não foi possível enviar suas respostas. Tente novamente.'),
       ).toBeInTheDocument();
     });
 
@@ -218,7 +218,7 @@ describe('ScalePublicForm', () => {
       });
 
       expect(
-        screen.getByText('Erro de conexao. Verifique sua internet e tente novamente.'),
+        screen.getByText('Erro de conexão. Verifique sua internet e tente novamente.'),
       ).toBeInTheDocument();
     });
   });

@@ -200,7 +200,7 @@ describe('email delivery for large exports', () => {
     });
 
     // Subject must contain file size in MB
-    const expectedSubject = `Exportacao de prontuario pronta (${fileSizeMb} MB)`;
+    const expectedSubject = `Exportação de prontuário pronta (${fileSizeMb} MB)`;
     expect(expectedSubject).toContain('15.0 MB');
 
     // Expiry date should be formatted in pt-BR

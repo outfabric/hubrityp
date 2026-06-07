@@ -82,7 +82,7 @@ test.describe('@prontuario scales', () => {
       await expect(page.getByTestId('scale-application-form')).toBeVisible({ timeout: 15_000 });
 
       // 10. Answer all 9 PHQ-9 questions with value 0 ("Nenhuma vez")
-      // Total score = 0 -> classification "Minimo" -> severity "minimal" -> badge "success"
+      // Total score = 0 -> classification "Mínimo" -> severity "minimal" -> badge "success"
       for (let i = 1; i <= 9; i++) {
         const questionGroup = page.getByTestId(`scale-question-q${i}`);
         await expect(questionGroup).toBeVisible();
@@ -99,7 +99,7 @@ test.describe('@prontuario scales', () => {
 
       // 13. Assert classification badge text and semantic variant
       const badge = page.getByTestId('scale-classification-badge');
-      await expect(badge).toHaveText('Minimo');
+      await expect(badge).toHaveText('Mínimo');
       // severity "minimal" maps to badge variant "success" (bg-success-50 text-success-700)
       await expect(badge).toHaveClass(/bg-success-50/);
     });
@@ -168,12 +168,12 @@ test.describe('@prontuario scales', () => {
       // 10. The public form should be visible with 9 questions
       await expect(patientPage.getByTestId('scale-public-form')).toBeVisible({ timeout: 15_000 });
 
-      // 11. Answer all 9 questions with value 1 ("Varios dias")
+      // 11. Answer all 9 questions with value 1 ("Vários dias")
       // Total score = 9 -> classification "Leve" -> severity "mild"
       for (let i = 1; i <= 9; i++) {
         const questionGroup = patientPage.getByTestId(`scale-question-q${i}`);
         await expect(questionGroup).toBeVisible();
-        await questionGroup.getByRole('radio', { name: 'Varios dias' }).click();
+        await questionGroup.getByRole('radio', { name: 'Vários dias' }).click();
       }
 
       // 12. Click "Enviar respostas"
@@ -185,7 +185,7 @@ test.describe('@prontuario scales', () => {
       });
       await expect(patientPage.getByText('Obrigado!')).toBeVisible();
       await expect(
-        patientPage.getByText('Suas respostas foram enviadas ao seu psicologo.'),
+        patientPage.getByText('Suas respostas foram enviadas ao seu psicólogo.'),
       ).toBeVisible();
 
       // Close the patient context
@@ -202,7 +202,7 @@ test.describe('@prontuario scales', () => {
       // 15. Assert the score appeared in the ScalesTab (PHQ-9 summary card)
       const summaryCard = page.getByTestId('scale-summary-card-phq9');
       await expect(summaryCard).toBeVisible({ timeout: 15_000 });
-      await expect(summaryCard).toContainText('Pontuacao: 9');
+      await expect(summaryCard).toContainText('Pontuação: 9');
     });
   });
 
@@ -231,7 +231,7 @@ test.describe('@prontuario scales', () => {
         {
           id: '00000000-0000-4000-8000-000000000070',
           score: 3,
-          classification: 'Minimo',
+          classification: 'Mínimo',
           appliedAt: '2026-01-15 10:00:00+00',
         },
         {
@@ -335,7 +335,7 @@ test.describe('@prontuario scales', () => {
       const expiredState = page.getByTestId('scale-expired');
       await expect(expiredState).toBeVisible({ timeout: 10_000 });
       await expect(
-        page.getByText('Este link expirou. Solicite um novo ao seu psicologo.'),
+        page.getByText('Este link expirou. Solicite um novo ao seu psicólogo.'),
       ).toBeVisible();
     });
   });

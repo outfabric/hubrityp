@@ -10,7 +10,7 @@ import { type Cid10Result, searchCid10 } from '@/modules/medical-records/lib/cid
 // ---------------------------------------------------------------------------
 
 const searchCid10Schema = z.object({
-  query: z.string().max(100, { message: 'Consulta deve ter no maximo 100 caracteres.' }),
+  query: z.string().max(100, { message: 'Consulta deve ter no máximo 100 caracteres.' }),
   limit: z.number().int().min(1).max(50).optional(),
 });
 

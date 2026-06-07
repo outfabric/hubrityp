@@ -17,7 +17,7 @@ async function WhatsappAccountServer() {
   if (!result.ok) {
     return (
       <div className="text-text-secondary py-12 text-center">
-        Erro ao carregar integracao. Tente novamente.
+        Erro ao carregar integração. Tente novamente.
       </div>
     );
   }

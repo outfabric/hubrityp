@@ -97,7 +97,7 @@ export function FinalizeModal({
 
     function poll() {
       if (attempt >= MAX_POLL_ATTEMPTS) {
-        toast.info('PDF sendo gerado. Atualize a pagina em alguns instantes para baixar.');
+        toast.info('PDF sendo gerado. Atualize a página em alguns instantes para baixar.');
         return;
       }
 
@@ -118,11 +118,11 @@ export function FinalizeModal({
               attempt += 1;
               poll();
             } else {
-              toast.info('PDF sendo gerado. Atualize a pagina em alguns instantes para baixar.');
+              toast.info('PDF sendo gerado. Atualize a página em alguns instantes para baixar.');
             }
           })
           .catch(() => {
-            toast.info('PDF sendo gerado. Atualize a pagina em alguns instantes para baixar.');
+            toast.info('PDF sendo gerado. Atualize a página em alguns instantes para baixar.');
           });
       }, POLL_INTERVAL_MS);
     }
@@ -150,9 +150,9 @@ export function FinalizeModal({
           router.refresh();
         } else {
           if (result.code === 'CID10_CONSENT_REQUIRED') {
-            toast.error('Confirme o consentimento do paciente para inclusao do CID-10.');
+            toast.error('Confirme o consentimento do paciente para inclusão do CID-10.');
           } else if (result.code === 'ALREADY_FINALIZED') {
-            toast.info('Documento ja finalizado.');
+            toast.info('Documento já finalizado.');
             onOpenChange(false);
             router.refresh();
           } else {
@@ -195,7 +195,7 @@ export function FinalizeModal({
         <AlertDialogHeader>
           <AlertDialogTitle>Finalizar documento</AlertDialogTitle>
           <AlertDialogDescription>
-            Apos finalizacao, este documento nao podera ser editado. Uma nova versao exige criar um
+            Após finalização, este documento não poderá ser editado. Uma nova versão exige criar um
             novo documento.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -215,7 +215,7 @@ export function FinalizeModal({
                 data-testid="finalize-cid10-consent"
               />
               <Label htmlFor="cid10-consent" className="text-sm leading-snug">
-                Confirmo que o paciente consentiu com a inclusao do(s) codigo(s) CID-10 (RN-05.06).
+                Confirmo que o paciente consentiu com a inclusão do(s) código(s) CID-10 (RN-05.06).
               </Label>
             </div>
           </div>

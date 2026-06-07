@@ -46,18 +46,18 @@ interface ScopeOption {
 const SCOPE_OPTIONS: readonly ScopeOption[] = [
   {
     value: 'this',
-    label: 'Apenas esta sessao',
-    subtitle: 'As demais sessoes da serie nao serao alteradas',
+    label: 'Apenas esta sessão',
+    subtitle: 'As demais sessões da série não serão alteradas',
   },
   {
     value: 'this_and_future',
-    label: 'Esta e todas as proximas',
-    subtitle: 'Sessoes anteriores permanecem como estao',
+    label: 'Esta e todas as próximas',
+    subtitle: 'Sessões anteriores permanecem como estão',
   },
   {
     value: 'all',
-    label: 'Toda a serie',
-    subtitle: 'Todas as sessoes futuras serao atualizadas',
+    label: 'Toda a série',
+    subtitle: 'Todas as sessões futuras serão atualizadas',
   },
 ] as const;
 
@@ -72,7 +72,7 @@ export interface EditScopeDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Called when the user selects a scope. */
   onSelect: (scope: EditScope) => void;
-  /** Dialog title — defaults to "Editar sessao recorrente". */
+  /** Dialog title — defaults to "Editar sessão recorrente". */
   title?: string;
   /** Dialog description — defaults to a generic edit description. */
   description?: string;
@@ -86,8 +86,8 @@ export function EditScopeDialog({
   open,
   onOpenChange,
   onSelect,
-  title = 'Editar sessao recorrente',
-  description = 'Escolha o escopo da alteracao para esta sessao recorrente.',
+  title = 'Editar sessão recorrente',
+  description = 'Escolha o escopo da alteração para esta sessão recorrente.',
 }: EditScopeDialogProps) {
   function handleScopeClick(scope: EditScope) {
     onSelect(scope);
@@ -101,7 +101,7 @@ export function EditScopeDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="flex flex-col gap-3" role="group" aria-label="Escopo da edicao">
+        <div className="flex flex-col gap-3" role="group" aria-label="Escopo da edição">
           {SCOPE_OPTIONS.map((option) => (
             <Button
               key={option.value}

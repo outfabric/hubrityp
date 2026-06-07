@@ -77,7 +77,7 @@ export async function createSessionImpl(
     return {
       ok: false,
       error: 'past_date',
-      message: 'Nao e possivel agendar sessoes no passado.',
+      message: 'Não é possível agendar sessões no passado.',
     };
   }
 
@@ -93,7 +93,7 @@ export async function createSessionImpl(
         return {
           ok: false,
           error: 'invalid_input',
-          fieldErrors: { patient_id: ['Paciente nao encontrado.'] },
+          fieldErrors: { patient_id: ['Paciente não encontrado.'] },
         };
       }
     }
@@ -108,7 +108,7 @@ export async function createSessionImpl(
         return {
           ok: false,
           error: 'invalid_input',
-          fieldErrors: { location_id: ['Local nao encontrado.'] },
+          fieldErrors: { location_id: ['Local não encontrado.'] },
         };
       }
     }
@@ -253,7 +253,7 @@ export async function createSessionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao criar sessao. Tente novamente.',
+      message: 'Erro inesperado ao criar sessão. Tente novamente.',
     };
   }
 }

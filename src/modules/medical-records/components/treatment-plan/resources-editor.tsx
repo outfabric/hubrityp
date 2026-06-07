@@ -36,7 +36,7 @@ export function ResourcesEditor({ value, onChange }: ResourcesEditorProps) {
     <div className="flex max-w-[720px] flex-col gap-1.5" data-testid="resources-editor">
       <Label htmlFor={editorId} className="flex items-center gap-1.5">
         <Wrench className="h-4 w-4" aria-hidden="true" />
-        Recursos terapeuticos
+        Recursos terapêuticos
       </Label>
       <div
         id={editorId}
@@ -49,8 +49,8 @@ export function ResourcesEditor({ value, onChange }: ResourcesEditorProps) {
         <TiptapEditor
           content={value}
           onChange={onChange}
-          placeholder="Descreva os recursos terapeuticos utilizados..."
-          aria-label="Recursos terapeuticos"
+          placeholder="Descreva os recursos terapêuticos utilizados..."
+          aria-label="Recursos terapêuticos"
         />
       </div>
     </div>

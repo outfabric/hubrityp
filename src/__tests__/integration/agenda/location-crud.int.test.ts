@@ -403,7 +403,7 @@ describe('deleteLocationImpl', () => {
     expect(result.error).toBe('has_linked_sessions');
     if (result.error !== 'has_linked_sessions') return;
     expect(result.message).toBe(
-      'Este local esta vinculado a sessoes. Remova o vinculo antes de excluir.',
+      'Este local está vinculado a sessões. Remova o vínculo antes de excluir.',
     );
 
     // Verify location still exists

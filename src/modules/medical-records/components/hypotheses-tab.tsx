@@ -145,9 +145,9 @@ export function HypothesesTab({
           if (reloadResult.ok) {
             setHypotheses(mapSummariesToCards(reloadResult.hypotheses));
           }
-          toast.error('Erro ao confirmar hipotese. Tente novamente.');
+          toast.error('Erro ao confirmar hipótese. Tente novamente.');
         } else {
-          toast.success('Hipotese confirmada.');
+          toast.success('Hipótese confirmada.');
         }
       });
     },
@@ -174,9 +174,9 @@ export function HypothesesTab({
           if (reloadResult.ok) {
             setHypotheses(mapSummariesToCards(reloadResult.hypotheses));
           }
-          toast.error('Erro ao descartar hipotese. Tente novamente.');
+          toast.error('Erro ao descartar hipótese. Tente novamente.');
         } else {
-          toast.success('Hipotese descartada.');
+          toast.success('Hipótese descartada.');
         }
       });
     },
@@ -203,10 +203,10 @@ export function HypothesesTab({
     <div className="space-y-6" data-testid="hypotheses-tab">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-text-primary text-lg font-semibold">Hipoteses diagnosticas</h3>
+        <h3 className="text-text-primary text-lg font-semibold">Hipóteses diagnósticas</h3>
         <Button onClick={handleAdd} data-testid="hypotheses-add-button">
           <Plus className="mr-2 h-4 w-4" />
-          Adicionar hipotese
+          Adicionar hipótese
         </Button>
       </div>
 
@@ -214,8 +214,8 @@ export function HypothesesTab({
       <Alert variant="info" data-testid="hypotheses-educational-banner">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Hipotese diagnostica em psicologia tem natureza de orientacao clinica, nao de diagnostico
-          medico. CID-10 e referencial.
+          Hipótese diagnóstica em psicologia tem natureza de orientação clínica, não de diagnóstico
+          médico. CID-10 é referencial.
         </AlertDescription>
       </Alert>
 

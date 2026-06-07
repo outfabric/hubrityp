@@ -116,12 +116,12 @@ test.describe('@agenda location CRUD', () => {
     await page.getByTestId(`location-set-default-${locationId}`).click();
 
     // Verify success toast
-    await expect(page.getByText('Local marcado como padrao.')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Local marcado como padrão.')).toBeVisible({ timeout: 5000 });
 
-    // Verify the "Padrao" badge appears on the card
+    // Verify the "Padrão" badge appears on the card
     const defaultBadge = page.getByTestId('location-default-badge');
     await expect(defaultBadge).toBeVisible({ timeout: 5000 });
-    await expect(defaultBadge).toHaveText('Padrao');
+    await expect(defaultBadge).toHaveText('Padrão');
 
     // ---- Step 6: Verify default location is pre-selected in session form ----
     // Navigate to the agenda page

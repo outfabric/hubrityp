@@ -28,7 +28,7 @@ const CATEGORY_LABELS: Record<AttachmentCategory, string> = {
   exam: 'Exame externo',
   image: 'Imagem',
   drawing: 'Desenho',
-  audio: 'Audio',
+  audio: 'Áudio',
   other: 'Outro',
 };
 

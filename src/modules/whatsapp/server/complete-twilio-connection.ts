@@ -15,12 +15,12 @@ import { seedDefaultTemplates } from './seed-default-templates';
 // ---------------------------------------------------------------------------
 
 export const completeConnectionInputSchema = z.object({
-  senderSid: z.string().min(1, { message: 'Sender SID e obrigatorio.' }),
+  senderSid: z.string().min(1, { message: 'Sender SID é obrigatório.' }),
   verificationCode: z
     .string()
-    .regex(/^\d{6}$/, { message: 'Codigo de verificacao deve ter 6 digitos.' }),
-  phoneNumber: z.string().min(1, { message: 'Numero de telefone e obrigatorio.' }),
-  displayName: z.string().min(1, { message: 'Nome de exibicao e obrigatorio.' }),
+    .regex(/^\d{6}$/, { message: 'Código de verificação deve ter 6 dígitos.' }),
+  phoneNumber: z.string().min(1, { message: 'Número de telefone é obrigatório.' }),
+  displayName: z.string().min(1, { message: 'Nome de exibição é obrigatório.' }),
 });
 
 export type CompleteConnectionInput = z.infer<typeof completeConnectionInputSchema>;
@@ -88,7 +88,7 @@ export async function completeTwilioConnectionImpl(
       return {
         ok: false,
         error: 'unknown',
-        message: 'Erro de configuracao do servidor. Tente novamente.',
+        message: 'Erro de configuração do servidor. Tente novamente.',
       };
     }
 
@@ -116,7 +116,7 @@ export async function completeTwilioConnectionImpl(
         return {
           ok: false,
           error: 'verification_failed',
-          message: 'Codigo incorreto. Verifique e tente novamente.',
+          message: 'Código incorreto. Verifique e tente novamente.',
         };
       }
 
@@ -127,7 +127,7 @@ export async function completeTwilioConnectionImpl(
       return {
         ok: false,
         error: 'unknown',
-        message: 'Nao foi possivel verificar o codigo. Tente novamente.',
+        message: 'Não foi possível verificar o código. Tente novamente.',
       };
     }
 
@@ -159,7 +159,7 @@ export async function completeTwilioConnectionImpl(
       return {
         ok: false,
         error: 'unknown',
-        message: 'Voce ja tem um numero conectado.',
+        message: 'Você já tem um número conectado.',
       };
     }
 
@@ -173,7 +173,7 @@ export async function completeTwilioConnectionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao completar conexao. Tente novamente.',
+      message: 'Erro inesperado ao completar conexão. Tente novamente.',
     };
   }
 }

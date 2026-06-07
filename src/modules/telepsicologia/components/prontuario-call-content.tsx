@@ -80,7 +80,7 @@ export function ProntuarioCallContent({
       {/* Quick evolution form */}
       {showEditor ? (
         <div className="flex flex-col gap-3">
-          <h5 className="text-text-primary text-sm font-medium">Nova evolucao</h5>
+          <h5 className="text-text-primary text-sm font-medium">Nova evolução</h5>
           <EvolutionEditor
             templateType={templateType}
             initialContent={
@@ -91,7 +91,7 @@ export function ProntuarioCallContent({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <h5 className="text-text-primary text-sm font-medium">Nova evolucao rapida</h5>
+          <h5 className="text-text-primary text-sm font-medium">Nova evolução rápida</h5>
           <TemplateSelector value={templateType} onChange={setTemplateType} />
           <Button
             size="sm"
@@ -100,7 +100,7 @@ export function ProntuarioCallContent({
             data-testid="create-evolution-button"
           >
             <FileText className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            {isCreating ? 'Criando...' : 'Criar evolucao'}
+            {isCreating ? 'Criando...' : 'Criar evolução'}
           </Button>
         </div>
       )}
@@ -108,10 +108,10 @@ export function ProntuarioCallContent({
       {/* Recent evolutions list */}
       <div className="flex flex-col gap-2">
         <h5 className="text-text-primary text-sm font-medium">
-          Evolucoes recentes ({recentEvolutions.length})
+          Evoluções recentes ({recentEvolutions.length})
         </h5>
         {recentEvolutions.length === 0 ? (
-          <p className="text-text-tertiary text-sm">Nenhuma evolucao registrada.</p>
+          <p className="text-text-tertiary text-sm">Nenhuma evolução registrada.</p>
         ) : (
           <ul className="flex flex-col gap-1.5" data-testid="recent-evolutions-list">
             {recentEvolutions.map((evo) => {

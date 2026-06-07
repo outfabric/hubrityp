@@ -82,7 +82,7 @@ describe('recurrenceFormSchema', () => {
     if (!result.success) {
       const messages = result.error.issues.map((i) => i.message);
       expect(messages).toContain(
-        'Informe uma condicao de termino: data final, numero de sessoes, ou marque como indefinido.',
+        'Informe uma condição de término: data final, número de sessões, ou marque como indefinido.',
       );
     }
   });
@@ -260,7 +260,7 @@ describe('lateRecordSchema', () => {
 
     if (!result.success) {
       const messages = result.error.issues.map((i) => i.message);
-      expect(messages).toContain('Lancamentos retroativos devem ter uma data no passado.');
+      expect(messages).toContain('Lançamentos retroativos devem ter uma data no passado.');
     }
   });
 

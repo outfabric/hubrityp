@@ -15,18 +15,18 @@ import type { ClassificationResult, ScaleDefinition, ScaleQuestion } from './typ
 const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q1',
-    prompt: 'Com que frequencia voce consome bebidas alcoolicas?',
+    prompt: 'Com que frequência você consome bebidas alcoólicas?',
     options: [
       { value: 0, label: 'Nunca' },
       { value: 1, label: 'Mensalmente ou menos' },
-      { value: 2, label: 'De 2 a 4 vezes por mes' },
+      { value: 2, label: 'De 2 a 4 vezes por mês' },
       { value: 3, label: 'De 2 a 3 vezes por semana' },
       { value: 4, label: '4 ou mais vezes por semana' },
     ],
   },
   {
     id: 'q2',
-    prompt: 'Quantas doses contendo alcool voce consome num dia tipico quando esta bebendo?',
+    prompt: 'Quantas doses contendo álcool você consome num dia típico quando está bebendo?',
     options: [
       { value: 0, label: '1 ou 2' },
       { value: 1, label: '3 ou 4' },
@@ -37,10 +37,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q3',
-    prompt: 'Com que frequencia voce consome seis ou mais doses de uma vez?',
+    prompt: 'Com que frequência você consome seis ou mais doses de uma vez?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -49,10 +49,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q4',
     prompt:
-      'Com que frequencia, durante o ultimo ano, voce achou que nao era capaz de parar de beber uma vez que tinha comecado?',
+      'Com que frequência, durante o último ano, você achou que não era capaz de parar de beber uma vez que tinha começado?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -61,10 +61,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q5',
     prompt:
-      'Com que frequencia, durante o ultimo ano, voce deixou de fazer o que era normalmente esperado por causa do uso de bebidas alcoolicas?',
+      'Com que frequência, durante o último ano, você deixou de fazer o que era normalmente esperado por causa do uso de bebidas alcoólicas?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -73,10 +73,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q6',
     prompt:
-      'Com que frequencia, durante o ultimo ano, voce precisou de uma primeira dose pela manha para sentir-se melhor depois de uma grande bebedeira?',
+      'Com que frequência, durante o último ano, você precisou de uma primeira dose pela manhã para sentir-se melhor depois de uma grande bebedeira?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -85,10 +85,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q7',
     prompt:
-      'Com que frequencia, durante o ultimo ano, voce se sentiu culpado(a) ou com remorso depois de ter bebido?',
+      'Com que frequência, durante o último ano, você se sentiu culpado(a) ou com remorso depois de ter bebido?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -97,10 +97,10 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q8',
     prompt:
-      'Com que frequencia, durante o ultimo ano, voce nao conseguiu lembrar o que aconteceu na noite anterior porque tinha bebido?',
+      'Com que frequência, durante o último ano, você não conseguiu lembrar o que aconteceu na noite anterior porque tinha bebido?',
     options: [
       { value: 0, label: 'Nunca' },
-      { value: 1, label: 'Menos do que uma vez ao mes' },
+      { value: 1, label: 'Menos do que uma vez ao mês' },
       { value: 2, label: 'Mensalmente' },
       { value: 3, label: 'Semanalmente' },
       { value: 4, label: 'Todos ou quase todos os dias' },
@@ -108,21 +108,21 @@ const AUDIT_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q9',
-    prompt: 'Voce ou outra pessoa ja se machucou pelo fato de voce ter bebido?',
+    prompt: 'Você ou outra pessoa já se machucou pelo fato de você ter bebido?',
     options: [
-      { value: 0, label: 'Nao' },
-      { value: 2, label: 'Sim, mas nao no ultimo ano' },
-      { value: 4, label: 'Sim, no ultimo ano' },
+      { value: 0, label: 'Não' },
+      { value: 2, label: 'Sim, mas não no último ano' },
+      { value: 4, label: 'Sim, no último ano' },
     ],
   },
   {
     id: 'q10',
     prompt:
-      'Algum parente, amigo, medico ou profissional da saude ja se preocupou com o fato de voce beber ou sugeriu que voce diminuisse?',
+      'Algum parente, amigo, médico ou profissional da saúde já se preocupou com o fato de você beber ou sugeriu que você diminuísse?',
     options: [
-      { value: 0, label: 'Nao' },
-      { value: 2, label: 'Sim, mas nao no ultimo ano' },
-      { value: 4, label: 'Sim, no ultimo ano' },
+      { value: 0, label: 'Não' },
+      { value: 2, label: 'Sim, mas não no último ano' },
+      { value: 4, label: 'Sim, no último ano' },
     ],
   },
 ];
@@ -161,9 +161,9 @@ function classifyAUDIT(score: number | null): ClassificationResult {
 
 export const audit: ScaleDefinition = {
   key: 'audit',
-  label: 'AUDIT (Uso de Alcool)',
+  label: 'AUDIT (Uso de Álcool)',
   description:
-    'Alcohol Use Disorders Identification Test — rastreamento de uso problematico de alcool.',
+    'Alcohol Use Disorders Identification Test — rastreamento de uso problemático de álcool.',
   estimatedMinutes: 5,
   questions: AUDIT_QUESTIONS,
   score: scoreAUDIT,

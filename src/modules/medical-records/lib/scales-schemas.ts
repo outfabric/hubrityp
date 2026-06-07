@@ -14,8 +14,8 @@ import { SCALE_KEYS } from './scales';
 // ---------------------------------------------------------------------------
 
 export const createScaleApplicationSchema = z.object({
-  patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
-  scaleKey: z.enum(SCALE_KEYS, { message: 'Escala invalida.' }),
+  patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
+  scaleKey: z.enum(SCALE_KEYS, { message: 'Escala inválida.' }),
   mode: z.enum(['in-session', 'remote'], { message: 'Modo deve ser "in-session" ou "remote".' }),
   expiresInHours: z.number().int().positive().max(720).optional(),
 });
@@ -27,7 +27,7 @@ export type CreateScaleApplicationInput = z.infer<typeof createScaleApplicationS
 // ---------------------------------------------------------------------------
 
 export const submitResponsesSchema = z.object({
-  applicationId: z.string().uuid({ message: 'applicationId deve ser um UUID valido.' }),
+  applicationId: z.string().uuid({ message: 'applicationId deve ser um UUID válido.' }),
   responses: z.record(z.string(), z.number().int().nonnegative()),
 });
 

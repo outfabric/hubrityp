@@ -50,7 +50,7 @@ type FieldDefinition = RichTextField | NumberField | SelectField | StringListFie
 const TAREFA_STATUS_OPTIONS = [
   { value: 'sim', label: 'Sim' },
   { value: 'parcial', label: 'Parcial' },
-  { value: 'nao', label: 'Nao' },
+  { value: 'nao', label: 'Não' },
 ] as const;
 
 const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
@@ -60,20 +60,20 @@ const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
     {
       type: 'rich',
       key: 'pauta_sessao',
-      label: 'Pauta da Sessao',
-      placeholder: 'Descreva a pauta da sessao...',
+      label: 'Pauta da Sessão',
+      placeholder: 'Descreva a pauta da sessão...',
     },
     {
       type: 'rich',
       key: 'conteudo_trabalhado',
-      label: 'Conteudo Trabalhado',
-      placeholder: 'Descreva o conteudo trabalhado...',
+      label: 'Conteúdo Trabalhado',
+      placeholder: 'Descreva o conteúdo trabalhado...',
     },
     {
       type: 'rich',
       key: 'tarefa_casa_atribuida',
-      label: 'Tarefa de Casa Atribuida',
-      placeholder: 'Descreva a tarefa atribuida...',
+      label: 'Tarefa de Casa Atribuída',
+      placeholder: 'Descreva a tarefa atribuída...',
     },
     {
       type: 'select',
@@ -84,22 +84,22 @@ const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
     {
       type: 'rich',
       key: 'proximos_passos',
-      label: 'Proximos Passos',
-      placeholder: 'Descreva os proximos passos...',
+      label: 'Próximos Passos',
+      placeholder: 'Descreva os próximos passos...',
     },
   ],
   psicanalise: [
     {
       type: 'rich',
       key: 'conteudo_manifesto',
-      label: 'Conteudo Manifesto',
-      placeholder: 'Descreva o conteudo manifesto...',
+      label: 'Conteúdo Manifesto',
+      placeholder: 'Descreva o conteúdo manifesto...',
     },
     {
       type: 'rich',
       key: 'associacoes_livres',
-      label: 'Associacoes Livres',
-      placeholder: 'Registre as associacoes livres...',
+      label: 'Associações Livres',
+      placeholder: 'Registre as associações livres...',
     },
     {
       type: 'rich',
@@ -110,8 +110,8 @@ const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
     {
       type: 'rich',
       key: 'transferencia_observada',
-      label: 'Transferencia Observada',
-      placeholder: 'Descreva a transferencia observada...',
+      label: 'Transferência Observada',
+      placeholder: 'Descreva a transferência observada...',
     },
   ],
   sistemica: [
@@ -124,20 +124,20 @@ const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
     {
       type: 'rich',
       key: 'conteudo_trabalhado',
-      label: 'Conteudo Trabalhado',
-      placeholder: 'Descreva o conteudo trabalhado...',
+      label: 'Conteúdo Trabalhado',
+      placeholder: 'Descreva o conteúdo trabalhado...',
     },
     {
       type: 'rich',
       key: 'padroes_observados',
-      label: 'Padroes Observados',
-      placeholder: 'Descreva os padroes observados...',
+      label: 'Padrões Observados',
+      placeholder: 'Descreva os padrões observados...',
     },
     {
       type: 'rich',
       key: 'intervencao_realizada',
-      label: 'Intervencao Realizada',
-      placeholder: 'Descreva a intervencao realizada...',
+      label: 'Intervenção Realizada',
+      placeholder: 'Descreva a intervenção realizada...',
     },
     {
       type: 'rich',
@@ -162,27 +162,27 @@ const TEMPLATE_FIELDS: Record<TemplateType, FieldDefinition[]> = {
     {
       type: 'rich',
       key: 'abc',
-      label: 'Analise ABC',
-      placeholder: 'Descreva a analise antecedente-comportamento-consequencia...',
+      label: 'Análise ABC',
+      placeholder: 'Descreva a análise antecedente-comportamento-consequência...',
     },
     {
       type: 'rich',
       key: 'reforcadores',
-      label: 'Reforcadores',
-      placeholder: 'Descreva os reforcadores utilizados...',
+      label: 'Reforçadores',
+      placeholder: 'Descreva os reforçadores utilizados...',
     },
     {
       type: 'rich',
       key: 'foco_proxima',
-      label: 'Foco da Proxima Sessao',
-      placeholder: 'Descreva o foco para a proxima sessao...',
+      label: 'Foco da Próxima Sessão',
+      placeholder: 'Descreva o foco para a próxima sessão...',
     },
   ],
   livre: [
-    { type: 'rich', key: 'conteudo', label: 'Conteudo', placeholder: 'Escreva livremente...' },
+    { type: 'rich', key: 'conteudo', label: 'Conteúdo', placeholder: 'Escreva livremente...' },
   ],
   custom: [
-    { type: 'rich', key: 'conteudo', label: 'Conteudo', placeholder: 'Escreva livremente...' },
+    { type: 'rich', key: 'conteudo', label: 'Conteúdo', placeholder: 'Escreva livremente...' },
   ],
 };
 

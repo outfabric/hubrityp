@@ -62,17 +62,17 @@ export function VersionHistorySheet({ versions, open, onOpenChange }: VersionHis
           data-testid="treatment-plan-version-history-trigger"
         >
           <History className="h-4 w-4" aria-hidden="true" />
-          Historico
+          Histórico
         </Button>
       </SheetTrigger>
 
       <SheetContent side="right" data-testid="treatment-plan-version-history-sheet">
         <SheetHeader>
-          <SheetTitle>Historico de versoes</SheetTitle>
+          <SheetTitle>Histórico de versões</SheetTitle>
           <SheetDescription>
             {versions.length === 0
-              ? 'Nenhuma versao registrada.'
-              : `${versions.length} ${versions.length === 1 ? 'versao' : 'versoes'} encontrada${versions.length === 1 ? '' : 's'}.`}
+              ? 'Nenhuma versão registrada.'
+              : `${versions.length} ${versions.length === 1 ? 'versão' : 'versões'} encontrada${versions.length === 1 ? '' : 's'}.`}
           </SheetDescription>
         </SheetHeader>
 
@@ -104,7 +104,7 @@ export function VersionHistorySheet({ versions, open, onOpenChange }: VersionHis
                 onClick={() =>
                   setSelectedVersion(selectedVersion?.id === version.id ? null : version)
                 }
-                aria-label={`Ver versao ${version.versionNumber}`}
+                aria-label={`Ver versão ${version.versionNumber}`}
               >
                 <Eye className="h-4 w-4" aria-hidden="true" />
               </Button>
@@ -140,7 +140,7 @@ function ReadOnlyPlanSnapshot({ content, versionNumber }: ReadOnlyPlanSnapshotPr
       data-testid={`treatment-plan-version-snapshot-${versionNumber}`}
     >
       <h4 className="text-text-primary mb-3 text-sm font-medium">
-        Conteudo da versao {versionNumber}
+        Conteúdo da versão {versionNumber}
       </h4>
 
       {/* Goals */}
@@ -152,7 +152,7 @@ function ReadOnlyPlanSnapshot({ content, versionNumber }: ReadOnlyPlanSnapshotPr
               <div key={goal.id ?? idx} className="text-text-primary text-sm">
                 <span className="font-medium">{idx + 1}.</span> {goal.description || '(vazio)'}
                 {goal.targetDate && (
-                  <span className="text-text-tertiary ml-2 text-xs">Ate {goal.targetDate}</span>
+                  <span className="text-text-tertiary ml-2 text-xs">Até {goal.targetDate}</span>
                 )}
               </div>
             ))}
@@ -167,10 +167,10 @@ function ReadOnlyPlanSnapshot({ content, versionNumber }: ReadOnlyPlanSnapshotPr
           <div className="bg-surface-sunken space-y-2 rounded-md border p-3">
             {content.phases.map((phase: Phase, idx: number) => (
               <div key={phase.id ?? idx} className="text-text-primary text-sm">
-                <span className="font-medium">{phase.title || '(sem titulo)'}</span>
+                <span className="font-medium">{phase.title || '(sem título)'}</span>
                 {phase.completed && (
                   <Badge variant="success" className="ml-2">
-                    Concluida
+                    Concluída
                   </Badge>
                 )}
                 {phase.description && (
@@ -186,7 +186,7 @@ function ReadOnlyPlanSnapshot({ content, versionNumber }: ReadOnlyPlanSnapshotPr
          psychologist, fetched via RLS-scoped query. Not untrusted user input. */}
       {content.resources && (
         <div className="mb-3">
-          <h5 className="text-text-secondary mb-1 text-xs font-medium">Recursos terapeuticos</h5>
+          <h5 className="text-text-secondary mb-1 text-xs font-medium">Recursos terapêuticos</h5>
           <div
             className="bg-surface-sunken prose prose-sm text-text-primary max-h-[200px] overflow-y-auto rounded-md border p-3"
             dangerouslySetInnerHTML={{ __html: content.resources }}
@@ -197,7 +197,7 @@ function ReadOnlyPlanSnapshot({ content, versionNumber }: ReadOnlyPlanSnapshotPr
       {/* Success criteria — same justification as resources above. */}
       {content.successCriteria && (
         <div className="mb-3">
-          <h5 className="text-text-secondary mb-1 text-xs font-medium">Criterios de sucesso</h5>
+          <h5 className="text-text-secondary mb-1 text-xs font-medium">Critérios de sucesso</h5>
           <div
             className="bg-surface-sunken prose prose-sm text-text-primary max-h-[200px] overflow-y-auto rounded-md border p-3"
             dangerouslySetInnerHTML={{ __html: content.successCriteria }}

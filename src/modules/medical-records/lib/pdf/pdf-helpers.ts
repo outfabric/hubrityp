@@ -142,7 +142,7 @@ export function buildSection(doc: PdfDoc, label: string, htmlContent: string): v
 export function buildCid10Section(doc: PdfDoc, codes: Cid10Entry[]): void {
   if (codes.length === 0) return;
 
-  doc.font(FONT_BOLD).fontSize(LABEL_FONT_SIZE).text('Codigos CID-10:');
+  doc.font(FONT_BOLD).fontSize(LABEL_FONT_SIZE).text('Códigos CID-10:');
   doc.moveDown(0.3);
 
   doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE);

@@ -67,14 +67,14 @@ export function LateRecordToggle({ selectedDateTime }: LateRecordToggleProps) {
           data-testid="late-record-toggle"
           checked={isLateRecord}
           onCheckedChange={(checked) => handleToggle(checked === true)}
-          aria-label="Marcar como lancamento retroativo"
+          aria-label="Marcar como lançamento retroativo"
         />
-        <Label htmlFor="late-record-toggle">Lancamento retroativo</Label>
+        <Label htmlFor="late-record-toggle">Lançamento retroativo</Label>
       </div>
 
       {isLateRecord && (
         <p className="text-text-tertiary text-xs" data-testid="late-record-helper">
-          Esta sessao ja foi realizada e sera registrada como concluida
+          Esta sessão já foi realizada e será registrada como concluída
         </p>
       )}
     </div>

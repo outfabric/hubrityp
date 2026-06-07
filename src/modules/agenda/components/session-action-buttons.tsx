@@ -92,7 +92,7 @@ export function SessionActionButtons({ status, session, onAction }: SessionActio
     return (
       <Alert variant="info" data-testid="session-locked-alert">
         <Lock className="h-4 w-4" aria-hidden="true" />
-        <AlertDescription>Sessao bloqueada para edicao apos 7 dias</AlertDescription>
+        <AlertDescription>Sessão bloqueada para edição após 7 dias</AlertDescription>
       </Alert>
     );
   }
@@ -108,7 +108,7 @@ export function SessionActionButtons({ status, session, onAction }: SessionActio
         // Safety net: if the server action throws (e.g. network error, auth
         // cookie issue, serialization failure), show a generic error toast so
         // the user always receives feedback instead of silent failure.
-        toast.error('Erro inesperado. Atualize a pagina e tente novamente.');
+        toast.error('Erro inesperado. Atualize a página e tente novamente.');
       } finally {
         setLoadingAction(null);
       }

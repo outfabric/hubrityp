@@ -24,7 +24,7 @@ export type HypothesisStatus = z.infer<typeof hypothesisStatusSchema>;
  */
 export const createHypothesisSchema = z
   .object({
-    patientId: z.string().uuid({ message: 'patientId deve ser um UUID valido.' }),
+    patientId: z.string().uuid({ message: 'patientId deve ser um UUID válido.' }),
     description: z.string().min(1).optional(),
     cid10Code: z.string().min(1).max(10).optional(),
     cid10Description: z.string().min(1).optional(),
@@ -56,7 +56,7 @@ export type CreateHypothesisInput = z.infer<typeof createHypothesisSchema>;
  */
 export const updateHypothesisSchema = z
   .object({
-    hypothesisId: z.string().uuid({ message: 'hypothesisId deve ser um UUID valido.' }),
+    hypothesisId: z.string().uuid({ message: 'hypothesisId deve ser um UUID válido.' }),
     description: z.string().optional(),
     cid10Code: z.string().max(10).optional(),
     cid10Description: z.string().optional(),
@@ -95,7 +95,7 @@ export type UpdateHypothesisInput = z.infer<typeof updateHypothesisSchema>;
  * All transitions are allowed (investigating <-> confirmed <-> discarded).
  */
 export const updateHypothesisStatusSchema = z.object({
-  hypothesisId: z.string().uuid({ message: 'hypothesisId deve ser um UUID valido.' }),
+  hypothesisId: z.string().uuid({ message: 'hypothesisId deve ser um UUID válido.' }),
   status: hypothesisStatusSchema,
   notes: z.string().optional(),
 });

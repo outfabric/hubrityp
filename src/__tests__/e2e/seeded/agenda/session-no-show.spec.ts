@@ -67,7 +67,7 @@ test.describe('@agenda session no-show', () => {
     await drawer.getByTestId('action-btn-mark_no_show').click();
 
     // Verify the success toast appeared
-    await expect(page.getByText('Sessao marcada como falta')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Sessão marcada como falta')).toBeVisible({ timeout: 5000 });
 
     // The drawer closes after mutation. Wait for calendar refresh, then re-navigate.
     await page.waitForTimeout(1000);

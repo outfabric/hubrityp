@@ -50,12 +50,12 @@ const LABEL_FONT_SIZE = 10;
 
 const SECTION_LABELS: ReadonlyArray<{ key: keyof ExportFilters['sections']; label: string }> = [
   { key: 'anamnese', label: 'Anamnese' },
-  { key: 'evolucoes', label: 'Evolucoes' },
-  { key: 'hipoteses', label: 'Hipoteses diagnosticas' },
-  { key: 'planoTerapeutico', label: 'Plano terapeutico' },
+  { key: 'evolucoes', label: 'Evoluções' },
+  { key: 'hipoteses', label: 'Hipóteses diagnósticas' },
+  { key: 'planoTerapeutico', label: 'Plano terapêutico' },
   { key: 'escalas', label: 'Escalas' },
-  { key: 'documentos', label: 'Documentos clinicos' },
-  { key: 'anexosIndex', label: 'Indice de anexos' },
+  { key: 'documentos', label: 'Documentos clínicos' },
+  { key: 'anexosIndex', label: 'Índice de anexos' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ function formatDateTimePtBr(date: Date): string {
   const year = date.getFullYear();
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${day}/${month}/${year} as ${hours}:${minutes}`;
+  return `${day}/${month}/${year} às ${hours}:${minutes}`;
 }
 
 function formatDatePtBr(dateStr: string): string {
@@ -90,12 +90,12 @@ export function renderCoverPage(doc: PdfDoc, data: CoverPageData): void {
 
   // --- Title ---
   doc.moveDown(3);
-  doc.font(FONT_BOLD).fontSize(TITLE_FONT_SIZE).text('Prontuario Psicologico', { align: 'center' });
+  doc.font(FONT_BOLD).fontSize(TITLE_FONT_SIZE).text('Prontuário Psicológico', { align: 'center' });
   doc.moveDown(0.5);
   doc
     .font(FONT_REGULAR)
     .fontSize(SUBTITLE_FONT_SIZE)
-    .text('Exportacao de Prontuario', { align: 'center' });
+    .text('Exportação de Prontuário', { align: 'center' });
   doc.moveDown(2);
 
   // --- Separator ---
@@ -119,7 +119,7 @@ export function renderCoverPage(doc: PdfDoc, data: CoverPageData): void {
   doc.moveDown(1);
 
   // --- Psychologist info ---
-  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Psicologo(a) Responsavel');
+  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Psicólogo(a) Responsável');
   doc.moveDown(0.5);
 
   renderKeyValue(doc, 'Nome', psychologist.name);
@@ -128,10 +128,10 @@ export function renderCoverPage(doc: PdfDoc, data: CoverPageData): void {
   doc.moveDown(1);
 
   // --- Export metadata ---
-  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Informacoes da Exportacao');
+  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Informações da Exportação');
   doc.moveDown(0.5);
 
-  renderKeyValue(doc, 'Data/hora da solicitacao', formatDateTimePtBr(exportRequestedAt));
+  renderKeyValue(doc, 'Data/hora da solicitação', formatDateTimePtBr(exportRequestedAt));
 
   // Date range filter
   const from = filters.dateRange.from;
@@ -139,18 +139,18 @@ export function renderCoverPage(doc: PdfDoc, data: CoverPageData): void {
   if (from || to) {
     const rangeText = [
       from ? `De ${formatDatePtBr(from)}` : null,
-      to ? `Ate ${formatDatePtBr(to)}` : null,
+      to ? `Até ${formatDatePtBr(to)}` : null,
     ]
       .filter(Boolean)
       .join(' ');
-    renderKeyValue(doc, 'Periodo', rangeText);
+    renderKeyValue(doc, 'Período', rangeText);
   } else {
-    renderKeyValue(doc, 'Periodo', 'Completo (sem filtro de data)');
+    renderKeyValue(doc, 'Período', 'Completo (sem filtro de data)');
   }
   doc.moveDown(1);
 
   // --- Sections included ---
-  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Secoes Incluidas');
+  doc.font(FONT_BOLD).fontSize(SUBTITLE_FONT_SIZE).text('Seções Incluídas');
   doc.moveDown(0.5);
 
   doc.font(FONT_REGULAR).fontSize(LABEL_FONT_SIZE);
@@ -161,7 +161,7 @@ export function renderCoverPage(doc: PdfDoc, data: CoverPageData): void {
   }
 
   const notesMarker = filters.includePersonalNotes ? '[x]' : '[ ]';
-  doc.text(`${notesMarker} Anotacoes pessoais`);
+  doc.text(`${notesMarker} Anotações pessoais`);
 }
 
 // ---------------------------------------------------------------------------

@@ -73,22 +73,22 @@ const MONTH_NAMES = [
 
 /** Known content field labels for each evolution template type. */
 const TEMPLATE_FIELDS: Record<string, ReadonlyArray<{ key: string; label: string }>> = {
-  livre: [{ key: 'content', label: 'Conteudo' }],
+  livre: [{ key: 'content', label: 'Conteúdo' }],
   tcc: [
-    { key: 'situation', label: 'Situacao' },
-    { key: 'automaticThought', label: 'Pensamento automatico' },
-    { key: 'emotion', label: 'Emocao' },
+    { key: 'situation', label: 'Situação' },
+    { key: 'automaticThought', label: 'Pensamento automático' },
+    { key: 'emotion', label: 'Emoção' },
     { key: 'behavior', label: 'Comportamento' },
-    { key: 'intervention', label: 'Intervencao' },
+    { key: 'intervention', label: 'Intervenção' },
     { key: 'homework', label: 'Tarefa de casa' },
-    { key: 'notes', label: 'Observacoes' },
+    { key: 'notes', label: 'Observações' },
   ],
   psicanalise: [
-    { key: 'manifest', label: 'Conteudo manifesto' },
-    { key: 'latent', label: 'Conteudo latente' },
-    { key: 'transference', label: 'Transferencia' },
-    { key: 'interpretation', label: 'Interpretacao' },
-    { key: 'notes', label: 'Observacoes' },
+    { key: 'manifest', label: 'Conteúdo manifesto' },
+    { key: 'latent', label: 'Conteúdo latente' },
+    { key: 'transference', label: 'Transferência' },
+    { key: 'interpretation', label: 'Interpretação' },
+    { key: 'notes', label: 'Observações' },
   ],
 };
 
@@ -196,7 +196,7 @@ function renderAddenda(doc: PdfDoc, addenda: EvolutionAddendum[]): void {
     doc
       .font(FONT_ITALIC)
       .fontSize(META_FONT_SIZE)
-      .text(`Versao ${addendum.versionNumber} — ${formatDateTimePtBr(addendum.createdAt)}`);
+      .text(`Versão ${addendum.versionNumber} — ${formatDateTimePtBr(addendum.createdAt)}`);
 
     if (addendum.reason) {
       doc.font(FONT_ITALIC).fontSize(META_FONT_SIZE).text(`Motivo: ${addendum.reason}`);
@@ -225,14 +225,14 @@ function renderAddenda(doc: PdfDoc, addenda: EvolutionAddendum[]): void {
 
 export function renderEvolutionsSection(doc: PdfDoc, evolutions: EvolutionForExport[]): void {
   // Section title (always rendered, even when empty)
-  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Evolucoes');
+  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Evoluções');
   doc.moveDown(0.8);
 
   if (evolutions.length === 0) {
     doc
       .font(FONT_REGULAR)
       .fontSize(BODY_FONT_SIZE)
-      .text('Nenhuma evolucao no periodo selecionado.');
+      .text('Nenhuma evolução no período selecionado.');
     doc.moveDown(1);
     return;
   }

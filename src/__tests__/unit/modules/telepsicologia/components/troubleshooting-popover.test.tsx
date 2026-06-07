@@ -36,7 +36,7 @@ describe('TroubleshootingPopover', () => {
     // Verify all four troubleshooting steps are rendered
     expect(
       screen.getByText(
-        'Verifique se microfone e camera estao ativados nas configuracoes do navegador',
+        'Verifique se microfone e câmera estão ativados nas configurações do navegador',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('Saia e volte a entrar pelo mesmo link')).toBeInTheDocument();

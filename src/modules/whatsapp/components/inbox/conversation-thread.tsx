@@ -169,7 +169,7 @@ export function ConversationThread({
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-4 py-4"
         role="log"
-        aria-label="Historico de mensagens"
+        aria-label="Histórico de mensagens"
       >
         <div className="space-y-3">
           {messages.map((msg) => {
@@ -194,7 +194,7 @@ export function ConversationThread({
                     <AlertTriangle
                       size={14}
                       className="text-danger-500 absolute top-1.5 right-1.5"
-                      aria-label="Mensagem com conteudo de risco"
+                      aria-label="Mensagem com conteúdo de risco"
                     />
                   )}
 

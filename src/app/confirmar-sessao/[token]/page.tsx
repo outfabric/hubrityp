@@ -50,8 +50,8 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
         data-testid="confirmation-invalid"
       >
         <AlertCircle className="text-danger-500 h-12 w-12" aria-hidden="true" />
-        <h2 className="text-text-primary text-[22px] leading-tight font-semibold">Link invalido</h2>
-        <p className="text-text-secondary text-[15px]">Este link de confirmacao nao e valido.</p>
+        <h2 className="text-text-primary text-[22px] leading-tight font-semibold">Link inválido</h2>
+        <p className="text-text-secondary text-[15px]">Este link de confirmação não é válido.</p>
       </div>
     );
   }
@@ -67,7 +67,7 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
       >
         <Clock className="text-text-tertiary h-12 w-12" aria-hidden="true" />
         <h2 className="text-text-primary text-[22px] leading-tight font-semibold">Link expirado</h2>
-        <p className="text-text-secondary text-[15px]">O horario desta sessao ja passou.</p>
+        <p className="text-text-secondary text-[15px]">O horário desta sessão já passou.</p>
       </div>
     );
   }
@@ -83,9 +83,9 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
       >
         <Info className="text-info-500 h-12 w-12" aria-hidden="true" />
         <h2 className="text-text-primary text-[22px] leading-tight font-semibold">
-          Voce ja respondeu
+          Você já respondeu
         </h2>
-        <p className="text-text-secondary text-[15px]">Esta confirmacao ja foi processada.</p>
+        <p className="text-text-secondary text-[15px]">Esta confirmação já foi processada.</p>
       </div>
     );
   }
@@ -122,7 +122,7 @@ export default async function ConfirmPage({ params }: ConfirmPageProps) {
         <CardContent className="p-6 md:p-8">
           <div className="flex flex-col gap-4">
             <h2 className="text-text-primary text-center text-[22px] leading-tight font-semibold">
-              Confirmar presenca
+              Confirmar presença
             </h2>
 
             <div className="text-text-secondary text-center text-[15px]">

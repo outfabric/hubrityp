@@ -184,18 +184,18 @@ function GoalItem({
       <div className="flex flex-col gap-3">
         {/* Description */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={descriptionId}>Descricao do objetivo</Label>
+          <Label htmlFor={descriptionId}>Descrição do objetivo</Label>
           <Textarea
             id={descriptionId}
             value={goal.description}
             onChange={(e) => onUpdate(goal.id, { description: e.target.value })}
-            placeholder="Descreva o objetivo terapeutico..."
+            placeholder="Descreva o objetivo terapêutico..."
             aria-invalid={hasError}
             className="min-h-[60px]"
           />
           {hasError && (
             <span className="text-danger-700 text-xs" role="alert">
-              Descricao obrigatoria
+              Descrição obrigatória
             </span>
           )}
         </div>
@@ -281,7 +281,7 @@ function GoalItem({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Remover objetivo</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tem certeza que deseja remover este objetivo? Esta acao nao pode ser desfeita.
+                    Tem certeza que deseja remover este objetivo? Esta ação não pode ser desfeita.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

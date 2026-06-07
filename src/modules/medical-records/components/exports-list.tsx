@@ -50,12 +50,12 @@ const STATUS_CONFIG: Record<
 
 const SECTION_LABELS: Record<string, string> = {
   anamnese: 'Anamnese',
-  evolucoes: 'Evolucoes',
-  hipoteses: 'Hipoteses',
-  planoTerapeutico: 'Plano terapeutico',
+  evolucoes: 'Evoluções',
+  hipoteses: 'Hipóteses',
+  planoTerapeutico: 'Plano terapêutico',
   escalas: 'Escalas',
   documentos: 'Documentos',
-  anexosIndex: 'Indice de anexos',
+  anexosIndex: 'Índice de anexos',
 };
 
 // ---------------------------------------------------------------------------
@@ -101,11 +101,11 @@ function buildFilterBadges(filters: ExportFilters): string[] {
       : '';
     const to = f.dateRange.to ? format(new Date(f.dateRange.to), 'MMM yyyy', { locale: ptBR }) : '';
     if (from && to) {
-      badges.push(`Periodo: ${from} - ${to}`);
+      badges.push(`Período: ${from} - ${to}`);
     } else if (from) {
       badges.push(`A partir de ${from}`);
     } else if (to) {
-      badges.push(`Ate ${to}`);
+      badges.push(`Até ${to}`);
     }
   }
 
@@ -117,7 +117,7 @@ function buildFilterBadges(filters: ExportFilters): string[] {
     if (excluded.length > 0 && excluded.length < Object.keys(SECTION_LABELS).length) {
       badges.push(`Sem: ${excluded.join(', ')}`);
     } else if (excluded.length === Object.keys(SECTION_LABELS).length) {
-      badges.push('Sem secoes');
+      badges.push('Sem seções');
     }
   }
 
@@ -214,9 +214,9 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
           // Toast on meaningful status transitions only
           if (previousStatus !== mapped.status) {
             if (mapped.status === 'ready' && previousStatus !== 'ready') {
-              toast.success('Exportacao pronta. Clique para baixar.');
+              toast.success('Exportação pronta. Clique para baixar.');
             } else if (mapped.status === 'failed') {
-              toast.error('Exportacao falhou. Tente novamente.');
+              toast.error('Exportação falhou. Tente novamente.');
             }
           }
 
@@ -242,9 +242,9 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
           window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
         } else {
           const messages: Record<string, string> = {
-            NOT_READY: 'PDF ainda esta sendo gerado. Tente novamente em instantes.',
-            EXPIRED: 'Esta exportacao expirou. Solicite uma nova.',
-            NOT_FOUND: 'Exportacao nao encontrada.',
+            NOT_READY: 'PDF ainda está sendo gerado. Tente novamente em instantes.',
+            EXPIRED: 'Esta exportação expirou. Solicite uma nova.',
+            NOT_FOUND: 'Exportação não encontrada.',
             STORAGE_ERROR: 'Erro ao acessar o arquivo. Tente novamente.',
           };
           toast.error(messages[result.code] ?? 'Erro ao obter PDF. Tente novamente.');
@@ -266,9 +266,9 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
         data-testid="exports-empty-state"
       >
         <Download className="text-text-tertiary mb-3 h-10 w-10" aria-hidden="true" />
-        <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhuma exportacao ainda</h4>
+        <h4 className="text-text-primary mb-1 text-lg font-semibold">Nenhuma exportação ainda</h4>
         <p className="text-text-secondary mb-4 max-w-sm text-sm">
-          Use o botao &quot;Exportar prontuario&quot; para gerar um PDF completo.
+          Use o botão &quot;Exportar prontuário&quot; para gerar um PDF completo.
         </p>
       </div>
     );
@@ -276,13 +276,13 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
 
   // ----- List of exports -----
   return (
-    <div className="space-y-3" data-testid="exports-list" role="list" aria-label="Exportacoes">
+    <div className="space-y-3" data-testid="exports-list" role="list" aria-label="Exportações">
       {exports.map((exp) => {
         const status = effectiveStatus(exp);
         const config = STATUS_CONFIG[status];
         const filterBadges = buildFilterBadges(exp.filters);
         const fileSize = formatFileSize(exp.fileSize);
-        const createdFormatted = format(new Date(exp.createdAt), "dd/MM/yyyy 'as' HH:mm", {
+        const createdFormatted = format(new Date(exp.createdAt), "dd/MM/yyyy 'às' HH:mm", {
           locale: ptBR,
         });
 
@@ -292,7 +292,7 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
             className="p-6"
             data-testid={`export-card-${exp.id}`}
             role="listitem"
-            aria-label={`Exportacao de ${createdFormatted}`}
+            aria-label={`Exportação de ${createdFormatted}`}
           >
             <div className="flex items-start justify-between gap-3">
               {/* Left: info */}
@@ -344,7 +344,7 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
                     onClick={() => void handleDownload(exp.id)}
                     disabled={downloadingId === exp.id}
                     data-testid={`export-download-${exp.id}`}
-                    aria-label="Baixar exportacao em PDF"
+                    aria-label="Baixar exportação em PDF"
                   >
                     {downloadingId === exp.id ? (
                       <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -362,7 +362,7 @@ export function ExportsList({ initial, patientId, userId, getExportSignedUrl }: 
                     size="sm"
                     disabled
                     data-testid={`export-expired-${exp.id}`}
-                    aria-label="Exportacao expirada"
+                    aria-label="Exportação expirada"
                   >
                     <Timer className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                     Expirado

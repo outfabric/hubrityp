@@ -179,7 +179,7 @@ export async function listSessionsImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao listar sessoes. Tente novamente.',
+      message: 'Erro inesperado ao listar sessões. Tente novamente.',
     };
   }
 }
