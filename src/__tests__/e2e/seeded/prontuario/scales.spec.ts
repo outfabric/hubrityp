@@ -168,12 +168,12 @@ test.describe('@prontuario scales', () => {
       // 10. The public form should be visible with 9 questions
       await expect(patientPage.getByTestId('scale-public-form')).toBeVisible({ timeout: 15_000 });
 
-      // 11. Answer all 9 questions with value 1 ("Varios dias")
+      // 11. Answer all 9 questions with value 1 ("Vários dias")
       // Total score = 9 -> classification "Leve" -> severity "mild"
       for (let i = 1; i <= 9; i++) {
         const questionGroup = patientPage.getByTestId(`scale-question-q${i}`);
         await expect(questionGroup).toBeVisible();
-        await questionGroup.getByRole('radio', { name: 'Varios dias' }).click();
+        await questionGroup.getByRole('radio', { name: 'Vários dias' }).click();
       }
 
       // 12. Click "Enviar respostas"

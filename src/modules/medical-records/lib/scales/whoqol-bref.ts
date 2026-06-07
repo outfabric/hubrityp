@@ -1,5 +1,8 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
+// TODO(clinical-review): canonical WHOQOL-Bref Brazilian Portuguese wording
+// verification deferred to clinical review — only unambiguous diacritics added here.
+
 // ---------------------------------------------------------------------------
 // WHOQOL-Bref response options
 // The official instrument uses several 5-point Likert sets depending on the
@@ -44,7 +47,7 @@ const OPTIONS_FREQUENCY: ScaleOption[] = [
 const OPTIONS_COMPLETENESS: ScaleOption[] = [
   { value: 1, label: 'Nada' },
   { value: 2, label: 'Muito pouco' },
-  { value: 3, label: 'Medio' },
+  { value: 3, label: 'Médio' },
   { value: 4, label: 'Muito' },
   { value: 5, label: 'Completamente' },
 ];
@@ -75,79 +78,79 @@ const WHOQOL_QUESTIONS: ScaleQuestion[] = [
   // General facets (not in any domain)
   {
     id: 'q1',
-    prompt: 'Como voce avaliaria sua qualidade de vida?',
+    prompt: 'Como você avaliaria sua qualidade de vida?',
     options: OPTIONS_CAPACITY,
   },
   {
     id: 'q2',
-    prompt: 'Quao satisfeito(a) voce esta com a sua saude?',
+    prompt: 'Quão satisfeito(a) você está com a sua saúde?',
     options: OPTIONS_SATISFACTION,
   },
 
   // Physical domain items
   {
     id: 'q3',
-    prompt: 'Em que medida voce acha que sua dor (fisica) impede voce de fazer o que voce precisa?',
+    prompt: 'Em que medida você acha que sua dor (física) impede você de fazer o que você precisa?',
     options: OPTIONS_INTENSITY,
     reverseScored: true,
   },
   {
     id: 'q4',
-    prompt: 'O quanto voce precisa de algum tratamento medico para levar sua vida diaria?',
+    prompt: 'O quanto você precisa de algum tratamento médico para levar sua vida diária?',
     options: OPTIONS_INTENSITY,
     reverseScored: true,
   },
   {
     id: 'q10',
-    prompt: 'Voce tem energia suficiente para seu dia a dia?',
+    prompt: 'Você tem energia suficiente para seu dia a dia?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q15',
-    prompt: 'Quao bem voce e capaz de se locomover?',
+    prompt: 'Quão bem você é capaz de se locomover?',
     options: OPTIONS_CAPACITY,
   },
   {
     id: 'q16',
-    prompt: 'Quao satisfeito(a) voce esta com o seu sono?',
+    prompt: 'Quão satisfeito(a) você está com o seu sono?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q17',
     prompt:
-      'Quao satisfeito(a) voce esta com sua capacidade de desempenhar as atividades do seu dia a dia?',
+      'Quão satisfeito(a) você está com sua capacidade de desempenhar as atividades do seu dia a dia?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q18',
-    prompt: 'Quao satisfeito(a) voce esta com sua capacidade para o trabalho?',
+    prompt: 'Quão satisfeito(a) você está com sua capacidade para o trabalho?',
     options: OPTIONS_SATISFACTION,
   },
 
   // Psychological domain items
   {
     id: 'q5',
-    prompt: 'O quanto voce aproveita a vida?',
+    prompt: 'O quanto você aproveita a vida?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q6',
-    prompt: 'Em que medida voce acha que a sua vida tem sentido?',
+    prompt: 'Em que medida você acha que a sua vida tem sentido?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q7',
-    prompt: 'O quanto voce consegue se concentrar?',
+    prompt: 'O quanto você consegue se concentrar?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q11',
-    prompt: 'Voce e capaz de aceitar sua aparencia fisica?',
+    prompt: 'Você é capaz de aceitar sua aparência física?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q19',
-    prompt: 'Quao satisfeito(a) voce esta consigo mesmo(a)?',
+    prompt: 'Quão satisfeito(a) você está consigo mesmo(a)?',
     options: OPTIONS_SATISFACTION,
   },
 
@@ -155,59 +158,59 @@ const WHOQOL_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q20',
     prompt:
-      'Quao satisfeito(a) voce esta com suas relacoes pessoais (amigos, parentes, conhecidos, colegas)?',
+      'Quão satisfeito(a) você está com suas relações pessoais (amigos, parentes, conhecidos, colegas)?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q21',
-    prompt: 'Quao satisfeito(a) voce esta com sua vida sexual?',
+    prompt: 'Quão satisfeito(a) você está com sua vida sexual?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q22',
-    prompt: 'Quao satisfeito(a) voce esta com o apoio que voce recebe de seus amigos?',
+    prompt: 'Quão satisfeito(a) você está com o apoio que você recebe de seus amigos?',
     options: OPTIONS_SATISFACTION,
   },
 
   // Environmental domain items
   {
     id: 'q8',
-    prompt: 'Quao seguro(a) voce se sente em sua vida diaria?',
+    prompt: 'Quão seguro(a) você se sente em sua vida diária?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q9',
-    prompt: 'Quao saudavel e o seu ambiente fisico (clima, barulho, poluicao, atrativos)?',
+    prompt: 'Quão saudável é o seu ambiente físico (clima, barulho, poluição, atrativos)?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q12',
-    prompt: 'Voce tem dinheiro suficiente para satisfazer suas necessidades?',
+    prompt: 'Você tem dinheiro suficiente para satisfazer suas necessidades?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q13',
-    prompt: 'Quao disponiveis para voce estao as informacoes que precisa no seu dia a dia?',
+    prompt: 'Quão disponíveis para você estão as informações que precisa no seu dia a dia?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q14',
-    prompt: 'Em que medida voce tem oportunidades de atividade de lazer?',
+    prompt: 'Em que medida você tem oportunidades de atividade de lazer?',
     options: OPTIONS_COMPLETENESS,
   },
   {
     id: 'q23',
-    prompt: 'Quao satisfeito(a) voce esta com as condicoes do local onde mora?',
+    prompt: 'Quão satisfeito(a) você está com as condições do local onde mora?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q24',
-    prompt: 'Quao satisfeito(a) voce esta com o seu acesso aos servicos de saude?',
+    prompt: 'Quão satisfeito(a) você está com o seu acesso aos serviços de saúde?',
     options: OPTIONS_SATISFACTION,
   },
   {
     id: 'q25',
-    prompt: 'Quao satisfeito(a) voce esta com o seu meio de transporte?',
+    prompt: 'Quão satisfeito(a) você está com o seu meio de transporte?',
     options: OPTIONS_SATISFACTION,
   },
 
@@ -215,7 +218,7 @@ const WHOQOL_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q26',
     prompt:
-      'Com que frequencia voce tem sentimentos negativos tais como mau humor, desespero, ansiedade, depressao?',
+      'Com que frequência você tem sentimentos negativos tais como mau humor, desespero, ansiedade, depressão?',
     options: OPTIONS_FREQUENCY,
     reverseScored: true,
   },

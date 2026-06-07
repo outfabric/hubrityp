@@ -1,12 +1,15 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
+// TODO(clinical-review): canonical PHQ-9 Portuguese wording verification
+// deferred to clinical review — only unambiguous diacritics added here.
+
 // ---------------------------------------------------------------------------
 // PHQ-9 response options (identical for all 9 items)
 // ---------------------------------------------------------------------------
 
 const PHQ9_OPTIONS: ScaleOption[] = [
   { value: 0, label: 'Nenhuma vez' },
-  { value: 1, label: 'Varios dias' },
+  { value: 1, label: 'Vários dias' },
   { value: 2, label: 'Mais da metade dos dias' },
   { value: 3, label: 'Quase todos os dias' },
 ];
@@ -45,18 +48,18 @@ const PHQ9_QUESTIONS: ScaleQuestion[] = [
   {
     id: 'q6',
     prompt:
-      'Se sentir mal consigo mesmo(a) — ou achar que voce e um fracasso ou que decepcionou sua familia ou voce mesmo(a)',
+      'Se sentir mal consigo mesmo(a) — ou achar que você é um fracasso ou que decepcionou sua família ou você mesmo(a)',
     options: PHQ9_OPTIONS,
   },
   {
     id: 'q7',
-    prompt: 'Dificuldade para se concentrar nas coisas, como ler o jornal ou ver televisao',
+    prompt: 'Dificuldade para se concentrar nas coisas, como ler o jornal ou ver televisão',
     options: PHQ9_OPTIONS,
   },
   {
     id: 'q8',
     prompt:
-      'Lentidao para se movimentar ou falar, a ponto das outras pessoas perceberem? Ou o contrario — ficar agitado(a) ou inquieto(a), andando de um lado para o outro mais do que de costume',
+      'Lentidão para se movimentar ou falar, a ponto das outras pessoas perceberem? Ou o contrário — ficar agitado(a) ou inquieto(a), andando de um lado para o outro mais do que de costume',
     options: PHQ9_OPTIONS,
   },
   {

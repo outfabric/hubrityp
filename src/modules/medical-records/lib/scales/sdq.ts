@@ -1,5 +1,8 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
+// TODO(clinical-review): canonical SDQ Portuguese (11-17 self-report) wording
+// verification deferred to clinical review — only unambiguous diacritics added here.
+
 // ---------------------------------------------------------------------------
 // SDQ response options (identical for all 25 items)
 // 0 = Falso, 1 = Mais ou menos verdadeiro, 2 = Verdadeiro
@@ -44,12 +47,12 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q2',
-    prompt: 'Eu sou inquieto(a), nao consigo ficar parado(a) por muito tempo',
+    prompt: 'Eu sou inquieto(a), não consigo ficar parado(a) por muito tempo',
     options: SDQ_OPTIONS,
   },
   {
     id: 'q3',
-    prompt: 'Eu tenho muitas dores de cabeca, de estomago ou enjoo',
+    prompt: 'Eu tenho muitas dores de cabeça, de estômago ou enjoo',
     options: SDQ_OPTIONS,
   },
   {
@@ -60,7 +63,7 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q5',
-    prompt: 'Eu fico muito bravo(a) e frequentemente perco a paciencia',
+    prompt: 'Eu fico muito bravo(a) e frequentemente perco a paciência',
     options: SDQ_OPTIONS,
   },
   {
@@ -70,7 +73,7 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q7',
-    prompt: 'Eu geralmente faco o que me mandam',
+    prompt: 'Eu geralmente faço o que me mandam',
     options: SDQ_OPTIONS,
   },
   {
@@ -80,13 +83,13 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q9',
-    prompt: 'Eu ajudo quando alguem se machuca, fica triste ou se sente mal',
+    prompt: 'Eu ajudo quando alguém se machuca, fica triste ou se sente mal',
     options: SDQ_OPTIONS,
     reverseScored: true,
   },
   {
     id: 'q10',
-    prompt: 'Eu fico mexendo muito as maos ou os pes ou me revirando na cadeira',
+    prompt: 'Eu fico mexendo muito as mãos ou os pés ou me revirando na cadeira',
     options: SDQ_OPTIONS,
   },
   {
@@ -111,17 +114,17 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q15',
-    prompt: 'Eu me distraio com facilidade, acho dificil me concentrar',
+    prompt: 'Eu me distraio com facilidade, acho difícil me concentrar',
     options: SDQ_OPTIONS,
   },
   {
     id: 'q16',
-    prompt: 'Eu fico nervoso(a) em situacoes novas. Eu facilmente perco a confianca em mim',
+    prompt: 'Eu fico nervoso(a) em situações novas. Eu facilmente perco a confiança em mim',
     options: SDQ_OPTIONS,
   },
   {
     id: 'q17',
-    prompt: 'Eu sou gentil com criancas mais novas',
+    prompt: 'Eu sou gentil com crianças mais novas',
     options: SDQ_OPTIONS,
     reverseScored: true,
   },
@@ -132,12 +135,12 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q19',
-    prompt: 'Outras criancas ou jovens me perseguem, ameacam ou intimidam',
+    prompt: 'Outras crianças ou jovens me perseguem, ameaçam ou intimidam',
     options: SDQ_OPTIONS,
   },
   {
     id: 'q20',
-    prompt: 'Eu frequentemente me ofereco para ajudar os outros (pais, professores, criancas)',
+    prompt: 'Eu frequentemente me ofereço para ajudar os outros (pais, professores, crianças)',
     options: SDQ_OPTIONS,
     reverseScored: true,
   },
@@ -148,7 +151,7 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q22',
-    prompt: 'Eu pego coisas que nao sao minhas, de casa, da escola ou de outros lugares',
+    prompt: 'Eu pego coisas que não são minhas, de casa, da escola ou de outros lugares',
     options: SDQ_OPTIONS,
   },
   {
@@ -163,7 +166,7 @@ const SDQ_QUESTIONS: ScaleQuestion[] = [
   },
   {
     id: 'q25',
-    prompt: 'Eu termino as tarefas que comeco. Eu tenho boa atencao',
+    prompt: 'Eu termino as tarefas que começo. Eu tenho boa atenção',
     options: SDQ_OPTIONS,
   },
 ];

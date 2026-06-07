@@ -50,9 +50,9 @@
 
 ## 8. Clinical scales — conservative diacritic fix + review markers
 
-- [ ] 8.1 In `src/modules/medical-records/lib/scales/**` (AUDIT, SDQ, …) add ONLY unambiguous diacritics to prompts/options (`frequencia`→`frequência`, `ultimo`→`último`, `voce`→`você`, `nao`→`não`); do NOT reword or restructure
-- [ ] 8.2 Add a `TODO(clinical-review)` marker on each touched scale (canonical validated wording verification deferred to clinical review)
-- [ ] 8.3 Validate slice: lint + typecheck + unit green (scale-public-form / scale unit tests)
+- [x] 8.1 In `src/modules/medical-records/lib/scales/**` (AUDIT, SDQ, …) add ONLY unambiguous diacritics to prompts/options (`frequencia`→`frequência`, `ultimo`→`último`, `voce`→`você`, `nao`→`não`); do NOT reword or restructure
+- [x] 8.2 Add a `TODO(clinical-review)` marker on each touched scale (canonical validated wording verification deferred to clinical review)
+- [x] 8.3 Validate slice: lint + typecheck + unit green (scale-public-form / scale unit tests)
 
 ## 9. cspell guard — install, configure, allowlist, wire into CI
 

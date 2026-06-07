@@ -55,7 +55,7 @@ describe('GAD-7 — questions', () => {
     const labels = gad7.questions[0]!.options.map((o) => o.label);
     expect(labels).toEqual([
       'Nenhuma vez',
-      'Varios dias',
+      'Vários dias',
       'Mais da metade dos dias',
       'Quase todos os dias',
     ]);
