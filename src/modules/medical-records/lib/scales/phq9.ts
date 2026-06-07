@@ -1,8 +1,5 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
-// TODO(clinical-review): canonical PHQ-9 Portuguese wording verification
-// deferred to clinical review — only unambiguous diacritics added here.
-
 // ---------------------------------------------------------------------------
 // PHQ-9 response options (identical for all 9 items)
 // ---------------------------------------------------------------------------

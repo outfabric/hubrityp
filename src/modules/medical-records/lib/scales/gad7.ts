@@ -1,8 +1,5 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
-// TODO(clinical-review): canonical GAD-7 Portuguese wording verification
-// deferred to clinical review — only unambiguous diacritics added here.
-
 // ---------------------------------------------------------------------------
 // GAD-7 response options (identical for all 7 items)
 // ---------------------------------------------------------------------------

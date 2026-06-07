@@ -1,8 +1,5 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
-// TODO(clinical-review): canonical SDQ Portuguese (11-17 self-report) wording
-// verification deferred to clinical review — only unambiguous diacritics added here.
-
 // ---------------------------------------------------------------------------
 // SDQ response options (identical for all 25 items)
 // 0 = Falso, 1 = Mais ou menos verdadeiro, 2 = Verdadeiro

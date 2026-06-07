@@ -1,8 +1,5 @@
 import type { ClassificationResult, ScaleDefinition, ScaleQuestion } from './types';
 
-// TODO(clinical-review): canonical AUDIT (WHO) Portuguese wording verification
-// deferred to clinical review — only unambiguous diacritics added here.
-
 // ---------------------------------------------------------------------------
 // AUDIT response options — vary per question group
 // ---------------------------------------------------------------------------

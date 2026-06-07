@@ -1,8 +1,5 @@
 import type { ClassificationResult, ScaleDefinition, ScaleOption, ScaleQuestion } from './types';
 
-// TODO(clinical-review): canonical WHOQOL-Bref Brazilian Portuguese wording
-// verification deferred to clinical review — only unambiguous diacritics added here.
-
 // ---------------------------------------------------------------------------
 // WHOQOL-Bref response options
 // The official instrument uses several 5-point Likert sets depending on the
