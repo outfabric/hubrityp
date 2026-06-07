@@ -47,17 +47,17 @@ describe('EditScopeDialog', () => {
     expect(screen.getByTestId('scope-all')).toBeInTheDocument();
 
     // Verify labels
-    expect(screen.getByText('Apenas esta sessao')).toBeInTheDocument();
-    expect(screen.getByText('Esta e todas as proximas')).toBeInTheDocument();
-    expect(screen.getByText('Toda a serie')).toBeInTheDocument();
+    expect(screen.getByText('Apenas esta sessão')).toBeInTheDocument();
+    expect(screen.getByText('Esta e todas as próximas')).toBeInTheDocument();
+    expect(screen.getByText('Toda a série')).toBeInTheDocument();
 
     // Verify subtitles
-    expect(screen.getByText('As demais sessoes da serie nao serao alteradas')).toBeInTheDocument();
-    expect(screen.getByText('Sessoes anteriores permanecem como estao')).toBeInTheDocument();
-    expect(screen.getByText('Todas as sessoes futuras serao atualizadas')).toBeInTheDocument();
+    expect(screen.getByText('As demais sessões da série não serão alteradas')).toBeInTheDocument();
+    expect(screen.getByText('Sessões anteriores permanecem como estão')).toBeInTheDocument();
+    expect(screen.getByText('Todas as sessões futuras serão atualizadas')).toBeInTheDocument();
   });
 
-  it('clicking "Apenas esta sessao" calls onSelect with "this"', () => {
+  it('clicking "Apenas esta sessão" calls onSelect with "this"', () => {
     const { props } = renderDialog();
 
     fireEvent.click(screen.getByTestId('scope-this'));
@@ -66,7 +66,7 @@ describe('EditScopeDialog', () => {
     expect(props.onSelect).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking "Esta e todas as proximas" calls onSelect with "this_and_future"', () => {
+  it('clicking "Esta e todas as próximas" calls onSelect with "this_and_future"', () => {
     const { props } = renderDialog();
 
     fireEvent.click(screen.getByTestId('scope-this_and_future'));
@@ -75,7 +75,7 @@ describe('EditScopeDialog', () => {
     expect(props.onSelect).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking "Toda a serie" calls onSelect with "all"', () => {
+  it('clicking "Toda a série" calls onSelect with "all"', () => {
     const { props } = renderDialog();
 
     fireEvent.click(screen.getByTestId('scope-all'));
@@ -107,7 +107,7 @@ describe('EditScopeDialog', () => {
     expect(dialogContent).toBeInTheDocument();
 
     // The dialog should contain a role="group" for the scope options
-    const group = screen.getByRole('group', { name: 'Escopo da edicao' });
+    const group = screen.getByRole('group', { name: 'Escopo da edição' });
     expect(group).toBeInTheDocument();
   });
 
@@ -126,22 +126,22 @@ describe('EditScopeDialog', () => {
   it('renders default title and description', () => {
     renderDialog();
 
-    expect(screen.getByText('Editar sessao recorrente')).toBeInTheDocument();
+    expect(screen.getByText('Editar sessão recorrente')).toBeInTheDocument();
     expect(
-      screen.getByText('Escolha o escopo da alteracao para esta sessao recorrente.'),
+      screen.getByText('Escolha o escopo da alteração para esta sessão recorrente.'),
     ).toBeInTheDocument();
   });
 
   it('accepts custom title and description props', () => {
     renderDialog({
-      title: 'Cancelar sessao recorrente',
-      description: 'Escolha quais sessoes deseja cancelar.',
+      title: 'Cancelar sessão recorrente',
+      description: 'Escolha quais sessões deseja cancelar.',
     });
 
-    expect(screen.getByText('Cancelar sessao recorrente')).toBeInTheDocument();
-    expect(screen.getByText('Escolha quais sessoes deseja cancelar.')).toBeInTheDocument();
+    expect(screen.getByText('Cancelar sessão recorrente')).toBeInTheDocument();
+    expect(screen.getByText('Escolha quais sessões deseja cancelar.')).toBeInTheDocument();
     // Default title should NOT be present
-    expect(screen.queryByText('Editar sessao recorrente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editar sessão recorrente')).not.toBeInTheDocument();
   });
 
   it('does not render when open is false', () => {

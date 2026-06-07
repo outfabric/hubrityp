@@ -4,7 +4,7 @@
  * RecurrenceFormSection — collapsible sub-form for recurrence rules.
  *
  * Integrates with a parent `<Form>` (React Hook Form `FormProvider`) via
- * `useFormContext`. When the "Sessao recorrente" checkbox is checked, a
+ * `useFormContext`. When the "Sessão recorrente" checkbox is checked, a
  * `Collapsible` reveals frequency, day-of-week, and end-condition controls.
  *
  * Field paths written to the form context:
@@ -52,11 +52,11 @@ const FREQUENCY_OPTIONS = [
 const DAY_ITEMS = [
   { value: '0', abbrev: 'D', full: 'Domingo' },
   { value: '1', abbrev: 'S', full: 'Segunda-feira' },
-  { value: '2', abbrev: 'T', full: 'Terca-feira' },
+  { value: '2', abbrev: 'T', full: 'Terça-feira' },
   { value: '3', abbrev: 'Q', full: 'Quarta-feira' },
   { value: '4', abbrev: 'Q', full: 'Quinta-feira' },
   { value: '5', abbrev: 'S', full: 'Sexta-feira' },
-  { value: '6', abbrev: 'S', full: 'Sabado' },
+  { value: '6', abbrev: 'S', full: 'Sábado' },
 ] as const;
 
 type EndCondition = 'date' | 'count' | 'indefinite';
@@ -167,7 +167,7 @@ export function RecurrenceFormSection() {
           checked={isRecurring}
           onCheckedChange={(checked) => handleRecurringToggle(checked === true)}
         />
-        <Label htmlFor="recurrence-toggle">Sessao recorrente</Label>
+        <Label htmlFor="recurrence-toggle">Sessão recorrente</Label>
       </div>
 
       {/* Collapsible body */}
@@ -183,9 +183,9 @@ export function RecurrenceFormSection() {
           <div className="flex flex-col gap-4">
             {/* 1. Frequency */}
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium">Frequencia</Label>
+              <Label className="text-sm font-medium">Frequência</Label>
               <RadioGroup
-                aria-label="Frequencia da recorrencia"
+                aria-label="Frequência da recorrência"
                 value={frequency ?? ''}
                 onValueChange={handleFrequencyChange}
                 data-testid="frequency-radio-group"
@@ -239,18 +239,18 @@ export function RecurrenceFormSection() {
 
             {/* 3. End condition */}
             <div className="flex flex-col gap-2">
-              <h4 className="text-base font-medium">Repetir ate</h4>
+              <h4 className="text-base font-medium">Repetir até</h4>
               <RadioGroup
                 value={endCondition}
                 onValueChange={handleEndConditionChange}
                 data-testid="end-condition-radio-group"
               >
-                {/* Data especifica */}
+                {/* Data específica */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <RadioGroupItem value="date" id="end-date" data-testid="end-condition-date" />
                     <Label htmlFor="end-date" className="font-normal">
-                      Data especifica
+                      Data específica
                     </Label>
                   </div>
                   {endCondition === 'date' && (
@@ -284,7 +284,7 @@ export function RecurrenceFormSection() {
                   )}
                 </div>
 
-                {/* Numero de sessoes */}
+                {/* Número de sessões */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <RadioGroupItem
@@ -293,7 +293,7 @@ export function RecurrenceFormSection() {
                       data-testid="end-condition-count"
                     />
                     <Label htmlFor="end-count" className="font-normal">
-                      Numero de sessoes
+                      Número de sessões
                     </Label>
                   </div>
                   {endCondition === 'count' && (
@@ -326,7 +326,7 @@ export function RecurrenceFormSection() {
                   </div>
                   {endCondition === 'indefinite' && (
                     <p className="text-text-tertiary ml-8 text-xs" data-testid="indefinite-helper">
-                      As sessoes serao geradas continuamente ate que voce cancele a recorrencia.
+                      As sessões serão geradas continuamente até que você cancele a recorrência.
                     </p>
                   )}
                 </div>

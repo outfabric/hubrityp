@@ -36,9 +36,9 @@
 
 ## 6. Sessions — display copy + coupled tests
 
-- [ ] 6.1 Correct display copy under `src/modules/sessions/components/**` (edit-scope dialog, recurrence form section)
-- [ ] 6.2 Update coupled unit assertions: `edit-scope-dialog.test.tsx`, `recurrence-form-section.test.tsx`
-- [ ] 6.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 6.1 Correct display copy under `src/modules/sessions/components/**` (edit-scope dialog, recurrence form section)
+- [x] 6.2 Update coupled unit assertions: `edit-scope-dialog.test.tsx`, `recurrence-form-section.test.tsx`
+- [x] 6.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 7. Auth / onboarding / oauth + page metadata + email templates
 
