@@ -23,7 +23,7 @@ export default async function LinkAccountPage({ searchParams }: LinkAccountPageP
           <CardTitle>Vincular conta</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-destructive text-sm">Solicitacao invalida.</p>
+          <p className="text-destructive text-sm">Solicitação inválida.</p>
         </CardContent>
       </Card>
     );
@@ -34,7 +34,7 @@ export default async function LinkAccountPage({ searchParams }: LinkAccountPageP
       <CardHeader>
         <CardTitle>Vincular conta</CardTitle>
         <CardDescription>
-          Ja existe uma conta com este email. Informe sua senha para vincular sua conta Google.
+          Já existe uma conta com este email. Informe sua senha para vincular sua conta Google.
         </CardDescription>
       </CardHeader>
       <CardContent>

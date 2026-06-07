@@ -42,11 +42,11 @@
 
 ## 7. Auth / onboarding / oauth + page metadata + email templates
 
-- [ ] 7.1 Correct display copy under `src/modules/auth/**`, `src/modules/registration/**`, `src/modules/onboarding/**`, `src/modules/oauth/**`, `src/modules/password-recovery/**` (forms, pending cards, tour copy)
-- [ ] 7.2 Correct page metadata prose (`title`/`description`) in route `layout.tsx`/`page.tsx` files (e.g. `confirmar-sessao/layout.tsx` `'Confirme ou cancele sua sessão agendada.'`) — leave URL segments untouched
-- [ ] 7.3 Correct transactional email subjects/bodies under `src/shared/lib/mail/**` (account-locked, password-changed, nps-detractor-followup)
-- [ ] 7.4 Update any coupled unit/integration assertions surfaced by these changes (verify via grep after editing)
-- [ ] 7.5 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 7.1 Correct display copy under `src/modules/auth/**`, `src/modules/registration/**`, `src/modules/onboarding/**`, `src/modules/oauth/**`, `src/modules/password-recovery/**` (forms, pending cards, tour copy)
+- [x] 7.2 Correct page metadata prose (`title`/`description`) in route `layout.tsx`/`page.tsx` files (e.g. `confirmar-sessao/layout.tsx` `'Confirme ou cancele sua sessão agendada.'`) — leave URL segments untouched
+- [x] 7.3 Correct transactional email subjects/bodies under `src/shared/lib/mail/**` (account-locked, password-changed, nps-detractor-followup)
+- [x] 7.4 Update coupled unit/integration assertions surfaced by these changes
+- [x] 7.5 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 8. Clinical scales — conservative diacritic fix + review markers
 

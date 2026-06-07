@@ -22,7 +22,7 @@ export type LinkAccountFormProps = {
 const FALLBACK_ERROR_COPY = 'Ocorreu um erro. Tente novamente.';
 const ERROR_COPY: Record<string, string> = {
   invalid_credentials: 'Senha incorreta. Tente novamente.',
-  invalid_link_request: 'Solicitacao invalida ou expirada. Tente novamente.',
+  invalid_link_request: 'Solicitação inválida ou expirada. Tente novamente.',
   unknown: FALLBACK_ERROR_COPY,
 };
 

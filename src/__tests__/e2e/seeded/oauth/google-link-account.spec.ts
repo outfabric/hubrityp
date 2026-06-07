@@ -25,8 +25,8 @@ test.describe('@auth Google OAuth link-account flow', () => {
   test('shows invalid request message when pendingUserId is missing', async ({ page }) => {
     await page.goto('/auth/link-account');
 
-    // Should show "Solicitacao invalida." instead of the form.
-    await expect(page.getByText('Solicitacao invalida.')).toBeVisible();
+    // Should show "Solicitação inválida." instead of the form.
+    await expect(page.getByText('Solicitação inválida.')).toBeVisible();
     await expect(page.getByTestId('link-account-form-password')).toHaveCount(0);
   });
 });

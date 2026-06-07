@@ -36,8 +36,8 @@ type FormValues = z.input<typeof completeProfileInputSchema>;
 
 const FALLBACK_ERROR_COPY = 'Ocorreu um erro. Tente novamente.';
 const TOP_LEVEL_ERROR_COPY: Record<string, string> = {
-  duplicate_crp: 'Este CRP ja esta cadastrado.',
-  invalid_session: 'Sessao expirada. Tente novamente.',
+  duplicate_crp: 'Este CRP já está cadastrado.',
+  invalid_session: 'Sessão expirada. Tente novamente.',
   unknown: FALLBACK_ERROR_COPY,
 };
 
@@ -145,7 +145,7 @@ export function CompleteProfileForm({ email, defaultFullName, action }: Complete
       {/* CRP */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_140px]">
         <div className="space-y-2">
-          <Label htmlFor={ids.crpNumber}>Numero do CRP</Label>
+          <Label htmlFor={ids.crpNumber}>Número do CRP</Label>
           <Input
             id={ids.crpNumber}
             type="text"
@@ -213,7 +213,7 @@ export function CompleteProfileForm({ email, defaultFullName, action }: Complete
         <ConsentRow
           inputId={ids.privacy}
           testId="complete-profile-form-privacy"
-          label="Aceito a Politica de Privacidade"
+          label="Aceito a Política de Privacidade"
           register={register('acceptedPrivacy')}
           setValue={(checked) =>
             setValue('acceptedPrivacy', checked as true, {
@@ -227,7 +227,7 @@ export function CompleteProfileForm({ email, defaultFullName, action }: Complete
         <ConsentRow
           inputId={ids.sensitive}
           testId="complete-profile-form-sensitive-data"
-          label="Aceito o Tratamento de Dados Sensiveis (LGPD)"
+          label="Aceito o Tratamento de Dados Sensíveis (LGPD)"
           register={register('acceptedSensitiveData')}
           setValue={(checked) =>
             setValue('acceptedSensitiveData', checked as true, {
