@@ -37,8 +37,3 @@
 - [ ] 6.3 E2E WhatsApp: adult → `wa.me/<patient digits>`; minor → `wa.me/<guardian digits>`; message contains `/termo/<token>`. Disabled-without-phone → button disabled + tooltip, copy-link still works.
 - [ ] 6.4 E2E remove chip → URL drops `filtro`, full list returns; unknown `?filtro=xyz` renders the full list without error (RF-12.16).
 - [ ] 6.5 E2E negative-auth: anonymous `/pacientes?filtro=sem-consentimento` redirects to `/login`.
-
-## 7. Quality gates
-
-- [ ] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck` (or `npm run check`) — all green.
-- [ ] 7.2 Run `npm run test:unit` (full) and the affected integration + e2e specs; confirm no regression in existing patient-listing, patient-consent, and patient-detail tests.

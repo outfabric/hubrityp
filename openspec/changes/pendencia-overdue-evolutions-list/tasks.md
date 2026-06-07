@@ -35,7 +35,3 @@
 - [ ] 6.4 E2E: remove chip → URL drops `filtro`, calendar returns; unknown `?filtro=xyz` → calendar, no error (RF-12.16); empty set → "Tudo em dia. 🎉" positive state with link to the full agenda.
 - [ ] 6.5 E2E negative-auth: anonymous `/agenda?filtro=sem-evolucao` redirects to `/login`.
 
-## 7. Quality gates
-
-- [ ] 7.1 Run `npm run lint`, `npm run format`, `npm run typecheck` (or `npm run check`) — all green.
-- [ ] 7.2 Run `npm run test:unit` (full) and the affected integration + e2e specs; confirm no regression in existing agenda-views, agenda-sessions, and evolutions tests.
