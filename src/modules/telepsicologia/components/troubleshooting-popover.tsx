@@ -36,16 +36,16 @@ export function TroubleshootingPopover({ psychologistName }: TroubleshootingPopo
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Problema tecnico?"
+          aria-label="Problema técnico?"
           data-testid="troubleshooting-button"
         >
           <HelpCircle className="h-5 w-5" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent side="top" className="max-w-[320px]" data-testid="troubleshooting-popover">
-        <p className="text-text-primary mb-3 text-sm font-medium">Problema tecnico?</p>
+        <p className="text-text-primary mb-3 text-sm font-medium">Problema técnico?</p>
         <ol className="text-text-secondary list-decimal space-y-2 pl-4 text-sm">
-          <li>Verifique se microfone e camera estao ativados nas configuracoes do navegador</li>
+          <li>Verifique se microfone e câmera estão ativados nas configurações do navegador</li>
           <li>Saia e volte a entrar pelo mesmo link</li>
           <li>Tente usar Chrome ou Firefox</li>
           <li>{step4Text}</li>

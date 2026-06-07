@@ -73,8 +73,8 @@ export function EndCallDialog({ open, onOpenChange, roomId, onEndSession }: EndC
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Encerrar sessao?</AlertDialogTitle>
-          <AlertDialogDescription>O paciente sera desconectado.</AlertDialogDescription>
+          <AlertDialogTitle>Encerrar sessão?</AlertDialogTitle>
+          <AlertDialogDescription>O paciente será desconectado.</AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
@@ -85,7 +85,7 @@ export function EndCallDialog({ open, onOpenChange, roomId, onEndSession }: EndC
             disabled={isEnding}
             data-testid="confirm-end-call"
           >
-            {isEnding ? 'Encerrando...' : 'Encerrar sessao'}
+            {isEnding ? 'Encerrando...' : 'Encerrar sessão'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

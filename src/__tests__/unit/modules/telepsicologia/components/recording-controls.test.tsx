@@ -114,12 +114,12 @@ describe('RecordingControls', () => {
   // ---- State 1: disabled (no consent) ----
 
   describe('when hasConsent is false', () => {
-    it('renders a disabled button with "Gravar sessao" text', () => {
+    it('renders a disabled button with "Gravar sessão" text', () => {
       renderControls({ hasConsent: false });
 
       const button = screen.getByTestId('recording-button-disabled');
       expect(button).toBeDisabled();
-      expect(button).toHaveTextContent('Gravar sessao');
+      expect(button).toHaveTextContent('Gravar sessão');
     });
 
     it('shows a tooltip explaining no consent', async () => {
@@ -137,7 +137,7 @@ describe('RecordingControls', () => {
 
       // Radix Tooltip renders the text in both the visual content and an
       // accessible description span, so use getAllByText instead of getByText.
-      const tooltipTexts = screen.getAllByText('Paciente nao assinou termo de gravacao');
+      const tooltipTexts = screen.getAllByText('Paciente não assinou termo de gravação');
       expect(tooltipTexts.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -156,12 +156,12 @@ describe('RecordingControls', () => {
   // ---- State 2: idle (consent valid, ready to start) ----
 
   describe('when hasConsent is true and isRecording is false', () => {
-    it('renders "Iniciar gravacao" button', () => {
+    it('renders "Iniciar gravação" button', () => {
       renderControls({ hasConsent: true, isRecording: false });
 
       const button = screen.getByTestId('recording-start-button');
       expect(button).toBeEnabled();
-      expect(button).toHaveTextContent('Iniciar gravacao');
+      expect(button).toHaveTextContent('Iniciar gravação');
     });
 
     it('calls onToggleRecording with start action when clicked', async () => {
@@ -215,15 +215,15 @@ describe('RecordingControls', () => {
       expect(screen.getByText('Gravando')).toBeInTheDocument();
     });
 
-    it('renders "Parar gravacao" button', () => {
+    it('renders "Parar gravação" button', () => {
       renderControls({ hasConsent: true, isRecording: true });
 
       const button = screen.getByTestId('recording-stop-button');
       expect(button).toBeEnabled();
-      expect(button).toHaveTextContent('Parar gravacao');
+      expect(button).toHaveTextContent('Parar gravação');
     });
 
-    it('calls onToggleRecording with stop action when "Parar gravacao" is clicked', async () => {
+    it('calls onToggleRecording with stop action when "Parar gravação" is clicked', async () => {
       const user = userEvent.setup();
       const onToggleRecording = vi.fn().mockResolvedValue({ ok: true });
       renderControls({
@@ -279,7 +279,7 @@ describe('RecordingControls', () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText('Consentimento de gravacao nao encontrado.')).toBeInTheDocument();
+        expect(screen.getByText('Consentimento de gravação não encontrado.')).toBeInTheDocument();
       });
     });
 
@@ -300,7 +300,7 @@ describe('RecordingControls', () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText('Erro ao alterar gravacao. Tente novamente.')).toBeInTheDocument();
+        expect(screen.getByText('Erro ao alterar gravação. Tente novamente.')).toBeInTheDocument();
       });
     });
 

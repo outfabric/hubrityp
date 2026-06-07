@@ -144,7 +144,7 @@ export function InCallView({
                 size="sm"
                 onClick={handleAdmitPatient}
                 disabled={isAdmitting}
-                aria-label="Admitir paciente na sessao"
+                aria-label="Admitir paciente na sessão"
                 data-testid="admit-patient-button"
               >
                 <UserCheck className="mr-1 h-4 w-4" aria-hidden="true" />

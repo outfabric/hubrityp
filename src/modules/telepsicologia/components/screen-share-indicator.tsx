@@ -37,7 +37,7 @@ export function ScreenShareIndicator() {
       data-testid="screen-share-indicator"
     >
       <span className="text-text-primary text-sm font-medium">
-        Voce esta compartilhando sua tela
+        Você está compartilhando sua tela
       </span>
       <button
         type="button"

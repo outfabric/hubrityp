@@ -88,7 +88,7 @@ describe('ProntuarioCallDrawer', () => {
     renderDrawer();
 
     expect(screen.getByTestId('prontuario-drawer')).toBeInTheDocument();
-    expect(screen.getByText('Prontuario de Maria Silva')).toBeInTheDocument();
+    expect(screen.getByText('Prontuário de Maria Silva')).toBeInTheDocument();
   });
 
   it('does not render content when closed', () => {
@@ -110,19 +110,19 @@ describe('ProntuarioCallDrawer', () => {
     expect(screen.queryByTestId('prontuario-drawer')).not.toBeInTheDocument();
   });
 
-  it('renders "Abrir prontuario completo" link with correct href', () => {
+  it('renders "Abrir prontuário completo" link with correct href', () => {
     renderDrawer({ patientId: 'patient-abc-456' });
 
     const link = screen.getByTestId('open-full-prontuario-link');
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/pacientes/patient-abc-456/prontuario');
-    expect(link).toHaveTextContent('Abrir prontuario completo');
+    expect(link).toHaveTextContent('Abrir prontuário completo');
   });
 
   it('shows empty state when there are no recent evolutions', () => {
     renderDrawer({ recentEvolutions: [] });
 
-    expect(screen.getByText('Nenhuma evolucao registrada.')).toBeInTheDocument();
+    expect(screen.getByText('Nenhuma evolução registrada.')).toBeInTheDocument();
   });
 
   it('renders recent evolutions list when evolutions exist', () => {
@@ -152,7 +152,7 @@ describe('ProntuarioCallDrawer', () => {
     renderDrawer({ recentEvolutions: evolutions });
 
     expect(screen.getByTestId('recent-evolutions-list')).toBeInTheDocument();
-    expect(screen.getByText('Evolucoes recentes (2)')).toBeInTheDocument();
+    expect(screen.getByText('Evoluções recentes (2)')).toBeInTheDocument();
     // Finalized evolution shows indicator
     expect(screen.getByText('Finalizada')).toBeInTheDocument();
   });

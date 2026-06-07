@@ -50,7 +50,7 @@ export function ConnectionQualityIndicator() {
       return {
         icon: Signal,
         colorClass: 'text-success-500',
-        label: 'Conexao boa',
+        label: 'Conexão boa',
         showBanner: false,
         isPoor: false,
       };
@@ -61,7 +61,7 @@ export function ConnectionQualityIndicator() {
       return {
         icon: SignalZero,
         colorClass: 'text-danger-500',
-        label: 'Conexao ruim',
+        label: 'Conexão ruim',
         showBanner: true,
         isPoor: true,
       };
@@ -71,7 +71,7 @@ export function ConnectionQualityIndicator() {
     return {
       icon: SignalLow,
       colorClass: 'text-warning-500',
-      label: 'Conexao instavel',
+      label: 'Conexão instável',
       showBanner: false,
       isPoor: false,
     };
@@ -87,7 +87,7 @@ export function ConnectionQualityIndicator() {
 
     lastDegradationToastTimestamp = now;
 
-    toast.warning('Sua conexao esta instavel', {
+    toast.warning('Sua conexão está instável', {
       action: {
         label: 'Reduzir qualidade',
         onClick: () => {
@@ -111,7 +111,7 @@ export function ConnectionQualityIndicator() {
           className="bg-danger-50 text-danger-700 animate-in fade-in rounded-lg px-3 py-1.5 text-xs font-medium"
           role="alert"
         >
-          Sua conexao esta instavel
+          Sua conexão está instável
         </div>
       )}
     </div>

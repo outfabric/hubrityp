@@ -166,7 +166,7 @@ function PatientCallControls({
         {hasUnreadMessages && !isChatOpen && (
           <span
             className="bg-danger-500 absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
-            aria-label="Mensagens nao lidas"
+            aria-label="Mensagens não lidas"
             data-testid="patient-chat-unread-badge"
           />
         )}

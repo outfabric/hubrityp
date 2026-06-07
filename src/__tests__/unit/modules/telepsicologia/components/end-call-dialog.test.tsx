@@ -65,16 +65,16 @@ describe('EndCallDialog', () => {
   it('renders the dialog when open', () => {
     renderDialog({ open: true });
 
-    expect(screen.getByText('Encerrar sessao?')).toBeInTheDocument();
-    expect(screen.getByText('O paciente sera desconectado.')).toBeInTheDocument();
+    expect(screen.getByText('Encerrar sessão?')).toBeInTheDocument();
+    expect(screen.getByText('O paciente será desconectado.')).toBeInTheDocument();
     expect(screen.getByText('Cancelar')).toBeInTheDocument();
-    expect(screen.getByTestId('confirm-end-call')).toHaveTextContent('Encerrar sessao');
+    expect(screen.getByTestId('confirm-end-call')).toHaveTextContent('Encerrar sessão');
   });
 
   it('does not render the dialog when closed', () => {
     renderDialog({ open: false });
 
-    expect(screen.queryByText('Encerrar sessao?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Encerrar sessão?')).not.toBeInTheDocument();
   });
 
   it('closes without calling onEndSession when "Cancelar" is clicked', async () => {
@@ -90,7 +90,7 @@ describe('EndCallDialog', () => {
     expect(onEndSession).not.toHaveBeenCalled();
   });
 
-  it('calls onEndSession with roomId when "Encerrar sessao" is clicked', async () => {
+  it('calls onEndSession with roomId when "Encerrar sessão" is clicked', async () => {
     const user = userEvent.setup();
     const onEndSession = vi.fn().mockResolvedValue({ ok: true });
 

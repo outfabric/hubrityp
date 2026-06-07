@@ -17,9 +17,9 @@
 
 ## 3. Telepsicologia — display copy + coupled tests
 
-- [ ] 3.1 Correct display copy under `src/modules/telepsicologia/components/**` (call controls, recording controls, lobby, prontuário drawer, in-call chat, aria-labels)
-- [ ] 3.2 Update coupled unit assertions: `end-call-dialog.test.tsx`, `pre-call-lobby.test.tsx`, `prontuario-call-drawer.test.tsx`, `recording-controls.test.tsx`, `screen-share-indicator.test.tsx`
-- [ ] 3.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 3.1 Correct display copy under `src/modules/telepsicologia/components/**` (call controls, recording controls, lobby, prontuário drawer, in-call chat, aria-labels)
+- [x] 3.2 Update coupled unit assertions: `end-call-dialog.test.tsx`, `pre-call-lobby.test.tsx`, `prontuario-call-drawer.test.tsx`, `recording-controls.test.tsx`, `screen-share-indicator.test.tsx`
+- [x] 3.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 4. Patients — display copy + coupled tests
 

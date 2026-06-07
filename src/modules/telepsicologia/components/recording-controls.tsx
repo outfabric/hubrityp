@@ -82,8 +82,8 @@ export function RecordingControls({
         // Surface a generic message — no internal details leaked
         const message =
           result.code === 'CONSENT_INVALID'
-            ? 'Consentimento de gravacao nao encontrado.'
-            : 'Erro ao alterar gravacao. Tente novamente.';
+            ? 'Consentimento de gravação não encontrado.'
+            : 'Erro ao alterar gravação. Tente novamente.';
         setError(message);
       }
     });
@@ -100,16 +100,16 @@ export function RecordingControls({
                 variant="ghost"
                 size="sm"
                 disabled
-                aria-label="Gravar sessao"
+                aria-label="Gravar sessão"
                 data-testid="recording-button-disabled"
               >
                 <Circle className="mr-1 h-4 w-4" aria-hidden="true" />
-                Gravar sessao
+                Gravar sessão
               </Button>
             </span>
           </TooltipTrigger>
           <TooltipContent data-testid="recording-no-consent-tooltip">
-            <p>Paciente nao assinou termo de gravacao</p>
+            <p>Paciente não assinou termo de gravação</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -135,10 +135,10 @@ export function RecordingControls({
           size="sm"
           onClick={handleToggle}
           disabled={isPending}
-          aria-label="Parar gravacao"
+          aria-label="Parar gravação"
           data-testid="recording-stop-button"
         >
-          {isPending ? 'Parando...' : 'Parar gravacao'}
+          {isPending ? 'Parando...' : 'Parar gravação'}
         </Button>
 
         {error && (
@@ -158,11 +158,11 @@ export function RecordingControls({
         size="sm"
         onClick={handleToggle}
         disabled={isPending}
-        aria-label="Iniciar gravacao"
+        aria-label="Iniciar gravação"
         data-testid="recording-start-button"
       >
         <Circle className="mr-1 h-4 w-4" aria-hidden="true" />
-        {isPending ? 'Iniciando...' : 'Iniciar gravacao'}
+        {isPending ? 'Iniciando...' : 'Iniciar gravação'}
       </Button>
 
       {error && (
