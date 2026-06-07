@@ -35,7 +35,7 @@ export default function ReminderSettingsPage() {
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="reminder-settings-page-title"
         >
-          Configuracoes de Lembretes
+          Configurações de Lembretes
         </h1>
       </div>
 

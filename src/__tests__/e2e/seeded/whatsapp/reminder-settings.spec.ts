@@ -39,7 +39,7 @@ test.describe('@whatsapp reminder settings', () => {
     // Verify page title
     await expect(page.getByTestId('reminder-settings-page-title')).toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('reminder-settings-page-title')).toHaveText(
-      'Configuracoes de Lembretes',
+      'Configurações de Lembretes',
     );
 
     // Verify form card is visible

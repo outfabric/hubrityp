@@ -35,7 +35,7 @@ export default function AgendaSettingsPage() {
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="agenda-settings-page-title"
         >
-          Configuracoes da Agenda
+          Configurações da Agenda
         </h1>
       </div>
 

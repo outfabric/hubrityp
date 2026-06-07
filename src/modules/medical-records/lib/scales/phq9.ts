@@ -87,10 +87,10 @@ function scorePHQ9(responses: Record<string, number>): number {
 
 function classifyPHQ9(score: number | null): ClassificationResult {
   if (score === null) {
-    return { label: 'Minimo', severity: 'minimal' };
+    return { label: 'Mínimo', severity: 'minimal' };
   }
 
-  if (score <= 4) return { label: 'Minimo', severity: 'minimal' };
+  if (score <= 4) return { label: 'Mínimo', severity: 'minimal' };
   if (score <= 9) return { label: 'Leve', severity: 'mild' };
   if (score <= 14) return { label: 'Moderado', severity: 'moderate' };
   if (score <= 19) return { label: 'Moderadamente grave', severity: 'severe' };
@@ -104,7 +104,7 @@ function classifyPHQ9(score: number | null): ClassificationResult {
 
 export const phq9: ScaleDefinition = {
   key: 'phq9',
-  label: 'PHQ-9 (Depressao)',
+  label: 'PHQ-9 (Depressão)',
   description:
     'Patient Health Questionnaire — rastreamento e monitoramento da gravidade de sintomas depressivos.',
   estimatedMinutes: 3,

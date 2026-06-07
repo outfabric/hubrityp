@@ -82,7 +82,7 @@ test.describe('@prontuario scales', () => {
       await expect(page.getByTestId('scale-application-form')).toBeVisible({ timeout: 15_000 });
 
       // 10. Answer all 9 PHQ-9 questions with value 0 ("Nenhuma vez")
-      // Total score = 0 -> classification "Minimo" -> severity "minimal" -> badge "success"
+      // Total score = 0 -> classification "Mínimo" -> severity "minimal" -> badge "success"
       for (let i = 1; i <= 9; i++) {
         const questionGroup = page.getByTestId(`scale-question-q${i}`);
         await expect(questionGroup).toBeVisible();
@@ -99,7 +99,7 @@ test.describe('@prontuario scales', () => {
 
       // 13. Assert classification badge text and semantic variant
       const badge = page.getByTestId('scale-classification-badge');
-      await expect(badge).toHaveText('Minimo');
+      await expect(badge).toHaveText('Mínimo');
       // severity "minimal" maps to badge variant "success" (bg-success-50 text-success-700)
       await expect(badge).toHaveClass(/bg-success-50/);
     });
@@ -231,7 +231,7 @@ test.describe('@prontuario scales', () => {
         {
           id: '00000000-0000-4000-8000-000000000070',
           score: 3,
-          classification: 'Minimo',
+          classification: 'Mínimo',
           appliedAt: '2026-01-15 10:00:00+00',
         },
         {

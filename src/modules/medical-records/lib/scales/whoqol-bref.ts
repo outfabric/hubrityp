@@ -289,7 +289,7 @@ export const whoqolBref: ScaleDefinition = {
   key: 'whoqol-bref',
   label: 'WHOQOL-Bref (Qualidade de Vida)',
   description:
-    'World Health Organization Quality of Life — avaliacao da qualidade de vida em quatro dominios: fisico, psicologico, relacoes sociais e meio ambiente.',
+    'World Health Organization Quality of Life — avaliação da qualidade de vida em quatro domínios: físico, psicológico, relações sociais e meio ambiente.',
   estimatedMinutes: 10,
   questions: WHOQOL_QUESTIONS,
   score: scoreWHOQOL,

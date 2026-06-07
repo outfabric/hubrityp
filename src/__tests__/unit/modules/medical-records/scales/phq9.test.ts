@@ -100,12 +100,12 @@ describe('PHQ-9 — scoring', () => {
 // ---------------------------------------------------------------------------
 
 describe('PHQ-9 — classification', () => {
-  it('score 0 -> Minimo / minimal', () => {
-    expect(phq9.classify(0)).toEqual({ label: 'Minimo', severity: 'minimal' });
+  it('score 0 -> Mínimo / minimal', () => {
+    expect(phq9.classify(0)).toEqual({ label: 'Mínimo', severity: 'minimal' });
   });
 
-  it('score 4 -> Minimo / minimal (upper boundary)', () => {
-    expect(phq9.classify(4)).toEqual({ label: 'Minimo', severity: 'minimal' });
+  it('score 4 -> Mínimo / minimal (upper boundary)', () => {
+    expect(phq9.classify(4)).toEqual({ label: 'Mínimo', severity: 'minimal' });
   });
 
   it('score 5 -> Leve / mild (lower boundary)', () => {
@@ -152,9 +152,9 @@ describe('PHQ-9 — classification', () => {
     expect(phq9.classify(27)).toEqual({ label: 'Grave', severity: 'severe' });
   });
 
-  it('null score defaults to Minimo / minimal', () => {
+  it('null score defaults to Mínimo / minimal', () => {
     expect(phq9.classify(null)).toEqual({
-      label: 'Minimo',
+      label: 'Mínimo',
       severity: 'minimal',
     });
   });
@@ -166,7 +166,7 @@ describe('PHQ-9 — classification', () => {
 
 describe('PHQ-9 — score then classify (integration)', () => {
   it.each([
-    { total: 4, label: 'Minimo', severity: 'minimal' },
+    { total: 4, label: 'Mínimo', severity: 'minimal' },
     { total: 5, label: 'Leve', severity: 'mild' },
     { total: 14, label: 'Moderado', severity: 'moderate' },
     { total: 15, label: 'Moderadamente grave', severity: 'severe' },

@@ -227,7 +227,7 @@ export const sdq: ScaleDefinition = {
   key: 'sdq',
   label: 'SDQ (Capacidades e Dificuldades)',
   description:
-    'Strengths and Difficulties Questionnaire — Versao autoaplicavel para adolescentes de 11 a 17 anos.',
+    'Strengths and Difficulties Questionnaire — Versão autoaplicável para adolescentes de 11 a 17 anos.',
   estimatedMinutes: 10,
   questions: SDQ_QUESTIONS,
   score: scoreSDQ,

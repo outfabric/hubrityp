@@ -38,7 +38,11 @@ type SeverityLevel = ClassificationResult['severity'];
  */
 export function classificationToSeverity(classification: string | null): SeverityLevel | null {
   if (!classification) return null;
-  const lower = classification.toLowerCase();
+  // Strip diacritics before keyword matching so accented persisted labels
+  // (e.g. "Mínimo") still reverse-map via the un-accented tokens below.
+  // Without this, 'mínimo'.includes('minim') is false (the í breaks the
+  // substring) and the badge/dot color would fall through to "unknown".
+  const lower = classification.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
   // WHOQOL-Bref stores a JSON object — detect before keyword matching
   try {

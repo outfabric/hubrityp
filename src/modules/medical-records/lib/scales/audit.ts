@@ -164,9 +164,9 @@ function classifyAUDIT(score: number | null): ClassificationResult {
 
 export const audit: ScaleDefinition = {
   key: 'audit',
-  label: 'AUDIT (Uso de Alcool)',
+  label: 'AUDIT (Uso de Álcool)',
   description:
-    'Alcohol Use Disorders Identification Test — rastreamento de uso problematico de alcool.',
+    'Alcohol Use Disorders Identification Test — rastreamento de uso problemático de álcool.',
   estimatedMinutes: 5,
   questions: AUDIT_QUESTIONS,
   score: scoreAUDIT,

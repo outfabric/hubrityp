@@ -74,10 +74,10 @@ function scoreGAD7(responses: Record<string, number>): number {
 
 function classifyGAD7(score: number | null): ClassificationResult {
   if (score === null) {
-    return { label: 'Minimo', severity: 'minimal' };
+    return { label: 'Mínimo', severity: 'minimal' };
   }
 
-  if (score <= 4) return { label: 'Minimo', severity: 'minimal' };
+  if (score <= 4) return { label: 'Mínimo', severity: 'minimal' };
   if (score <= 9) return { label: 'Leve', severity: 'mild' };
   if (score <= 14) return { label: 'Moderado', severity: 'moderate' };
 
