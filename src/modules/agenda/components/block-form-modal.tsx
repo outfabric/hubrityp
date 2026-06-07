@@ -235,13 +235,13 @@ export function BlockFormModal({
 
       if (result.ok) {
         toast.success(
-          isEdit ? 'Bloqueio atualizado com sucesso.' : 'Horario bloqueado com sucesso.',
+          isEdit ? 'Bloqueio atualizado com sucesso.' : 'Horário bloqueado com sucesso.',
         );
         onOpenChange(false);
         onSuccess();
       } else if (result.error === 'invalid_input' && result.fieldErrors) {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {
-          const msg = messages[0] ?? 'Campo invalido.';
+          const msg = messages[0] ?? 'Campo inválido.';
           form.setError(field as keyof BlockFormValues, { message: msg });
         }
       } else {
@@ -254,11 +254,11 @@ export function BlockFormModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="block-form-modal">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Editar bloqueio' : 'Bloquear horario'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Editar bloqueio' : 'Bloquear horário'}</DialogTitle>
           <DialogDescription className="sr-only">
             {isEdit
-              ? 'Edite os dados do bloqueio de horario.'
-              : 'Preencha os dados para bloquear um horario na agenda.'}
+              ? 'Edite os dados do bloqueio de horário.'
+              : 'Preencha os dados para bloquear um horário na agenda.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -274,7 +274,7 @@ export function BlockFormModal({
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="block-title">
-              Titulo
+              Título
               <span className="text-danger-500 ml-0.5">*</span>
             </Label>
             <Input
@@ -341,10 +341,10 @@ export function BlockFormModal({
           <div className="grid grid-cols-2 gap-4">
             {/* Start time */}
             <div className="space-y-2">
-              <Label htmlFor="block-start-time">Hora inicio</Label>
+              <Label htmlFor="block-start-time">Hora início</Label>
               <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
                 <SelectTrigger id="block-start-time" data-testid="block-form-start-time">
-                  <SelectValue placeholder="Horario" />
+                  <SelectValue placeholder="Horário" />
                 </SelectTrigger>
                 <SelectContent>
                   {timeSlots.map((slot) => (
@@ -358,7 +358,7 @@ export function BlockFormModal({
 
             {/* Duration */}
             <div className="space-y-2">
-              <Label htmlFor="block-duration">Duracao</Label>
+              <Label htmlFor="block-duration">Duração</Label>
               <Select
                 value={String(durationMinutes)}
                 onValueChange={(val) =>
@@ -370,7 +370,7 @@ export function BlockFormModal({
                   aria-invalid={Boolean(form.formState.errors.duration_minutes)}
                   data-testid="block-form-duration"
                 >
-                  <SelectValue placeholder="Duracao" />
+                  <SelectValue placeholder="Duração" />
                 </SelectTrigger>
                 <SelectContent>
                   {DURATION_OPTIONS.map((mins) => (

@@ -146,7 +146,7 @@ describe('DeleteSessionDialog', () => {
   it('renders dialog title and description', () => {
     renderDialog();
 
-    expect(screen.getByText('Excluir sessao definitivamente')).toBeInTheDocument();
-    expect(screen.getByText(/Esta acao nao pode ser desfeita/)).toBeInTheDocument();
+    expect(screen.getByText('Excluir sessão definitivamente')).toBeInTheDocument();
+    expect(screen.getByText(/Esta ação não pode ser desfeita/)).toBeInTheDocument();
   });
 });

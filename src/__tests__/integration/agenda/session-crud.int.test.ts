@@ -213,7 +213,7 @@ describe('createSessionImpl', () => {
     if (result.ok) return;
     expect(result.error).toBe('past_date');
     if (result.error !== 'past_date') return;
-    expect(result.message).toBe('Nao e possivel agendar sessoes no passado.');
+    expect(result.message).toBe('Não é possível agendar sessões no passado.');
   });
 
   it('returns invalid_input for missing required fields', async () => {

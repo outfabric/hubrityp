@@ -69,12 +69,12 @@ export function DeleteSessionDialog({
       const result = await onConfirm();
 
       if (result.ok) {
-        toast.success('Sessao excluida');
+        toast.success('Sessão excluída');
         setConfirmText('');
         onOpenChange(false);
         onSuccess();
       } else {
-        toast.error(result.message ?? 'Erro ao excluir sessao.');
+        toast.error(result.message ?? 'Erro ao excluir sessão.');
       }
     });
   }
@@ -90,9 +90,9 @@ export function DeleteSessionDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent data-testid="delete-session-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir sessao definitivamente</AlertDialogTitle>
+          <AlertDialogTitle>Excluir sessão definitivamente</AlertDialogTitle>
           <AlertDialogDescription className="text-danger-700">
-            Esta acao nao pode ser desfeita. A sessao sera removida permanentemente e nao podera ser
+            Esta ação não pode ser desfeita. A sessão será removida permanentemente e não poderá ser
             recuperada.
           </AlertDialogDescription>
         </AlertDialogHeader>

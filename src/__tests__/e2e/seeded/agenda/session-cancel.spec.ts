@@ -8,7 +8,7 @@ import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-
  * Flow:
  *   1. Navigate to /agenda and switch to day view on "tomorrow"
  *   2. Click the seeded scheduled session to open the detail drawer
- *   3. Click "Cancelar sessao" action button
+ *   3. Click "Cancelar sessão" action button
  *   4. Fill the cancellation dialog (reason, who cancelled, charge switch)
  *   5. Submit
  *   6. Verify the session badge changes to "Cancelada"
@@ -63,7 +63,7 @@ test.describe('@agenda session cancellation', () => {
     // Verify the status badge shows "Agendada" before cancellation (scoped to drawer)
     await expect(drawer.getByTestId('session-status-badge-scheduled')).toBeVisible();
 
-    // Click the "Cancelar sessao" action button
+    // Click the "Cancelar sessão" action button
     await drawer.getByTestId('action-btn-cancel').click();
 
     // The cancellation dialog should appear
@@ -88,8 +88,8 @@ test.describe('@agenda session cancellation', () => {
     // Wait for the dialog to close (success path)
     await expect(cancelDialog).toBeHidden({ timeout: 10000 });
 
-    // Verify the toast appeared (cancellation uses toast.error with "Sessao cancelada")
-    await expect(page.getByText('Sessao cancelada')).toBeVisible({ timeout: 5000 });
+    // Verify the toast appeared (cancellation uses toast.error with "Sessão cancelada")
+    await expect(page.getByText('Sessão cancelada')).toBeVisible({ timeout: 5000 });
 
     // The drawer closes after mutation (onSessionMutated closes it).
     // Wait for the calendar to re-fetch, then re-navigate to tomorrow.

@@ -192,12 +192,12 @@ describe('SessionFormModal — post-scheduling copy toast', () => {
     });
 
     const call = successToast.mock.calls[0] as unknown[];
-    expect(call[0]).toBe('Sessao agendada com sucesso.');
+    expect(call[0]).toBe('Sessão agendada com sucesso.');
     // No options object → no copy action, default auto-dismiss.
     expect(call[1]).toBeUndefined();
   });
 
-  it('shows the "Sessao atualizada" toast without a copy action when editing a session', async () => {
+  it('shows the "Sessão atualizada" toast without a copy action when editing a session', async () => {
     const user = userEvent.setup();
     const onUpdate = vi
       .fn()
@@ -216,7 +216,7 @@ describe('SessionFormModal — post-scheduling copy toast', () => {
     });
 
     const call = successToast.mock.calls[0] as unknown[];
-    expect(call[0]).toBe('Sessao atualizada com sucesso.');
+    expect(call[0]).toBe('Sessão atualizada com sucesso.');
     expect(call[1]).toBeUndefined();
   });
 });

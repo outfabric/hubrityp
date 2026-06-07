@@ -58,7 +58,7 @@ export function LocationDeleteDialog({
     startTransition(async () => {
       const result = await onConfirm();
       if (result.ok) {
-        toast.success('Local excluido com sucesso.');
+        toast.success('Local excluído com sucesso.');
         onOpenChange(false);
         onSuccess();
       } else {
@@ -72,7 +72,7 @@ export function LocationDeleteDialog({
       <AlertDialogContent data-testid="location-delete-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir {locationName}?</AlertDialogTitle>
-          <AlertDialogDescription>Esta acao nao pode ser desfeita.</AlertDialogDescription>
+          <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending} data-testid="location-delete-cancel">

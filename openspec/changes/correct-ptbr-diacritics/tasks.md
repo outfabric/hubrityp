@@ -1,9 +1,9 @@
 ## 1. Agenda — display copy + coupled tests
 
-- [ ] 1.1 Correct diacritics/cedillas in display copy under `src/modules/agenda/components/**` and `src/modules/agenda/server/**` user-facing messages (toasts, dialog text, labels, placeholders, aria-labels), leaving route segments, identifiers, and status tokens untouched
-- [ ] 1.2 Update coupled e2e assertions to corrected strings: `session-cancel.spec.ts`, `session-create.spec.ts`, `session-drag-drop.spec.ts`, `session-mark-done.spec.ts`, `session-no-show.spec.ts` (e.g. `'Sessao cancelada'` → `'Sessão cancelada'`)
-- [ ] 1.3 Update coupled unit assertions: `cancel-session-dialog.test.tsx`, `delete-session-dialog.test.tsx`, `session-action-buttons.test.tsx`
-- [ ] 1.4 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 1.1 Correct diacritics/cedillas in display copy under `src/modules/agenda/components/**` and `src/modules/agenda/server/**` user-facing messages (toasts, dialog text, labels, placeholders, aria-labels), leaving route segments, identifiers, and status tokens untouched
+- [x] 1.2 Update coupled e2e assertions to corrected strings: `session-cancel.spec.ts`, `session-create.spec.ts`, `session-drag-drop.spec.ts`, `session-mark-done.spec.ts`, `session-no-show.spec.ts` (e.g. `'Sessao cancelada'` → `'Sessão cancelada'`)
+- [x] 1.3 Update coupled unit assertions: `cancel-session-dialog.test.tsx`, `delete-session-dialog.test.tsx`, `session-action-buttons.test.tsx`
+- [x] 1.4 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 2. Medical-records / prontuário — display copy + label maps + coupled tests
 

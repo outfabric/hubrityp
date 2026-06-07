@@ -98,7 +98,7 @@ export async function cancelSessionImpl(
       return {
         ok: false,
         error: 'invalid_transition',
-        message: `Transicao de "${fromStatus}" para "cancelled" nao e permitida.`,
+        message: `Transição de "${fromStatus}" para "cancelled" não é permitida.`,
       };
     }
 
@@ -150,7 +150,7 @@ export async function cancelSessionImpl(
         ok: false,
         error: 'concurrent_modification',
         message:
-          'O status da sessao foi alterado por outra operacao. Atualize a pagina e tente novamente.',
+          'O status da sessão foi alterado por outra operação. Atualize a página e tente novamente.',
       };
     }
 
@@ -204,7 +204,7 @@ export async function cancelSessionImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao cancelar sessao. Tente novamente.',
+      message: 'Erro inesperado ao cancelar sessão. Tente novamente.',
     };
   }
 }

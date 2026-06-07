@@ -65,7 +65,7 @@ test.describe('@agenda mark session as done', () => {
     await drawer.getByTestId('action-btn-mark_done').click();
 
     // Verify the success toast appeared
-    await expect(page.getByText('Sessao marcada como realizada')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Sessão marcada como realizada')).toBeVisible({ timeout: 5000 });
 
     // The drawer closes after mutation. Wait for calendar refresh, then re-navigate.
     await page.waitForTimeout(1000);

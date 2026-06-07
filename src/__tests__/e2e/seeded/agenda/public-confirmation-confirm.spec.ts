@@ -9,8 +9,8 @@ import { readSeedState, SEED_SESSIONS } from '../setup/seed-state';
  * Tests the patient-facing public confirmation page at `/confirmar-sessao/:token`:
  *   1. Navigate to the page (no auth context)
  *   2. Verify session details are displayed (date, time, psychologist name)
- *   3. Click "Confirmar presenca"
- *   4. Verify success message "Presenca confirmada"
+ *   3. Click "Confirmar presença"
+ *   4. Verify success message "Presença confirmada"
  *   5. Revisit the same URL -> "Voce ja respondeu"
  *
  * Prerequisites:
@@ -67,7 +67,7 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
     const form = page.getByTestId('confirmation-form');
     await expect(form).toBeVisible();
 
-    // Click "Confirmar presenca"
+    // Click "Confirmar presença"
     const confirmButton = page.getByTestId('confirm-button');
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
@@ -75,8 +75,8 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
     // Verify success message
     const success = page.getByTestId('confirmation-success');
     await expect(success).toBeVisible({ timeout: 10000 });
-    await expect(success).toContainText('Presenca confirmada');
-    await expect(success).toContainText('Sua psicologa foi notificada');
+    await expect(success).toContainText('Presença confirmada');
+    await expect(success).toContainText('Sua psicóloga foi notificada');
   });
 
   test('revisiting after confirmation shows already-responded', async ({ page }) => {

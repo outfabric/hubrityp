@@ -29,14 +29,14 @@ import { Switch } from '@/shared/ui/switch';
 
 const REASON_OPTIONS = [
   { value: 'patient_cancelled', label: 'Paciente cancelou' },
-  { value: 'therapist_cancelled', label: 'Psicologo cancelou' },
+  { value: 'therapist_cancelled', label: 'Psicólogo cancelou' },
   { value: 'unforeseen', label: 'Imprevisto' },
   { value: 'other', label: 'Outro' },
 ] as const;
 
 const CANCELLED_BY_OPTIONS = [
   { value: 'patient', label: 'Paciente' },
-  { value: 'therapist', label: 'Psicologo' },
+  { value: 'therapist', label: 'Psicólogo' },
 ] as const;
 
 const NOTICE_VARIANT: Record<CancellationNotice, 'info' | 'warning' | 'danger'> = {
@@ -47,10 +47,10 @@ const NOTICE_VARIANT: Record<CancellationNotice, 'info' | 'warning' | 'danger'> 
 };
 
 const NOTICE_LABEL: Record<CancellationNotice, string> = {
-  '24h+': 'Cancelamento com mais de 24h de antecedencia.',
-  less_24h: 'Cancelamento com menos de 24h de antecedencia.',
-  less_1h: 'Cancelamento com menos de 1h de antecedencia.',
-  on_time: 'Cancelamento no horario da sessao ou apos o inicio.',
+  '24h+': 'Cancelamento com mais de 24h de antecedência.',
+  less_24h: 'Cancelamento com menos de 24h de antecedência.',
+  less_1h: 'Cancelamento com menos de 1h de antecedência.',
+  on_time: 'Cancelamento no horário da sessão ou após o início.',
 };
 
 // ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ export function CancelSessionDialog({
       const result = await onConfirm(values);
 
       if (result.ok) {
-        toast.success('Sessao cancelada', {
+        toast.success('Sessão cancelada', {
           className: 'border-l-4 border-l-danger-500',
         });
         form.reset();
@@ -141,7 +141,7 @@ export function CancelSessionDialog({
           onRescheduleReady(result.rescheduleData);
         }
       } else {
-        toast.error(result.message ?? 'Erro ao cancelar sessao.');
+        toast.error(result.message ?? 'Erro ao cancelar sessão.');
       }
     });
   }
@@ -157,7 +157,7 @@ export function CancelSessionDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent data-testid="cancel-session-dialog">
         <DialogHeader>
-          <DialogTitle>Cancelar sessao</DialogTitle>
+          <DialogTitle>Cancelar sessão</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -237,7 +237,7 @@ export function CancelSessionDialog({
                         data-testid="cancel-charge-switch"
                       />
                     </FormControl>
-                    <FormLabel>Aplicar cobranca?</FormLabel>
+                    <FormLabel>Aplicar cobrança?</FormLabel>
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -267,7 +267,7 @@ export function CancelSessionDialog({
                     Cancelando...
                   </>
                 ) : (
-                  'Cancelar sessao'
+                  'Cancelar sessão'
                 )}
               </Button>
             </DialogFooter>

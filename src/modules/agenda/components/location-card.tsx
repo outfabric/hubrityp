@@ -96,7 +96,7 @@ export function LocationCard({ location, onEdit, onSetDefault, onDelete }: Locat
             <Badge variant={typeBadge.variant}>{typeBadge.label}</Badge>
             {location.isDefault && (
               <Badge variant="default" data-testid="location-default-badge">
-                Padrao
+                Padrão
               </Badge>
             )}
           </div>
@@ -114,7 +114,7 @@ export function LocationCard({ location, onEdit, onSetDefault, onDelete }: Locat
               variant="ghost"
               size="icon"
               className="h-8 w-8 shrink-0"
-              aria-label={`Acoes para ${location.name}`}
+              aria-label={`Ações para ${location.name}`}
               data-testid={`location-actions-${location.id}`}
             >
               <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -134,7 +134,7 @@ export function LocationCard({ location, onEdit, onSetDefault, onDelete }: Locat
                 data-testid={`location-set-default-${location.id}`}
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                Marcar como padrao
+                Marcar como padrão
               </DropdownMenuItem>
             )}
             <DropdownMenuItem

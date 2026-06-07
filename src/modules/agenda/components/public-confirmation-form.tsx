@@ -71,7 +71,7 @@ export function PublicConfirmationForm({
         } else {
           setFormState({
             kind: 'error',
-            message: 'Nao foi possivel confirmar. Tente novamente.',
+            message: 'Não foi possível confirmar. Tente novamente.',
           });
         }
       } catch {
@@ -97,7 +97,7 @@ export function PublicConfirmationForm({
           } else {
             setFormState({
               kind: 'error',
-              message: 'Nao foi possivel registrar o cancelamento. Tente novamente.',
+              message: 'Não foi possível registrar o cancelamento. Tente novamente.',
             });
           }
         } catch {
@@ -126,9 +126,9 @@ export function PublicConfirmationForm({
       >
         <CheckCircle2 className="text-success-500 h-12 w-12" aria-hidden="true" />
         <h3 className="text-text-primary text-lg leading-tight font-semibold">
-          Presenca confirmada
+          Presença confirmada
         </h3>
-        <p className="text-text-secondary text-[15px]">Sua psicologa foi notificada. Ate la!</p>
+        <p className="text-text-secondary text-[15px]">Sua psicóloga foi notificada. Até lá!</p>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export function PublicConfirmationForm({
           Cancelamento registrado
         </h3>
         <p className="text-text-secondary text-[15px]">
-          Sua psicologa foi notificada sobre o cancelamento.
+          Sua psicóloga foi notificada sobre o cancelamento.
         </p>
       </div>
     );
@@ -191,7 +191,7 @@ export function PublicConfirmationForm({
         ) : (
           <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
         )}
-        Confirmar presenca
+        Confirmar presença
       </Button>
 
       {/* Decline flow */}
@@ -205,7 +205,7 @@ export function PublicConfirmationForm({
           data-testid="decline-button"
         >
           <XCircle className="h-5 w-5" aria-hidden="true" />
-          Nao posso comparecer
+          Não posso comparecer
         </Button>
       ) : (
         <form

@@ -115,8 +115,8 @@ export function RescheduleConfirmDialog({
       const result = await onConfirm(rescheduleInfo.sessionId, payload);
 
       if (result.ok) {
-        toast.success('Sessao remarcada', {
-          description: `Sessao remarcada para ${formatSessionDate(rescheduleInfo.newStart)} as ${formatSessionTime(rescheduleInfo.newStart)}`,
+        toast.success('Sessão remarcada', {
+          description: `Sessão remarcada para ${formatSessionDate(rescheduleInfo.newStart)} às ${formatSessionTime(rescheduleInfo.newStart)}`,
           icon: <CheckCircle2 className="h-4 w-4" aria-hidden="true" />,
         });
         setConflicts([]);
@@ -132,7 +132,7 @@ export function RescheduleConfirmDialog({
 
       // Other errors
       const message =
-        'message' in result ? result.message : 'Erro ao remarcar sessao. Tente novamente.';
+        'message' in result ? result.message : 'Erro ao remarcar sessão. Tente novamente.';
       toast.error(message);
     });
   }
@@ -159,9 +159,9 @@ export function RescheduleConfirmDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent data-testid="reschedule-confirm-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>Remarcar sessao?</AlertDialogTitle>
+          <AlertDialogTitle>Remarcar sessão?</AlertDialogTitle>
           <AlertDialogDescription>
-            Remarcar sessao de {rescheduleInfo.label} para {formattedDate} as {formattedTime}?
+            Remarcar sessão de {rescheduleInfo.label} para {formattedDate} às {formattedTime}?
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -172,7 +172,7 @@ export function RescheduleConfirmDialog({
             <AlertDescription>
               {conflicts.map((c) => (
                 <span key={c.sessionId} className="block">
-                  Voce ja tem {c.label} nesse horario. Remarcar mesmo assim?
+                  Você já tem {c.label} nesse horário. Remarcar mesmo assim?
                 </span>
               ))}
             </AlertDescription>

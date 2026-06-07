@@ -186,7 +186,7 @@ export function AgendaNavBar({
             variant="ghost"
             size="icon"
             onClick={navigatePrev}
-            aria-label="Periodo anterior"
+            aria-label="Período anterior"
             data-testid="agenda-nav-prev"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -195,7 +195,7 @@ export function AgendaNavBar({
             variant="ghost"
             size="icon"
             onClick={navigateNext}
-            aria-label="Proximo periodo"
+            aria-label="Próximo período"
             data-testid="agenda-nav-next"
           >
             <ChevronRight className="h-5 w-5" />
@@ -245,7 +245,7 @@ export function AgendaNavBar({
         <TabsList>
           <TabsTrigger value="day">Dia</TabsTrigger>
           <TabsTrigger value="week">Semana</TabsTrigger>
-          <TabsTrigger value="month">Mes</TabsTrigger>
+          <TabsTrigger value="month">Mês</TabsTrigger>
         </TabsList>
       </Tabs>
     </div>

@@ -35,7 +35,7 @@ export function LocationsEmptyState({ onAdd }: LocationsEmptyStateProps) {
       <Building2 className="text-text-tertiary mb-4 h-6 w-6" aria-hidden="true" />
       <h4 className="text-text-primary mb-2 text-base font-medium">Nenhum local cadastrado</h4>
       <p className="text-text-secondary mb-6 max-w-sm text-[13px]">
-        Cadastre seu primeiro local de atendimento para vincular as sessoes
+        Cadastre seu primeiro local de atendimento para vincular as sessões
       </p>
       <Button onClick={onAdd} data-testid="empty-state-add-location">
         <Plus className="h-4 w-4" aria-hidden="true" />

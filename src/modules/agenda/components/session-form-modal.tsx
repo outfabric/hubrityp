@@ -648,7 +648,7 @@ export function SessionFormModal({
               label: 'Copiar link',
               onClick: () => {
                 void navigator.clipboard.writeText(patientVideoUrl).catch(() => {
-                  toast.error('Nao foi possivel copiar o link. Tente novamente.');
+                  toast.error('Não foi possível copiar o link. Tente novamente.');
                 });
               },
             },
@@ -656,10 +656,10 @@ export function SessionFormModal({
           });
         } else {
           const successMsg = isEdit
-            ? 'Sessao atualizada com sucesso.'
+            ? 'Sessão atualizada com sucesso.'
             : result.sessionCount && result.sessionCount > 1
-              ? `${result.sessionCount} sessoes agendadas com sucesso.`
-              : 'Sessao agendada com sucesso.';
+              ? `${result.sessionCount} sessões agendadas com sucesso.`
+              : 'Sessão agendada com sucesso.';
           toast.success(successMsg);
         }
         onOpenChange(false);
@@ -669,7 +669,7 @@ export function SessionFormModal({
         form.setValue('force_conflict', false);
       } else if (result.error === 'invalid_input' && result.fieldErrors) {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {
-          const msg = messages[0] ?? 'Campo invalido.';
+          const msg = messages[0] ?? 'Campo inválido.';
           form.setError(field as keyof SessionFormValues, { message: msg });
         }
       } else {
@@ -685,11 +685,11 @@ export function SessionFormModal({
         data-testid="session-form-modal"
       >
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Editar sessao' : 'Agendar sessao'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Editar sessão' : 'Agendar sessão'}</DialogTitle>
           <DialogDescription className="sr-only">
             {isEdit
-              ? 'Edite os dados da sessao.'
-              : 'Preencha os dados para agendar uma nova sessao.'}
+              ? 'Edite os dados da sessão.'
+              : 'Preencha os dados para agendar uma nova sessão.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -777,10 +777,10 @@ export function SessionFormModal({
             <div className="grid grid-cols-2 gap-4">
               {/* Start time */}
               <div className="space-y-2">
-                <Label htmlFor="session-start-time">Hora inicio</Label>
+                <Label htmlFor="session-start-time">Hora início</Label>
                 <Select value={selectedTime} onValueChange={(val) => setSelectedTime(val)}>
                   <SelectTrigger id="session-start-time" data-testid="session-form-start-time">
-                    <SelectValue placeholder="Horario" />
+                    <SelectValue placeholder="Horário" />
                   </SelectTrigger>
                   <SelectContent>
                     {timeSlots.map((slot) => (
@@ -794,7 +794,7 @@ export function SessionFormModal({
 
               {/* Duration */}
               <div className="space-y-2">
-                <Label htmlFor="session-duration">Duracao</Label>
+                <Label htmlFor="session-duration">Duração</Label>
                 <Select
                   value={String(durationMinutes)}
                   onValueChange={(val) =>
@@ -806,7 +806,7 @@ export function SessionFormModal({
                     aria-invalid={Boolean(form.formState.errors.duration_minutes)}
                     data-testid="session-form-duration"
                   >
-                    <SelectValue placeholder="Duracao" />
+                    <SelectValue placeholder="Duração" />
                   </SelectTrigger>
                   <SelectContent>
                     {DURATION_OPTIONS.map((mins) => (
@@ -918,11 +918,11 @@ export function SessionFormModal({
 
             {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="session-notes">Observacao</Label>
+              <Label htmlFor="session-notes">Observação</Label>
               <Textarea
                 id="session-notes"
                 rows={3}
-                placeholder="Observacoes sobre a sessao (opcional)"
+                placeholder="Observações sobre a sessão (opcional)"
                 aria-invalid={Boolean(form.formState.errors.notes)}
                 data-testid="session-form-notes"
                 {...form.register('notes')}
@@ -951,10 +951,10 @@ export function SessionFormModal({
                     htmlFor="session-reminders-disabled"
                     className="cursor-pointer leading-none font-normal"
                   >
-                    Nao enviar lembretes WhatsApp para esta sessao
+                    Não enviar lembretes WhatsApp para esta sessão
                   </Label>
                   <p className="text-text-tertiary text-sm">
-                    Util quando o paciente avisou que nao pode receber
+                    Útil quando o paciente avisou que não pode receber
                   </p>
                 </div>
               </div>
@@ -963,7 +963,7 @@ export function SessionFormModal({
             {/* Color */}
             <div className="space-y-2">
               <Label>Cor</Label>
-              <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessao">
+              <div className="flex gap-2" role="radiogroup" aria-label="Cor da sessão">
                 {PRESET_COLORS.map((preset) => (
                   <button
                     key={preset.value}
@@ -1007,8 +1007,8 @@ export function SessionFormModal({
                   <div className="space-y-2">
                     {conflicts.map((c) => (
                       <p key={c.sessionId}>
-                        Voce ja tem {c.label} das {formatSessionTime(new Date(c.conflictStart))} as{' '}
-                        {formatSessionTime(new Date(c.conflictEnd))} nesse horario.
+                        Você já tem {c.label} das {formatSessionTime(new Date(c.conflictStart))} às{' '}
+                        {formatSessionTime(new Date(c.conflictEnd))} nesse horário.
                       </p>
                     ))}
                     <Button

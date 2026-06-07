@@ -6,11 +6,11 @@ import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import type { LocationCardData } from '@/modules/agenda/components/location-card';
 import {
   locationInputSchema,
   type LocationInput,
 } from '@/modules/agenda/lib/location-input-schema';
-import type { LocationCardData } from '@/modules/agenda/components/location-card';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
 import {
@@ -154,7 +154,7 @@ export function LocationFormModal({
       } else if (result.error === 'invalid_input' && result.fieldErrors) {
         // Map server field errors back to the form
         for (const [field, messages] of Object.entries(result.fieldErrors)) {
-          const msg = messages[0] ?? 'Campo invalido.';
+          const msg = messages[0] ?? 'Campo inválido.';
           form.setError(field as keyof LocationInput, { message: msg });
         }
       } else {
@@ -172,8 +172,8 @@ export function LocationFormModal({
           <DialogTitle>{isEdit ? 'Editar local' : 'Adicionar local'}</DialogTitle>
           <DialogDescription className="sr-only">
             {isEdit
-              ? 'Edite as informacoes do local de atendimento.'
-              : 'Preencha as informacoes do novo local de atendimento.'}
+              ? 'Edite as informações do local de atendimento.'
+              : 'Preencha as informações do novo local de atendimento.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -194,7 +194,7 @@ export function LocationFormModal({
             </Label>
             <Input
               id="location-name"
-              placeholder="Ex: Consultorio Centro"
+              placeholder="Ex: Consultório Centro"
               aria-invalid={Boolean(form.formState.errors.name)}
               data-testid="location-form-name"
               {...form.register('name')}
@@ -209,10 +209,10 @@ export function LocationFormModal({
 
           {/* Address */}
           <div className="space-y-2">
-            <Label htmlFor="location-address">Endereco</Label>
+            <Label htmlFor="location-address">Endereço</Label>
             <Input
               id="location-address"
-              placeholder="Rua, numero, bairro, cidade"
+              placeholder="Rua, número, bairro, cidade"
               aria-invalid={Boolean(form.formState.errors.address)}
               data-testid="location-form-address"
               {...form.register('address')}
@@ -285,10 +285,10 @@ export function LocationFormModal({
 
           {/* Arrival instructions */}
           <div className="space-y-2">
-            <Label htmlFor="location-instructions">Instrucoes de chegada</Label>
+            <Label htmlFor="location-instructions">Instruções de chegada</Label>
             <Textarea
               id="location-instructions"
-              placeholder="Ex: Entrar pela porta lateral, subir ao 3o andar"
+              placeholder="Ex: Entrar pela porta lateral, subir ao 3º andar"
               rows={3}
               aria-invalid={Boolean(form.formState.errors.arrival_instructions)}
               data-testid="location-form-instructions"
@@ -313,7 +313,7 @@ export function LocationFormModal({
               data-testid="location-form-default"
             />
             <Label htmlFor="location-default" className="cursor-pointer">
-              Marcar como padrao
+              Marcar como padrão
             </Label>
           </div>
 

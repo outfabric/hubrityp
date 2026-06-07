@@ -138,14 +138,14 @@ test.describe('@agenda session drag and drop', () => {
     await expect(rescheduleDialog).toContainText(patientName);
 
     // Verify the dialog title asks about rescheduling
-    await expect(rescheduleDialog).toContainText('Remarcar sessao?');
+    await expect(rescheduleDialog).toContainText('Remarcar sessão?');
 
     // Click "Confirmar" to accept the reschedule
     await page.getByTestId('reschedule-confirm').click();
 
     // Verify success toast appeared. Use `exact: true` to match only the
-    // toast title and not the description (which also contains "Sessao remarcada").
-    await expect(page.getByText('Sessao remarcada', { exact: true })).toBeVisible({
+    // toast title and not the description (which also contains "Sessão remarcada").
+    await expect(page.getByText('Sessão remarcada', { exact: true })).toBeVisible({
       timeout: 5000,
     });
 

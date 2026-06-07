@@ -94,7 +94,7 @@ test.describe('@whatsapp session disable reminders', () => {
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 10000 });
 
     // Verify success toast
-    await expect(page.getByText('Sessao agendada com sucesso.')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Sessão agendada com sucesso.')).toBeVisible({ timeout: 5000 });
 
     // Navigate to tomorrow in day view to find the newly created session
     await page.getByTestId('agenda-view-toggle').getByText('Dia').click();

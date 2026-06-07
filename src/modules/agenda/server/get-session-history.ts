@@ -68,7 +68,7 @@ export async function getSessionHistoryImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao buscar historico da sessao. Tente novamente.',
+      message: 'Erro inesperado ao buscar histórico da sessão. Tente novamente.',
     };
   }
 }

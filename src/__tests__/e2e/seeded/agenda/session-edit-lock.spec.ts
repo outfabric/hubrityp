@@ -9,7 +9,7 @@ import { SEED_PATIENTS, SEED_SESSIONS, STORAGE_STATE_PATH } from '../setup/seed-
  *   1. Navigate to /agenda and switch to day view on "tomorrow"
  *   2. Click the seeded done session (updated_at 8 days ago) to open the detail drawer
  *   3. Verify that action buttons are replaced by the lock alert
- *      "Sessao bloqueada para edicao apos 7 dias"
+ *      "Sessão bloqueada para edição após 7 dias"
  *   4. Verify no edit or status-change buttons are visible
  *
  * Prerequisites:
@@ -70,7 +70,7 @@ test.describe('@agenda session edit lock', () => {
     // Verify the lock alert is displayed instead of action buttons
     const lockAlert = drawer.getByTestId('session-locked-alert');
     await expect(lockAlert).toBeVisible();
-    await expect(lockAlert).toContainText('Sessao bloqueada para edicao apos 7 dias');
+    await expect(lockAlert).toContainText('Sessão bloqueada para edição após 7 dias');
 
     // Verify that no status-change action buttons are visible.
     // When locked, SessionActionButtons renders the Alert instead of buttons.

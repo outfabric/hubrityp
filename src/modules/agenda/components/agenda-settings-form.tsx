@@ -169,10 +169,10 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
       const result = await saveAgendaSettings(data);
 
       if (result.ok) {
-        toast.success('Configuracoes salvas');
+        toast.success('Configurações salvas');
       } else if (result.error === 'invalid_input' && result.fieldErrors) {
         for (const [field, messages] of Object.entries(result.fieldErrors)) {
-          const msg = messages[0] ?? 'Campo invalido.';
+          const msg = messages[0] ?? 'Campo inválido.';
           form.setError(field as keyof AgendaSettingsInput, { message: msg });
         }
       } else {
@@ -202,7 +202,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
           {/* ---- Default session duration ---- */}
           <div className="space-y-2">
             <Label htmlFor="default-duration" className="text-[15px] font-normal">
-              Duracao padrao da sessao
+              Duração padrão da sessão
             </Label>
             <Select
               value={String(form.watch('default_duration_minutes'))}
@@ -240,7 +240,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
           {/* ---- Interval between sessions ---- */}
           <div className="space-y-2">
             <Label htmlFor="interval" className="text-[15px] font-normal">
-              Intervalo entre sessoes
+              Intervalo entre sessões
             </Label>
             <Select
               value={String(form.watch('interval_minutes'))}
@@ -277,9 +277,9 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
 
           {/* ---- Business hours ---- */}
           <div className="space-y-3">
-            <Label className="text-[15px] font-normal">Horario de funcionamento</Label>
+            <Label className="text-[15px] font-normal">Horário de funcionamento</Label>
 
-            <div className="space-y-3" role="group" aria-label="Horario de funcionamento">
+            <div className="space-y-3" role="group" aria-label="Horário de funcionamento">
               {dayRows.map((row, dayIndex) => (
                 <div
                   key={dayIndex}
@@ -305,7 +305,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
                   >
                     <SelectTrigger
                       className="w-28"
-                      aria-label={`Horario inicio ${DAY_LABELS[dayIndex]}`}
+                      aria-label={`Horário início ${DAY_LABELS[dayIndex]}`}
                       data-testid={`day-${dayIndex}-start`}
                     >
                       <SelectValue />
@@ -319,7 +319,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
                     </SelectContent>
                   </Select>
 
-                  <span className="text-text-tertiary text-sm">ate</span>
+                  <span className="text-text-tertiary text-sm">até</span>
 
                   <Select
                     value={row.end}
@@ -328,7 +328,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
                   >
                     <SelectTrigger
                       className="w-28"
-                      aria-label={`Horario fim ${DAY_LABELS[dayIndex]}`}
+                      aria-label={`Horário fim ${DAY_LABELS[dayIndex]}`}
                       data-testid={`day-${dayIndex}-end`}
                     >
                       <SelectValue />
@@ -357,7 +357,7 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {typeof form.formState.errors.business_hours.message === 'string'
                   ? form.formState.errors.business_hours.message
-                  : 'Verifique os horarios de funcionamento.'}
+                  : 'Verifique os horários de funcionamento.'}
               </p>
             )}
           </div>
@@ -367,18 +367,18 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
           {/* ---- Cancellation policy ---- */}
           <div className="space-y-2">
             <Label htmlFor="cancellation-policy" className="text-[15px] font-normal">
-              Politica de cancelamento
+              Política de cancelamento
             </Label>
             <Textarea
               id="cancellation-policy"
               rows={5}
-              placeholder="Descreva sua politica de cancelamento..."
+              placeholder="Descreva sua política de cancelamento..."
               aria-invalid={Boolean(form.formState.errors.cancellation_policy)}
               data-testid="agenda-settings-cancellation-policy"
               {...form.register('cancellation_policy')}
             />
             <p className="text-text-tertiary text-xs">
-              Este texto sera incluido no termo de consentimento
+              Este texto será incluído no termo de consentimento
             </p>
             {form.formState.errors.cancellation_policy && (
               <p className="text-danger-700 flex items-center gap-1 text-sm" role="alert">
@@ -392,8 +392,8 @@ export function AgendaSettingsForm({ settings }: AgendaSettingsFormProps) {
 
           {/* ---- Default session color ---- */}
           <div className="space-y-2">
-            <Label className="text-[15px] font-normal">Cor padrao das sessoes</Label>
-            <div className="flex gap-2" role="radiogroup" aria-label="Cor padrao das sessoes">
+            <Label className="text-[15px] font-normal">Cor padrão das sessões</Label>
+            <div className="flex gap-2" role="radiogroup" aria-label="Cor padrão das sessões">
               {PRESET_COLORS.map((preset) => (
                 <button
                   key={preset.value}

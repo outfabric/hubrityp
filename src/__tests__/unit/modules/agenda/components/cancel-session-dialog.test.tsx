@@ -62,7 +62,7 @@ describe('CancelSessionDialog', () => {
     it('renders the dialog title', () => {
       renderDialog();
       // The title text also appears on the submit button, so use role heading
-      expect(screen.getByRole('heading', { name: 'Cancelar sessao' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Cancelar sessão' })).toBeInTheDocument();
     });
 
     it('renders the reason select', () => {
@@ -74,13 +74,13 @@ describe('CancelSessionDialog', () => {
       renderDialog();
       expect(screen.getByTestId('cancel-cancelled-by')).toBeInTheDocument();
       expect(screen.getByText('Paciente')).toBeInTheDocument();
-      expect(screen.getByText('Psicologo')).toBeInTheDocument();
+      expect(screen.getByText('Psicólogo')).toBeInTheDocument();
     });
 
     it('renders the charge cancellation switch', () => {
       renderDialog();
       expect(screen.getByTestId('cancel-charge-switch')).toBeInTheDocument();
-      expect(screen.getByText('Aplicar cobranca?')).toBeInTheDocument();
+      expect(screen.getByText('Aplicar cobrança?')).toBeInTheDocument();
     });
 
     it('renders the notice alert', () => {
@@ -100,7 +100,7 @@ describe('CancelSessionDialog', () => {
       const tomorrow = new Date(Date.now() + 25 * 60 * 60 * 1000);
       renderDialog({ sessionStartAt: tomorrow });
 
-      expect(screen.getByText('Cancelamento com mais de 24h de antecedencia.')).toBeInTheDocument();
+      expect(screen.getByText('Cancelamento com mais de 24h de antecedência.')).toBeInTheDocument();
     });
 
     it('shows warning notice for sessions less than 24h away', () => {
@@ -108,7 +108,7 @@ describe('CancelSessionDialog', () => {
       renderDialog({ sessionStartAt: in12h });
 
       expect(
-        screen.getByText('Cancelamento com menos de 24h de antecedencia.'),
+        screen.getByText('Cancelamento com menos de 24h de antecedência.'),
       ).toBeInTheDocument();
     });
 
@@ -116,7 +116,7 @@ describe('CancelSessionDialog', () => {
       const in30min = new Date(Date.now() + 30 * 60 * 1000);
       renderDialog({ sessionStartAt: in30min });
 
-      expect(screen.getByText('Cancelamento com menos de 1h de antecedencia.')).toBeInTheDocument();
+      expect(screen.getByText('Cancelamento com menos de 1h de antecedência.')).toBeInTheDocument();
     });
 
     it('shows danger notice for sessions at or past start time', () => {
@@ -124,7 +124,7 @@ describe('CancelSessionDialog', () => {
       renderDialog({ sessionStartAt: inPast });
 
       expect(
-        screen.getByText('Cancelamento no horario da sessao ou apos o inicio.'),
+        screen.getByText('Cancelamento no horário da sessão ou após o início.'),
       ).toBeInTheDocument();
     });
   });

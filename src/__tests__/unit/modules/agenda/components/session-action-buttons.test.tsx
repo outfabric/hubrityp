@@ -81,7 +81,7 @@ describe('SessionActionButtons', () => {
       renderButtons('done', { updatedAt: eightDaysAgo });
 
       expect(screen.getByTestId('session-locked-alert')).toBeInTheDocument();
-      expect(screen.getByText('Sessao bloqueada para edicao apos 7 dias')).toBeInTheDocument();
+      expect(screen.getByText('Sessão bloqueada para edição após 7 dias')).toBeInTheDocument();
 
       // No action buttons should be rendered
       expect(screen.queryByTestId('session-action-buttons')).not.toBeInTheDocument();
