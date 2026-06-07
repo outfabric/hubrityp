@@ -61,15 +61,15 @@ export function NewEvolutionForm({ patientId, sessionId, createAction }: NewEvol
 
       if (result.ok) {
         setHasSaved(true);
-        toast.success('Evolucao criada com sucesso');
+        toast.success('Evolução criada com sucesso');
         // Redirect to the detail page for further editing via auto-save
         router.push(`/pacientes/${patientId}/prontuario/evolucoes/${result.id}`);
       } else if (result.code === 'DUPLICATE_SESSION') {
-        toast.error('Ja existe uma evolucao vinculada a esta sessao.');
+        toast.error('Já existe uma evolução vinculada a esta sessão.');
       } else if (result.code === 'NOT_FOUND') {
-        toast.error('Paciente ou sessao nao encontrada.');
+        toast.error('Paciente ou sessão não encontrada.');
       } else {
-        toast.error('Erro ao criar evolucao. Verifique os campos.');
+        toast.error('Erro ao criar evolução. Verifique os campos.');
       }
     },
     [patientId, sessionId, templateType, hasSaved, router, createAction],

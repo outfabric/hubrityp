@@ -83,13 +83,13 @@ export default async function ProntuarioPage({ params }: ProntuarioPageProps) {
           className="text-text-primary text-[28px] leading-[1.25] font-semibold"
           data-testid="prontuario-page-title"
         >
-          Prontuario
+          Prontuário
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           <Link href={`/pacientes/${patientId}/prontuario/exportacoes`}>
             <Button variant="ghost" size="sm" data-testid="prontuario-exports-link">
               <History className="h-4 w-4" aria-hidden="true" />
-              Ver exportacoes
+              Ver exportações
             </Button>
           </Link>
           <ExportPanel patientId={patientId} requestExport={requestProntuarioExport} />

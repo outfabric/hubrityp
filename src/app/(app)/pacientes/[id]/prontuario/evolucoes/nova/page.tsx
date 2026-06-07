@@ -51,7 +51,7 @@ export default async function NovaEvolucaoPage({ params, searchParams }: NovaEvo
         <Link href={`/pacientes/${patientId}/prontuario`}>
           <Button variant="ghost" size="sm" data-testid="nova-evolucao-back">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao prontuario
+            Voltar ao prontuário
           </Button>
         </Link>
       </div>
@@ -61,7 +61,7 @@ export default async function NovaEvolucaoPage({ params, searchParams }: NovaEvo
         className="text-text-primary mb-6 text-[28px] leading-[1.25] font-semibold"
         data-testid="nova-evolucao-page-title"
       >
-        Nova evolucao
+        Nova evolução
       </h1>
 
       {/* Form: TemplateSelector + EvolutionEditor */}

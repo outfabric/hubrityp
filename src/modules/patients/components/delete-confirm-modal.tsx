@@ -72,9 +72,9 @@ export function DeleteConfirmModal({
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir paciente</AlertDialogTitle>
           <AlertDialogDescription className="mt-2 space-y-3">
-            <span className="text-danger-700 block font-medium">Esta acao e irreversivel.</span>
+            <span className="text-danger-700 block font-medium">Esta ação é irreversível.</span>
             <span className="block">
-              Todos os dados deste paciente serao permanentemente removidos. Esta acao nao pode ser
+              Todos os dados deste paciente serão permanentemente removidos. Esta ação não pode ser
               desfeita.
             </span>
           </AlertDialogDescription>

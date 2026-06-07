@@ -55,38 +55,38 @@ const SECTIONS: SectionDefinition[] = [
   },
   {
     key: 'historyPresentIllness',
-    label: 'Historia da Queixa',
-    placeholder: 'Descreva a historia da queixa atual...',
+    label: 'História da Queixa',
+    placeholder: 'Descreva a história da queixa atual...',
   },
   {
     key: 'familyHistory',
-    label: 'Historia Familiar',
-    placeholder: 'Descreva a historia familiar relevante...',
+    label: 'História Familiar',
+    placeholder: 'Descreva a história familiar relevante...',
   },
   {
     key: 'educationalProfessional',
     label: 'Escolar/Profissional',
-    placeholder: 'Descreva o historico escolar ou profissional...',
+    placeholder: 'Descreva o histórico escolar ou profissional...',
   },
   {
     key: 'physicalHealth',
-    label: 'Saude Fisica',
-    placeholder: 'Descreva o estado de saude fisica...',
+    label: 'Saúde Física',
+    placeholder: 'Descreva o estado de saúde física...',
   },
   {
     key: 'priorTherapy',
-    label: 'Historico Psicoterapeutico',
-    placeholder: 'Descreva experiencias anteriores com terapia...',
+    label: 'Histórico Psicoterapêutico',
+    placeholder: 'Descreva experiências anteriores com terapia...',
   },
   {
     key: 'initialHypothesis',
-    label: 'Hipoteses Diagnosticas',
-    placeholder: 'Descreva as hipoteses diagnosticas iniciais...',
+    label: 'Hipóteses Diagnósticas',
+    placeholder: 'Descreva as hipóteses diagnósticas iniciais...',
   },
   {
     key: 'treatmentPlan',
-    label: 'Plano Terapeutico',
-    placeholder: 'Descreva o plano terapeutico proposto...',
+    label: 'Plano Terapêutico',
+    placeholder: 'Descreva o plano terapêutico proposto...',
   },
 ];
 
@@ -331,9 +331,9 @@ export function AnamnesisTab({ patientId, initialAnamnesis, upsertAction }: Anam
       <AlertDialog open={showDirtyDialog} onOpenChange={setShowDirtyDialog}>
         <AlertDialogContent data-testid="anamnesis-dirty-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>Alteracoes nao salvas</AlertDialogTitle>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
             <AlertDialogDescription>
-              Voce tem alteracoes que ainda nao foram salvas. Deseja descartar as alteracoes ou
+              Você tem alterações que ainda não foram salvas. Deseja descartar as alterações ou
               continuar editando?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -413,7 +413,7 @@ function AutoSaveIndicator({ status, lastSavedAt, onRetry }: AutoSaveIndicatorPr
         data-testid="anamnesis-autosave-saved"
         aria-live="polite"
       >
-        Salvo as {timeStr}
+        Salvo às {timeStr}
       </span>
     );
   }

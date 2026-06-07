@@ -63,7 +63,7 @@ export default async function DocumentDetailPage({ params }: DocumentDetailPageP
         <Link href={`/pacientes/${patientId}/prontuario`}>
           <Button variant="ghost" size="sm" data-testid="document-detail-back">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao prontuario
+            Voltar ao prontuário
           </Button>
         </Link>
       </div>

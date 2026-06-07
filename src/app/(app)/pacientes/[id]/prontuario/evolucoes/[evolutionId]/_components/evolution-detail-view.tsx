@@ -93,9 +93,9 @@ export function EvolutionDetailView({
       setAddendumReason('');
       pendingContentRef.current = null;
     } else if (result.code === 'REASON_REQUIRED') {
-      toast.error('Motivo obrigatorio para adendo.');
+      toast.error('Motivo obrigatório para adendo.');
     } else if (result.code === 'CONFLICT') {
-      toast.error('Conflito de versao. Recarregue a pagina e tente novamente.');
+      toast.error('Conflito de versão. Recarregue a página e tente novamente.');
     } else {
       toast.error('Erro ao salvar adendo.');
     }
@@ -117,11 +117,11 @@ export function EvolutionDetailView({
       });
 
       if (result.ok) {
-        toast.success('Evolucao salva com sucesso');
+        toast.success('Evolução salva com sucesso');
       } else if (result.code === 'CONFLICT') {
-        toast.error('Conflito de versao. Recarregue a pagina e tente novamente.');
+        toast.error('Conflito de versão. Recarregue a página e tente novamente.');
       } else {
-        toast.error('Erro ao salvar evolucao.');
+        toast.error('Erro ao salvar evolução.');
       }
     },
     [evolution.id, forceAddendum, updateAction],
@@ -134,7 +134,7 @@ export function EvolutionDetailView({
         <div className="flex items-center gap-2">
           {withinWindow ? (
             <Badge variant="neutral" data-testid="edit-mode-badge">
-              Editavel
+              Editável
             </Badge>
           ) : (
             <Badge variant="warning" data-testid="addendum-mode-badge">
@@ -159,7 +159,7 @@ export function EvolutionDetailView({
           <DialogHeader>
             <DialogTitle>Motivo do adendo</DialogTitle>
             <DialogDescription>
-              Esta evolucao ultrapassou o prazo de edicao de 30 dias. Qualquer alteracao sera
+              Esta evolução ultrapassou o prazo de edição de 30 dias. Qualquer alteração será
               registrada como adendo. Informe o motivo abaixo.
             </DialogDescription>
           </DialogHeader>
@@ -170,7 +170,7 @@ export function EvolutionDetailView({
               data-testid="addendum-reason-input"
               value={addendumReason}
               onChange={(e) => setAddendumReason(e.target.value)}
-              placeholder="Descreva o motivo da alteracao..."
+              placeholder="Descreva o motivo da alteração..."
               rows={3}
             />
           </div>

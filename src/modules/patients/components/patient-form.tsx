@@ -48,15 +48,15 @@ const guardianFormSchema = z.object({
     .min(2, { message: 'O parentesco deve ter pelo menos 2 caracteres.' })
     .max(100, { message: 'O parentesco deve ter no máximo 100 caracteres.' }),
   phone: z.string({ message: 'Informe o telefone.' }).refine((v) => isValidBrazilianPhone(v), {
-    message: 'Telefone invalido. Use o formato +55 DD NNNNN-NNNN.',
+    message: 'Telefone inválido. Use o formato +55 DD NNNNN-NNNN.',
   }),
   cpf: z
     .string()
     .optional()
     .refine((v) => !v || v === '' || isValidCpf(v), {
-      message: 'CPF invalido.',
+      message: 'CPF inválido.',
     }),
-  email: z.string().email({ message: 'E-mail invalido.' }).max(255).optional().or(z.literal('')),
+  email: z.string().email({ message: 'E-mail inválido.' }).max(255).optional().or(z.literal('')),
 });
 
 // Type inferred from guardianFormSchema — used implicitly by useFieldArray
@@ -75,7 +75,7 @@ const partnerFormSchema = z.object({
     .string()
     .optional()
     .refine((v) => !v || v === '' || isValidBrazilianPhone(v), {
-      message: 'Telefone invalido. Use o formato +55 DD NNNNN-NNNN.',
+      message: 'Telefone inválido. Use o formato +55 DD NNNNN-NNNN.',
     }),
   useBirthDate: z.boolean(),
   birthDate: z.string().optional(),
@@ -94,7 +94,7 @@ const step1Schema = z
       .string({ message: 'Informe o nome completo.' })
       .trim()
       .min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' })
-      .max(200, { message: 'O nome deve ter no maximo 200 caracteres.' }),
+      .max(200, { message: 'O nome deve ter no máximo 200 caracteres.' }),
     patientType: z.enum(PATIENT_TYPES, {
       message: 'Selecione o tipo de paciente.',
     }),
@@ -105,7 +105,7 @@ const step1Schema = z
       .string()
       .optional()
       .refine((v) => !v || v === '' || isValidBrazilianPhone(v), {
-        message: 'Telefone invalido. Use o formato (11) 98765-4321.',
+        message: 'Telefone inválido. Use o formato (11) 98765-4321.',
       }),
     // WhatsApp opt-out controls
     whatsappOptOut: z.boolean(),
@@ -122,7 +122,7 @@ const step1Schema = z
           return phoneNumberSchema.safeParse(e164).success;
         },
         {
-          message: 'Telefone invalido. Use o formato +55 (DD) NNNNN-NNNN.',
+          message: 'Telefone inválido. Use o formato +55 (DD) NNNNN-NNNN.',
         },
       ),
     // Guardian array for minor patients (child/adolescent)
@@ -137,7 +137,7 @@ const step1Schema = z
       if (Number.isNaN(d.getTime())) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Data de nascimento invalida.',
+          message: 'Data de nascimento inválida.',
           path: ['birthDate'],
         });
       }
@@ -148,7 +148,7 @@ const step1Schema = z
       if (!data.guardians || data.guardians.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Pacientes menores precisam de pelo menos 1 responsavel.',
+          message: 'Pacientes menores precisam de pelo menos 1 responsável.',
           path: ['guardians'],
         });
       }
@@ -170,13 +170,13 @@ const step1Schema = z
  * Step 2 schema: optional details.
  */
 const step2Schema = z.object({
-  gender: z.enum(GENDERS, { message: 'Genero invalido.' }).optional().or(z.literal('')),
-  email: z.string().email({ message: 'E-mail invalido.' }).max(255).optional().or(z.literal('')),
+  gender: z.enum(GENDERS, { message: 'Gênero inválido.' }).optional().or(z.literal('')),
+  email: z.string().email({ message: 'E-mail inválido.' }).max(255).optional().or(z.literal('')),
   cpf: z
     .string()
     .optional()
     .refine((v) => !v || v === '' || isValidCpf(v), {
-      message: 'CPF invalido.',
+      message: 'CPF inválido.',
     }),
   street: z.string().max(200).optional(),
   number: z.string().max(20).optional(),
@@ -187,14 +187,14 @@ const step2Schema = z.object({
   zipCode: z.string().max(10).optional(),
   profession: z.string().max(100).optional(),
   maritalStatus: z
-    .enum(MARITAL_STATUSES, { message: 'Estado civil invalido.' })
+    .enum(MARITAL_STATUSES, { message: 'Estado civil inválido.' })
     .optional()
     .or(z.literal('')),
-  source: z.enum(SOURCES, { message: 'Origem invalida.' }).optional().or(z.literal('')),
+  source: z.enum(SOURCES, { message: 'Origem inválida.' }).optional().or(z.literal('')),
   tags: z.string().optional(),
   notes: z
     .string()
-    .max(5000, { message: 'Anotacoes devem ter no maximo 5000 caracteres.' })
+    .max(5000, { message: 'Anotações devem ter no máximo 5000 caracteres.' })
     .optional(),
 });
 
@@ -501,7 +501,7 @@ export function PatientForm(props: PatientFormProps) {
             } else {
               if (result.error === 'invalid_input' && result.fieldErrors) {
                 Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-                  const msg = messages[0] ?? 'Campo invalido.';
+                  const msg = messages[0] ?? 'Campo inválido.';
                   if (field in step1Form.getValues()) {
                     step1Form.setError(field as keyof Step1Data, { message: msg });
                     setStep(1);
@@ -562,7 +562,7 @@ export function PatientForm(props: PatientFormProps) {
                     // Redirect to patient detail so user can add guardians manually.
                     setServerError(
                       guardianResult.message ??
-                        `Paciente criado, mas houve erro ao adicionar responsavel "${guardian.fullName}".`,
+                        `Paciente criado, mas houve erro ao adicionar responsável "${guardian.fullName}".`,
                     );
                     router.push(`/pacientes/${result.patientId}`);
                     return;
@@ -573,7 +573,7 @@ export function PatientForm(props: PatientFormProps) {
             } else {
               if (result.error === 'invalid_input' && result.fieldErrors) {
                 Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-                  const msg = messages[0] ?? 'Campo invalido.';
+                  const msg = messages[0] ?? 'Campo inválido.';
                   if (field in step1Form.getValues()) {
                     step1Form.setError(field as keyof Step1Data, { message: msg });
                     setStep(1);
@@ -606,7 +606,7 @@ export function PatientForm(props: PatientFormProps) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       // 2MB limit
-      setServerError('A foto deve ter no maximo 2MB.');
+      setServerError('A foto deve ter no máximo 2MB.');
       return;
     }
     setPhotoPreview(URL.createObjectURL(file));
@@ -625,7 +625,7 @@ export function PatientForm(props: PatientFormProps) {
   return (
     <div className="mx-auto w-full max-w-[640px]" data-testid="patient-form">
       {/* Step indicator */}
-      <div className="mb-8 flex items-center gap-3" aria-label="Progresso do formulario">
+      <div className="mb-8 flex items-center gap-3" aria-label="Progresso do formulário">
         <StepIndicator step={1} current={step} label="Dados essenciais" />
         <div className="bg-border h-px flex-1" />
         <StepIndicator step={2} current={step} label="Detalhes opcionais" />
@@ -812,7 +812,7 @@ export function PatientForm(props: PatientFormProps) {
                   Receber lembretes via WhatsApp
                 </Label>
                 <p className="text-text-tertiary text-[13px]">
-                  Quando desativado, nenhum lembrete sera enviado a este paciente
+                  Quando desativado, nenhum lembrete será enviado a este paciente
                 </p>
               </div>
               <Switch
@@ -831,13 +831,13 @@ export function PatientForm(props: PatientFormProps) {
                 {/* Opt-out reason */}
                 <FormField
                   id="whatsappOptOutReason"
-                  label="Motivo (visivel so para voce)"
+                  label="Motivo (visível só para você)"
                   error={step1Form.formState.errors.whatsappOptOutReason?.message}
                 >
                   <Textarea
                     id="whatsappOptOutReason-form-item"
                     rows={2}
-                    placeholder="Ex.: Paciente pediu para nao receber mensagens"
+                    placeholder="Ex.: Paciente pediu para não receber mensagens"
                     aria-invalid={Boolean(step1Form.formState.errors.whatsappOptOutReason)}
                     data-testid="whatsapp-opt-out-reason"
                     {...step1Form.register('whatsappOptOutReason')}
@@ -868,7 +868,7 @@ export function PatientForm(props: PatientFormProps) {
                 }}
               />
               <p className="text-text-tertiary text-[13px]">
-                Use para enviar lembretes ao responsavel (ex.: pai/mae de menor)
+                Use para enviar lembretes ao responsável (ex.: pai/mãe de menor)
               </p>
             </FormField>
           </fieldset>
@@ -877,7 +877,7 @@ export function PatientForm(props: PatientFormProps) {
           {(watchedPatientType === 'child' || watchedPatientType === 'adolescent') && (
             <div className="space-y-4" data-testid="guardians-section">
               <div className="flex items-center justify-between">
-                <h4 className="text-text-primary text-base font-medium">Responsaveis</h4>
+                <h4 className="text-text-primary text-base font-medium">Responsáveis</h4>
                 <Button
                   type="button"
                   variant="ghost"
@@ -895,7 +895,7 @@ export function PatientForm(props: PatientFormProps) {
                   }
                 >
                   <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
-                  Adicionar responsavel
+                  Adicionar responsável
                 </Button>
               </div>
 
@@ -915,7 +915,7 @@ export function PatientForm(props: PatientFormProps) {
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="text-text-primary text-base font-medium">
-                      Responsavel {index + 1}
+                      Responsável {index + 1}
                     </h4>
                     <Button
                       type="button"
@@ -924,7 +924,7 @@ export function PatientForm(props: PatientFormProps) {
                       className="text-danger-700 hover:text-danger-500"
                       onClick={() => removeGuardian(index)}
                       data-testid={`remove-guardian-${index}`}
-                      aria-label={`Remover responsavel ${index + 1}`}
+                      aria-label={`Remover responsável ${index + 1}`}
                     >
                       <Trash2 className="mr-1 h-4 w-4" aria-hidden="true" />
                       Remover
@@ -941,7 +941,7 @@ export function PatientForm(props: PatientFormProps) {
                     >
                       <Input
                         id={`guardian-${index}-fullName-form-item`}
-                        placeholder="Nome do responsavel"
+                        placeholder="Nome do responsável"
                         aria-invalid={Boolean(
                           step1Form.formState.errors.guardians?.[index]?.fullName,
                         )}
@@ -959,7 +959,7 @@ export function PatientForm(props: PatientFormProps) {
                     >
                       <Input
                         id={`guardian-${index}-relationship-form-item`}
-                        placeholder="Ex: Mae, Pai, Tio(a)"
+                        placeholder="Ex: Mãe, Pai, Tio(a)"
                         aria-invalid={Boolean(
                           step1Form.formState.errors.guardians?.[index]?.relationship,
                         )}
@@ -1160,7 +1160,7 @@ export function PatientForm(props: PatientFormProps) {
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="submit" variant="secondary" data-testid="patient-form-next">
-              Proximo
+              Próximo
               <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
@@ -1179,7 +1179,7 @@ export function PatientForm(props: PatientFormProps) {
           noValidate
         >
           {/* Gender */}
-          <FormField id="gender" label="Genero" error={step2Form.formState.errors.gender?.message}>
+          <FormField id="gender" label="Gênero" error={step2Form.formState.errors.gender?.message}>
             <Select
               value={step2Form.watch('gender') ?? ''}
               onValueChange={(value) => {
@@ -1238,7 +1238,7 @@ export function PatientForm(props: PatientFormProps) {
 
           {/* Address section */}
           <fieldset className="space-y-4">
-            <legend className="text-text-primary text-sm font-medium">Endereco</legend>
+            <legend className="text-text-primary text-sm font-medium">Endereço</legend>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
@@ -1277,7 +1277,7 @@ export function PatientForm(props: PatientFormProps) {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FormField
                 id="number"
-                label="Numero"
+                label="Número"
                 error={step2Form.formState.errors.number?.message}
               >
                 <Input
@@ -1318,7 +1318,7 @@ export function PatientForm(props: PatientFormProps) {
             <FormField id="city" label="Cidade" error={step2Form.formState.errors.city?.message}>
               <Input
                 id="city-form-item"
-                placeholder="Sao Paulo"
+                placeholder="São Paulo"
                 data-testid="patient-form-city"
                 {...step2Form.register('city')}
               />
@@ -1328,12 +1328,12 @@ export function PatientForm(props: PatientFormProps) {
           {/* Profession */}
           <FormField
             id="profession"
-            label="Profissao"
+            label="Profissão"
             error={step2Form.formState.errors.profession?.message}
           >
             <Input
               id="profession-form-item"
-              placeholder="Profissao do paciente"
+              placeholder="Profissão do paciente"
               data-testid="patient-form-profession"
               {...step2Form.register('profession')}
             />
@@ -1405,7 +1405,7 @@ export function PatientForm(props: PatientFormProps) {
           <FormField id="tags" label="Tags" error={step2Form.formState.errors.tags?.message}>
             <Input
               id="tags-form-item"
-              placeholder="Separar por virgula: ansiedade, terapia"
+              placeholder="Separar por vírgula: ansiedade, terapia"
               data-testid="patient-form-tags"
               {...step2Form.register('tags')}
             />
@@ -1451,15 +1451,15 @@ export function PatientForm(props: PatientFormProps) {
                 className="hidden"
                 onChange={handlePhotoChange}
               />
-              <span className="text-text-tertiary text-xs">Maximo 2MB. JPG, PNG ou WebP.</span>
+              <span className="text-text-tertiary text-xs">Máximo 2MB. JPG, PNG ou WebP.</span>
             </div>
           </div>
 
           {/* Notes */}
-          <FormField id="notes" label="Anotacoes" error={step2Form.formState.errors.notes?.message}>
+          <FormField id="notes" label="Anotações" error={step2Form.formState.errors.notes?.message}>
             <Textarea
               id="notes-form-item"
-              placeholder="Observacoes sobre o paciente..."
+              placeholder="Observações sobre o paciente..."
               rows={4}
               aria-invalid={Boolean(step2Form.formState.errors.notes)}
               data-testid="patient-form-notes"

@@ -23,9 +23,9 @@
 
 ## 4. Patients — display copy + coupled tests
 
-- [ ] 4.1 Correct display copy under `src/modules/patients/components/**` and `src/app/(app)/pacientes/**` (forms, anamnesis tab, placeholders, dialog text) — leave the `/pacientes` route segment and identifiers untouched
-- [ ] 4.2 Update any coupled unit/integration assertions surfaced by the patients copy changes (verify via grep after editing)
-- [ ] 4.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
+- [x] 4.1 Correct display copy under `src/modules/patients/components/**` and `src/app/(app)/pacientes/**` (forms, anamnesis tab, placeholders, dialog text) — leave the `/pacientes` route segment and identifiers untouched
+- [x] 4.2 Update any coupled unit/integration assertions surfaced by the patients copy changes (verify via grep after editing)
+- [x] 4.3 Validate slice: lint + typecheck + unit + scoped integration/e2e for changed specs green
 
 ## 5. WhatsApp — display copy + coupled tests
 

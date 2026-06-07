@@ -595,7 +595,7 @@ export function PatientList({
               size="sm"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              aria-label="Pagina anterior"
+              aria-label="Página anterior"
               data-testid="patient-pagination-prev"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -606,7 +606,7 @@ export function PatientList({
                 variant={pageNum === currentPage ? 'default' : 'secondary'}
                 size="sm"
                 onClick={() => handlePageChange(pageNum)}
-                aria-label={`Pagina ${pageNum}`}
+                aria-label={`Página ${pageNum}`}
                 aria-current={pageNum === currentPage ? 'page' : undefined}
                 data-testid={`patient-pagination-page-${pageNum}`}
               >
@@ -618,7 +618,7 @@ export function PatientList({
               size="sm"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              aria-label="Proxima pagina"
+              aria-label="Próxima página"
               data-testid="patient-pagination-next"
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />

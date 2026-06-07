@@ -48,15 +48,15 @@ export function ArchiveConfirmModal({
           <AlertDialogTitle>Arquivar paciente</AlertDialogTitle>
           <AlertDialogDescription className="mt-2 space-y-2">
             <span className="block">
-              O prontuario e os dados do paciente serao preservados conforme exigido pela legislacao
+              O prontuário e os dados do paciente serão preservados conforme exigido pela legislação
               vigente:
             </span>
             <span className="text-text-tertiary block text-[13px]">
-              CFP — Resolucao 001/2009: guarda minima de 5 anos apos ultimo atendimento. Lei
-              13.787/2018: prontuarios em meio digital devem ser mantidos por no minimo 20 anos.
+              CFP — Resolução 001/2009: guarda mínima de 5 anos após último atendimento. Lei
+              13.787/2018: prontuários em meio digital devem ser mantidos por no mínimo 20 anos.
             </span>
             <span className="block">
-              O paciente nao aparecera mais na listagem ativa, mas voce podera desarquiva-lo a
+              O paciente não aparecerá mais na listagem ativa, mas você poderá desarquivá-lo a
               qualquer momento.
             </span>
           </AlertDialogDescription>

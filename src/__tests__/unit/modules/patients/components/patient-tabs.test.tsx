@@ -73,7 +73,7 @@ describe('PatientTabs — delta (c): "Prontuario" tab redirects', () => {
     const contentPanel = screen.getByTestId('patient-tab-content-records');
     expect(contentPanel).toBeVisible();
 
-    expect(contentPanel).toHaveTextContent('Prontuario');
+    expect(contentPanel).toHaveTextContent('Prontuário');
 
     const link = screen.getByTestId('patient-tab-records-open-prontuario');
     expect(link).toHaveAttribute('href', `/pacientes/${PATIENT_ID}/prontuario`);
