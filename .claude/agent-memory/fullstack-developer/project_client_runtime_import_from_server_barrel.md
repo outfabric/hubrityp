@@ -1,0 +1,14 @@
+---
+name: client-runtime-import-from-server-barrel
+description: 'use client' importing a runtime VALUE from a module barrel that re-exports server impls breaks the Turbopack next build
+metadata:
+  type: project
+---
+
+A `'use client'` component that imports a **runtime value** (e.g. a Zod schema used in `zodResolver`, or `clientEnv` from `@/shared/env`) from a module/shared barrel that also re-exports server-only impls breaks `next build`. Seen on the disable-whatsapp-reminders-ui branch (2026-05-30 sweep): `src/app/(app)/sidebar-nav.tsx` line 1 `'use client'`, line 9 `import { clientEnv } from '@/shared/env'` — and `@/shared/env/index.ts` line 1 is `import 'server-only'`. Fix: client components must read public env from the client leaf (`@/shared/env/client`), never the `@/shared/env` barrel.
+
+**Why:** module barrels like `@/modules/ai-transcription/index.ts` re-export server impls (`get*Impl`) that transitively `import 'server-only'` / `next/headers` / `@/shared/db/client`. Type-only imports (`import type {...}`) are erased and safe, but a runtime value import forces Turbopack to evaluate the entire barrel graph in the browser bundle → 47-error build failure ("You're importing a module that depends on 'server-only'/'next/headers' ... Pages Router"). The error text is misleading (no Pages Router involved); the real cause is server code reaching the client graph. `npm run lint`/`typecheck` PASS — only `next build` (and therefore e2e:seeded `next start` and CI) catches it.
+
+**How to apply:** in client components, take only `import type` from the barrel; import runtime values (Zod schemas) directly from the pure leaf, e.g. `@/modules/ai-transcription/lib/settings-schemas`. The established repo pattern: existing client comps (review form) import schema *types* from the barrel and build their schema inline or from `lib/`; pages import client components from `@/modules/<domain>/components/...` directly. When implementing an e2e-only section, still run `next build` first — a UI regression from earlier sections only surfaces at build time. See [[e2e_seeded_needs_fresh_build]].
+
+**Recurrence (2026-06-04, in-app-notifications-and-nps, Section 6):** `src/app/(app)/configuracoes/notificacoes/notification-preferences-form.tsx` ('use client') imported `updateNotificationPreferencesInputSchema` (Zod VALUE) from the `@/modules/notifications` barrel, which re-exports `server/list-notifications.ts` (`import 'server-only'` + `db`/`postgres`). `next build` failed with `Module not found: Can't resolve 'fs'/'net'/'perf_hooks'` (postgres's Node deps reaching the client). Fix: split the import — `import type {...}` from the barrel, `import { updateNotificationPreferencesInputSchema } from '@/modules/notifications/lib/preferences-schema'` (the pure leaf). Confirmed lint+typecheck stayed green throughout; only the e2e build caught it. A non-barrel deep import from `app/` into `@/modules/<domain>/lib/...` is NOT flagged by ESLint here.

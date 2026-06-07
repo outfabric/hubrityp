@@ -192,3 +192,65 @@ The "Admitir" button in `InCallView` now correctly calls `handleAdmitPatient`. N
 
 **Why:** Telepsicologia PRD 09 — Stream.io video calling, psychologist call UI.
 **How to apply:** When reviewing change 5+ (recording, prontuario wiring), verify: (1) prontuario wiring is complete end-to-end; (2) chat length cap is added; (3) DB transactions in admitPatient/endVideoSession; (4) no new NEXT_PUBLIC_ secrets.
+
+## Change 6 patterns (2026-05-29 — Stream recording fix, silent failure fix, deferred creation)
+
+### Bug fixes confirmed
+- `create-video-room-helper.ts`: `settings_override.recording` now includes `quality: '1080p', audio_only: false` — fixes Stream HTTP 400.
+- `auto-create-room.ts`: `processSessionCreated` / `processSessionUpdated` now `throw new Error(...)` instead of returning `{ action: 'error' }` — fixes silent Inngest failure. `AutoCreateRoomResult` error variant removed; compile-time assertion added in unit test via `@ts-expect-error`.
+- `errorMessage` added to helper catch-block log — safe (Stream API error strings contain no PII).
+
+### Deferred creation architecture
+- `autoCreateVideoRoom` Inngest function restructured: guard step → `step.sleepUntil('wait-until-1h-before', wakeUpAt)` → `recheck-session-eligible` step → `auto-create-room` step.
+- `computeWakeUpAt(startAt: Date): Date` exported helper: `startAt - 1h`. If wakeUpAt is already past, sleep is skipped.
+- `cancelOn: [{ event: 'agenda/session.cancelled', if: 'async.data.sessionId == event.data.sessionId' }]` — confirmed correct Inngest CEL syntax (`async` = sleeping function's trigger event, `event` = cancel event).
+- Post-sleep re-check queries `sessions WHERE id=? AND userId=?` — defends against in_person switch during sleep (cancelOn only fires on cancellation, not modality changes).
+- The `'eligible_pending_create'` string is used as an internal sentinel in the guard step (to signal "proceed to deferred creation") — it is NOT a terminal result. Typed as `reason: string` in `AutoCreateRoomResult`. KNOWN ISSUE: sentinel leaks into public type.
+- Concurrent session.updated events can produce multiple sleeping instances → both try createRoom → 23505 unique violation → helper re-fetches existing room. Safe but wastes one Stream API call.
+
+### cancelRoomOnSessionCancel — new Inngest function
+- `src/modules/telepsicologia/inngest/cancel-room-on-session-cancel.ts` — triggered by `agenda/session.cancelled`, retries: 3.
+- Core logic: query `video_rooms WHERE session_id=? AND user_id=? AND status IN ('pending','active')`; if none, return `skipped/no_room`; if found: Stream `call.end()` (try/catch, logs roomId + hasError, no PII), then `db.transaction(UPDATE rooms + INSERT log)`.
+- `onStreamError` injected via deps for testability (not imported logger directly in core function).
+- Registered in `/api/inngest/route.ts`.
+- Exported from module barrel `index.ts`.
+
+### KNOWN ISSUE: duplicate SESSION_CANCELLED_EVENT constant (HIGH, open)
+Both `auto-create-room.ts:53` and `cancel-room-on-session-cancel.ts:40` export `SESSION_CANCELLED_EVENT = 'agenda/session.cancelled'` as independent const. Three-way duplication with the Zod schema in `agenda/lib/session-events.ts`. Should be unified — flag in next review.
+
+### KNOWN ISSUE: no Inngest handler orchestration test (HIGH, open)
+The full `autoCreateVideoRoom` handler (guard → sleep → recheck → create step sequencing) is not tested. Only `computeWakeUpAt` and `processSession*` pure functions have tests. The step orchestration branch logic needs unit tests mocking `step.run` / `step.sleepUntil` (see ai-transcription pattern).
+
+### Still-open from changes 2/4: admitPatientImpl + endVideoSessionImpl missing db.transaction
+Still not fixed as of change 6. (createEvolutionImpl and updateEvolutionImpl correctly use transactions.)
+
+## Change 7 patterns (2026-06-04 — fix Stream upsertUsers: register users before join)
+
+### Bug fixed
+- Root cause: `call.join()` (client-side) fails when the user is not registered in Stream's user DB. Server-side admin ops (`getOrCreate`, token minting) succeed without a user record — masking the bug.
+
+### Three upsert touchpoints
+1. `create-video-room-helper.ts`: `streamClient.upsertUsers()` before `call.getOrCreate()`. Skipped on idempotent early-return (room already exists). Upserts `[{id: userId, name: psychologistName}]` plus `{id: 'patient-<patientId>', name: patientFullName}` when patient is linked.
+2. `get-video-token.ts`: `streamClient.upsertUsers([{id: userId, name: profile.fullName}])` before `generateCallToken()`. Keeps psychologist name fresh at token-minting time.
+3. `/api/video/join/route.ts`: `streamClient.upsertUsers([{id: 'patient-<patientId>', name: patient.fullName}])` in the `status === 'active'` branch before returning the JWT. Wrapped in try/catch; returns 500 `INTERNAL_ERROR` (no streamToken) if upsert fails.
+
+### Inconsistent psychologistName fallback (open MEDIUM)
+- `create-video-room.ts` and `auto-create-room.ts`: `profile?.fullName ?? ''` (empty string)
+- `get-video-token.ts`: `profile?.fullName ?? userId` (UUID)
+Should be unified. Document the chosen fallback in `SessionData` interface JSDoc.
+
+### E2E_STREAM_STUB escape hatch
+- Added to `serverEnvSchema` as `z.enum(['true','false']).default('false').transform(v => v === 'true')`.
+- In `getStreamClient()`: returns `buildE2eStreamStub()` when true, real SDK when false.
+- Set to `'true'` ONLY in `src/__tests__/e2e/seeded/setup/start-server.ts`.
+- Defaults to `'false'` in `.env.example`.
+- NOT in any CI build step or Vercel workflow (verified).
+- KNOWN ISSUE: no production guard (e.g., throw if `E2E_STREAM_STUB && NODE_ENV === 'production'`). If accidentally set in Vercel prod env, silently no-ops all Stream calls. Recommend adding to `src/shared/env/index.ts` following the `INNGEST_SIGNING_KEY` pattern.
+
+### Test coverage
+- Unit: happy path (psychologist + patient), psychologist-only, idempotent skip, ordering (`invocationCallOrder`).
+- Integration: create-video-room, auto-create-room, get-video-token, video-join-handler (active+upsert, 500-on-upsert-fail, no-upsert-on-non-active), stream-recording-fix (SessionData fixture updated).
+- E2E: `E2E_STREAM_STUB` prevents regression (no real Stream calls from seeded suite).
+
+### Still-open from changes 2/4: admitPatientImpl + endVideoSessionImpl missing db.transaction
+Still not fixed as of change 7.

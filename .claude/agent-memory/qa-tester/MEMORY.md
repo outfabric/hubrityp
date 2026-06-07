@@ -2,6 +2,20 @@
 
 - [Module barrel server-only leakage pattern](project_barrel_server_only_leakage.md) — module barrels co-exporting Server Actions (server-only) and Client Components cause a build error in Next.js App Router
 - [Radix Popover type=button bug](project_radix_popover_type_button.md) — PopoverTrigger asChild sets type="button" on Input children, breaking combobox text input
-- [App mobile sidebar overflow](project_app_mobile_sidebar_overflow.md) — sidebar nav does not collapse on mobile, causing horizontal overflow on all authenticated pages
+- [App mobile sidebar overflow](project_app_mobile_sidebar_overflow.md) — STALE/likely-fixed: as of 2026-05-30 sidebar collapses behind a hamburger at 375px with NO horizontal overflow; re-verify before citing
 - [Local env setup notes](project_local_env_setup_notes.md) — migrations, Mailpit, user creation steps for local QA testing
 - [Prontuario nav architecture](project_prontuario_nav_architecture.md) — patient detail vs prontuario page have separate tab systems; prontuario features live at /pacientes/[id]/prontuario
+- [AI consent flow patterns](project_ai_consent_flow_patterns.md) — 4-state consent model, token format, expiry logic inconsistency between status query and generate action
+- [INNGEST_ENCRYPTION_KEY boot blocker](project_inngest_encryption_key_boot_blocker.md) — required serverEnv var missing from docker-compose/.env.local; app 500s on every page until injected
+- [AI transcription review UI](project_ai_transcription_review_ui.md) — /dashboard/transcricoes list+review routes, status branches, review-form gating, seeding recipe, QA findings
+- [AI transcription settings UI](project_ai_transcription_settings_ui.md) — /configuracoes/transcricao-ia form+stats, defaults UPSERT, disable-dialog gate, testids, QA-1 findings; corrects mobile-overflow memory
+- [Authenticated browser QA setup](project_authenticated_browser_qa_setup.md) — local Docker needs db:migrate + seeded active public.profiles row before any authenticated browser QA (compose up alone leaves DB empty)
+- [playwright-cli invocation](project_playwright_cli_invocation.md) — correct global playwright-cli usage: persistent session, open/goto/--raw snapshot/--raw eval refs, resize/screenshot gotchas
+- [WhatsApp UI freeze flag](project_whatsapp_ui_freeze_flag.md) — NEXT_PUBLIC_WHATSAPP_UI_ENABLED OFF freezes inbox sidebar item + WhatsApp/Lembretes settings cards as aria-disabled spans; route not gated
+- [Onboarding wizard QA](project_onboarding_wizard_qa.md) — 4-step wizard routes, strict server-side forward-gating, CSV consent gate, banner visibility rule, testids; all scenarios PASS
+- [Dashboard home QA](project_dashboard_home_qa.md) — /dashboard empty-state-vs-four-sections branch (hasAnyData), SP-tz "today" window, post-MVP string exclusion, mobile chevron collapse, seeding+testids
+- [Onboarding checklist+tour QA](project_onboarding_checklist_and_tour_qa.md) — checklist %/celebration/read-only mounts, Driver.js tour anchors+replay, closeBtnText no-op bug (MÉDIO), browser-auth cookie-injection workaround for internal NEXT_PUBLIC_SUPABASE_URL
+- [Design token --space-3 undefined](project_design_token_space3_undefined.md) — globals.css tokens are --ds-space-* / --color-*; bare var(--space-3) is undefined and silently breaks position via invalid var(); verify resolved values not served chunk
+- [Turbopack cache corruption blocks CSS QA](project_turbopack_cache_corruption.md) — stale CSS chunk + TurbopackInternalError after partial .next deletes; clean reset recipe (stop, transient-container rm -rf .next, start)
+- [Notifications + NPS QA](project_notifications_nps_qa.md) — bell/dropdown MVP-type-allowlist (non-allowlist types render iconless/inert by design), NPS eligibility columns + force/suppress recipe, prefs explicit-save + locked critical switch
+- [Copy patient video link QA](project_copy_patient_video_link_qa.md) — APP_URL (unset in docker-compose) silently gates whole feature; drawer status gating; toast accent tells branch; testids; modal-toast clipboard no-catch (LOW)
