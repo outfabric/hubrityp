@@ -11,7 +11,7 @@ import { readSeedState, SEED_SESSIONS } from '../setup/seed-state';
  *   2. Verify session details are displayed (date, time, psychologist name)
  *   3. Click "Confirmar presença"
  *   4. Verify success message "Presença confirmada"
- *   5. Revisit the same URL -> "Voce ja respondeu"
+ *   5. Revisit the same URL -> "Você já respondeu"
  *
  * Prerequisites:
  *   - Seeded session with confirmation_token in global-setup.ts
@@ -91,11 +91,11 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
     const success = page.getByTestId('confirmation-success');
     await expect(success).toBeVisible({ timeout: 10000 });
 
-    // Revisit the same URL — should see "Voce ja respondeu"
+    // Revisit the same URL — should see "Você já respondeu"
     await page.goto(`/confirmar-sessao/${token}`);
     const alreadyResponded = page.getByTestId('confirmation-already-responded');
     await expect(alreadyResponded).toBeVisible();
-    await expect(alreadyResponded).toContainText('Voce ja respondeu');
+    await expect(alreadyResponded).toContainText('Você já respondeu');
   });
 
   test('shows invalid message for nonexistent token', async ({ page }) => {
@@ -105,6 +105,6 @@ test.describe.serial('@agenda public confirmation — confirm', () => {
 
     const invalid = page.getByTestId('confirmation-invalid');
     await expect(invalid).toBeVisible();
-    await expect(invalid).toContainText('Link invalido');
+    await expect(invalid).toContainText('Link inválido');
   });
 });

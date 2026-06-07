@@ -18,10 +18,10 @@ export const startConnectionInputSchema = z.object({
   phone: phoneNumberSchema,
   displayName: z
     .string()
-    .min(1, { message: 'O nome de exibicao e obrigatorio.' })
-    .max(120, { message: 'O nome de exibicao deve ter no maximo 120 caracteres.' }),
+    .min(1, { message: 'O nome de exibição é obrigatório.' })
+    .max(120, { message: 'O nome de exibição deve ter no máximo 120 caracteres.' }),
   consent: z.literal(true, {
-    message: 'Voce precisa confirmar o consentimento LGPD para continuar.',
+    message: 'Você precisa confirmar o consentimento LGPD para continuar.',
   }),
 });
 
@@ -110,7 +110,7 @@ export async function startTwilioConnectionImpl(
       return {
         ok: false,
         error: 'twilio_error',
-        message: 'Nao foi possivel conectar o WhatsApp. Tente novamente.',
+        message: 'Não foi possível conectar o WhatsApp. Tente novamente.',
       };
     }
 
@@ -156,7 +156,7 @@ export async function startTwilioConnectionImpl(
       return {
         ok: false,
         error: 'twilio_error',
-        message: 'Nao foi possivel conectar o WhatsApp. Tente novamente.',
+        message: 'Não foi possível conectar o WhatsApp. Tente novamente.',
       };
     }
 

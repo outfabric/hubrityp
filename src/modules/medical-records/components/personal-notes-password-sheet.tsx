@@ -158,7 +158,7 @@ function SetPasswordForm({ patientId, setPassword, onSuccess }: SetPasswordFormP
         setConfirmPassword('');
         onSuccess();
       } else if (result.code === 'WEAK_PASSWORD') {
-        setError(`A senha deve ter no minimo ${MIN_PASSWORD_LENGTH} caracteres.`);
+        setError(`A senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres.`);
       } else {
         toast.error('Erro ao configurar senha. Tente novamente.');
       }

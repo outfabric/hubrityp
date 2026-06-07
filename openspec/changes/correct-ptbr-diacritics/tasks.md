@@ -56,9 +56,9 @@
 
 ## 9. cspell guard — install, configure, allowlist, wire into CI
 
-- [ ] 9.1 Add `cspell` + a pt-BR dictionary dev dependency (confirm package via Context7/npm); add `npm run spell` script
-- [ ] 9.2 Create cspell config scoped to `src/**` (TS/TSX), excluding generated output (drizzle `migrations/meta/`, lockfiles, build artifacts)
-- [ ] 9.3 Author the allowlist / project dictionary encoding intentional ASCII: route segments (`pacientes`, `configuracoes`, `transcricoes`, `confirmar-sessao`, `sessao`, `caixa-de-entrada`), stored enum tokens (`declaracao`, `atestado`, `relatorio`, `laudo`, `parecer`, `cancelled`), and vendor/technical/domain terms (Twilio, Asaas, Inngest, Drizzle, Supabase, Gemini, PIX, CRP, CPF, LGPD, …)
-- [ ] 9.4 Run `npm run spell` over the whole tree; fix any residual user-facing misspellings it surfaces that the per-module passes missed (the exhaustiveness backstop)
-- [ ] 9.5 Wire the spell step into the lint/CI pipeline so future PRs are guarded (blocking once the tree is clean)
-- [ ] 9.6 Final validation: full lint + typecheck + unit + integration + e2e-seeded green, and `npm run spell` clean
+- [x] 9.1 Add `cspell` + a pt-BR dictionary dev dependency (confirm package via Context7/npm); add `npm run spell` script
+- [x] 9.2 Create cspell config scoped to `src/**` (TS/TSX), excluding generated output (drizzle `migrations/meta/`, lockfiles, build artifacts)
+- [x] 9.3 Author the allowlist / project dictionary encoding intentional ASCII: route segments (`pacientes`, `configuracoes`, `transcricoes`, `confirmar-sessao`, `sessao`, `caixa-de-entrada`), stored enum tokens (`declaracao`, `atestado`, `relatorio`, `laudo`, `parecer`, `cancelled`), and vendor/technical/domain terms (Twilio, Asaas, Inngest, Drizzle, Supabase, Gemini, PIX, CRP, CPF, LGPD, …)
+- [x] 9.4 Run `npm run spell` over the whole tree; fix any residual user-facing misspellings it surfaces that the per-module passes missed (the exhaustiveness backstop)
+- [x] 9.5 Wire the spell step into the lint/CI pipeline so future PRs are guarded (blocking once the tree is clean)
+- [x] 9.6 Final validation: full lint + typecheck + unit + integration + e2e-seeded green, and `npm run spell` clean

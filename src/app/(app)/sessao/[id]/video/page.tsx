@@ -138,9 +138,9 @@ export default async function VideoCallPage({ params }: VideoCallPageProps) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="bg-surface border-border rounded-xl border p-8 text-center shadow-sm">
-          <h2 className="text-text-primary mb-2 text-lg font-semibold">Sala indisponivel</h2>
+          <h2 className="text-text-primary mb-2 text-lg font-semibold">Sala indisponível</h2>
           <p className="text-text-secondary text-sm">
-            Esta sala de video nao esta mais disponivel. Retorne para a agenda.
+            Esta sala de vídeo não está mais disponível. Retorne para a agenda.
           </p>
         </div>
       </div>

@@ -120,7 +120,7 @@ describe('renderHypothesesSection', () => {
 
       const textArgs = extractTextArgs(mockDoc);
       expect(textArgs).toContain('CID-10');
-      expect(textArgs).toContain('Descricao');
+      expect(textArgs).toContain('Descrição');
       expect(textArgs).toContain('Status');
       expect(textArgs).toContain('Data');
     });
@@ -162,7 +162,7 @@ describe('renderHypothesesSection', () => {
 
       // Status labels in Portuguese
       expect(textArgs).toContain('Confirmada');
-      expect(textArgs).toContain('Em investigacao');
+      expect(textArgs).toContain('Em investigação');
 
       // Dates formatted as DD/MM/YYYY
       expect(textArgs).toContain('10/02/2026');
@@ -177,7 +177,7 @@ describe('renderHypothesesSection', () => {
   describe('status labels', () => {
     it.each([
       ['confirmed', 'Confirmada'],
-      ['investigating', 'Em investigacao'],
+      ['investigating', 'Em investigação'],
       ['discarded', 'Descartada'],
     ])('maps status "%s" to Portuguese label "%s"', (status, expectedLabel) => {
       const mockDoc = createMockDoc();

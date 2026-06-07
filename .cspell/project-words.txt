@@ -1,0 +1,281 @@
+# Project dictionary — intentional ASCII / non-dictionary tokens for HubrityP.
+#
+# Words here are accepted by `npm run spell`. Add ONLY:
+#   - URL/route segments kept ASCII on purpose
+#   - stored enum / status / classification tokens (DB CHECK constraints,
+#     persisted values, accent-insensitive matchers)
+#   - data-testid / data-tour-anchor / template-variable keys
+#   - vendor / library / protocol / domain proper nouns and abbreviations
+#   - English code identifiers and log verbs cspell cannot infer
+#   - clinical-scale wording deferred to clinical review (see
+#     src/modules/medical-records/lib/scales/** TODO(clinical-review))
+#
+# Do NOT add common Portuguese words that should carry diacritics in
+# user-facing copy — those are bugs to fix, not entries to suppress.
+
+# --- Route / URL segments (kept ASCII intentionally) ---
+pacientes
+configuracoes
+configuracao
+transcricoes
+transcricao
+confirmar-sessao
+sessao
+sessaonova
+caixa-de-entrada
+telepsicologia
+prontuario
+prontuarios
+exportacoes
+agenda
+termo
+escala
+evolucao
+evolucoes
+sem-evolucao
+
+# --- Stored enum / status / document tokens (persisted; must stay ASCII) ---
+declaracao
+atestado
+relatorio
+laudo
+parecer
+cancelled
+noshow
+no-show
+sistemica
+conclusao
+
+# --- data-testid / data-tour-anchor / template-variable keys ---
+secao
+nova-evolucao
+testid
+endereco
+
+# --- Accent-insensitive risk/keyword matchers (intentional ASCII tokens) ---
+# These match user input with accents stripped, so the stored form is ASCII.
+suicidio
+suicid
+autolesao
+depressao
+
+# --- Clinical-scale wording (deferred to clinical review; see scales/**) ---
+# Stored classification labels are reverse-mapped by severity-tokens.ts via
+# accent-insensitive substring checks — accenting them is a data hazard.
+Limitrofe
+Provavel
+dependencia
+autoaplicavel
+avaliacao
+alcool
+dominios
+fisico
+Likert
+WHOQOL
+Bref
+WAIS
+
+# --- Vendor / library / service proper nouns ---
+Twilio
+twilio
+Asaas
+Inngest
+Drizzle
+Supabase
+Gemini
+gemini
+genai
+Stream
+Vercel
+Resend
+Pino
+Zod
+Tiptap
+Sonner
+Recharts
+Lucide
+shadcn
+Postgres
+postgres
+Postg
+GoTrue
+Testcontainers
+Playwright
+Vitest
+Husky
+Papaparse
+pdfkit
+argon
+Realtime
+kong
+inbucket
+gstatic
+
+# --- Protocols / standards / domain abbreviations ---
+PIX
+CRP
+CPF
+CNPJ
+cnpj
+cids
+LGPD
+JWT
+OAuth
+PKCE
+IMDS
+RLS
+OTP
+SSRF
+IDOR
+CSRF
+HSTS
+MIME
+UUID
+NPS
+SDQ
+AUDIT
+eCAC
+BRST
+BRT
+
+# --- Postgres / SQL identifiers and functions ---
+ilike
+inet
+timestamptz
+tsquery
+tsvector
+unaccent
+plainto
+pgrst
+polcmd
+polrelid
+rolname
+onnotice
+BYPASSRLS
+
+# --- File-format / MIME magic-byte tokens ---
+msword
+msdownload
+openxmlformats
+wordprocessingml
+Matroska
+EBML
+VINT
+ftyp
+IHDR
+RRGGBB
+WAAPI
+
+# --- Project nouns ---
+Hubrity
+hubrityp
+
+# --- English code identifiers / log verbs (bilingual codebase) ---
+serverEnv
+clientEnv
+searchParams
+revalidate
+revalidatePath
+revalidateTag
+middleware
+favicon
+webhooks
+webhook
+timezone
+camelCase
+kebab
+pseudonymization
+pseudonymize
+pseudonymized
+pseudonymizes
+anonymization
+upsert
+upserts
+upserted
+upserting
+unarchive
+unarchives
+unarchiving
+Jsonify
+memoizable
+schedulable
+retriable
+Retriable
+unclickable
+unfindable
+unguessability
+unredacted
+unrepresentable
+unsubmitted
+unskip
+unskipped
+unstub
+inlines
+navigations
+hrefs
+
+# --- British-English spellings (in comments / log strings) ---
+authorises
+behaviour
+behavioural
+behaviours
+Centralised
+initialise
+initialiser
+initialises
+minimisation
+normalisation
+optimisation
+personalised
+serialisation
+
+# --- Portuguese words appearing only in code comments / docstrings ---
+# (not user-facing copy; left ASCII to avoid churning comment prose)
+acao
+anotacao
+atribuida
+clinicos
+cobranca
+confirmacao
+Duracao
+Editavel
+excluida
+gravacao
+instrucao
+Instrucoes
+intervencao
+irreversivel
+observacao
+padrao
+presenca
+proximos
+Pontuacao
+Terapeutico
+terapeuticos
+transferencia
+Versao
+Visao
+Anonimização
+
+# --- Lowercase / alt-case scale & stored-key tokens (cspell is case-sensitive) ---
+limitrofe
+bref
+Whoqol
+whoqol
+terapeutico
+duracao
+
+# --- Code / regex / comment fragments and example placeholders ---
+anam
+creds
+impls
+sess
+pdfs
+telepsychology
+bevolu
+bsess
+Fonboarding
+Fwelcome
+welcomex
+DDNNNNNNNNN
+Gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

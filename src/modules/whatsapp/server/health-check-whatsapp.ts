@@ -79,7 +79,7 @@ export async function healthCheckWhatsappImpl(
       return {
         ok: false,
         error: 'unknown',
-        message: 'Erro de configuracao do servidor.',
+        message: 'Erro de configuração do servidor.',
       };
     }
 
@@ -129,7 +129,7 @@ export async function healthCheckWhatsappImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao verificar conexao. Tente novamente.',
+      message: 'Erro inesperado ao verificar conexão. Tente novamente.',
     };
   }
 }

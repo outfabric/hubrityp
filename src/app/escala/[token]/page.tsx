@@ -117,10 +117,10 @@ function ExpiredOrNotFoundState() {
     >
       <AlertCircle className="text-text-tertiary h-12 w-12" aria-hidden="true" />
       <h2 className="text-text-primary text-[22px] leading-tight font-semibold">
-        Link indisponivel
+        Link indisponível
       </h2>
       <p className="text-text-secondary text-[15px]">
-        Este link expirou. Solicite um novo ao seu psicologo.
+        Este link expirou. Solicite um novo ao seu psicólogo.
       </p>
     </div>
   );

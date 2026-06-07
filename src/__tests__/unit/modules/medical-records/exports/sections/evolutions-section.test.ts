@@ -89,12 +89,12 @@ function makeEvolution(overrides?: Partial<EvolutionForExport>): EvolutionForExp
 // ---------------------------------------------------------------------------
 
 describe('renderEvolutionsSection', () => {
-  it('renders the section title "Evolucoes"', () => {
+  it('renders the section title "Evoluções"', () => {
     const mockDoc = createMockDoc();
     renderEvolutionsSection(asPdfDoc(mockDoc), []);
 
     const textArgs = extractTextArgs(mockDoc);
-    expect(textArgs).toContain('Evolucoes');
+    expect(textArgs).toContain('Evoluções');
   });
 
   // ---------------------------------------------------------------------------
@@ -102,12 +102,12 @@ describe('renderEvolutionsSection', () => {
   // ---------------------------------------------------------------------------
 
   describe('empty evolutions', () => {
-    it('renders "Nenhuma evolucao no periodo selecionado." when empty', () => {
+    it('renders "Nenhuma evolução no período selecionado." when empty', () => {
       const mockDoc = createMockDoc();
       renderEvolutionsSection(asPdfDoc(mockDoc), []);
 
       const textArgs = extractTextArgs(mockDoc);
-      expect(textArgs).toContain('Nenhuma evolucao no periodo selecionado.');
+      expect(textArgs).toContain('Nenhuma evolução no período selecionado.');
     });
   });
 
@@ -161,7 +161,7 @@ describe('renderEvolutionsSection', () => {
       renderEvolutionsSection(asPdfDoc(mockDoc), [evo]);
 
       const textArgs = extractTextArgs(mockDoc);
-      expect(textArgs).toContain('Conteudo');
+      expect(textArgs).toContain('Conteúdo');
       expect(textArgs.some((t) => t.includes('Paciente relatou melhora'))).toBe(true);
     });
 
@@ -183,13 +183,13 @@ describe('renderEvolutionsSection', () => {
       renderEvolutionsSection(asPdfDoc(mockDoc), [evo]);
 
       const textArgs = extractTextArgs(mockDoc);
-      expect(textArgs).toContain('Situacao');
-      expect(textArgs).toContain('Pensamento automatico');
-      expect(textArgs).toContain('Emocao');
+      expect(textArgs).toContain('Situação');
+      expect(textArgs).toContain('Pensamento automático');
+      expect(textArgs).toContain('Emoção');
       expect(textArgs).toContain('Comportamento');
-      expect(textArgs).toContain('Intervencao');
+      expect(textArgs).toContain('Intervenção');
       expect(textArgs).toContain('Tarefa de casa');
-      expect(textArgs).toContain('Observacoes');
+      expect(textArgs).toContain('Observações');
     });
 
     it('renders "psicanalise" template fields with appropriate labels', () => {
@@ -208,11 +208,11 @@ describe('renderEvolutionsSection', () => {
       renderEvolutionsSection(asPdfDoc(mockDoc), [evo]);
 
       const textArgs = extractTextArgs(mockDoc);
-      expect(textArgs).toContain('Conteudo manifesto');
-      expect(textArgs).toContain('Conteudo latente');
-      expect(textArgs).toContain('Transferencia');
-      expect(textArgs).toContain('Interpretacao');
-      expect(textArgs).toContain('Observacoes');
+      expect(textArgs).toContain('Conteúdo manifesto');
+      expect(textArgs).toContain('Conteúdo latente');
+      expect(textArgs).toContain('Transferência');
+      expect(textArgs).toContain('Interpretação');
+      expect(textArgs).toContain('Observações');
     });
 
     it('falls back to generic rendering for unknown template type', () => {
@@ -269,7 +269,7 @@ describe('renderEvolutionsSection', () => {
       renderEvolutionsSection(asPdfDoc(mockDoc), [evo]);
 
       const textArgs = extractTextArgs(mockDoc);
-      expect(textArgs.some((t) => t.includes('Versao 2'))).toBe(true);
+      expect(textArgs.some((t) => t.includes('Versão 2'))).toBe(true);
       expect(textArgs.some((t) => t.includes('Motivo: Complemento solicitado pelo paciente'))).toBe(
         true,
       );

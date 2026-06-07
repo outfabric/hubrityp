@@ -124,7 +124,7 @@ export async function createCoupleSessionImpl(
       return {
         ok: false,
         error: 'past_date',
-        message: 'Nao e possivel agendar sessoes no passado.',
+        message: 'Não é possível agendar sessões no passado.',
       };
     }
 

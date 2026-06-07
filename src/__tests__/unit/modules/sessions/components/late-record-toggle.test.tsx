@@ -85,7 +85,7 @@ describe('LateRecordToggle', () => {
 
     expect(screen.getByTestId('late-record-section')).toBeInTheDocument();
     expect(screen.getByTestId('late-record-toggle')).toBeInTheDocument();
-    expect(screen.getByText('Lancamento retroativo')).toBeInTheDocument();
+    expect(screen.getByText('Lançamento retroativo')).toBeInTheDocument();
   });
 
   it('has the correct aria-label', () => {
@@ -94,7 +94,7 @@ describe('LateRecordToggle', () => {
 
     expect(screen.getByTestId('late-record-toggle')).toHaveAttribute(
       'aria-label',
-      'Marcar como lancamento retroativo',
+      'Marcar como lançamento retroativo',
     );
   });
 
@@ -138,7 +138,7 @@ describe('LateRecordToggle', () => {
 
     // Verify helper text content
     expect(screen.getByTestId('late-record-helper')).toHaveTextContent(
-      'Esta sessao ja foi realizada e sera registrada como concluida',
+      'Esta sessão já foi realizada e será registrada como concluída',
     );
 
     // Verify status was set to 'done'

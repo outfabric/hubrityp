@@ -41,7 +41,7 @@ const HEADER_HEIGHT = 20;
 // ---------------------------------------------------------------------------
 
 const STATUS_LABELS: Record<string, string> = {
-  investigating: 'Em investigacao',
+  investigating: 'Em investigação',
   confirmed: 'Confirmada',
   discarded: 'Descartada',
 };
@@ -80,7 +80,7 @@ function renderTable(doc: PdfDoc, rows: HypothesisRow[]): void {
   let x = leftMargin;
   doc.text('CID-10', x, startY, { width: colWidths.cid10 });
   x += colWidths.cid10;
-  doc.text('Descricao', x, startY, { width: colWidths.description });
+  doc.text('Descrição', x, startY, { width: colWidths.description });
   x += colWidths.description;
   doc.text('Status', x, startY, { width: colWidths.status });
   x += colWidths.status;

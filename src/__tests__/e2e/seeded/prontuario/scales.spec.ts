@@ -335,7 +335,7 @@ test.describe('@prontuario scales', () => {
       const expiredState = page.getByTestId('scale-expired');
       await expect(expiredState).toBeVisible({ timeout: 10_000 });
       await expect(
-        page.getByText('Este link expirou. Solicite um novo ao seu psicologo.'),
+        page.getByText('Este link expirou. Solicite um novo ao seu psicólogo.'),
       ).toBeVisible();
     });
   });

@@ -12,7 +12,7 @@ import { readSeedState, SEED_SESSIONS } from '../setup/seed-state';
  *   3. Enter optional reason in textarea
  *   4. Click "Confirmar cancelamento"
  *   5. Verify "Cancelamento registrado" message
- *   6. Revisit the same URL -> "Voce ja respondeu"
+ *   6. Revisit the same URL -> "Você já respondeu"
  *
  * Prerequisites:
  *   - Seeded session with confirmation_token in global-setup.ts
@@ -100,11 +100,11 @@ test.describe.serial('@agenda public confirmation — decline', () => {
     const declined = page.getByTestId('confirmation-declined');
     await expect(declined).toBeVisible({ timeout: 10000 });
 
-    // Revisit the same URL — should see "Voce ja respondeu"
+    // Revisit the same URL — should see "Você já respondeu"
     await page.goto(`/confirmar-sessao/${token}`);
     const alreadyResponded = page.getByTestId('confirmation-already-responded');
     await expect(alreadyResponded).toBeVisible();
-    await expect(alreadyResponded).toContainText('Voce ja respondeu');
+    await expect(alreadyResponded).toContainText('Você já respondeu');
   });
 
   test('declines a session without providing a reason', async ({ page }) => {

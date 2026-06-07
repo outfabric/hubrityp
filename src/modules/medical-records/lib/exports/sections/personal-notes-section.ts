@@ -1,8 +1,8 @@
 /**
  * Personal notes section renderer for prontuario export PDFs.
  *
- * Renders a prominent warning header ("ATENCAO — Conteudo restrito ao
- * psicologo") followed by the personal notes content. This section is
+ * Renders a prominent warning header ("ATENÇÃO — Conteúdo restrito ao
+ * psicólogo") followed by the personal notes content. This section is
  * only included when the psychologist explicitly opts in via double
  * confirmation (filters.includePersonalNotes = true).
  */
@@ -70,7 +70,7 @@ function renderWarningBanner(doc: PdfDoc): void {
     .fill('#000000')
     .font(FONT_BOLD)
     .fontSize(WARNING_FONT_SIZE)
-    .text('ATENCAO — Conteudo restrito ao psicologo', leftMargin + 12, bannerY + 8, {
+    .text('ATENÇÃO — Conteúdo restrito ao psicólogo', leftMargin + 12, bannerY + 8, {
       width: contentWidth - 20,
     });
 
@@ -84,14 +84,14 @@ function renderWarningBanner(doc: PdfDoc): void {
 // ---------------------------------------------------------------------------
 
 export function renderPersonalNotesSection(doc: PdfDoc, notes: PersonalNoteForExport[]): void {
-  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Anotacoes Pessoais');
+  doc.font(FONT_BOLD).fontSize(SECTION_TITLE_FONT_SIZE).text('Anotações Pessoais');
   doc.moveDown(0.8);
 
   renderWarningBanner(doc);
   doc.moveDown(0.8);
 
   if (notes.length === 0) {
-    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhuma anotacao pessoal registrada.');
+    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhuma anotação pessoal registrada.');
     doc.moveDown(1);
     return;
   }
@@ -105,7 +105,7 @@ export function renderPersonalNotesSection(doc: PdfDoc, notes: PersonalNoteForEx
     doc
       .font(FONT_REGULAR)
       .fontSize(META_FONT_SIZE)
-      .text(`Ultima atualizacao: ${formatDatePtBr(note.updatedAt)}`);
+      .text(`Última atualização: ${formatDatePtBr(note.updatedAt)}`);
     doc.moveDown(0.3);
 
     doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text(plainText, { align: 'justify' });

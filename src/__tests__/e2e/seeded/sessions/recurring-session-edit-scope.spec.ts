@@ -163,7 +163,7 @@ test.describe('@sessions recurring session edit scope', () => {
     }
 
     await expect(page.getByTestId('session-form-modal')).toBeHidden({ timeout: 15000 });
-    await expect(page.getByText(/sessoes agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/sessões agendadas com sucesso/i)).toBeVisible({ timeout: 5000 });
 
     // ---- Step 2: Navigate to the second week and click session #2 ----
 

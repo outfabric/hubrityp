@@ -64,10 +64,10 @@ export function LocationsPageClient({ locations }: LocationsPageClientProps) {
       startTransition(async () => {
         const result = await setLocationDefault(locationId);
         if (result.ok) {
-          toast.success('Local marcado como padrao.');
+          toast.success('Local marcado como padrão.');
           router.refresh();
         } else {
-          toast.error('Erro ao marcar local como padrao.');
+          toast.error('Erro ao marcar local como padrão.');
         }
       });
     },

@@ -28,33 +28,33 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export const recurrenceFormSchema = z
   .object({
     frequency: z.enum(['weekly', 'biweekly', 'monthly', 'custom'], {
-      message: 'Selecione a frequencia da recorrencia.',
+      message: 'Selecione a frequência da recorrência.',
     }),
 
     daysOfWeek: z
       .array(
         z
           .number()
-          .int({ message: 'Dia da semana deve ser um numero inteiro.' })
-          .min(0, { message: 'Dia da semana deve ser entre 0 (domingo) e 6 (sabado).' })
-          .max(6, { message: 'Dia da semana deve ser entre 0 (domingo) e 6 (sabado).' }),
+          .int({ message: 'Dia da semana deve ser um número inteiro.' })
+          .min(0, { message: 'Dia da semana deve ser entre 0 (domingo) e 6 (sábado).' })
+          .max(6, { message: 'Dia da semana deve ser entre 0 (domingo) e 6 (sábado).' }),
       )
       .optional(),
 
     startDate: z
-      .string({ message: 'Informe a data de inicio.' })
-      .datetime({ message: 'Data de inicio invalida. Use o formato ISO 8601.' }),
+      .string({ message: 'Informe a data de início.' })
+      .datetime({ message: 'Data de início inválida. Use o formato ISO 8601.' }),
 
     endDate: z
       .string()
-      .datetime({ message: 'Data de termino invalida. Use o formato ISO 8601.' })
+      .datetime({ message: 'Data de término inválida. Use o formato ISO 8601.' })
       .optional(),
 
     occurrenceCount: z
       .number()
-      .int({ message: 'O numero de sessoes deve ser um inteiro.' })
-      .min(2, { message: 'O numero minimo de sessoes e 2.' })
-      .max(104, { message: 'O numero maximo de sessoes e 104.' })
+      .int({ message: 'O número de sessões deve ser um inteiro.' })
+      .min(2, { message: 'O número mínimo de sessões é 2.' })
+      .max(104, { message: 'O número máximo de sessões é 104.' })
       .optional(),
 
     isIndefinite: z.boolean().optional().default(false),
@@ -65,7 +65,7 @@ export const recurrenceFormSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          'Informe uma condicao de termino: data final, numero de sessoes, ou marque como indefinido.',
+          'Informe uma condição de término: data final, número de sessões, ou marque como indefinido.',
         path: ['endDate'],
       });
     }
@@ -77,7 +77,7 @@ export const recurrenceFormSchema = z
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Selecione ao menos um dia da semana para a frequencia semanal ou personalizada.',
+        message: 'Selecione ao menos um dia da semana para a frequência semanal ou personalizada.',
         path: ['daysOfWeek'],
       });
     }
@@ -92,9 +92,9 @@ export type RecurrenceFormInput = z.infer<typeof recurrenceFormSchema>;
 export const coupleSessionSchema = z
   .object({
     patient_ids: z
-      .array(z.string().regex(UUID_REGEX, { message: 'ID de paciente invalido.' }))
+      .array(z.string().regex(UUID_REGEX, { message: 'ID de paciente inválido.' }))
       .min(2, { message: 'Um atendimento de casal exige 2 pacientes.' })
-      .max(2, { message: 'Um atendimento de casal aceita no maximo 2 pacientes.' }),
+      .max(2, { message: 'Um atendimento de casal aceita no máximo 2 pacientes.' }),
   })
   .superRefine((data, ctx) => {
     // All patient_ids must be distinct.
@@ -119,8 +119,8 @@ export const lateRecordSchema = z
     is_late_record: z.boolean(),
 
     date: z
-      .string({ message: 'Informe a data da sessao.' })
-      .datetime({ message: 'Data invalida. Use o formato ISO 8601.' }),
+      .string({ message: 'Informe a data da sessão.' })
+      .datetime({ message: 'Data inválida. Use o formato ISO 8601.' }),
   })
   .superRefine((data, ctx) => {
     // When flagged as late record, the date must be in the past.
@@ -129,7 +129,7 @@ export const lateRecordSchema = z
       if (sessionDate >= new Date()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Lancamentos retroativos devem ter uma data no passado.',
+          message: 'Lançamentos retroativos devem ter uma data no passado.',
           path: ['date'],
         });
       }

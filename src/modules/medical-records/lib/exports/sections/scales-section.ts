@@ -85,9 +85,9 @@ function renderScaleTable(doc: PdfDoc, applications: ScaleApplicationRow[]): voi
   let x = leftMargin;
   doc.text('Data', x, startY, { width: colWidths.date });
   x += colWidths.date;
-  doc.text('Pontuacao', x, startY, { width: colWidths.score });
+  doc.text('Pontuação', x, startY, { width: colWidths.score });
   x += colWidths.score;
-  doc.text('Classificacao', x, startY, { width: colWidths.classification });
+  doc.text('Classificação', x, startY, { width: colWidths.classification });
 
   // Header underline
   const lineY = startY + HEADER_HEIGHT;
@@ -167,7 +167,7 @@ export function renderScalesSection(doc: PdfDoc, groups: ScaleGroup[]): void {
   doc.moveDown(0.8);
 
   if (groups.length === 0) {
-    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhuma aplicacao de escala registrada.');
+    doc.font(FONT_REGULAR).fontSize(BODY_FONT_SIZE).text('Nenhuma aplicação de escala registrada.');
     doc.moveDown(1);
     return;
   }

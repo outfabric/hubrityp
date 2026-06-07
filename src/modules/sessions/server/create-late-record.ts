@@ -95,7 +95,7 @@ export async function createLateRecordImpl(
     return {
       ok: false,
       error: 'invalid_input',
-      fieldErrors: { is_late_record: ['Lancamento retroativo nao marcado.'] },
+      fieldErrors: { is_late_record: ['Lançamento retroativo não marcado.'] },
     };
   }
 
@@ -107,7 +107,7 @@ export async function createLateRecordImpl(
     return {
       ok: false,
       error: 'invalid_input',
-      fieldErrors: { start_at: ['Lancamentos retroativos devem ter uma data no passado.'] },
+      fieldErrors: { start_at: ['Lançamentos retroativos devem ter uma data no passado.'] },
     };
   }
 
@@ -226,7 +226,7 @@ export async function createLateRecordImpl(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao criar lancamento retroativo. Tente novamente.',
+      message: 'Erro inesperado ao criar lançamento retroativo. Tente novamente.',
     };
   }
 }

@@ -319,7 +319,7 @@ describe('createVideoRoomHelper', () => {
     expect(result).toEqual({
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao criar sala de video. Tente novamente.',
+      message: 'Erro inesperado ao criar sala de vídeo. Tente novamente.',
     });
 
     expect(mockLoggerError).toHaveBeenCalledOnce();

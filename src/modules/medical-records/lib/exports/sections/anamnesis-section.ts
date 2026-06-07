@@ -48,12 +48,12 @@ const STANDARD_SECTIONS: ReadonlyArray<{
   label: string;
 }> = [
   { key: 'chiefComplaint', label: 'Queixa principal' },
-  { key: 'historyPresentIllness', label: 'Historia da doenca atual' },
-  { key: 'familyHistory', label: 'Historia familiar' },
-  { key: 'educationalProfessional', label: 'Historia educacional e profissional' },
-  { key: 'physicalHealth', label: 'Saude fisica' },
+  { key: 'historyPresentIllness', label: 'História da doença atual' },
+  { key: 'familyHistory', label: 'História familiar' },
+  { key: 'educationalProfessional', label: 'História educacional e profissional' },
+  { key: 'physicalHealth', label: 'Saúde física' },
   { key: 'priorTherapy', label: 'Terapias anteriores' },
-  { key: 'initialHypothesis', label: 'Hipotese inicial' },
+  { key: 'initialHypothesis', label: 'Hipótese inicial' },
   { key: 'treatmentPlan', label: 'Plano de tratamento' },
 ];
 
@@ -107,7 +107,7 @@ export function renderAnamnesisSection(doc: PdfDoc, data: AnamnesisData): void {
     doc
       .font(FONT_REGULAR)
       .fontSize(BODY_FONT_SIZE)
-      .text('Nenhuma informacao de anamnese registrada.', { align: 'left' });
+      .text('Nenhuma informação de anamnese registrada.', { align: 'left' });
     doc.moveDown(0.8);
   }
 }

@@ -26,7 +26,7 @@ import { Textarea } from '@/shared/ui/textarea';
 const DURATION_OPTIONS = [30, 40, 45, 50, 60, 90, 120] as const;
 const INTERVAL_OPTIONS = [0, 5, 10, 15, 20, 30] as const;
 
-const DAY_LABELS = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'] as const;
+const DAY_LABELS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const;
 
 /** 06:00 to 22:00 in 30-min steps */
 function generateTimeSlots(): string[] {

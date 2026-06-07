@@ -279,7 +279,7 @@ export function BlockFormModal({
             </Label>
             <Input
               id="block-title"
-              placeholder="Ex: Almoco, Supervisao"
+              placeholder="Ex: Almoço, Supervisão"
               aria-invalid={Boolean(form.formState.errors.blocking_title)}
               data-testid="block-form-title"
               {...form.register('blocking_title')}

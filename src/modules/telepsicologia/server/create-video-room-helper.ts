@@ -253,7 +253,7 @@ export async function createVideoRoomHelper(
     return {
       ok: false,
       error: 'unknown',
-      message: 'Erro inesperado ao criar sala de video. Tente novamente.',
+      message: 'Erro inesperado ao criar sala de vídeo. Tente novamente.',
     };
   }
 }
