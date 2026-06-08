@@ -17,7 +17,7 @@
 
 ## 4. E2E coverage (navigation + negative-auth)
 
-- [ ] 4.1 E2E (seeded) in `src/__tests__/e2e/seeded/ai-transcription/`: seed a user with transcriptions in multiple buckets; from the dashboard click the AI-notes "Ver" link; assert the URL is `/dashboard/transcricoes?status=ready` and `tab-pending` / `panel-pending` is active on load (no client flip). (Acceptance: PRD 12 §9.)
-- [ ] 4.2 E2E negative-auth: anonymous GET of `/dashboard/transcricoes?status=ready` redirects to `/login` (owed gating test; param preservation desirable, not required).
-- [ ] 4.3 E2E degradation: authenticated load of `/dashboard/transcricoes?status=xyz` (with items) renders the default Pendentes tab with no error and no blank screen (RF-12.16 / RN-12.05).
+- [x] 4.1 E2E (seeded) in `src/__tests__/e2e/seeded/ai-transcription/`: seed a user with transcriptions in multiple buckets; from the dashboard click the AI-notes "Ver" link; assert the URL is `/dashboard/transcricoes?status=ready` and `tab-pending` / `panel-pending` is active on load (no client flip). (Acceptance: PRD 12 §9.)
+- [x] 4.2 E2E negative-auth: anonymous GET of `/dashboard/transcricoes?status=ready` redirects to `/login` (owed gating test; param preservation desirable, not required).
+- [x] 4.3 E2E degradation: authenticated load of `/dashboard/transcricoes?status=xyz` (with items) renders the default Pendentes tab with no error and no blank screen (RF-12.16 / RN-12.05).
 
