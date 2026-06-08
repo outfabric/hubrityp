@@ -10,4 +10,4 @@
 
 ## 3. Tests
 
-- [ ] 3.1 Add unit tests for `formatAddress` covering: full address, partial fields, null, empty object, corrupt JSON
+- [x] 3.1 Add unit tests for `formatAddress` covering: full address, partial fields, null, empty object, corrupt JSON
