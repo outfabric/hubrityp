@@ -5,8 +5,8 @@
 
 ## 2. Display fix
 
-- [ ] 2.1 Update `src/modules/patients/components/patient-overview-tab.tsx` line 183 to call `formatAddress(patient.address)` instead of passing the raw string
-- [ ] 2.2 Update `src/modules/patients/lib/generate-patient-pdf.ts` line 207 to call `formatAddress(input.address)` for the PDF export
+- [x] 2.1 Update `src/modules/patients/components/patient-overview-tab.tsx` line 183 to call `formatAddress(patient.address)` instead of passing the raw string
+- [x] 2.2 Update `src/modules/patients/lib/generate-patient-pdf.ts` line 207 to call `formatAddress(input.address)` for the PDF export
 
 ## 3. Tests
 
