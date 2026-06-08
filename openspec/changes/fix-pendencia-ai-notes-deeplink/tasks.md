@@ -11,9 +11,9 @@
 
 ## 3. Wire `searchParams.status` into the page and tabs
 
-- [ ] 3.1 Add an optional `initialTab?: TranscriptionTab` prop to `TranscriptionsTabs` (`src/modules/ai-transcription/components/transcriptions-tabs.tsx`); set `<Tabs defaultValue={initialTab ?? 'pending'} ...>`. Keep it uncontrolled and leave all `data-testid`s unchanged (design D3).
-- [ ] 3.2 Make `TranscricoesPage` (`src/app/(app)/dashboard/transcricoes/page.tsx`) async, accept `searchParams: Promise<{ status?: string | string[] }>`, resolve `initialTab` via `resolveInitialTabFromStatus`, and thread it through `TranscriptionListServer` into `<TranscriptionsTabs initialTab={...} />`. Preserve the `<Suspense>` boundary around the DB fetch (design D2, RNF-12.01/02).
-- [ ] 3.3 Unit/RTL test for `TranscriptionsTabs` (`src/__tests__/unit/modules/ai-transcription/components/`): rendering with `initialTab="pending"` (and default/omitted) keeps `tab-pending` active; passing a non-default tab seeds that tab. Run `npm run test:unit` for this file.
+- [x] 3.1 Add an optional `initialTab?: TranscriptionTab` prop to `TranscriptionsTabs` (`src/modules/ai-transcription/components/transcriptions-tabs.tsx`); set `<Tabs defaultValue={initialTab ?? 'pending'} ...>`. Keep it uncontrolled and leave all `data-testid`s unchanged (design D3).
+- [x] 3.2 Make `TranscricoesPage` (`src/app/(app)/dashboard/transcricoes/page.tsx`) async, accept `searchParams: Promise<{ status?: string | string[] }>`, resolve `initialTab` via `resolveInitialTabFromStatus`, and thread it through `TranscriptionListServer` into `<TranscriptionsTabs initialTab={...} />`. Preserve the `<Suspense>` boundary around the DB fetch (design D2, RNF-12.01/02).
+- [x] 3.3 Unit/RTL test for `TranscriptionsTabs` (`src/__tests__/unit/modules/ai-transcription/components/`): rendering with `initialTab="pending"` (and default/omitted) keeps `tab-pending` active; passing a non-default tab seeds that tab. Run `npm run test:unit` for this file.
 
 ## 4. E2E coverage (navigation + negative-auth)
 
