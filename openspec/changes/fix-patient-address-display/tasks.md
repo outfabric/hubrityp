@@ -1,7 +1,7 @@
 ## 1. Format helper
 
-- [ ] 1.1 Create `src/modules/patients/lib/format-address.ts` with `formatAddress(json: string | null): string | null` — parses JSON, formats as Brazilian address, returns `null` on empty/corrupt input
-- [ ] 1.2 Re-export `formatAddress` from the module barrel (`src/modules/patients/index.ts`) if needed internally
+- [x] 1.1 Create `src/modules/patients/lib/format-address.ts` with `formatAddress(json: string | null): string | null` — parses JSON, formats as Brazilian address, returns `null` on empty/corrupt input
+- [x] 1.2 Re-export `formatAddress` from the module barrel (`src/modules/patients/index.ts`) if needed internally
 
 ## 2. Display fix
 
