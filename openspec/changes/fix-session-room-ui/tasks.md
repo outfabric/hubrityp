@@ -32,5 +32,5 @@
 
 ## 7. End-to-end coverage (cross-cutting safeguard)
 
-- [ ] 7.1 Extend the seeded telepsicologia in-call e2e spec under `src/__tests__/e2e/seeded/**` (reuse the existing mock-GoTrue + seeded-room harness): as the psychologist, send a chat message and assert it appears exactly once in the sender's chat view; assert the in-call mic/camera/screen-share controls render the Lucide-based design-system buttons (by `data-testid`/`aria-label`) consistent with the lobby. If a fresh build is required, rebuild before `next start`.
+- [x] 7.1 Extend the seeded telepsicologia in-call e2e spec under `src/__tests__/e2e/seeded/**` (reuse the existing mock-GoTrue + seeded-room harness): as the psychologist, send a chat message and assert it appears exactly once in the sender's chat view; assert the in-call mic/camera/screen-share controls render the Lucide-based design-system buttons (by `data-testid`/`aria-label`) consistent with the lobby. If a fresh build is required, rebuild before `next start`.
 

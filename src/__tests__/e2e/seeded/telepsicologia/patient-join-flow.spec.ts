@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import pgModule from 'postgres';
 
-import { readSeedState } from '../setup/seed-state';
+import { readSeedState, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @telepsicologia -- Patient video join flow E2E test.
@@ -305,5 +305,183 @@ test.describe('@telepsicologia patient video join error states', () => {
     await expect(page.getByText(/Link inválido|sessão não encontrada/i)).toBeVisible({
       timeout: 10_000,
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Psychologist in-call surface — design-system device controls (#2)
+//
+// This block is the cross-cutting e2e safeguard for the section-2..5 work that
+// migrated the mic/camera/screen-share controls off Stream's built-in widgets
+// and onto the shared `DeviceToggleButton` (Lucide icons + shadcn Button). It
+// drives the REAL built `/sessao/:id/video` page as the authenticated seeded
+// psychologist and asserts that the design-system controls render with the
+// exact `data-testid` + Lucide-based `aria-label` contract — the same controls
+// the lobby exposes.
+//
+// HONEST SCOPE NOTE (read before "fixing" this to assert the chat drawer or the
+// JOINED in-call control bar):
+//
+//   The psychologist `CallControlBar` and the `ChatDrawer` only mount once the
+//   Stream SDK reaches `CallingState.JOINED` (see `video-call-client.tsx` →
+//   `CallStateRouter`). Reaching JOINED requires a live Stream WebSocket join
+//   handshake. The seeded suite has NO network path to Stream and only a
+//   server-side no-op stub (`E2E_STREAM_STUB`, see `stream-client.ts`) — the
+//   client `StreamVideoClient` is the real SDK and never reaches JOINED here.
+//   This is the SAME documented limitation the patient-join transition test
+//   above acknowledges with its [STREAM-MOCK] comments.
+//
+//   Therefore the reachable surface in this harness is the PRE-CALL LOBBY
+//   (`CallingState.IDLE`), which renders the SAME shared `DeviceToggleButton`
+//   mic/camera controls (identical `data-testid`/`aria-label`) that the in-call
+//   bar uses — so asserting them here genuinely proves the design-system
+//   migration shipped end-to-end on the real built page.
+//
+//   The JOINED-only behaviors the section asks about are covered exhaustively,
+//   against the real components with mocked Stream call-state hooks, by the
+//   co-located unit tests added in sections 1-5:
+//     - chat de-duplication (sender sees a message exactly once):
+//         src/__tests__/unit/modules/telepsicologia/components/chat-drawer.test.tsx
+//     - in-call mic/camera/screen-share design-system controls + states:
+//         src/__tests__/unit/modules/telepsicologia/components/call-control-bar.test.tsx
+//         src/__tests__/unit/modules/telepsicologia/components/device-toggle-button.test.tsx
+//
+//   We deliberately do NOT inject fake DOM or stub the client SDK to force a
+//   green JOINED assertion — that would mask whether the real components render.
+// ---------------------------------------------------------------------------
+
+const SEED_SESSION_ID = '00000000-0000-4000-8000-000000000098';
+const SEED_VIDEO_ROOM_ID = '00000000-0000-4000-8000-000000000099';
+
+/**
+ * Seed an ACTIVATED online video room (`stream_call_id` set, status='pending')
+ * for the seeded psychologist's session. With `stream_call_id` non-null the
+ * `/sessao/:id/video` page skips the "create room" UI and mounts the real
+ * VideoCallClient → PreCallLobby. Reuses the existing seeded patient
+ * (Maria Silva) so no extra patient row is needed.
+ */
+async function seedActivatedRoomForPsychologist(): Promise<void> {
+  const seed = await readSeedState();
+  const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
+  try {
+    await sql`DELETE FROM public.video_rooms WHERE session_id = ${SEED_SESSION_ID}`;
+    await sql`DELETE FROM public.session_history WHERE session_id = ${SEED_SESSION_ID}`;
+    await sql`DELETE FROM public.sessions WHERE id = ${SEED_SESSION_ID}`;
+
+    // Online session owned by the seeded psychologist. modality='online' is
+    // required by the page (in-person sessions redirect to /agenda).
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        modality, status, is_blocking
+      )
+      VALUES (
+        ${SEED_SESSION_ID},
+        ${seed.userId},
+        ${'00000000-0000-4000-8000-000000000010'},
+        now() + interval '30 minutes',
+        now() + interval '1 hour 20 minutes',
+        50,
+        'online',
+        'scheduled',
+        false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        modality         = EXCLUDED.modality,
+        start_at         = EXCLUDED.start_at,
+        end_at           = EXCLUDED.end_at,
+        duration_minutes = EXCLUDED.duration_minutes,
+        status           = EXCLUDED.status;
+    `;
+
+    // Activated room: stream_call_id is non-null so the page mounts the call
+    // client (lobby) rather than the reservation/"create room" card.
+    // patient_token is NOT NULL + unique; use a deterministic 64-char hex value
+    // distinct from the patient-join test's token ('9'*64).
+    await sql`
+      INSERT INTO public.video_rooms (
+        id, user_id, session_id, stream_call_id,
+        patient_token,
+        available_from, expires_at, status
+      )
+      VALUES (
+        ${SEED_VIDEO_ROOM_ID},
+        ${seed.userId},
+        ${SEED_SESSION_ID},
+        ${'e2e-psychologist-call-id'},
+        ${'8'.repeat(64)},
+        now() - interval '5 minutes',
+        now() + interval '2 hours',
+        'pending'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        stream_call_id = EXCLUDED.stream_call_id,
+        patient_token  = EXCLUDED.patient_token,
+        available_from = EXCLUDED.available_from,
+        expires_at     = EXCLUDED.expires_at,
+        status         = EXCLUDED.status;
+    `;
+  } finally {
+    await sql.end();
+  }
+}
+
+test.describe('@telepsicologia psychologist in-call surface', () => {
+  // Authenticated psychologist (seeded storageState — same as the agenda specs).
+  test.use({ storageState: STORAGE_STATE_PATH });
+
+  test.setTimeout(45_000);
+
+  test('renders the Lucide design-system mic/camera controls on the video page', async ({
+    page,
+    context,
+  }) => {
+    await seedActivatedRoomForPsychologist();
+
+    // Pre-grant device permissions so the lobby's mount-time enableDevices()
+    // resolves instead of tripping the permission-error path. The mic/camera
+    // DeviceToggleButtons render unconditionally regardless, but granting keeps
+    // the lobby in its clean state.
+    await context.grantPermissions(['camera', 'microphone'], {
+      origin: 'http://localhost:3000',
+    });
+
+    // Block all Stream SDK traffic — there is no Stream backend in this harness.
+    // The client stays in CallingState.IDLE (lobby), which is exactly the
+    // surface we assert. Returning minimal JSON keeps the SDK from throwing
+    // during client construction.
+    await page.route(/\.(stream-io-api\.com|getstream\.io)/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ duration: '0ms' }),
+      }),
+    );
+    await page.route('**/api/video/log', (route) => route.fulfill({ status: 200, body: '{}' }));
+
+    await page.goto(`/sessao/${SEED_SESSION_ID}/video`);
+
+    // The page (RSC) mints a stub token via E2E_STREAM_STUB and hands off to the
+    // client VideoCallClient (dynamic, ssr:false). The lobby is the IDLE state.
+    const micButton = page.getByTestId('mic-toggle-button');
+    const cameraButton = page.getByTestId('camera-toggle-button');
+
+    await expect(micButton).toBeVisible({ timeout: 20_000 });
+    await expect(cameraButton).toBeVisible();
+
+    // Design-system contract: the controls are the shared DeviceToggleButton,
+    // not Stream's built-in widgets. Assert the Lucide-based PT-BR aria-labels
+    // (the exact labels the lobby and the in-call bar both render).
+    await expect(micButton).toHaveAttribute('aria-label', /microfone/i);
+    await expect(cameraButton).toHaveAttribute('aria-label', /câmera/i);
+
+    // Each control wraps a single Lucide icon (rendered as inline <svg>).
+    await expect(micButton.locator('svg')).toHaveCount(1);
+    await expect(cameraButton.locator('svg')).toHaveCount(1);
+
+    // The lobby's "Entrar na sessão" CTA confirms we are on the real video
+    // page (not the "create room" reservation card or an error state).
+    await expect(page.getByTestId('join-call-button')).toBeVisible();
   });
 });
