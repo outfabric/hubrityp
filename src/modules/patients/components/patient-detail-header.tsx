@@ -22,6 +22,7 @@ import type {
   GenerateConsentResult,
   RevokeConsentResult,
 } from '@/modules/patients';
+import { buildConsentUrl, buildConsentWhatsAppHref, extractPhoneDigits } from '@/modules/patients';
 import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
 import {
   AlertDialog,
@@ -57,11 +58,6 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
   return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
-}
-
-/** Extracts digits from a phone string for building a wa.me link. */
-function extractPhoneDigits(phone: string): string {
-  return phone.replace(/\D/g, '');
 }
 
 /**
@@ -103,18 +99,6 @@ function consentBadgeConfig(status: ConsentStatus) {
     default:
       return { variant: 'warning' as const, label: 'Consentimento pendente' };
   }
-}
-
-/**
- * Builds a `wa.me` consent link with pre-filled message.
- * For minors, uses the primary guardian's phone.
- */
-function buildConsentWhatsAppHref(phone: string, consentUrl: string): string {
-  const digits = extractPhoneDigits(phone);
-  const message = encodeURIComponent(
-    `Olá! Segue o link para assinatura do termo de consentimento: ${consentUrl}`,
-  );
-  return `https://wa.me/${digits}?text=${message}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -220,15 +204,11 @@ export function PatientDetailHeader({
     return null;
   };
 
-  const buildConsentUrl = (token: string) => {
-    return `${window.location.origin}/termo/${token}`;
-  };
-
   const handleCopyConsentLink = () => {
     startTransition(async () => {
       const token = await resolveConsentToken();
       if (!token) return;
-      const url = buildConsentUrl(token);
+      const url = buildConsentUrl(window.location.origin, token);
       await navigator.clipboard.writeText(url);
       toast.success('Link do termo copiado', { duration: 4000 });
     });
@@ -239,7 +219,7 @@ export function PatientDetailHeader({
     startTransition(async () => {
       const token = await resolveConsentToken();
       if (!token) return;
-      const url = buildConsentUrl(token);
+      const url = buildConsentUrl(window.location.origin, token);
       const href = buildConsentWhatsAppHref(consentWhatsAppPhone, url);
       window.open(href, '_blank', 'noopener,noreferrer');
     });

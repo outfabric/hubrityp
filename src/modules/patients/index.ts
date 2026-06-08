@@ -156,6 +156,9 @@ export {
   maskPhone,
 } from './lib/patient-validators';
 
+// ---- Consent Share Helpers ---------------------------------------------------
+export { extractPhoneDigits, buildConsentUrl, buildConsentWhatsAppHref } from './lib/consent-share';
+
 // ---- List Filter -------------------------------------------------------------
 export {
   PATIENT_LIST_FILTERS,

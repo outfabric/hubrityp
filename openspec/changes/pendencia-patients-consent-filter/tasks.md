@@ -6,9 +6,9 @@
 
 ## 2. Extract and reuse the consent-share helpers
 
-- [ ] 2.1 Create `src/modules/patients/lib/consent-share.ts` exporting `extractPhoneDigits(phone)`, `buildConsentWhatsAppHref(phone, consentUrl)` (canonical "Olá! Segue o link…" message), and `buildConsentUrl(origin, token)` (`${origin}/termo/${token}`) — moved verbatim from `patient-detail-header.tsx` (design D4).
-- [ ] 2.2 Update `src/modules/patients/components/patient-detail-header.tsx` to import these from the new lib and delete the private copies — no behavior change.
-- [ ] 2.3 Unit test `src/__tests__/unit/modules/patients/lib/consent-share.test.ts`: `extractPhoneDigits` strips non-digits; `buildConsentWhatsAppHref` builds `https://wa.me/<digits>?text=<encoded message containing the url>`; `buildConsentUrl` returns `${origin}/termo/${token}`. Run `npm run test:unit`.
+- [x] 2.1 Create `src/modules/patients/lib/consent-share.ts` exporting `extractPhoneDigits(phone)`, `buildConsentWhatsAppHref(phone, consentUrl)` (canonical "Olá! Segue o link…" message), and `buildConsentUrl(origin, token)` (`${origin}/termo/${token}`) — moved verbatim from `patient-detail-header.tsx` (design D4).
+- [x] 2.2 Update `src/modules/patients/components/patient-detail-header.tsx` to import these from the new lib and delete the private copies — no behavior change.
+- [x] 2.3 Unit test `src/__tests__/unit/modules/patients/lib/consent-share.test.ts`: `extractPhoneDigits` strips non-digits; `buildConsentWhatsAppHref` builds `https://wa.me/<digits>?text=<encoded message containing the url>`; `buildConsentUrl` returns `${origin}/termo/${token}`. Run `npm run test:unit`.
 
 ## 3. `listPatientsImpl` consent predicate + row enrichment
 
