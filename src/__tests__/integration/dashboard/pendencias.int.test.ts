@@ -203,7 +203,10 @@ describe('getPendencias — real Postgres', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.aiNotesAwaitingReviewCount).toBe(2);
-    expect(result.aiNotesAwaitingReviewHref).toContain('ready');
+    // RF-12.02 / design D4: the deep-link MUST resolve to the real
+    // transcriptions route, never the non-existent /configuracoes/ia/transcricoes.
+    expect(result.aiNotesAwaitingReviewHref).toBe('/dashboard/transcricoes?status=ready');
+    expect(result.aiNotesAwaitingReviewHref).not.toContain('/configuracoes/ia/transcricoes');
   });
 
   it('carries no clinical text fields in the result', async () => {

@@ -6,8 +6,8 @@
 
 ## 2. Correct the dashboard AI-notes deep-link constant
 
-- [ ] 2.1 In `src/modules/dashboard/server/get-pendencias.ts`, change `AI_NOTES_AWAITING_REVIEW_HREF` from `/configuracoes/ia/transcricoes?status=ready` to `/dashboard/transcricoes?status=ready` (RF-12.02 / design D4). No other logic changes.
-- [ ] 2.2 Extend the existing `get-pendencias` integration test (under `src/__tests__/integration/`) to assert the returned `aiNotesAwaitingReviewHref === '/dashboard/transcricoes?status=ready'` for a seeded user, and that it does NOT contain `/configuracoes/ia/transcricoes`. Run the targeted integration spec.
+- [x] 2.1 In `src/modules/dashboard/server/get-pendencias.ts`, change `AI_NOTES_AWAITING_REVIEW_HREF` from `/configuracoes/ia/transcricoes?status=ready` to `/dashboard/transcricoes?status=ready` (RF-12.02 / design D4). No other logic changes.
+- [x] 2.2 Extend the existing `get-pendencias` integration test (under `src/__tests__/integration/`) to assert the returned `aiNotesAwaitingReviewHref === '/dashboard/transcricoes?status=ready'` for a seeded user, and that it does NOT contain `/configuracoes/ia/transcricoes`. Run the targeted integration spec.
 
 ## 3. Wire `searchParams.status` into the page and tabs
 
