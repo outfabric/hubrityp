@@ -25,7 +25,7 @@
 
 ## 5. Resolve-and-decrement on return
 
-- [ ] 5.1 In the evolution-create route action `src/app/(app)/pacientes/[id]/prontuario/evolucoes/nova/actions.ts`, call `revalidatePath('/agenda')` after a successful `createEvolution` so the overdue list reflects the removed row + decremented count on return (design D5, RF-12.10). No change to the form or `createEvolutionImpl`.
+- [x] 5.1 In the evolution-create route action `src/app/(app)/pacientes/[id]/prontuario/evolucoes/nova/actions.ts`, call `revalidatePath('/agenda')` after a successful `createEvolution` so the overdue list reflects the removed row + decremented count on return (design D5, RF-12.10). No change to the form or `createEvolutionImpl`.
 
 ## 6. E2E coverage (flows + negative-auth)
 
