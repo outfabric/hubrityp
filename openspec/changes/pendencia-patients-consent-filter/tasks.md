@@ -32,8 +32,8 @@
 
 ## 6. E2E coverage (flows + negative-auth)
 
-- [ ] 6.1 E2E (seeded) `src/__tests__/e2e/seeded/patients/`: dashboard "Ver" (pacientes sem consentimento) → `/pacientes?filtro=sem-consentimento`; only unconsented patients listed; chip visible with count matching the dashboard (PRD §9).
-- [ ] 6.2 E2E copy link: click → "copiado" feedback; assert a single pending consent term exists (second click does not duplicate).
-- [ ] 6.3 E2E WhatsApp: adult → `wa.me/<patient digits>`; minor → `wa.me/<guardian digits>`; message contains `/termo/<token>`. Disabled-without-phone → button disabled + tooltip, copy-link still works.
-- [ ] 6.4 E2E remove chip → URL drops `filtro`, full list returns; unknown `?filtro=xyz` renders the full list without error (RF-12.16).
-- [ ] 6.5 E2E negative-auth: anonymous `/pacientes?filtro=sem-consentimento` redirects to `/login`.
+- [x] 6.1 E2E (seeded) `src/__tests__/e2e/seeded/patients/`: dashboard "Ver" (pacientes sem consentimento) → `/pacientes?filtro=sem-consentimento`; only unconsented patients listed; chip visible with count matching the dashboard (PRD §9).
+- [x] 6.2 E2E copy link: click → "copiado" feedback; assert a single pending consent term exists (second click does not duplicate).
+- [x] 6.3 E2E WhatsApp: adult → `wa.me/<patient digits>`; minor → `wa.me/<guardian digits>`; message contains `/termo/<token>`. Disabled-without-phone → button disabled + tooltip, copy-link still works.
+- [x] 6.4 E2E remove chip → URL drops `filtro`, full list returns; unknown `?filtro=xyz` renders the full list without error (RF-12.16).
+- [x] 6.5 E2E negative-auth: anonymous `/pacientes?filtro=sem-consentimento` redirects to `/login`.

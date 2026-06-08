@@ -22,7 +22,11 @@ import type {
   GenerateConsentResult,
   RevokeConsentResult,
 } from '@/modules/patients';
-import { buildConsentUrl, buildConsentWhatsAppHref, extractPhoneDigits } from '@/modules/patients';
+
+// Import the consent-share helpers from the LEAF, not the module barrel: the
+// barrel (`@/modules/patients`) re-exports `server-only` server impls, so a
+// runtime VALUE import of these helpers from it would drag server-only code into
+// this `'use client'` component's bundle and break `next build`.
 import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
 import {
   AlertDialog,
@@ -45,6 +49,12 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+
+import {
+  buildConsentUrl,
+  buildConsentWhatsAppHref,
+  extractPhoneDigits,
+} from '../lib/consent-share';
 
 import { ArchiveConfirmModal } from './archive-confirm-modal';
 import { DeleteConfirmModal } from './delete-confirm-modal';

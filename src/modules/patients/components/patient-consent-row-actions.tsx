@@ -5,9 +5,14 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import type { GenerateConsentResult } from '@/modules/patients';
-import { buildConsentUrl, buildConsentWhatsAppHref } from '@/modules/patients';
+
+// Import the consent-share helpers from the LEAF, not the module barrel: the
+// barrel re-exports `server-only` server impls, so a runtime VALUE import from it
+// would pull server-only code into this `'use client'` bundle and break the build.
 import { Button } from '@/shared/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+
+import { buildConsentUrl, buildConsentWhatsAppHref } from '../lib/consent-share';
 
 // ---------------------------------------------------------------------------
 // Props

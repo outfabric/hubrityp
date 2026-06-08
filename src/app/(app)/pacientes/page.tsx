@@ -63,7 +63,14 @@ async function PatientListServer({
   }
 
   return (
+    // Key by the active filter so toggling `?filtro=sem-consentimento` (e.g.
+    // removing the chip) REMOUNTS the client list with the freshly server-fetched
+    // page. `PatientList` seeds its row state from `initialPatients` via
+    // `useState`, which ignores later prop changes; without remounting, dropping
+    // the filter would clear the chip but leave the stale (filtered) rows on
+    // screen (RF-12.13 — the full list must return).
     <PatientListLoader
+      key={missingConsent ? 'filter-missing-consent' : 'filter-none'}
       patients={result.patients}
       total={result.total}
       page={result.page}
