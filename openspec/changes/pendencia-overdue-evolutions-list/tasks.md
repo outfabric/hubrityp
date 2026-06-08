@@ -18,10 +18,10 @@
 
 ## 4. List UI: rows, CTA, chip, empty state
 
-- [ ] 4.1 Read `docs/design-system/rules.md` (Sálvia) before building UI. Create `src/modules/agenda/components/overdue-evolutions-list.tsx` (Server Component): header with count; one row per item showing patient name, São Paulo date/time (reuse `formatSessionDate`/`formatSessionTime`), modality when available, "há N dias", and a `next/link` CTA "Registrar evolução" → `/pacientes/{patientId}/prontuario/evolucoes/nova?sessionId={sessionId}` (RF-12.08).
-- [ ] 4.2 Create `overdue-filter-chip.tsx` (`'use client'`): "Sem evolução · N" (`Badge`) + keyboard-focusable remove control (`aria-label`, live region per RNF-12.03) that `router.replace`s `/agenda` without `filtro` → calendar (RF-12.09).
-- [ ] 4.3 Empty state in the list component: when zero items, render "Nenhuma sessão sem evolução. Tudo em dia. 🎉" with a link to `/agenda` (RF-12.19) — not the calendar.
-- [ ] 4.4 Unit/RTL test for the row + chip: CTA href is correct; "há N dias" renders from `daysOverdue`; chip remove control is keyboard-accessible and clears `filtro`. Run `npm run test:unit`.
+- [x] 4.1 Read `docs/design-system/rules.md` (Sálvia) before building UI. Create `src/modules/agenda/components/overdue-evolutions-list.tsx` (Server Component): header with count; one row per item showing patient name, São Paulo date/time (reuse `formatSessionDate`/`formatSessionTime`), modality when available, "há N dias", and a `next/link` CTA "Registrar evolução" → `/pacientes/{patientId}/prontuario/evolucoes/nova?sessionId={sessionId}` (RF-12.08).
+- [x] 4.2 Create `overdue-filter-chip.tsx` (`'use client'`): "Sem evolução · N" (`Badge`) + keyboard-focusable remove control (`aria-label`, live region per RNF-12.03) that `router.replace`s `/agenda` without `filtro` → calendar (RF-12.09).
+- [x] 4.3 Empty state in the list component: when zero items, render "Nenhuma sessão sem evolução. Tudo em dia. 🎉" with a link to `/agenda` (RF-12.19) — not the calendar.
+- [x] 4.4 Unit/RTL test for the row + chip: CTA href is correct; "há N dias" renders from `daysOverdue`; chip remove control is keyboard-accessible and clears `filtro`. Run `npm run test:unit`.
 
 ## 5. Resolve-and-decrement on return
 

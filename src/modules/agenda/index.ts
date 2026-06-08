@@ -165,3 +165,4 @@ export {
 
 // ---- Components — overdue evolutions list view -------------------------------
 export { OverdueEvolutionsList } from './components/overdue-evolutions-list';
+export { OverdueFilterChip } from './components/overdue-filter-chip';
