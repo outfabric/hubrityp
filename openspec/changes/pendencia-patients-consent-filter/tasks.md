@@ -20,8 +20,8 @@
 
 ## 4. Page wiring: parse `filtro`, thread filter state
 
-- [ ] 4.1 In `src/app/(app)/pacientes/page.tsx`, parse `searchParams.filtro` via `resolvePatientListFilter`; set `query.missingConsent = true` when it resolves to `sem-consentimento`; pass the active-filter flag + `consentShare` data + the `generateConsent` Server Action down through `PatientListLoader` to the list (first-paint server filtering, RNF-12.01).
-- [ ] 4.2 When `missingConsent` is active and `total === 0`, render the positive empty state "Nenhum paciente sem consentimento pendente." with a link to `/pacientes` (RF-12.19) — distinct from the generic search-empty state.
+- [x] 4.1 In `src/app/(app)/pacientes/page.tsx`, parse `searchParams.filtro` via `resolvePatientListFilter`; set `query.missingConsent = true` when it resolves to `sem-consentimento`; pass the active-filter flag + `consentShare` data + the `generateConsent` Server Action down through `PatientListLoader` to the list (first-paint server filtering, RNF-12.01).
+- [x] 4.2 When `missingConsent` is active and `total === 0`, render the positive empty state "Nenhum paciente sem consentimento pendente." with a link to `/pacientes` (RF-12.19) — distinct from the generic search-empty state.
 
 ## 5. UI: active-filter chip + per-row consent actions
 

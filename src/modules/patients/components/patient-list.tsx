@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
+import type { ConsentShare, GenerateConsentResult } from '@/modules/patients';
 import type { Patient } from '@/shared/db/schema/patients/tables';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Badge } from '@/shared/ui/badge';
@@ -52,6 +53,24 @@ interface PatientListProps {
   >;
   /** Available tags for the multi-select filter (distinct tags from server). */
   availableTags?: string[];
+  /**
+   * When true, the listing is showing the "missing consent" pendência set
+   * (driven by `?filtro=sem-consentimento`). Server-resolved from the URL on
+   * first paint (RNF-12.01) — drives the positive empty state (RF-12.19) and,
+   * in a later iteration, the per-row consent share/generate actions.
+   */
+  missingConsent?: boolean;
+  /**
+   * Per-row, server-resolved share phone for the missing-consent listing.
+   * Parallel to the initial `patients` page. Only present when `missingConsent`
+   * is active. Wired through here for the row-action UI (section 5).
+   */
+  consentShare?: ConsentShare[];
+  /**
+   * Server Action to generate a consent term for a patient. Threaded through so
+   * the missing-consent row actions can trigger it (section 5).
+   */
+  generateConsentAction?: (patientId: string) => Promise<GenerateConsentResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +131,7 @@ export function PatientList({
   pageSize,
   listAction,
   availableTags = [],
+  missingConsent = false,
 }: PatientListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -158,18 +178,31 @@ export function PatientList({
       search: debouncedSearch || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
-      // This list view does not surface the missing-consent pendência filter;
-      // the dashboard deep-link sets it via searchParams on a separate path.
-      missingConsent: false,
+      // Persist the missing-consent pendência filter across client-side
+      // refetches (search/sort/pagination) so the listing stays scoped to the
+      // pendência set the user arrived at via `?filtro=sem-consentimento`.
+      missingConsent,
       ...overrides,
     }),
-    [currentPage, pageSize, sortColumn, sortOrder, debouncedSearch, statusFilter, selectedTags],
+    [
+      currentPage,
+      pageSize,
+      sortColumn,
+      sortOrder,
+      debouncedSearch,
+      statusFilter,
+      selectedTags,
+      missingConsent,
+    ],
   );
 
   // Sync URL search params
   const syncUrlParams = useCallback(
     (query: ListPatientsQuery) => {
       const params = new URLSearchParams();
+      // Keep the pendência deep-link param in the URL so a refetch (search,
+      // sort, pagination) does not silently drop the missing-consent scope.
+      if (missingConsent) params.set('filtro', 'sem-consentimento');
       if (query.search) params.set('search', query.search);
       if (query.status) params.set('status', query.status);
       if (query.tags && query.tags.length > 0) params.set('tags', query.tags.join(','));
@@ -181,7 +214,7 @@ export function PatientList({
       const newUrl = paramString ? `?${paramString}` : window.location.pathname;
       router.replace(newUrl, { scroll: false });
     },
-    [router],
+    [router, missingConsent],
   );
 
   // Fetch data from server action
@@ -271,6 +304,29 @@ export function PatientList({
   // ---------------------------------------------------------------------------
   // Empty state
   // ---------------------------------------------------------------------------
+
+  // Positive empty state for the "missing consent" pendência listing (RF-12.19):
+  // reaching the destination with zero matches means there is nothing pending —
+  // never show the full list unexplained. Distinct from the generic
+  // "no patients registered" and "no search results" states.
+  if (missingConsent && total === 0) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-20 text-center"
+        data-testid="patient-list-missing-consent-empty"
+      >
+        <Users className="text-text-tertiary mb-4 h-12 w-12" aria-hidden="true" />
+        <h4 className="text-text-primary text-base font-medium">
+          Nenhum paciente sem consentimento pendente.
+        </h4>
+        <Link href="/pacientes">
+          <Button variant="secondary" className="mt-6" data-testid="patient-list-view-all">
+            Ver todos os pacientes
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (
     patients.length === 0 &&

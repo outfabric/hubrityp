@@ -1,6 +1,6 @@
 'use client';
 
-import type { ListPatientsResult } from '@/modules/patients';
+import type { ConsentShare, GenerateConsentResult, ListPatientsResult } from '@/modules/patients';
 import { PatientList } from '@/modules/patients/components/patient-list';
 import type { Patient } from '@/shared/db/schema/patients/tables';
 
@@ -21,6 +21,12 @@ interface PatientListLoaderProps {
   pageSize: number;
   listAction: (query: unknown) => Promise<ListPatientsResult>;
   availableTags?: string[];
+  /** Active "missing consent" pendência filter (server-resolved from `filtro`). */
+  missingConsent?: boolean;
+  /** Per-row server-resolved share phone for the missing-consent listing. */
+  consentShare?: ConsentShare[];
+  /** Server Action to generate a consent term for a patient. */
+  generateConsentAction?: (patientId: string) => Promise<GenerateConsentResult>;
 }
 
 export function PatientListLoader(props: PatientListLoaderProps) {

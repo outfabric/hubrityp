@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 
-import { listPatientsImpl } from '@/modules/patients';
+import { listPatientsImpl, resolvePatientListFilter } from '@/modules/patients';
 import { createServerClient } from '@/shared/supabase/server';
 
+import { generateConsent } from './[id]/actions';
 import { listPatients } from './actions';
 import { PatientListLoader } from './patient-list-loader';
 
@@ -25,7 +26,14 @@ async function PatientListServer({
 }) {
   const supabase = await createServerClient();
 
-  // Build the query from URL search params
+  // Resolve the `filtro` deep-link param against a closed allowlist. Anything
+  // outside the allowlist degrades to `null` (no filter) — never trust the raw
+  // attacker-controlled query string.
+  const missingConsent = resolvePatientListFilter(searchParams.filtro) === 'sem-consentimento';
+
+  // Build the query from URL search params. The missing-consent filter is
+  // applied server-side here so the very first paint is already scoped to the
+  // pendência set (RNF-12.01 — no flash of the unfiltered list).
   const query = {
     page: searchParams.page ? Number(searchParams.page) : 1,
     pageSize: 25,
@@ -40,6 +48,7 @@ async function PatientListServer({
         : undefined,
     sort: typeof searchParams.sort === 'string' ? searchParams.sort : 'full_name',
     order: typeof searchParams.order === 'string' ? searchParams.order : 'asc',
+    missingConsent,
   };
 
   const result = await listPatientsImpl(supabase, query);
@@ -60,6 +69,9 @@ async function PatientListServer({
       page={result.page}
       pageSize={result.pageSize}
       listAction={listPatients}
+      missingConsent={missingConsent}
+      consentShare={result.consentShare}
+      generateConsentAction={generateConsent}
     />
   );
 }
