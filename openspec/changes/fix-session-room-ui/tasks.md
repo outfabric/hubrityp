@@ -25,10 +25,10 @@
 
 ## 6. Chat drawer layout to design system (#3)
 
-- [ ] 6.1 In `chat-drawer.tsx`, apply one consistent horizontal inset across header, message list, and input; give `SheetHeader` `px-4 pt-4` so the title is not flush to the corner and clears the close `X`; remove the unintended `gap-4` floating gap above the input. Drop the chat-input `bg-surface-muted` band.
-- [ ] 6.2 In `chat-input.tsx`, render the input region as the platform drawer-footer (plain `surface` + `border-t border-border`, `px-4 py-3`) matching `prontuario-call-drawer`. Keep `chat-input`, `chat-input-field`, `chat-send-button` testids and `maxLength`.
-- [ ] 6.3 In `chat-message-list.tsx`, use the shared `px-4` inset, tokenize typography (sender name/timestamp → `caption`, name keeps `caption-upper`; message text → `body-sm`), and set inter-message gap to a 4-multiple. Keep `role="log"` + `aria-live="polite"`, `chat-message-list` testid, and auto-scroll behavior.
-- [ ] 6.4 Extend/add unit tests for the chat components asserting: header/list/input share the same inset class, the input uses `border-t` (not `surface-muted`), and typography uses the design-system scale tokens. (Co-locate with the existing chat component tests.)
+- [x] 6.1 In `chat-drawer.tsx`, apply one consistent horizontal inset across header, message list, and input; give `SheetHeader` `px-4 pt-4` so the title is not flush to the corner and clears the close `X`; remove the unintended `gap-4` floating gap above the input. Drop the chat-input `bg-surface-muted` band.
+- [x] 6.2 In `chat-input.tsx`, render the input region as the platform drawer-footer (plain `surface` + `border-t border-border`, `px-4 py-3`) matching `prontuario-call-drawer`. Keep `chat-input`, `chat-input-field`, `chat-send-button` testids and `maxLength`.
+- [x] 6.3 In `chat-message-list.tsx`, use the shared `px-4` inset, tokenize typography (sender name/timestamp → `caption`, name keeps `caption-upper`; message text → `body-sm`), and set inter-message gap to a 4-multiple. Keep `role="log"` + `aria-live="polite"`, `chat-message-list` testid, and auto-scroll behavior.
+- [x] 6.4 Extend/add unit tests for the chat components asserting: header/list/input share the same inset class, the input uses `border-t` (not `surface-muted`), and typography uses the design-system scale tokens. (Co-locate with the existing chat component tests.)
 
 ## 7. End-to-end coverage (cross-cutting safeguard)
 

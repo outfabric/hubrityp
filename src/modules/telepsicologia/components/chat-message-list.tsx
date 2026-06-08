@@ -32,13 +32,13 @@ export function ChatMessageList({ messages }: ChatMessageListProps) {
   if (messages.length === 0) {
     return (
       <div
-        className="flex flex-1 items-center justify-center"
+        className="flex flex-1 items-center justify-center px-4"
         role="log"
         aria-live="polite"
         aria-label="Mensagens do chat"
         data-testid="chat-message-list"
       >
-        <p className="text-text-tertiary text-[13px]">Nenhuma mensagem ainda.</p>
+        <p className="text-text-tertiary text-[0.8125rem] font-normal">Nenhuma mensagem ainda.</p>
       </div>
     );
   }
@@ -51,18 +51,20 @@ export function ChatMessageList({ messages }: ChatMessageListProps) {
       aria-label="Mensagens do chat"
       data-testid="chat-message-list"
     >
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {messages.map((msg) => (
           <div key={msg.id} className="flex flex-col gap-0.5">
             <div className="flex items-baseline gap-2">
-              <span className="text-text-primary text-[12px] font-medium tracking-[0.06em] uppercase">
+              <span className="text-text-primary text-xs font-medium tracking-[0.06em] uppercase">
                 {msg.senderName}
               </span>
-              <span className="text-text-tertiary text-[12px] font-medium">
+              <span className="text-text-tertiary text-xs font-medium">
                 {formatTime(msg.timestamp)}
               </span>
             </div>
-            <p className="text-text-primary text-[13px] leading-[1.5]">{msg.text}</p>
+            <p className="text-text-primary text-[0.8125rem] leading-[1.5] font-normal">
+              {msg.text}
+            </p>
           </div>
         ))}
         <div ref={bottomRef} />
