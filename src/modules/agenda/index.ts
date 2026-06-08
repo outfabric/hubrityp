@@ -162,3 +162,6 @@ export {
   type ListOverdueEvolutionsResult,
   type OverdueEvolutionItem,
 } from './server/list-overdue-evolutions';
+
+// ---- Components — overdue evolutions list view -------------------------------
+export { OverdueEvolutionsList } from './components/overdue-evolutions-list';

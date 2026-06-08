@@ -1,7 +1,15 @@
 import { endOfWeek, startOfWeek } from 'date-fns';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { getAgendaSettingsImpl, listLocationsImpl, listSessionsImpl } from '@/modules/agenda';
+import {
+  getAgendaSettingsImpl,
+  listLocationsImpl,
+  listOverdueEvolutionsImpl,
+  listSessionsImpl,
+  OverdueEvolutionsList,
+  resolveAgendaListFilter,
+} from '@/modules/agenda';
 import { createServerClient } from '@/shared/supabase/server';
 
 import { AgendaCalendarLoader } from './agenda-calendar-loader';
@@ -47,10 +55,36 @@ async function AgendaDataServer() {
 }
 
 // ---------------------------------------------------------------------------
+// Inner async component — fetches the overdue-evolutions list
+// ---------------------------------------------------------------------------
+
+async function OverdueEvolutionsListServer() {
+  const supabase = await createServerClient();
+
+  const result = await listOverdueEvolutionsImpl(supabase);
+
+  // Defense-in-depth mirror of the middleware gate: if the session is invalid
+  // by the time the data-fetch runs, send the user back to login rather than
+  // rendering a logged-out view of (an empty) clinical-adjacent list.
+  if (!result.ok) {
+    redirect('/login');
+  }
+
+  return <OverdueEvolutionsList items={result.items} />;
+}
+
+// ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function AgendaPage() {
+interface AgendaPageProps {
+  searchParams: Promise<{ filtro?: string | string[] }>;
+}
+
+export default async function AgendaPage({ searchParams }: AgendaPageProps) {
+  const { filtro } = await searchParams;
+  const view = resolveAgendaListFilter(filtro);
+
   return (
     <div className="mx-auto max-w-[1200px]">
       <div className="mb-6">
@@ -69,7 +103,7 @@ export default function AgendaPage() {
           </div>
         }
       >
-        <AgendaDataServer />
+        {view === 'sem-evolucao' ? <OverdueEvolutionsListServer /> : <AgendaDataServer />}
       </Suspense>
     </div>
   );

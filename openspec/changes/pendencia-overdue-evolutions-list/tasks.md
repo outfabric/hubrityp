@@ -13,8 +13,8 @@
 
 ## 3. Page branch: list vs. calendar
 
-- [ ] 3.1 In `src/app/(app)/agenda/page.tsx`, make the page async, read `searchParams`, resolve `view = resolveAgendaListFilter(filtro)`; inside `<Suspense>` render the new `OverdueEvolutionsListServer` when `view === 'sem-evolucao'`, else the existing `AgendaDataServer` (calendar untouched). First-paint server branch, no calendar flash (design D3, RNF-12.01).
-- [ ] 3.2 Add `OverdueEvolutionsListServer` inner async component that calls `listOverdueEvolutionsImpl` and renders the list/empty state; redirect to `/login` on `UNAUTHORIZED` (defense-in-depth mirror of middleware).
+- [x] 3.1 In `src/app/(app)/agenda/page.tsx`, make the page async, read `searchParams`, resolve `view = resolveAgendaListFilter(filtro)`; inside `<Suspense>` render the new `OverdueEvolutionsListServer` when `view === 'sem-evolucao'`, else the existing `AgendaDataServer` (calendar untouched). First-paint server branch, no calendar flash (design D3, RNF-12.01).
+- [x] 3.2 Add `OverdueEvolutionsListServer` inner async component that calls `listOverdueEvolutionsImpl` and renders the list/empty state; redirect to `/login` on `UNAUTHORIZED` (defense-in-depth mirror of middleware).
 
 ## 4. List UI: rows, CTA, chip, empty state
 
