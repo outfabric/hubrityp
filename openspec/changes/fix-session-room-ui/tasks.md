@@ -20,8 +20,8 @@
 
 ## 5. Pre-call lobby onto shared control (#2)
 
-- [ ] 5.1 In `src/modules/telepsicologia/components/pre-call-lobby.tsx`, refactor the existing mic/camera buttons to use `DeviceToggleButton` (no behavior change — keep the current `toggle().then/catch` permission handling and the mic-level meter). This completes the rule-of-three so all three surfaces share one component.
-- [ ] 5.2 Update/extend the lobby unit test (if present at `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx`, else add a focused case) to assert mic/camera render via `DeviceToggleButton` with the correct variant per mute state and that permission errors still surface.
+- [x] 5.1 In `src/modules/telepsicologia/components/pre-call-lobby.tsx`, refactor the existing mic/camera buttons to use `DeviceToggleButton` (no behavior change — keep the current `toggle().then/catch` permission handling and the mic-level meter). This completes the rule-of-three so all three surfaces share one component.
+- [x] 5.2 Update/extend the lobby unit test (if present at `src/__tests__/unit/modules/telepsicologia/components/pre-call-lobby.test.tsx`, else add a focused case) to assert mic/camera render via `DeviceToggleButton` with the correct variant per mute state and that permission errors still surface.
 
 ## 6. Chat drawer layout to design system (#3)
 

@@ -1,12 +1,14 @@
 'use client';
 
 import { useCall, useCallStateHooks } from '@stream-io/video-react-sdk';
-import { AlertCircle, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { AlertCircle, VideoOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+
+import { DeviceToggleButton } from './device-toggle-button';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -181,18 +183,13 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
 
           {/* Device controls */}
           <div className="flex items-center justify-center gap-4">
-            <Button
-              variant={isMicMuted ? 'outline' : 'ghost'}
-              size="icon"
-              onClick={toggleMic}
-              aria-label={isMicMuted ? 'Ligar microfone' : 'Desligar microfone'}
-            >
-              {isMicMuted ? (
-                <MicOff className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Mic className="h-5 w-5" aria-hidden="true" />
-              )}
-            </Button>
+            <DeviceToggleButton
+              kind="mic"
+              isOff={isMicMuted}
+              onToggle={toggleMic}
+              ariaLabel={isMicMuted ? 'Ligar microfone' : 'Desligar microfone'}
+              data-testid="mic-toggle-button"
+            />
 
             {/* Mic level indicator */}
             {!isMicMuted && (
@@ -211,18 +208,13 @@ export function PreCallLobby({ patient }: PreCallLobbyProps) {
               </div>
             )}
 
-            <Button
-              variant={isCameraMuted ? 'outline' : 'ghost'}
-              size="icon"
-              onClick={toggleCamera}
-              aria-label={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
-            >
-              {isCameraMuted ? (
-                <VideoOff className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Video className="h-5 w-5" aria-hidden="true" />
-              )}
-            </Button>
+            <DeviceToggleButton
+              kind="camera"
+              isOff={isCameraMuted}
+              onToggle={toggleCamera}
+              ariaLabel={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
+              data-testid="camera-toggle-button"
+            />
           </div>
 
           {/* Patient waiting indicator */}
