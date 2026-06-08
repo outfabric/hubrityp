@@ -155,3 +155,10 @@ export {
 
 // ---- Lib — overdue-days helper ----------------------------------------------
 export { overdueDays } from './lib/overdue-days';
+
+// ---- Server Actions (overdue evolutions list) -------------------------------
+export {
+  listOverdueEvolutionsImpl,
+  type ListOverdueEvolutionsResult,
+  type OverdueEvolutionItem,
+} from './server/list-overdue-evolutions';

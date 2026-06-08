@@ -6,10 +6,10 @@
 
 ## 2. Overdue-evolutions query
 
-- [ ] 2.1 Create `src/modules/agenda/server/list-overdue-evolutions.ts` (`listOverdueEvolutionsImpl`) reusing the count predicate: `getUser()`; `LEFT JOIN evolutions ON session_id` with `evolutions.id IS NULL`; `WHERE userId = uid AND status='done' AND deleted_at IS NULL AND start_at < now−7d`; `INNER JOIN patients` for name; `ORDER BY start_at ASC`. Return `{ ok, items: OverdueEvolutionItem[] }` with `{ sessionId, patientId, patientName, startAt, modality, daysOverdue }`; modality best-effort from the session/location data. Owner-scoped + RLS (design D2, RF-12.04/12.06/12.07).
-- [ ] 2.2 Barrel-export `listOverdueEvolutionsImpl` + types from `src/modules/agenda/index.ts`.
-- [ ] 2.3 Integration test `src/__tests__/integration/agenda/overdue-evolutions.int.test.ts`: parity with the count predicate; oldest-first ordering; includes weeks-old sessions (not week-bounded); excludes done-with-evolution, non-`done`, soft-deleted, and within-7-days; `patientName` resolved. Run the targeted integration spec.
-- [ ] 2.4 Integration cross-tenant test: psychologists A and B each with overdue sessions; A's query never returns B's rows (RN-12.02). Same spec or `src/__tests__/integration/agenda/`.
+- [x] 2.1 Create `src/modules/agenda/server/list-overdue-evolutions.ts` (`listOverdueEvolutionsImpl`) reusing the count predicate: `getUser()`; `LEFT JOIN evolutions ON session_id` with `evolutions.id IS NULL`; `WHERE userId = uid AND status='done' AND deleted_at IS NULL AND start_at < now−7d`; `INNER JOIN patients` for name; `ORDER BY start_at ASC`. Return `{ ok, items: OverdueEvolutionItem[] }` with `{ sessionId, patientId, patientName, startAt, modality, daysOverdue }`; modality best-effort from the session/location data. Owner-scoped + RLS (design D2, RF-12.04/12.06/12.07).
+- [x] 2.2 Barrel-export `listOverdueEvolutionsImpl` + types from `src/modules/agenda/index.ts`.
+- [x] 2.3 Integration test `src/__tests__/integration/agenda/overdue-evolutions.int.test.ts`: parity with the count predicate; oldest-first ordering; includes weeks-old sessions (not week-bounded); excludes done-with-evolution, non-`done`, soft-deleted, and within-7-days; `patientName` resolved. Run the targeted integration spec.
+- [x] 2.4 Integration cross-tenant test: psychologists A and B each with overdue sessions; A's query never returns B's rows (RN-12.02). Same spec or `src/__tests__/integration/agenda/`.
 
 ## 3. Page branch: list vs. calendar
 
