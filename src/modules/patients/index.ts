@@ -156,6 +156,13 @@ export {
   maskPhone,
 } from './lib/patient-validators';
 
+// ---- List Filter -------------------------------------------------------------
+export {
+  PATIENT_LIST_FILTERS,
+  resolvePatientListFilter,
+  type PatientListFilter,
+} from './lib/patient-list-filter';
+
 // ---- CSV Import --------------------------------------------------------------
 export {
   detectColumnMapping,

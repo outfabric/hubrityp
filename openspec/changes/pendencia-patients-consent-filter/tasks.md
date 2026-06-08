@@ -1,8 +1,8 @@
 ## 1. `filtro` allowlist parser
 
-- [ ] 1.1 Create `src/modules/patients/lib/patient-list-filter.ts` exporting `PATIENT_LIST_FILTERS`, `PatientListFilter`, and `resolvePatientListFilter(raw: string | string[] | undefined): PatientListFilter | null` (closed allowlist `['sem-consentimento']`; unknown/empty/array → null; never throws — design D1, RF-12.03/RNF-12.05).
-- [ ] 1.2 Re-export the parser and type from the module barrel `src/modules/patients/index.ts`.
-- [ ] 1.3 Unit test `src/__tests__/unit/modules/patients/lib/patient-list-filter.test.ts`: `'sem-consentimento'→'sem-consentimento'`, `'xyz'→null`, `''→null`, `undefined→null`, `['sem-consentimento']→null`. Run `npm run test:unit`.
+- [x] 1.1 Create `src/modules/patients/lib/patient-list-filter.ts` exporting `PATIENT_LIST_FILTERS`, `PatientListFilter`, and `resolvePatientListFilter(raw: string | string[] | undefined): PatientListFilter | null` (closed allowlist `['sem-consentimento']`; unknown/empty/array → null; never throws — design D1, RF-12.03/RNF-12.05).
+- [x] 1.2 Re-export the parser and type from the module barrel `src/modules/patients/index.ts`.
+- [x] 1.3 Unit test `src/__tests__/unit/modules/patients/lib/patient-list-filter.test.ts`: `'sem-consentimento'→'sem-consentimento'`, `'xyz'→null`, `''→null`, `undefined→null`, `['sem-consentimento']→null`. Run `npm run test:unit`.
 
 ## 2. Extract and reuse the consent-share helpers
 
