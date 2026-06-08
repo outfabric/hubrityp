@@ -3,6 +3,7 @@
 - [E2E shared-seed session slot collision](feedback_e2e_shared_seed_session_slot_collision.md) — two seeded specs scheduling SAME seed patient at SAME tomorrow slot race detectConflicts under fullyParallel; loser → conflict_warning, modal stays open, toBeHidden fails
 - [E2E build Supabase URL must be local](feedback_e2e_build_supabase_url_must_be_local.md) — e2e build MUST set NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321; wrong value bakes wrong URL into edge middleware → EVERY authenticated spec redirects to /login (looks like auth regression, is build-env mistake)
 - [NPS modal overlay blocks feedback card](feedback_nps_modal_overlay_blocks_feedback_card.md) — day-7 NPS modal renders on every (app) route incl /configuracoes/feedback; eligible user → dup testids + Radix overlay intercepts card clicks
+- [E2E dashboard networkidle flake](feedback_e2e_dashboard_networkidle_flake.md) — whatsapp-health-banner.spec "navigates to reconnect" times out at page.goto('/dashboard',{waitUntil:'networkidle'}); dashboard keeps net busy, page renders fine; pre-existing flake not a copy regression
 
 - [Wizard spec pollutes seed full_name](project_wizard_spec_pollutes_seed_fullname.md) — wizard-flow.spec.ts leaves seed full_name='Seed Baseline'; auth/agenda-confirm/telepsicologia fail nondeterministically (pre-existing PR#71 bug)
 - [E2E prontuario tabs flaky](feedback_e2e_prontuario_tabs_flaky.md) — prontuario tab-content toBeVisible flakes under parallel load + 0 retries; validate with CI=true
