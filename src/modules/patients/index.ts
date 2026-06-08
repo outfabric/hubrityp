@@ -26,7 +26,11 @@ export {
   type UnarchivePatientResult,
 } from './server/archive-patient';
 export { deletePatientImpl, type DeletePatientResult } from './server/delete-patient';
-export { listPatientsImpl, type ListPatientsResult } from './server/list-patients';
+export {
+  listPatientsImpl,
+  type ConsentShare,
+  type ListPatientsResult,
+} from './server/list-patients';
 export {
   uploadPatientPhotoImpl,
   type UploadPatientPhotoResult,
@@ -156,6 +160,16 @@ export {
   maskPhone,
 } from './lib/patient-validators';
 
+// ---- Consent Share Helpers ---------------------------------------------------
+export { extractPhoneDigits, buildConsentUrl, buildConsentWhatsAppHref } from './lib/consent-share';
+
+// ---- List Filter -------------------------------------------------------------
+export {
+  PATIENT_LIST_FILTERS,
+  resolvePatientListFilter,
+  type PatientListFilter,
+} from './lib/patient-list-filter';
+
 // ---- CSV Import --------------------------------------------------------------
 export {
   detectColumnMapping,
@@ -172,6 +186,7 @@ export {
 
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
+export { PatientConsentRowActions } from './components/patient-consent-row-actions';
 export { PatientForm } from './components/patient-form';
 export { PatientEditForm } from './components/patient-edit-form';
 export { PatientDetailHeader } from './components/patient-detail-header';

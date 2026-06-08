@@ -10,11 +10,13 @@ import {
   SlidersHorizontal,
   Upload,
   Users,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
+import type { ConsentShare, GenerateConsentResult, ListPatientsResult } from '@/modules/patients';
 import type { Patient } from '@/shared/db/schema/patients/tables';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Badge } from '@/shared/ui/badge';
@@ -23,6 +25,8 @@ import { Input } from '@/shared/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 
 import type { ListPatientsQuery, PatientStatus, SortColumn, SortOrder } from '../lib/patient-types';
+
+import { PatientConsentRowActions } from './patient-consent-row-actions';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,18 +44,27 @@ interface PatientListProps {
   /** Page size used. */
   pageSize: number;
   /** Server action to refetch patients. */
-  listAction: (query: unknown) => Promise<
-    | {
-        ok: true;
-        patients: Patient[];
-        total: number;
-        page: number;
-        pageSize: number;
-      }
-    | { ok: false; error: string; fieldErrors?: Record<string, string[]>; message?: string }
-  >;
+  listAction: (query: unknown) => Promise<ListPatientsResult>;
   /** Available tags for the multi-select filter (distinct tags from server). */
   availableTags?: string[];
+  /**
+   * When true, the listing is showing the "missing consent" pendência set
+   * (driven by `?filtro=sem-consentimento`). Server-resolved from the URL on
+   * first paint (RNF-12.01) — drives the positive empty state (RF-12.19) and,
+   * in a later iteration, the per-row consent share/generate actions.
+   */
+  missingConsent?: boolean;
+  /**
+   * Per-row, server-resolved share phone for the missing-consent listing.
+   * Parallel to the initial `patients` page. Only present when `missingConsent`
+   * is active. Wired through here for the row-action UI (section 5).
+   */
+  consentShare?: ConsentShare[];
+  /**
+   * Server Action to generate a consent term for a patient. Threaded through so
+   * the missing-consent row actions can trigger it (section 5).
+   */
+  generateConsentAction?: (patientId: string) => Promise<GenerateConsentResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +125,9 @@ export function PatientList({
   pageSize,
   listAction,
   availableTags = [],
+  missingConsent = false,
+  consentShare = [],
+  generateConsentAction,
 }: PatientListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -136,6 +152,11 @@ export function PatientList({
   // Data state
   const [patients, setPatients] = useState(initialPatients);
   const [total, setTotal] = useState(initialTotal);
+  // Per-row share phone for the missing-consent listing. Seeded from the
+  // server-rendered first page and REPLACED on every client refetch so paginated
+  // rows keep an accurate share phone (otherwise page 2+ rows would resolve to
+  // null and the WhatsApp action would appear wrongly disabled).
+  const [consentShareState, setConsentShareState] = useState<ConsentShare[]>(consentShare);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -158,15 +179,31 @@ export function PatientList({
       search: debouncedSearch || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      // Persist the missing-consent pendência filter across client-side
+      // refetches (search/sort/pagination) so the listing stays scoped to the
+      // pendência set the user arrived at via `?filtro=sem-consentimento`.
+      missingConsent,
       ...overrides,
     }),
-    [currentPage, pageSize, sortColumn, sortOrder, debouncedSearch, statusFilter, selectedTags],
+    [
+      currentPage,
+      pageSize,
+      sortColumn,
+      sortOrder,
+      debouncedSearch,
+      statusFilter,
+      selectedTags,
+      missingConsent,
+    ],
   );
 
   // Sync URL search params
   const syncUrlParams = useCallback(
     (query: ListPatientsQuery) => {
       const params = new URLSearchParams();
+      // Keep the pendência deep-link param in the URL so a refetch (search,
+      // sort, pagination) does not silently drop the missing-consent scope.
+      if (missingConsent) params.set('filtro', 'sem-consentimento');
       if (query.search) params.set('search', query.search);
       if (query.status) params.set('status', query.status);
       if (query.tags && query.tags.length > 0) params.set('tags', query.tags.join(','));
@@ -178,7 +215,7 @@ export function PatientList({
       const newUrl = paramString ? `?${paramString}` : window.location.pathname;
       router.replace(newUrl, { scroll: false });
     },
-    [router],
+    [router, missingConsent],
   );
 
   // Fetch data from server action
@@ -190,6 +227,10 @@ export function PatientList({
           setPatients(result.patients);
           setTotal(result.total);
           setCurrentPage(result.page);
+          // Refresh the per-row share phones for the new page. The server only
+          // returns `consentShare` when the missing-consent filter is active; for
+          // unfiltered refetches it is absent, so fall back to an empty array.
+          setConsentShareState(result.consentShare ?? []);
         }
         syncUrlParams(query);
       });
@@ -265,9 +306,54 @@ export function PatientList({
     return pages;
   }, [currentPage, totalPages]);
 
+  // Per-row share phone lookup for the missing-consent row actions. Built once
+  // per render from the server-resolved `consentShare` array (RF-12.14).
+  const sharePhoneByPatient = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const entry of consentShareState) map.set(entry.patientId, entry.sharePhone);
+    return map;
+  }, [consentShareState]);
+
+  // Row actions render only on the missing-consent listing and only when the
+  // generate action was threaded through from the server page (section 5.3).
+  const showConsentRowActions = missingConsent && generateConsentAction !== undefined;
+
+  // Remove the active-filter chip: drop ONLY the `filtro` param and return to
+  // the full list (RF-12.13). We build a fresh URL from the current params so
+  // an unrelated state (search, sort, page) is preserved.
+  const handleRemoveConsentFilter = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('filtro');
+    const paramString = params.toString();
+    router.replace(paramString ? `?${paramString}` : window.location.pathname, { scroll: false });
+  }, [router, searchParams]);
+
   // ---------------------------------------------------------------------------
   // Empty state
   // ---------------------------------------------------------------------------
+
+  // Positive empty state for the "missing consent" pendência listing (RF-12.19):
+  // reaching the destination with zero matches means there is nothing pending —
+  // never show the full list unexplained. Distinct from the generic
+  // "no patients registered" and "no search results" states.
+  if (missingConsent && total === 0) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-20 text-center"
+        data-testid="patient-list-missing-consent-empty"
+      >
+        <Users className="text-text-tertiary mb-4 h-12 w-12" aria-hidden="true" />
+        <h4 className="text-text-primary text-base font-medium">
+          Nenhum paciente sem consentimento pendente.
+        </h4>
+        <Link href="/pacientes">
+          <Button variant="secondary" className="mt-6" data-testid="patient-list-view-all">
+            Ver todos os pacientes
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (
     patients.length === 0 &&
@@ -301,6 +387,30 @@ export function PatientList({
 
   return (
     <div className="space-y-4" data-testid="patient-list">
+      {/* Active-filter chip for the missing-consent pendência listing (RF-12.13 /
+          RNF-12.03). Announced via aria-live; the remove control is a
+          keyboard-focusable button that drops only the `filtro` param. */}
+      {missingConsent && (
+        <div aria-live="polite">
+          <Badge
+            variant="warning"
+            className="gap-1.5 py-1 pr-1 pl-2.5"
+            data-testid="patient-consent-filter-chip"
+          >
+            <span>Sem consentimento &middot; {total}</span>
+            <button
+              type="button"
+              onClick={handleRemoveConsentFilter}
+              aria-label="Remover filtro: sem consentimento"
+              className="focus-visible:ring-brand-500 hover:bg-warning-50 inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2"
+              data-testid="patient-consent-filter-remove"
+            >
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </Badge>
+        </div>
+      )}
+
       {/* Toolbar: Search + Filters + Add button */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-1 items-center gap-3">
@@ -453,6 +563,9 @@ export function PatientList({
                     />
                   </button>
                 </TableHead>
+                {showConsentRowActions && (
+                  <TableHead className="text-right">Consentimento</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -509,6 +622,15 @@ export function PatientList({
                       })}
                     </span>
                   </TableCell>
+                  {showConsentRowActions && generateConsentAction && (
+                    <TableCell>
+                      <PatientConsentRowActions
+                        patientId={patient.id}
+                        sharePhone={sharePhoneByPatient.get(patient.id) ?? null}
+                        generateConsentAction={generateConsentAction}
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -518,50 +640,60 @@ export function PatientList({
         {/* Mobile cards (visible below md) */}
         <div className="space-y-3 md:hidden" data-testid="patient-cards-mobile">
           {patients.map((patient) => (
-            <Link
+            <div
               key={patient.id}
-              href={`/pacientes/${patient.id}`}
-              className="border-border bg-surface duration-fast hover:border-border-strong block rounded-xl border p-4 transition-colors"
+              className="border-border bg-surface duration-fast hover:border-border-strong rounded-xl border transition-colors"
               data-testid="patient-card"
             >
-              <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src="" alt="" />
-                  <AvatarFallback>{getInitials(patient.fullName)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-text-primary font-medium">{patient.fullName}</span>
-                      {patient.coupleId && (
-                        <Badge variant="info" data-testid="patient-couple-badge">
-                          Casal
-                        </Badge>
-                      )}
+              <Link href={`/pacientes/${patient.id}`} className="block p-4">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="" alt="" />
+                    <AvatarFallback>{getInitials(patient.fullName)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-text-primary font-medium">{patient.fullName}</span>
+                        {patient.coupleId && (
+                          <Badge variant="info" data-testid="patient-couple-badge">
+                            Casal
+                          </Badge>
+                        )}
+                      </div>
+                      <Badge variant={statusBadgeVariant(patient.status)}>
+                        {statusLabel(patient.status)}
+                      </Badge>
                     </div>
-                    <Badge variant={statusBadgeVariant(patient.status)}>
-                      {statusLabel(patient.status)}
-                    </Badge>
+                    {(patient.phone || patient.email) && (
+                      <div className="text-text-secondary mt-1 text-sm">
+                        {patient.phone && <span>{patient.phone}</span>}
+                        {patient.phone && patient.email && <span> &middot; </span>}
+                        {patient.email && <span>{patient.email}</span>}
+                      </div>
+                    )}
+                    {patient.tags.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {patient.tags.map((tag) => (
+                          <Badge key={tag} variant="neutral">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {(patient.phone || patient.email) && (
-                    <div className="text-text-secondary mt-1 text-sm">
-                      {patient.phone && <span>{patient.phone}</span>}
-                      {patient.phone && patient.email && <span> &middot; </span>}
-                      {patient.email && <span>{patient.email}</span>}
-                    </div>
-                  )}
-                  {patient.tags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {patient.tags.map((tag) => (
-                        <Badge key={tag} variant="neutral">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
-              </div>
-            </Link>
+              </Link>
+              {showConsentRowActions && generateConsentAction && (
+                <div className="border-border-subtle border-t px-4 py-2">
+                  <PatientConsentRowActions
+                    patientId={patient.id}
+                    sharePhone={sharePhoneByPatient.get(patient.id) ?? null}
+                    generateConsentAction={generateConsentAction}
+                  />
+                </div>
+              )}
+            </div>
           ))}
         </div>
 

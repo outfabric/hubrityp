@@ -284,6 +284,93 @@ export const SEED_NPS_USER = {
   fullName: 'NPS E2E',
 } as const;
 
+/**
+ * Dedicated user for the patients consent-filter E2E spec
+ * (patients/consent-filter.spec.ts — PRD §12, section 6).
+ *
+ * The "sem-consentimento" pendência listing's header count MUST equal the
+ * dashboard pendência count for the SAME user (RF-12.18 / RN-12.03), and the
+ * filtered set must contain ONLY active patients with no signed consent. Driving
+ * this on the GLOBAL seed user is unsafe: its three `SEED_PATIENTS` rows are read
+ * (and their consent state asserted) by many sibling specs under
+ * `fullyParallel`, so adding/removing unconsented patients there would shift
+ * their counts and break them. Mutating the shared user is exactly the hazard the
+ * tour/checklist/nps dedicated users were created to avoid.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, owning a deterministic patient set seeded in `global-setup.ts`:
+ *
+ *   - `adultWithPhone`    — active, unconsented, individual, has phone
+ *   - `minorWithGuardian` — active, unconsented, `child`, primary guardian w/ phone
+ *   - `adultNoPhone`      — active, unconsented, individual, NO phone (WhatsApp
+ *                            disabled, copy-link still works)
+ *   - `signedAdult`       — active, consent SIGNED (consent_signed_at set) → MUST
+ *                            NOT appear in the filtered list
+ *   - `archivedNoConsent` — archived, unconsented → MUST NOT appear
+ *   - `copyTarget`        — active, unconsented, has phone, NO pre-seeded consent
+ *                            term — used by the copy-link/no-duplicate test so it
+ *                            can assert the term count goes 0 → 1 → 1.
+ *
+ * So the missing-consent count is deterministically 4 (adultWithPhone,
+ * minorWithGuardian, adultNoPhone, copyTarget — the four ACTIVE unconsented
+ * rows). `signedAdult` and `archivedNoConsent` are the negative cases.
+ *
+ * `tour_completed_at` is stamped and `first_access_at` left NULL in
+ * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
+ * auto-runs and intercepts the row-action clicks this spec needs. The mock
+ * GoTrue never authenticates this user by default; the spec signs in at runtime
+ * via the shared `signInAsDedicatedUser` helper.
+ */
+export const SEED_CONSENT_FILTER_USER = {
+  id: '00000000-0000-4000-8000-0000000000f0',
+  email: 'consent-filter-e2e@example.com',
+  fullName: 'Consent Filter E2E',
+  patients: {
+    /** Active, unconsented, adult with a phone — WhatsApp uses the patient's own number. */
+    adultWithPhone: {
+      id: '00000000-0000-4000-8000-0000000000f1',
+      fullName: 'Filtro Adulto Com Telefone',
+      phone: '+55 11 98888-0001',
+    },
+    /** Active, unconsented minor — WhatsApp uses the PRIMARY GUARDIAN's phone. */
+    minorWithGuardian: {
+      id: '00000000-0000-4000-8000-0000000000f2',
+      fullName: 'Filtro Menor Com Responsavel',
+      guardianId: '00000000-0000-4000-8000-0000000000fa',
+      guardianPhone: '+55 11 97777-0002',
+    },
+    /** Active, unconsented adult WITHOUT a phone — WhatsApp disabled, copy-link works. */
+    adultNoPhone: {
+      id: '00000000-0000-4000-8000-0000000000f3',
+      fullName: 'Filtro Adulto Sem Telefone',
+    },
+    /** Active patient WITH a signed consent — must be EXCLUDED from the filter. */
+    signedAdult: {
+      id: '00000000-0000-4000-8000-0000000000f4',
+      fullName: 'Filtro Adulto Com Consentimento',
+      // Pre-signed consent term (deterministic 64-char hex token).
+      consentTermId: '00000000-0000-4000-8000-0000000000fb',
+      signatureToken: 'f1'.repeat(32),
+    },
+    /** Archived patient WITHOUT consent — must be EXCLUDED from the filter. */
+    archivedNoConsent: {
+      id: '00000000-0000-4000-8000-0000000000f5',
+      fullName: 'Filtro Adulto Arquivado',
+    },
+    /**
+     * Active, unconsented adult with phone and NO pre-seeded consent term — used
+     * by the copy-link/no-duplicate test (term count goes 0 → 1 → 1). Kept
+     * separate from `adultWithPhone` so the count assertions can't race other
+     * row actions on the same page.
+     */
+    copyTarget: {
+      id: '00000000-0000-4000-8000-0000000000f6',
+      fullName: 'Filtro Adulto Copia Link',
+      phone: '+55 11 96666-0003',
+    },
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

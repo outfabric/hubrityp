@@ -7,6 +7,7 @@ import {
   readSeedState,
   SEED_AI_CONSENT_TERMS,
   SEED_AI_TRANSCRIPTIONS,
+  SEED_CONSENT_FILTER_USER,
   SEED_CONSENT_TERMS,
   SEED_DASHBOARD_EMPTY_USER,
   SEED_IDOR,
@@ -1025,6 +1026,156 @@ export default async function globalSetup() {
           nps_feedback = NULL,
           requires_password_reset = false
       WHERE user_id = ${npsUser.id};
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated consent-filter user (patients/consent-filter.spec.ts).
+    //
+    // A sixth active psychologist touched by NOTHING else, owning a
+    // deterministic patient set so the "sem-consentimento" listing's header
+    // count equals the dashboard pendência count for this same user (4 active
+    // unconsented rows), with one signed + one archived as negative cases. See
+    // SEED_CONSENT_FILTER_USER for the full rationale. `tour_completed_at` is
+    // stamped and `first_access_at` left NULL so neither overlay (guided tour /
+    // day-7 NPS modal) auto-runs and steals the row-action clicks.
+    // -----------------------------------------------------------------------
+    const cfUser = SEED_CONSENT_FILTER_USER;
+    const cfMetadata = JSON.stringify({
+      fullName: cfUser.fullName,
+      crpNumber: '66666-F',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${cfUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${cfUser.email},
+        ${cfMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${cfUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          requires_password_reset = false
+      WHERE user_id = ${cfUser.id};
+    `;
+    // Wipe stale rows (FK-ordered) so the spec starts from a known set on the
+    // reused container.
+    await sql`DELETE FROM public.consent_terms WHERE user_id = ${cfUser.id}`;
+    await sql`
+      DELETE FROM public.patient_guardians
+      WHERE patient_id IN (SELECT id FROM public.patients WHERE user_id = ${cfUser.id});
+    `;
+    await sql`DELETE FROM public.patients WHERE user_id = ${cfUser.id}`;
+
+    const cfp = cfUser.patients;
+    // Active, unconsented patients (appear in the filter). The minor uses
+    // `patient_type = 'child'` so the row's share phone resolves to its primary
+    // guardian (resolveConsentShare in list-patients.ts).
+    for (const [patient, patientType, phone] of [
+      [cfp.adultWithPhone, 'individual', cfp.adultWithPhone.phone] as const,
+      [cfp.minorWithGuardian, 'child', null] as const,
+      [cfp.adultNoPhone, 'individual', null] as const,
+      [cfp.copyTarget, 'individual', cfp.copyTarget.phone] as const,
+    ]) {
+      await sql`
+        INSERT INTO public.patients (id, user_id, full_name, patient_type, phone, status, archived_at, consent_signed_at, consent_revoked_at)
+        VALUES (
+          ${patient.id}, ${cfUser.id}, ${patient.fullName}, ${patientType},
+          ${phone}, 'active', NULL, NULL, NULL
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          user_id            = EXCLUDED.user_id,
+          full_name          = EXCLUDED.full_name,
+          patient_type       = EXCLUDED.patient_type,
+          phone              = EXCLUDED.phone,
+          status             = 'active',
+          archived_at        = NULL,
+          consent_signed_at  = NULL,
+          consent_revoked_at = NULL;
+      `;
+    }
+
+    // Primary guardian (with phone) for the minor — the row's WhatsApp share
+    // uses THIS phone, not the patient's.
+    await sql`
+      INSERT INTO public.patient_guardians (id, patient_id, full_name, relationship, phone, is_primary)
+      VALUES (
+        ${cfp.minorWithGuardian.guardianId},
+        ${cfp.minorWithGuardian.id},
+        'Responsavel Filtro',
+        'mother',
+        ${cfp.minorWithGuardian.guardianPhone},
+        true
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        patient_id = EXCLUDED.patient_id,
+        phone      = EXCLUDED.phone,
+        is_primary = true;
+    `;
+
+    // Active patient WITH a signed consent — EXCLUDED from the filter.
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at, consent_signed_at, consent_revoked_at)
+      VALUES (
+        ${cfp.signedAdult.id}, ${cfUser.id}, ${cfp.signedAdult.fullName}, 'individual',
+        'active', NULL, now(), NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id            = EXCLUDED.user_id,
+        full_name          = EXCLUDED.full_name,
+        status             = 'active',
+        archived_at        = NULL,
+        consent_signed_at  = now(),
+        consent_revoked_at = NULL;
+    `;
+    await sql`
+      INSERT INTO public.consent_terms (id, patient_id, user_id, kind, term_text, signature_token, revocation_takes_effect_immediately, signed_at, signed_ip, signed_user_agent)
+      VALUES (
+        ${cfp.signedAdult.consentTermId},
+        ${cfp.signedAdult.id},
+        ${cfUser.id},
+        'general',
+        'Termo assinado (filtro).',
+        ${cfp.signedAdult.signatureToken},
+        false,
+        now(),
+        '127.0.0.1',
+        'e2e-seed-agent'
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        signed_at         = EXCLUDED.signed_at,
+        signature_token   = EXCLUDED.signature_token,
+        revoked_at        = NULL;
+    `;
+
+    // Archived patient WITHOUT consent — EXCLUDED from the filter (archived).
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at, consent_signed_at, consent_revoked_at)
+      VALUES (
+        ${cfp.archivedNoConsent.id}, ${cfUser.id}, ${cfp.archivedNoConsent.fullName}, 'individual',
+        'archived', now(), NULL, NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id            = EXCLUDED.user_id,
+        full_name          = EXCLUDED.full_name,
+        status             = 'archived',
+        archived_at        = now(),
+        consent_signed_at  = NULL,
+        consent_revoked_at = NULL;
     `;
   } finally {
     await sql.end();
