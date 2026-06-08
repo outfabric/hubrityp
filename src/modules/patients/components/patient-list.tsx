@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
-import type { ConsentShare, GenerateConsentResult } from '@/modules/patients';
+import type { ConsentShare, GenerateConsentResult, ListPatientsResult } from '@/modules/patients';
 import type { Patient } from '@/shared/db/schema/patients/tables';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Badge } from '@/shared/ui/badge';
@@ -44,16 +44,7 @@ interface PatientListProps {
   /** Page size used. */
   pageSize: number;
   /** Server action to refetch patients. */
-  listAction: (query: unknown) => Promise<
-    | {
-        ok: true;
-        patients: Patient[];
-        total: number;
-        page: number;
-        pageSize: number;
-      }
-    | { ok: false; error: string; fieldErrors?: Record<string, string[]>; message?: string }
-  >;
+  listAction: (query: unknown) => Promise<ListPatientsResult>;
   /** Available tags for the multi-select filter (distinct tags from server). */
   availableTags?: string[];
   /**
@@ -161,6 +152,11 @@ export function PatientList({
   // Data state
   const [patients, setPatients] = useState(initialPatients);
   const [total, setTotal] = useState(initialTotal);
+  // Per-row share phone for the missing-consent listing. Seeded from the
+  // server-rendered first page and REPLACED on every client refetch so paginated
+  // rows keep an accurate share phone (otherwise page 2+ rows would resolve to
+  // null and the WhatsApp action would appear wrongly disabled).
+  const [consentShareState, setConsentShareState] = useState<ConsentShare[]>(consentShare);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -231,6 +227,10 @@ export function PatientList({
           setPatients(result.patients);
           setTotal(result.total);
           setCurrentPage(result.page);
+          // Refresh the per-row share phones for the new page. The server only
+          // returns `consentShare` when the missing-consent filter is active; for
+          // unfiltered refetches it is absent, so fall back to an empty array.
+          setConsentShareState(result.consentShare ?? []);
         }
         syncUrlParams(query);
       });
@@ -310,9 +310,9 @@ export function PatientList({
   // per render from the server-resolved `consentShare` array (RF-12.14).
   const sharePhoneByPatient = useMemo(() => {
     const map = new Map<string, string | null>();
-    for (const entry of consentShare) map.set(entry.patientId, entry.sharePhone);
+    for (const entry of consentShareState) map.set(entry.patientId, entry.sharePhone);
     return map;
-  }, [consentShare]);
+  }, [consentShareState]);
 
   // Row actions render only on the missing-consent listing and only when the
   // generate action was threaded through from the server page (section 5.3).

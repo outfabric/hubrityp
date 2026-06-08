@@ -107,6 +107,7 @@ export function PatientConsentRowActions({
         onClick={handleCopyLink}
         disabled={isPending}
         data-testid="patient-consent-copy-link"
+        aria-label="Copiar link do termo"
       >
         {copied ? (
           <Check className="h-4 w-4" aria-hidden="true" />
@@ -147,6 +148,7 @@ export function PatientConsentRowActions({
           onClick={handleSendWhatsApp}
           disabled={isPending}
           data-testid="patient-consent-whatsapp"
+          aria-label="Enviar por WhatsApp"
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
           <span className="hidden sm:inline">Enviar por WhatsApp</span>
