@@ -15,8 +15,8 @@
 
 ## 4. Patient call bar parity (#2)
 
-- [ ] 4.1 In `src/modules/telepsicologia/components/patient-in-call-view.tsx` (`PatientCallControls`), refactor mic/camera onto `DeviceToggleButton` and add the lobby's permission-error handling: local `permissionError` state, `.then(() => setPermissionError(null))` / `.catch(() => setPermissionError('Não foi possível acessar o microfone…'))`, and an inline `AlertCircle` message region matching the lobby. Keep NO screen-share control. Preserve `patient-chat-toggle-button`, `patient-chat-unread-badge`, `patient-leave-button` and other `data-testid`s.
-- [ ] 4.2 Add unit test at `src/__tests__/unit/modules/telepsicologia/components/patient-call-controls.test.tsx`: mic/camera use `DeviceToggleButton`; no screen-share control is rendered; a denied `toggle()` surfaces the PT-BR error.
+- [x] 4.1 In `src/modules/telepsicologia/components/patient-in-call-view.tsx` (`PatientCallControls`), refactor mic/camera onto `DeviceToggleButton` and add the lobby's permission-error handling: local `permissionError` state, `.then(() => setPermissionError(null))` / `.catch(() => setPermissionError('Não foi possível acessar o microfone…'))`, and an inline `AlertCircle` message region matching the lobby. Keep NO screen-share control. Preserve `patient-chat-toggle-button`, `patient-chat-unread-badge`, `patient-leave-button` and other `data-testid`s.
+- [x] 4.2 Add unit test at `src/__tests__/unit/modules/telepsicologia/components/patient-call-controls.test.tsx`: mic/camera use `DeviceToggleButton`; no screen-share control is rendered; a denied `toggle()` surfaces the PT-BR error.
 
 ## 5. Pre-call lobby onto shared control (#2)
 
