@@ -1,20 +1,32 @@
 'use client';
 
-import {
-  ScreenShareButton,
-  ToggleAudioPublishingButton,
-  ToggleVideoPublishingButton,
-} from '@stream-io/video-react-sdk';
+import { useCallStateHooks } from '@stream-io/video-react-sdk';
 import { FileText, MessageSquare, PhoneOff } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { EndVideoSessionResult, ToggleRecordingResult } from '@/modules/telepsicologia';
 import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Button } from '@/shared/ui/button';
 
+import { DeviceToggleButton } from './device-toggle-button';
 import { EndCallDialog } from './end-call-dialog';
 import { RecordingControls } from './recording-controls';
 import { TroubleshootingPopover } from './troubleshooting-popover';
+
+// ---------------------------------------------------------------------------
+// PT-BR permission errors
+//
+// Surfaced inline when a device toggle Promise rejects (browser blocked the
+// permission). Consistent with RecordingControls' inline error rendering:
+// small danger-colored text inside a role="alert" region.
+// ---------------------------------------------------------------------------
+
+const MIC_PERMISSION_ERROR =
+  'Não foi possível acessar o microfone. Verifique as permissões do navegador.';
+const CAMERA_PERMISSION_ERROR =
+  'Não foi possível acessar a câmera. Verifique as permissões do navegador.';
+const SCREEN_SHARE_PERMISSION_ERROR =
+  'Não foi possível compartilhar a tela. Verifique as permissões do navegador.';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -49,11 +61,94 @@ interface CallControlBarProps {
 }
 
 // ---------------------------------------------------------------------------
+// Inner: device controls (mic, camera, screen share)
+//
+// Backed by Stream call-state hooks. Mic/camera state comes from the `isMute`
+// alias; screen-share active state is derived from `status === 'enabled'`
+// (NOT the `isMute` alias — see design D3) and the button is disabled while
+// another participant is sharing. Each toggle() returns a Promise; a rejection
+// (browser blocked the permission) surfaces a PT-BR inline error.
+//
+// Screen share is psychologist-only — the caller renders this component only
+// for the host, so the screen-share control always belongs to the host.
+// ---------------------------------------------------------------------------
+
+function DeviceControls() {
+  const { useMicrophoneState, useCameraState, useScreenShareState, useHasOngoingScreenShare } =
+    useCallStateHooks();
+  const { microphone, isMute: isMicMuted } = useMicrophoneState();
+  const { camera, isMute: isCameraMuted } = useCameraState();
+  const { screenShare, status: screenShareStatus } = useScreenShareState();
+
+  const isSharing = screenShareStatus === 'enabled';
+  const someoneElseSharing = useHasOngoingScreenShare();
+
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+
+  const handleToggleMic = useCallback(() => {
+    void microphone
+      .toggle()
+      .then(() => setPermissionError(null))
+      .catch(() => setPermissionError(MIC_PERMISSION_ERROR));
+  }, [microphone]);
+
+  const handleToggleCamera = useCallback(() => {
+    void camera
+      .toggle()
+      .then(() => setPermissionError(null))
+      .catch(() => setPermissionError(CAMERA_PERMISSION_ERROR));
+  }, [camera]);
+
+  const handleToggleScreenShare = useCallback(() => {
+    void screenShare
+      .toggle()
+      .then(() => setPermissionError(null))
+      .catch(() => setPermissionError(SCREEN_SHARE_PERMISSION_ERROR));
+  }, [screenShare]);
+
+  return (
+    <>
+      <DeviceToggleButton
+        kind="mic"
+        isOff={isMicMuted}
+        onToggle={handleToggleMic}
+        ariaLabel={isMicMuted ? 'Ligar microfone' : 'Desligar microfone'}
+        data-testid="mic-toggle-button"
+      />
+
+      <DeviceToggleButton
+        kind="camera"
+        isOff={isCameraMuted}
+        onToggle={handleToggleCamera}
+        ariaLabel={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
+        data-testid="camera-toggle-button"
+      />
+
+      <DeviceToggleButton
+        kind="screenshare"
+        isOff={!isSharing}
+        onToggle={handleToggleScreenShare}
+        disabled={!isSharing && someoneElseSharing}
+        ariaLabel={isSharing ? 'Parar compartilhamento de tela' : 'Compartilhar tela'}
+        data-testid="screen-share-toggle-button"
+      />
+
+      {permissionError && (
+        <span className="text-danger-600 text-xs" role="alert">
+          {permissionError}
+        </span>
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 //
 // Bottom controls bar with mic, camera, screen share, chat toggle,
-// and end call button. Uses Stream SDK's built-in toggle buttons for
-// mic/camera/screen share and a custom end call button with confirmation.
+// and end call button. Mic/camera/screen-share are rendered via the
+// design-system DeviceToggleButton (Lucide icons + shadcn Button) — no
+// Stream built-in widgets — backed by Stream call-state hooks.
 // ---------------------------------------------------------------------------
 
 export function CallControlBar({
@@ -79,14 +174,8 @@ export function CallControlBar({
         role="toolbar"
         aria-label="Controles da sessão de vídeo"
       >
-        {/* Mic toggle — Stream's built-in button with custom aria-label */}
-        <ToggleAudioPublishingButton caption="Microfone" />
-
-        {/* Camera toggle */}
-        <ToggleVideoPublishingButton caption="Câmera" />
-
-        {/* Screen share — psychologist only (always shown for the host) */}
-        <ScreenShareButton caption="Compartilhar tela" />
+        {/* Mic, camera, screen share — design-system controls backed by Stream hooks */}
+        <DeviceControls />
 
         {/* Chat toggle */}
         <div className="relative">

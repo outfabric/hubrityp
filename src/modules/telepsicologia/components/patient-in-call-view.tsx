@@ -12,7 +12,7 @@ import {
   useCall,
   useCallStateHooks,
 } from '@stream-io/video-react-sdk';
-import { MessageSquare, Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
+import { AlertCircle, MessageSquare, PhoneOff } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/shared/ui/alert';
@@ -22,7 +22,21 @@ import type { ChatCustomEventPayload, RecordingStateEventPayload } from '../lib/
 
 import { ChatDrawer } from './chat-drawer';
 import { ConnectionQualityIndicator } from './connection-quality-indicator';
+import { DeviceToggleButton } from './device-toggle-button';
 import { TroubleshootingPopover } from './troubleshooting-popover';
+
+// ---------------------------------------------------------------------------
+// PT-BR permission errors
+//
+// Surfaced inline when a device toggle Promise rejects (browser blocked the
+// permission). Mirrors the lobby + psychologist bar pattern: an AlertCircle
+// message region inside a role="alert".
+// ---------------------------------------------------------------------------
+
+const MIC_PERMISSION_ERROR =
+  'Não foi possível acessar o microfone. Verifique as permissões do navegador.';
+const CAMERA_PERMISSION_ERROR =
+  'Não foi possível acessar a câmera. Verifique as permissões do navegador.';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -92,7 +106,7 @@ function logVideoEvent(videoToken: string, eventType: 'patient_joined' | 'patien
 // Inner: call controls (simplified patient bar — no screen share, has chat)
 // ---------------------------------------------------------------------------
 
-function PatientCallControls({
+export function PatientCallControls({
   onLeave,
   isChatOpen,
   onChatToggle,
@@ -109,12 +123,21 @@ function PatientCallControls({
   const { microphone, isMute: isMicMuted } = useMicrophoneState();
   const { camera, isMute: isCameraMuted } = useCameraState();
 
+  // Inline permission-error region, matching the lobby + psychologist bar.
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+
   const handleToggleMic = useCallback(() => {
-    void microphone.toggle();
+    void microphone
+      .toggle()
+      .then(() => setPermissionError(null))
+      .catch(() => setPermissionError(MIC_PERMISSION_ERROR));
   }, [microphone]);
 
   const handleToggleCamera = useCallback(() => {
-    void camera.toggle();
+    void camera
+      .toggle()
+      .then(() => setPermissionError(null))
+      .catch(() => setPermissionError(CAMERA_PERMISSION_ERROR));
   }, [camera]);
 
   return (
@@ -123,33 +146,23 @@ function PatientCallControls({
       role="toolbar"
       aria-label="Controles da videochamada"
     >
-      {/* Mic toggle */}
-      <Button
-        variant={isMicMuted ? 'outline' : 'ghost'}
-        size="icon"
-        onClick={handleToggleMic}
-        aria-label={isMicMuted ? 'Ligar microfone' : 'Desligar microfone'}
-      >
-        {isMicMuted ? (
-          <MicOff className="h-5 w-5" aria-hidden="true" />
-        ) : (
-          <Mic className="h-5 w-5" aria-hidden="true" />
-        )}
-      </Button>
+      {/* Mic toggle — design-system control backed by Stream hooks. NO screen share. */}
+      <DeviceToggleButton
+        kind="mic"
+        isOff={isMicMuted}
+        onToggle={handleToggleMic}
+        ariaLabel={isMicMuted ? 'Ligar microfone' : 'Desligar microfone'}
+        data-testid="patient-mic-toggle-button"
+      />
 
       {/* Camera toggle */}
-      <Button
-        variant={isCameraMuted ? 'outline' : 'ghost'}
-        size="icon"
-        onClick={handleToggleCamera}
-        aria-label={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
-      >
-        {isCameraMuted ? (
-          <VideoOff className="h-5 w-5" aria-hidden="true" />
-        ) : (
-          <Video className="h-5 w-5" aria-hidden="true" />
-        )}
-      </Button>
+      <DeviceToggleButton
+        kind="camera"
+        isOff={isCameraMuted}
+        onToggle={handleToggleCamera}
+        ariaLabel={isCameraMuted ? 'Ligar câmera' : 'Desligar câmera'}
+        data-testid="patient-camera-toggle-button"
+      />
 
       {/* Chat toggle */}
       <div className="relative">
@@ -185,6 +198,24 @@ function PatientCallControls({
       >
         <PhoneOff className="h-5 w-5" aria-hidden="true" />
       </Button>
+
+      {/* Permission error — same copy/markup as the lobby */}
+      {permissionError && (
+        <div
+          className="bg-danger-50 flex items-start gap-2 rounded-xl p-4"
+          role="alert"
+          data-testid="patient-permission-error"
+        >
+          <AlertCircle className="text-danger-700 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="text-danger-700 text-sm">{permissionError}</p>
+            <p className="text-text-tertiary text-xs">
+              Verifique as configurações do navegador e permita o acesso à câmera e microfone para
+              este site.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

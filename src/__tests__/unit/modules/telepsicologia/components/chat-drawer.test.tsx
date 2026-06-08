@@ -246,6 +246,84 @@ describe('ChatDrawer', () => {
     expect(mockSendCustomEvent).not.toHaveBeenCalled();
   });
 
+  it("sender's own message is not duplicated by the echo", async () => {
+    const user = userEvent.setup();
+    renderDrawer({ open: true });
+
+    // Send a message — adds one optimistic local copy with id 'test-uuid-1234'.
+    await user.type(screen.getByTestId('chat-input-field'), 'Mensagem do psicologo');
+    await user.click(screen.getByTestId('chat-send-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Mensagem do psicologo')).toBeInTheDocument();
+    });
+
+    // Stream broadcasts the custom event back to the originating client: the
+    // sender receives an echo carrying the SAME id and senderId.
+    simulateIncomingMessage({
+      id: 'test-uuid-1234',
+      text: 'Mensagem do psicologo',
+      senderId: defaultCurrentUser.id,
+      senderName: defaultCurrentUser.name,
+    });
+
+    // The message must appear exactly once despite the echo.
+    expect(screen.getAllByText('Mensagem do psicologo')).toHaveLength(1);
+  });
+
+  it('drops a duplicate-id event without growing the list', () => {
+    renderDrawer({ open: true });
+
+    simulateIncomingMessage({
+      id: 'dup-msg',
+      text: 'Mensagem unica',
+      senderId: 'patient-456',
+      senderName: 'Paciente',
+    });
+
+    expect(screen.getAllByText('Mensagem unica')).toHaveLength(1);
+
+    // A redelivery (transport redelivery / StrictMode double-mount) of the same
+    // id must be ignored — the list does not grow.
+    simulateIncomingMessage({
+      id: 'dup-msg',
+      text: 'Mensagem unica',
+      senderId: 'patient-456',
+      senderName: 'Paciente',
+    });
+
+    expect(screen.getAllByText('Mensagem unica')).toHaveLength(1);
+  });
+
+  it('appends a genuinely new message from the other participant once and in order', () => {
+    renderDrawer({ open: true });
+
+    simulateIncomingMessage({
+      id: 'other-1',
+      text: 'Primeira do paciente',
+      senderId: 'patient-456',
+      senderName: 'Paciente',
+      timestamp: '2026-05-23T10:30:00Z',
+    });
+
+    simulateIncomingMessage({
+      id: 'other-2',
+      text: 'Segunda do paciente',
+      senderId: 'patient-456',
+      senderName: 'Paciente',
+      timestamp: '2026-05-23T10:31:00Z',
+    });
+
+    // Each appears exactly once.
+    expect(screen.getAllByText('Primeira do paciente')).toHaveLength(1);
+    expect(screen.getAllByText('Segunda do paciente')).toHaveLength(1);
+
+    // Order preserved: first appended before second in the DOM.
+    const first = screen.getByText('Primeira do paciente');
+    const second = screen.getByText('Segunda do paciente');
+    expect(first.compareDocumentPosition(second)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it('caps oversized messages at MAX_CHAT_MESSAGE_LENGTH', async () => {
     const user = userEvent.setup();
     renderDrawer({ open: true });

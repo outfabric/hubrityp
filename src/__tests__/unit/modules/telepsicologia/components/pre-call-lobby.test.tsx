@@ -192,4 +192,105 @@ describe('PreCallLobby', () => {
 
     expect(screen.getByText('Joana Silva está aguardando')).toBeInTheDocument();
   });
+
+  // -------------------------------------------------------------------------
+  // DeviceToggleButton integration (rule-of-three extraction)
+  //
+  // After Section 5, the lobby renders mic/camera via the shared
+  // DeviceToggleButton. These assertions pin the contract: stable testids,
+  // ghost variant when the device is on, outline when off, and the existing
+  // toggle().catch permission handling still surfaces an inline error.
+  // -------------------------------------------------------------------------
+
+  it('renders mic and camera as DeviceToggleButton with stable testids', () => {
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    expect(screen.getByTestId('mic-toggle-button')).toBeInTheDocument();
+    expect(screen.getByTestId('camera-toggle-button')).toBeInTheDocument();
+  });
+
+  it('uses the ghost variant for mic/camera when devices are on', () => {
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    const mic = screen.getByTestId('mic-toggle-button');
+    const camera = screen.getByTestId('camera-toggle-button');
+
+    // DeviceToggleButton maps isOff=false -> variant "ghost" (no border, unlike outline)
+    expect(mic).not.toHaveClass('border-border-strong');
+    expect(camera).not.toHaveClass('border-border-strong');
+    // On-state label + accessible name
+    expect(mic).toHaveAccessibleName('Desligar microfone');
+    expect(camera).toHaveAccessibleName('Desligar câmera');
+  });
+
+  it('uses the outline variant for mic/camera when devices are muted', () => {
+    mockIsMicMuted = true;
+    mockIsCameraMuted = true;
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    const mic = screen.getByTestId('mic-toggle-button');
+    const camera = screen.getByTestId('camera-toggle-button');
+
+    // DeviceToggleButton maps isOff=true -> variant "outline" (has border-border-strong)
+    expect(mic).toHaveClass('border-border-strong');
+    expect(camera).toHaveClass('border-border-strong');
+    // Off-state label + accessible name
+    expect(mic).toHaveAccessibleName('Ligar microfone');
+    expect(camera).toHaveAccessibleName('Ligar câmera');
+  });
+
+  it('toggles the mic via the shared button', async () => {
+    const user = userEvent.setup();
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    await user.click(screen.getByTestId('mic-toggle-button'));
+
+    expect(mockMicToggle).toHaveBeenCalledOnce();
+  });
+
+  it('toggles the camera via the shared button', async () => {
+    const user = userEvent.setup();
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    await user.click(screen.getByTestId('camera-toggle-button'));
+
+    expect(mockCameraToggle).toHaveBeenCalledOnce();
+  });
+
+  it('surfaces a permission error when microphone.toggle() rejects', async () => {
+    const user = userEvent.setup();
+    mockMicToggle.mockRejectedValueOnce(new DOMException('NotAllowedError'));
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    await user.click(screen.getByTestId('mic-toggle-button'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Não foi possível acessar o microfone. Verifique as permissões do navegador.',
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('surfaces a permission error when camera.toggle() rejects', async () => {
+    const user = userEvent.setup();
+    mockCameraToggle.mockRejectedValueOnce(new DOMException('NotAllowedError'));
+
+    render(<PreCallLobby patient={{ id: 'p-1', fullName: 'Joana Silva' }} />);
+
+    await user.click(screen.getByTestId('camera-toggle-button'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'Não foi possível acessar a câmera. Verifique as permissões do navegador.',
+        ),
+      ).toBeInTheDocument();
+    });
+  });
 });

@@ -49,7 +49,10 @@ export function ChatInput({ onSend }: ChatInputProps) {
   );
 
   return (
-    <div className="bg-surface-muted flex items-center gap-2 px-3 py-3" data-testid="chat-input">
+    <div
+      className="bg-surface border-border flex items-center gap-2 border-t px-4 py-3"
+      data-testid="chat-input"
+    >
       <Input
         ref={inputRef}
         value={text}
