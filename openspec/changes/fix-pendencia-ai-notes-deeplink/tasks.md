@@ -1,8 +1,8 @@
 ## 1. Allowlist parser (status → initial tab)
 
-- [ ] 1.1 Create `src/modules/ai-transcription/lib/transcription-list-tab.ts` exporting `TRANSCRIPTION_TABS`, the `TranscriptionTab` type, `DEFAULT_TRANSCRIPTION_TAB = 'pending'`, and `resolveInitialTabFromStatus(raw: string | string[] | undefined): TranscriptionTab`. Closed allowlist `{ ready: 'pending' }`; any non-string / unknown / empty value returns the default and never throws (design D1, RF-12.03/RF-12.16, RNF-12.05).
-- [ ] 1.2 Re-export `resolveInitialTabFromStatus` and the `TranscriptionTab` type from the module barrel `src/modules/ai-transcription/index.ts`.
-- [ ] 1.3 Unit test `src/__tests__/unit/modules/ai-transcription/lib/transcription-list-tab.test.ts`: assert `'ready'→'pending'`, `undefined→'pending'`, `'xyz'→'pending'`, `''→'pending'`, `['ready','reviewed']→'pending'`. Run `npm run test:unit` for this file.
+- [x] 1.1 Create `src/modules/ai-transcription/lib/transcription-list-tab.ts` exporting `TRANSCRIPTION_TABS`, the `TranscriptionTab` type, `DEFAULT_TRANSCRIPTION_TAB = 'pending'`, and `resolveInitialTabFromStatus(raw: string | string[] | undefined): TranscriptionTab`. Closed allowlist `{ ready: 'pending' }`; any non-string / unknown / empty value returns the default and never throws (design D1, RF-12.03/RF-12.16, RNF-12.05).
+- [x] 1.2 Re-export `resolveInitialTabFromStatus` and the `TranscriptionTab` type from the module barrel `src/modules/ai-transcription/index.ts`.
+- [x] 1.3 Unit test `src/__tests__/unit/modules/ai-transcription/lib/transcription-list-tab.test.ts`: assert `'ready'→'pending'`, `undefined→'pending'`, `'xyz'→'pending'`, `''→'pending'`, `['ready','reviewed']→'pending'`. Run `npm run test:unit` for this file.
 
 ## 2. Correct the dashboard AI-notes deep-link constant
 

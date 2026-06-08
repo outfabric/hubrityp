@@ -42,6 +42,9 @@ export {
 // ---- Pure helpers -----------------------------------------------------------
 export { pseudonymizeTranscript } from './lib/pseudonymize';
 
+// ---- Review list tab (deep-link status → initial tab) -----------------------
+export { resolveInitialTabFromStatus, type TranscriptionTab } from './lib/transcription-list-tab';
+
 // ---- Client components ------------------------------------------------------
 export { AiRealtimeBoundary } from './components/ai-realtime-boundary';
 
