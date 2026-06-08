@@ -5,8 +5,8 @@
 
 ## 2. Shared `DeviceToggleButton` (#2)
 
-- [ ] 2.1 Create `src/modules/telepsicologia/components/device-toggle-button.tsx` (`'use client'`): a pure presentational wrapper over shadcn `Button` + Lucide icons with props `{ kind: 'mic' | 'camera' | 'screenshare'; isOff: boolean; onToggle: () => void; disabled?: boolean; ariaLabel: string; 'data-testid'?: string }`. Icon map: mic → `Mic`/`MicOff`, camera → `Video`/`VideoOff`, screenshare → `ScreenShare`/`ScreenShareOff`. Visual treatment matches the lobby: `size="icon"`, `variant={isOff ? 'outline' : 'ghost'}`, icon `h-5 w-5` `aria-hidden`. Do NOT call Stream hooks inside the component (callers own state). Export it from the module barrel if other modules need it (otherwise keep internal).
-- [ ] 2.2 Add unit test at `src/__tests__/unit/modules/telepsicologia/components/device-toggle-button.test.tsx`: renders the correct Lucide icon and `variant` for `isOff` true/false per `kind`; fires `onToggle` on click; respects `disabled`; exposes the provided `aria-label`.
+- [x] 2.1 Create `src/modules/telepsicologia/components/device-toggle-button.tsx` (`'use client'`): a pure presentational wrapper over shadcn `Button` + Lucide icons with props `{ kind: 'mic' | 'camera' | 'screenshare'; isOff: boolean; onToggle: () => void; disabled?: boolean; ariaLabel: string; 'data-testid'?: string }`. Icon map: mic → `Mic`/`MicOff`, camera → `Video`/`VideoOff`, screenshare → `ScreenShare`/`ScreenShareOff`. Visual treatment matches the lobby: `size="icon"`, `variant={isOff ? 'outline' : 'ghost'}`, icon `h-5 w-5` `aria-hidden`. Do NOT call Stream hooks inside the component (callers own state). Export it from the module barrel if other modules need it (otherwise keep internal).
+- [x] 2.2 Add unit test at `src/__tests__/unit/modules/telepsicologia/components/device-toggle-button.test.tsx`: renders the correct Lucide icon and `variant` for `isOff` true/false per `kind`; fires `onToggle` on click; respects `disabled`; exposes the provided `aria-label`.
 
 ## 3. Psychologist call bar → design-system controls (#2)
 
