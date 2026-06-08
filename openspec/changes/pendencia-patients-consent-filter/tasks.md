@@ -12,11 +12,11 @@
 
 ## 3. `listPatientsImpl` consent predicate + row enrichment
 
-- [ ] 3.1 Extend `listPatientsQuerySchema` and `ListPatientsQuery` (`src/modules/patients/lib/`) with optional `missingConsent?: boolean` (default false).
-- [ ] 3.2 In `listPatientsImpl` (`src/modules/patients/server/list-patients.ts`), when `missingConsent` is true push `isNull(patients.consentSignedAt)` and `isNull(patients.archivedAt)` into the shared `conditions` (so rows and `count()` stay consistent → parity, RF-12.18; matches the get-pendencias predicate exactly, RN-12.03).
-- [ ] 3.3 When `missingConsent` is true, after fetching the page rows run ONE batched query for the primary-guardian phone of the minor (`child`/`adolescent`) patients on the page (`WHERE patient_id IN (...)`), then resolve a server-side `sharePhone` per row (adult → `patient.phone`; minor → guardian phone) and return a `consentShare: { patientId, sharePhone }[]` alongside the existing result (design D3 — no N+1, no token pre-generation).
-- [ ] 3.4 Integration test `src/__tests__/integration/patients/consent-filter.int.test.ts`: seed signed/unsigned/archived patients → `missingConsent` returns exactly the count predicate set; composes with `search`/`tags`/pagination; archived+consent → empty; `sharePhone` is the guardian's phone for a minor and the patient's for an adult. Run the targeted integration spec.
-- [ ] 3.5 Integration cross-tenant test: seed psychologists A and B each with unconsented patients; assert A's `missingConsent` listing never returns B's rows (RN-12.02). Add to the same spec or `src/__tests__/integration/patients/`.
+- [x] 3.1 Extend `listPatientsQuerySchema` and `ListPatientsQuery` (`src/modules/patients/lib/`) with optional `missingConsent?: boolean` (default false).
+- [x] 3.2 In `listPatientsImpl` (`src/modules/patients/server/list-patients.ts`), when `missingConsent` is true push `isNull(patients.consentSignedAt)` and `isNull(patients.archivedAt)` into the shared `conditions` (so rows and `count()` stay consistent → parity, RF-12.18; matches the get-pendencias predicate exactly, RN-12.03).
+- [x] 3.3 When `missingConsent` is true, after fetching the page rows run ONE batched query for the primary-guardian phone of the minor (`child`/`adolescent`) patients on the page (`WHERE patient_id IN (...)`), then resolve a server-side `sharePhone` per row (adult → `patient.phone`; minor → guardian phone) and return a `consentShare: { patientId, sharePhone }[]` alongside the existing result (design D3 — no N+1, no token pre-generation).
+- [x] 3.4 Integration test `src/__tests__/integration/patients/consent-filter.int.test.ts`: seed signed/unsigned/archived patients → `missingConsent` returns exactly the count predicate set; composes with `search`/`tags`/pagination; archived+consent → empty; `sharePhone` is the guardian's phone for a minor and the patient's for an adult. Run the targeted integration spec.
+- [x] 3.5 Integration cross-tenant test: seed psychologists A and B each with unconsented patients; assert A's `missingConsent` listing never returns B's rows (RN-12.02). Add to the same spec or `src/__tests__/integration/patients/`.
 
 ## 4. Page wiring: parse `filtro`, thread filter state
 

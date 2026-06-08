@@ -26,7 +26,11 @@ export {
   type UnarchivePatientResult,
 } from './server/archive-patient';
 export { deletePatientImpl, type DeletePatientResult } from './server/delete-patient';
-export { listPatientsImpl, type ListPatientsResult } from './server/list-patients';
+export {
+  listPatientsImpl,
+  type ConsentShare,
+  type ListPatientsResult,
+} from './server/list-patients';
 export {
   uploadPatientPhotoImpl,
   type UploadPatientPhotoResult,

@@ -158,6 +158,9 @@ export function PatientList({
       search: debouncedSearch || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
+      // This list view does not surface the missing-consent pendência filter;
+      // the dashboard deep-link sets it via searchParams on a separate path.
+      missingConsent: false,
       ...overrides,
     }),
     [currentPage, pageSize, sortColumn, sortOrder, debouncedSearch, statusFilter, selectedTags],

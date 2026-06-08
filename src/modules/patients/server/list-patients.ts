@@ -1,17 +1,33 @@
 import 'server-only';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 
 import { listPatientsQuerySchema } from '@/modules/patients/lib/patient-input-schema';
 import type { ListPatientsQuery } from '@/modules/patients/lib/patient-types';
 import { db } from '@/shared/db/client';
-import { patients, type Patient } from '@/shared/db/schema/patients/tables';
+import { patientGuardians, patients, type Patient } from '@/shared/db/schema/patients/tables';
 import { logger } from '@/shared/lib/logger';
+
+// Patient types whose share phone is the patient's own number. Minors
+// (`child`/`adolescent`) instead share via the primary guardian's phone.
+const MINOR_PATIENT_TYPES = new Set(['child', 'adolescent']);
 
 // ---------------------------------------------------------------------------
 // Result types
 // ---------------------------------------------------------------------------
+
+/**
+ * Per-row, server-resolved phone to use when sharing the consent link from the
+ * "missing consent" listing. Resolved server-side (never trusting the client):
+ *   - adult (individual/couple/elderly) → the patient's own phone
+ *   - minor (child/adolescent)          → the primary guardian's phone
+ * `sharePhone` is null when no usable phone exists for the row.
+ */
+export type ConsentShare = {
+  patientId: string;
+  sharePhone: string | null;
+};
 
 export type ListPatientsResult =
   | {
@@ -20,6 +36,9 @@ export type ListPatientsResult =
       total: number;
       page: number;
       pageSize: number;
+      // Present only when the listing was filtered by `missingConsent`. Parallel
+      // to the returned `patients` page (one entry per row).
+      consentShare?: ConsentShare[];
     }
   | { ok: false; error: 'unauthenticated' }
   | { ok: false; error: 'invalid_input'; fieldErrors: Record<string, string[]> }
@@ -78,6 +97,16 @@ export async function listPatientsImpl(
     conditions.push(eq(patients.status, query.status));
   }
 
+  // Missing-consent filter. Mirrors the dashboard pendência count predicate
+  // exactly (`isNull(consentSignedAt) AND isNull(archivedAt)`, owner-scoped) so
+  // this listing's header count equals the dashboard count (RF-12.18 / RN-12.03).
+  // Pushed into the shared `conditions`, so both the rows query and the count()
+  // query stay consistent.
+  if (query.missingConsent) {
+    conditions.push(isNull(patients.consentSignedAt));
+    conditions.push(isNull(patients.archivedAt));
+  }
+
   // Search: accent-insensitive ILIKE on full_name, plain ILIKE on phone/email
   if (query.search && query.search.trim() !== '') {
     const term = query.search.trim();
@@ -134,12 +163,22 @@ export async function listPatientsImpl(
 
     const total = totalResult[0]?.count ?? 0;
 
+    // Row-action enrichment for the missing-consent listing: resolve the phone
+    // to share the consent link with, per row, WITHOUT an N+1. Minors get the
+    // primary guardian's phone via a single batched lookup; adults use their own
+    // phone. Done server-side — the client never supplies the phone.
+    let consentShare: ConsentShare[] | undefined;
+    if (query.missingConsent) {
+      consentShare = await resolveConsentShare(rows);
+    }
+
     return {
       ok: true,
       patients: rows,
       total,
       page: query.page,
       pageSize: query.pageSize,
+      ...(consentShare ? { consentShare } : {}),
     };
   } catch (err: unknown) {
     const pgError = err as { code?: string; message?: string };
@@ -153,4 +192,46 @@ export async function listPatientsImpl(
       message: 'Erro inesperado ao listar pacientes. Tente novamente.',
     };
   }
+}
+
+/**
+ * Resolves the per-row share phone for a page of missing-consent patients
+ * without an N+1: adults map directly to their own phone; minors are resolved
+ * via ONE batched query for their primary guardian's phone.
+ *
+ * The guardian query is scoped to the page's minor ids only — and those ids
+ * came from an owner-scoped (and RLS-backed) patients query, so it never
+ * reaches another tenant's guardians.
+ */
+async function resolveConsentShare(rows: Patient[]): Promise<ConsentShare[]> {
+  const minorIds = rows.filter((p) => MINOR_PATIENT_TYPES.has(p.patientType)).map((p) => p.id);
+
+  // Batched primary-guardian phone lookup for the minors on this page.
+  // `is_primary DESC, created_at ASC` makes the pick deterministic: the primary
+  // guardian wins, falling back to the earliest-created guardian otherwise.
+  const guardianPhoneByPatientId = new Map<string, string | null>();
+  if (minorIds.length > 0) {
+    const guardianRows = await db
+      .select({
+        patientId: patientGuardians.patientId,
+        phone: patientGuardians.phone,
+      })
+      .from(patientGuardians)
+      .where(inArray(patientGuardians.patientId, minorIds))
+      .orderBy(desc(patientGuardians.isPrimary), asc(patientGuardians.createdAt));
+
+    // First row per patient wins (ordering above puts the primary guardian first).
+    for (const g of guardianRows) {
+      if (!guardianPhoneByPatientId.has(g.patientId)) {
+        guardianPhoneByPatientId.set(g.patientId, g.phone ?? null);
+      }
+    }
+  }
+
+  return rows.map((p) => ({
+    patientId: p.id,
+    sharePhone: MINOR_PATIENT_TYPES.has(p.patientType)
+      ? (guardianPhoneByPatientId.get(p.id) ?? null)
+      : (p.phone ?? null),
+  }));
 }

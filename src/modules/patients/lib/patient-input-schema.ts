@@ -215,4 +215,16 @@ export const listPatientsQuerySchema = z.object({
   tags: z.union([z.string().transform((s) => s.split(',')), z.array(z.string())]).optional(),
   sort: z.enum(SORT_COLUMNS).default('full_name'),
   order: z.enum(SORT_ORDERS).default('asc'),
+  // When true, restricts the listing to the "missing consent" pendência set:
+  // patients with no signed consent that are not archived. The predicate is
+  // applied to both the rows query and the count() query so the header count
+  // matches the dashboard pendência count exactly (RF-12.18 / RN-12.03).
+  //
+  // Accepts a real boolean or the URL strings 'true'/'1'; anything else
+  // (including the string 'false') falls back to false. We avoid
+  // `z.coerce.boolean()` because it coerces ANY non-empty string (e.g. 'false')
+  // to true — a footgun for a flag fed from query params.
+  missingConsent: z
+    .preprocess((v) => (typeof v === 'string' ? v === 'true' || v === '1' : v), z.boolean())
+    .default(false),
 });
