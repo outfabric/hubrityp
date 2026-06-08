@@ -1,7 +1,7 @@
 ## 1. Chat message de-duplication (#1)
 
-- [ ] 1.1 In `src/modules/telepsicologia/components/chat-drawer.tsx`, fix the `call.on('custom')` handler so a sent message is never duplicated: de-dup by `id` in the `setMessages` updater (`prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]`) and add a self-skip (`if (payload.senderId === currentUser.id) return;`) as defense-in-depth. Keep the single subscription with its `unsubscribe` cleanup so listeners do not stack. Preserve all existing `data-testid`s.
-- [ ] 1.2 Add unit test (Vitest + RTL) at `src/__tests__/unit/modules/telepsicologia/components/chat-drawer.test.tsx`: simulate a `custom` event echoing a just-sent message (same `id`) and assert the sender sees it exactly once; assert a duplicate-`id` event does not grow the list; assert a new `id` from the other participant is appended exactly once and in order.
+- [x] 1.1 In `src/modules/telepsicologia/components/chat-drawer.tsx`, fix the `call.on('custom')` handler so a sent message is never duplicated: de-dup by `id` in the `setMessages` updater (`prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]`) and add a self-skip (`if (payload.senderId === currentUser.id) return;`) as defense-in-depth. Keep the single subscription with its `unsubscribe` cleanup so listeners do not stack. Preserve all existing `data-testid`s.
+- [x] 1.2 Add unit test (Vitest + RTL) at `src/__tests__/unit/modules/telepsicologia/components/chat-drawer.test.tsx`: simulate a `custom` event echoing a just-sent message (same `id`) and assert the sender sees it exactly once; assert a duplicate-`id` event does not grow the list; assert a new `id` from the other participant is appended exactly once and in order.
 
 ## 2. Shared `DeviceToggleButton` (#2)
 

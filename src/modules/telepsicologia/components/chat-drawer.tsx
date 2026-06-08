@@ -51,6 +51,13 @@ export function ChatDrawer({ open, onOpenChange, call, currentUser }: ChatDrawer
       // Validate required fields before accepting
       if (!payload.id || !payload.text || !payload.senderId || !payload.senderName) return;
 
+      // Defense-in-depth: skip the echo of our own message. Stream broadcasts
+      // call custom events back to the originating client, so the sender would
+      // otherwise receive a copy of the message it already added optimistically.
+      // Correctness does not depend on this guard — the id de-dup below is the
+      // load-bearing fix — but it mirrors the unread-listener pattern.
+      if (payload.senderId === currentUser.id) return;
+
       const incoming: ChatMessage = {
         id: payload.id,
         text: payload.text,
@@ -59,11 +66,15 @@ export function ChatDrawer({ open, onOpenChange, call, currentUser }: ChatDrawer
         timestamp: payload.timestamp ?? new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, incoming]);
+      // De-dup by id: the optimistic local copy and any echoed/redelivered copy
+      // share the same crypto.randomUUID() generated once at send time. This
+      // single guard neutralizes the self-echo and any double-delivery
+      // (StrictMode double-mount, transport redelivery).
+      setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
     });
 
     return unsubscribe;
-  }, [call]);
+  }, [call, currentUser.id]);
 
   const handleSend = useCallback(
     (text: string) => {
