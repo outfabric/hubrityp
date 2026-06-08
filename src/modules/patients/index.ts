@@ -163,6 +163,9 @@ export {
 // ---- Consent Share Helpers ---------------------------------------------------
 export { extractPhoneDigits, buildConsentUrl, buildConsentWhatsAppHref } from './lib/consent-share';
 
+// ---- Address Formatting ------------------------------------------------------
+export { formatAddress } from './lib/format-address';
+
 // ---- List Filter -------------------------------------------------------------
 export {
   PATIENT_LIST_FILTERS,

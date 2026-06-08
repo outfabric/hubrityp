@@ -1,5 +1,6 @@
 import type { Patient, PatientGuardian } from '@/shared/db/schema/patients/tables';
 
+import { formatAddress } from '../lib/format-address';
 import {
   GENDER_LABELS,
   MARITAL_STATUS_LABELS,
@@ -180,7 +181,11 @@ export function PatientOverviewTab({
             testId="patient-field-cpf"
           />
 
-          <DataField label="Endereço" value={patient.address} testId="patient-field-address" />
+          <DataField
+            label="Endereço"
+            value={formatAddress(patient.address)}
+            testId="patient-field-address"
+          />
 
           <DataField
             label="Cadastrado em"

@@ -4,6 +4,8 @@ import PDFDocument from 'pdfkit';
 
 import type { Anamnesis } from '@/shared/db/schema/patients/tables';
 
+import { formatAddress } from './format-address';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -203,8 +205,9 @@ export async function generatePatientPdf(input: PatientPdfInput): Promise<Buffer
       addField(doc, 'CPF', maskCpf(input.cpf));
     }
 
-    if (input.address) {
-      addField(doc, 'Endereço', input.address);
+    const formattedAddress = formatAddress(input.address);
+    if (formattedAddress) {
+      addField(doc, 'Endereço', formattedAddress);
     }
 
     if (input.profession) {
