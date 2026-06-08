@@ -18,7 +18,7 @@ import { TroubleshootingPopover } from './troubleshooting-popover';
 //
 // Surfaced inline when a device toggle Promise rejects (browser blocked the
 // permission). Consistent with RecordingControls' inline error rendering:
-// small danger-coloured text inside a role="alert" region.
+// small danger-colored text inside a role="alert" region.
 // ---------------------------------------------------------------------------
 
 const MIC_PERMISSION_ERROR =
