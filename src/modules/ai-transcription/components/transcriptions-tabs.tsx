@@ -1,6 +1,10 @@
 'use client';
 
-import type { TranscriptionListBuckets, TranscriptionListItem } from '@/modules/ai-transcription';
+import type {
+  TranscriptionListBuckets,
+  TranscriptionListItem,
+  TranscriptionTab,
+} from '@/modules/ai-transcription';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 import { TranscriptionListCard } from './transcription-list-card';
@@ -34,6 +38,11 @@ function TabPanel({ items, emptyLabel }: { items: TranscriptionListItem[]; empty
 
 interface TranscriptionsTabsProps {
   buckets: TranscriptionListBuckets;
+  /**
+   * Tab to seed on the first render (server-resolved from a `?status=` deep
+   * link). Optional — when omitted the priority "Pendentes" bucket wins.
+   */
+  initialTab?: TranscriptionTab;
 }
 
 /**
@@ -44,10 +53,13 @@ interface TranscriptionsTabsProps {
  * per the spec. When ALL buckets are empty the page renders the global
  * `TranscriptionsEmptyState` instead of this component, so this component only
  * has to handle the "this specific tab is empty" case.
+ *
+ * The tabs stay UNCONTROLLED (`defaultValue`, not `value`): `initialTab` only
+ * seeds the first render, so the user can still switch tabs freely afterward.
  */
-export function TranscriptionsTabs({ buckets }: TranscriptionsTabsProps) {
+export function TranscriptionsTabs({ buckets, initialTab }: TranscriptionsTabsProps) {
   return (
-    <Tabs defaultValue="pending" data-testid="transcriptions-tabs">
+    <Tabs defaultValue={initialTab ?? 'pending'} data-testid="transcriptions-tabs">
       <TabsList>
         <TabsTrigger value="pending" data-testid="tab-pending">
           Pendentes

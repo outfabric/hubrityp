@@ -18,7 +18,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 // filtered list, never at a clinical record's content.
 const OVERDUE_EVOLUTIONS_HREF = '/agenda?filtro=sem-evolucao';
 const PATIENTS_MISSING_CONSENT_HREF = '/pacientes?filtro=sem-consentimento';
-const AI_NOTES_AWAITING_REVIEW_HREF = '/configuracoes/ia/transcricoes?status=ready';
+const AI_NOTES_AWAITING_REVIEW_HREF = '/dashboard/transcricoes?status=ready';
 
 /**
  * Computes the three MVP pendência counts for the authenticated psychologist.

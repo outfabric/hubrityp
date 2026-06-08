@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { listTranscriptionsForReviewImpl } from '@/modules/ai-transcription';
+import {
+  listTranscriptionsForReviewImpl,
+  resolveInitialTabFromStatus,
+  type TranscriptionTab,
+} from '@/modules/ai-transcription';
 import { TranscriptionsEmptyState } from '@/modules/ai-transcription/components/transcriptions-empty-state';
 import { TranscriptionsTabs } from '@/modules/ai-transcription/components/transcriptions-tabs';
 import { createServerClient } from '@/shared/supabase/server';
@@ -10,7 +14,7 @@ import { createServerClient } from '@/shared/supabase/server';
 // Inner async component that fetches data
 // ---------------------------------------------------------------------------
 
-async function TranscriptionListServer() {
+async function TranscriptionListServer({ initialTab }: { initialTab: TranscriptionTab }) {
   const supabase = await createServerClient();
   const result = await listTranscriptionsForReviewImpl(supabase);
 
@@ -31,6 +35,7 @@ async function TranscriptionListServer() {
 
   return (
     <TranscriptionsTabs
+      initialTab={initialTab}
       buckets={{
         pending: result.pending,
         reviewed: result.reviewed,
@@ -44,7 +49,17 @@ async function TranscriptionListServer() {
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function TranscricoesPage() {
+export default async function TranscricoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string | string[] }>;
+}) {
+  // Deep-link support: `?status=ready` seeds the "Pendentes" tab on first
+  // render. The resolver treats the param as fully untrusted (closed allowlist,
+  // never reflects the raw value) — see resolveInitialTabFromStatus.
+  const { status } = await searchParams;
+  const initialTab = resolveInitialTabFromStatus(status);
+
   return (
     <div className="mx-auto max-w-[1200px]">
       <div className="mb-6">
@@ -63,7 +78,7 @@ export default function TranscricoesPage() {
           </div>
         }
       >
-        <TranscriptionListServer />
+        <TranscriptionListServer initialTab={initialTab} />
       </Suspense>
     </div>
   );
