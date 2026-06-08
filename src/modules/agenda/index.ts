@@ -145,3 +145,24 @@ export {
 
 // ---- Zod Schema — cancellation input ----------------------------------------
 export { cancelSessionInputSchema, type CancelSessionInput } from './lib/cancellation-schema';
+
+// ---- Lib — list-filter allowlist parser -------------------------------------
+export {
+  AGENDA_LIST_FILTERS,
+  type AgendaListFilter,
+  resolveAgendaListFilter,
+} from './lib/agenda-list-filter';
+
+// ---- Lib — overdue-days helper ----------------------------------------------
+export { overdueDays } from './lib/overdue-days';
+
+// ---- Server Actions (overdue evolutions list) -------------------------------
+export {
+  listOverdueEvolutionsImpl,
+  type ListOverdueEvolutionsResult,
+  type OverdueEvolutionItem,
+} from './server/list-overdue-evolutions';
+
+// ---- Components — overdue evolutions list view -------------------------------
+export { OverdueEvolutionsList } from './components/overdue-evolutions-list';
+export { OverdueFilterChip } from './components/overdue-filter-chip';

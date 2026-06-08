@@ -14,6 +14,7 @@ import {
   SEED_NPS_USER,
   SEED_ONBOARDING_CHECKLIST_USER,
   SEED_ONBOARDING_TOUR_USER,
+  SEED_OVERDUE_EVOLUTIONS_USER,
   SEED_PATIENTS,
   SEED_SESSIONS,
 } from './seed-state';
@@ -1176,6 +1177,120 @@ export default async function globalSetup() {
         archived_at        = now(),
         consent_signed_at  = NULL,
         consent_revoked_at = NULL;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated overdue-evolutions user (agenda/overdue-evolutions-list.spec.ts).
+    //
+    // A seventh active psychologist touched by NOTHING else, owning a
+    // deterministic set of `done` sessions so the `/agenda?filtro=sem-evolucao`
+    // list has exactly 3 overdue rows (oldest-first) and the header count
+    // equals the dashboard pendência count for this same user (RF-12.18). Two
+    // control sessions are EXCLUDED: one inside the 7-day window, one older but
+    // already evolved (anti-join). See SEED_OVERDUE_EVOLUTIONS_USER for the full
+    // rationale. `tour_completed_at` is stamped and `first_access_at` left NULL
+    // so neither overlay auto-runs and steals the row CTA / chip clicks.
+    // -----------------------------------------------------------------------
+    const oeUser = SEED_OVERDUE_EVOLUTIONS_USER;
+    const oeMetadata = JSON.stringify({
+      fullName: oeUser.fullName,
+      crpNumber: '77777-G',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${oeUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${oeUser.email},
+        ${oeMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${oeUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          requires_password_reset = false
+      WHERE user_id = ${oeUser.id};
+    `;
+    // Wipe stale rows (FK-ordered: evolutions reference sessions) so the spec
+    // starts from a known set on the reused container.
+    await sql`DELETE FROM public.evolutions WHERE user_id = ${oeUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${oeUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${oeUser.id}`;
+
+    const oep = oeUser.patient;
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at)
+      VALUES (
+        ${oep.id}, ${oeUser.id}, ${oep.fullName}, 'individual', 'active', NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id     = EXCLUDED.user_id,
+        full_name   = EXCLUDED.full_name,
+        status      = 'active',
+        archived_at = NULL;
+    `;
+
+    const oes = oeUser.sessions;
+    // Five `done` sessions: three overdue-without-evolution (oldest-first by age),
+    // one recent (inside the window), one old-but-evolved. `start_at` is anchored
+    // to `now()` minus N days so the relationship to the 7-day window holds on
+    // every run regardless of wall-clock date.
+    for (const session of [
+      oes.overdueOldest,
+      oes.overdueMiddle,
+      oes.overdueNewest,
+      oes.recentDone,
+      oes.oldDoneEvolved,
+    ]) {
+      await sql`
+        INSERT INTO public.sessions (
+          id, user_id, patient_id,
+          start_at, end_at, duration_minutes,
+          status, modality, is_blocking
+        )
+        VALUES (
+          ${session.id},
+          ${oeUser.id},
+          ${oep.id},
+          (now() - (${session.ageDays} || ' days')::interval),
+          (now() - (${session.ageDays} || ' days')::interval + interval '50 minutes'),
+          50, 'done', 'in_person', false
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          start_at   = EXCLUDED.start_at,
+          end_at     = EXCLUDED.end_at,
+          status     = 'done',
+          modality   = 'in_person',
+          deleted_at = NULL;
+      `;
+    }
+
+    // The old-but-evolved control session gets a seeded evolution so the
+    // anti-join excludes it from the overdue list.
+    await sql`
+      INSERT INTO public.evolutions (id, user_id, patient_id, session_id, template_type, content)
+      VALUES (
+        ${oes.oldDoneEvolved.evolutionId},
+        ${oeUser.id},
+        ${oep.id},
+        ${oes.oldDoneEvolved.id},
+        'livre',
+        ${'{"text":"Evolucao de controle"}'}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
     `;
   } finally {
     await sql.end();
