@@ -29,9 +29,9 @@
 
 ## 6. E2E coverage (flows + negative-auth)
 
-- [ ] 6.1 E2E (seeded) `src/__tests__/e2e/seeded/agenda/`: dashboard "Ver" (sessões sem evolução) → `/agenda?filtro=sem-evolucao` renders the **list** (not the calendar); items oldest-first; chip count matches the dashboard (PRD §9).
-- [ ] 6.2 E2E: "Registrar evolução" href is `/pacientes/{patientId}/prontuario/evolucoes/nova?sessionId={sessionId}` and opens that session's evolution.
-- [ ] 6.3 E2E resolve flow: register an evolution for a listed session → return to the list → row gone and count decremented (RF-12.10).
-- [ ] 6.4 E2E: remove chip → URL drops `filtro`, calendar returns; unknown `?filtro=xyz` → calendar, no error (RF-12.16); empty set → "Tudo em dia. 🎉" positive state with link to the full agenda.
-- [ ] 6.5 E2E negative-auth: anonymous `/agenda?filtro=sem-evolucao` redirects to `/login`.
+- [x] 6.1 E2E (seeded) `src/__tests__/e2e/seeded/agenda/`: dashboard "Ver" (sessões sem evolução) → `/agenda?filtro=sem-evolucao` renders the **list** (not the calendar); items oldest-first; chip count matches the dashboard (PRD §9).
+- [x] 6.2 E2E: "Registrar evolução" href is `/pacientes/{patientId}/prontuario/evolucoes/nova?sessionId={sessionId}` and opens that session's evolution.
+- [x] 6.3 E2E resolve flow: register an evolution for a listed session → return to the list → row gone and count decremented (RF-12.10).
+- [x] 6.4 E2E: remove chip → URL drops `filtro`, calendar returns; unknown `?filtro=xyz` → calendar, no error (RF-12.16); empty set → "Tudo em dia. 🎉" positive state with link to the full agenda.
+- [x] 6.5 E2E negative-auth: anonymous `/agenda?filtro=sem-evolucao` redirects to `/login`.
 

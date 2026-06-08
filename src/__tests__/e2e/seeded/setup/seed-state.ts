@@ -371,6 +371,79 @@ export const SEED_CONSENT_FILTER_USER = {
   },
 } as const;
 
+/**
+ * Dedicated user for the overdue-evolutions list E2E spec
+ * (agenda/overdue-evolutions-list.spec.ts — PRD §9 / §12, section 6).
+ *
+ * The list-mode destination `/agenda?filtro=sem-evolucao` shows every `done`
+ * session older than 7 days with NO evolution (owner-scoped), and its header
+ * count MUST equal the dashboard pendência count for the SAME user (RF-12.18).
+ * The resolve flow (RF-12.10) also CREATES and DELETES evolutions against this
+ * user's rows on return from the create page. Both behaviours mutate clinical
+ * data and depend on a deterministic overdue set, so driving them on the GLOBAL
+ * seed user is unsafe: its sessions/evolutions are read by many sibling specs
+ * under `fullyParallel`, and several specs add/remove overdue sessions on it
+ * (e.g. dashboard-home.spec), which would shift this spec's count and ordering.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, owning a deterministic data set seeded in `global-setup.ts`:
+ *
+ *   - `overdueOldest`  — `done` 30 days ago, NO evolution → row 1 (oldest-first)
+ *   - `overdueMiddle`  — `done` 20 days ago, NO evolution → row 2
+ *   - `overdueNewest`  — `done` 10 days ago, NO evolution → row 3
+ *   - `recentDone`     — `done` 2 days ago (inside the 7-day window) → EXCLUDED
+ *   - `oldDoneEvolved` — `done` 25 days ago WITH a seeded evolution → EXCLUDED
+ *
+ * So the overdue count is deterministically 3, ordered oldest-first
+ * (overdueOldest, overdueMiddle, overdueNewest). The resolve test creates an
+ * evolution for `overdueNewest` (and deletes it in afterEach), proving the row
+ * disappears and the count drops to 2 on return.
+ *
+ * `tour_completed_at` is stamped and `first_access_at`/`nps_responded_at` left
+ * so neither the guided tour overlay nor the day-7 NPS modal auto-runs and
+ * intercepts the clicks this spec needs. The mock GoTrue never authenticates
+ * this user by default; the spec signs in at runtime via the shared
+ * `signInAsDedicatedUser` helper.
+ */
+export const SEED_OVERDUE_EVOLUTIONS_USER = {
+  id: '00000000-0000-4000-8000-0000000000e0',
+  email: 'overdue-evolucoes-e2e@example.com',
+  fullName: 'Overdue Evolucoes E2E',
+  /** Single patient owning every seeded session for this user. */
+  patient: {
+    id: '00000000-0000-4000-8000-0000000000e1',
+    fullName: 'Paciente Sem Evolucao',
+  },
+  sessions: {
+    /** `done` 30 days ago, no evolution → oldest overdue row (top of list). */
+    overdueOldest: {
+      id: '00000000-0000-4000-8000-0000000000e2',
+      ageDays: 30,
+    },
+    /** `done` 20 days ago, no evolution → middle overdue row. */
+    overdueMiddle: {
+      id: '00000000-0000-4000-8000-0000000000e3',
+      ageDays: 20,
+    },
+    /** `done` 10 days ago, no evolution → newest overdue row (resolved by 6.3). */
+    overdueNewest: {
+      id: '00000000-0000-4000-8000-0000000000e4',
+      ageDays: 10,
+    },
+    /** `done` 2 days ago — inside the 7-day window → EXCLUDED from the list. */
+    recentDone: {
+      id: '00000000-0000-4000-8000-0000000000e5',
+      ageDays: 2,
+    },
+    /** `done` 25 days ago WITH a seeded evolution → EXCLUDED (anti-join). */
+    oldDoneEvolved: {
+      id: '00000000-0000-4000-8000-0000000000e6',
+      ageDays: 25,
+      evolutionId: '00000000-0000-4000-8000-0000000000e7',
+    },
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {
