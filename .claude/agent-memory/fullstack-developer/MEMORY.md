@@ -22,5 +22,6 @@
 - [E2E dedicated-user refresh token](feedback_e2e_dedicated_user_refresh_token.md) — runtime-registered dedicated e2e users need a UNIQUE refresh token + a mock refresh_token grant, else a Server Action's server-side getUser resolves the wrong user; use signInAsDedicatedUser helper
 - [Tour overlay blocks shared-seed specs](feedback_tour_overlay_blocks_shared_seed_specs.md) — default-ON dashboard overlay gated by NULL profile col auto-runs for shared seed user, intercepts clicks across every /dashboard spec; stamp the col done in global-setup for all non-overlay users
 - [today-sessions int SP-midnight flake](feedback_today_sessions_int_sp_midnight_flake.md) — dashboard today-sessions.int.test.ts "all past" case fails when run in first ~2h after São Paulo midnight (seeds "2h ago" → previous SP day); date-deterministic, not load flakiness
+- [Tests interleaved with code in tasks.md](feedback_tests_interleaved_with_code.md) — user wants each test task placed right after the code task that motivates it (never batched at change end) so the code agent keeps context when writing the test
 
 Notes:
