@@ -186,6 +186,7 @@ export {
 
 // ---- Components --------------------------------------------------------------
 export { PatientList } from './components/patient-list';
+export { PatientConsentRowActions } from './components/patient-consent-row-actions';
 export { PatientForm } from './components/patient-form';
 export { PatientEditForm } from './components/patient-edit-form';
 export { PatientDetailHeader } from './components/patient-detail-header';

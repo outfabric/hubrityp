@@ -25,10 +25,10 @@
 
 ## 5. UI: active-filter chip + per-row consent actions
 
-- [ ] 5.1 Read `docs/design-system/rules.md` (Sálvia) before building UI. Add a removable active-filter chip (`Badge` + keyboard-focusable `✕`, `aria-label`/live region per RNF-12.03) shown when `filtro=sem-consentimento`; removing it `router.replace`s the URL without `filtro` and returns to the full list (RF-12.13).
-- [ ] 5.2 Create `src/modules/patients/components/patient-consent-row-actions.tsx` (`'use client'`): **Copiar link** → call `generateConsentAction(patientId)` (reuse pending token, no duplicate) → `buildConsentUrl(window.location.origin, token)` → clipboard + "Link copiado" toast; **Enviar por WhatsApp** → `<Button disabled={!sharePhone}>` (tooltip "Cadastre um telefone para enviar pelo WhatsApp" when disabled) → resolve token on click → `window.open(buildConsentWhatsAppHref(sharePhone, url))`. Never log the token-gated URL (RF-12.14a/b/c, PRD §11).
-- [ ] 5.3 Render the row actions in the patient list only when the consent filter is active.
-- [ ] 5.4 Unit/RTL test for `patient-consent-row-actions`: copy path writes the `/termo/{token}` URL and toasts; WhatsApp button disabled (with tooltip) when `sharePhone` is null and enabled otherwise. Run `npm run test:unit`.
+- [x] 5.1 Read `docs/design-system/rules.md` (Sálvia) before building UI. Add a removable active-filter chip (`Badge` + keyboard-focusable `✕`, `aria-label`/live region per RNF-12.03) shown when `filtro=sem-consentimento`; removing it `router.replace`s the URL without `filtro` and returns to the full list (RF-12.13).
+- [x] 5.2 Create `src/modules/patients/components/patient-consent-row-actions.tsx` (`'use client'`): **Copiar link** → call `generateConsentAction(patientId)` (reuse pending token, no duplicate) → `buildConsentUrl(window.location.origin, token)` → clipboard + "Link copiado" toast; **Enviar por WhatsApp** → `<Button disabled={!sharePhone}>` (tooltip "Cadastre um telefone para enviar pelo WhatsApp" when disabled) → resolve token on click → `window.open(buildConsentWhatsAppHref(sharePhone, url))`. Never log the token-gated URL (RF-12.14a/b/c, PRD §11).
+- [x] 5.3 Render the row actions in the patient list only when the consent filter is active.
+- [x] 5.4 Unit/RTL test for `patient-consent-row-actions`: copy path writes the `/termo/{token}` URL and toasts; WhatsApp button disabled (with tooltip) when `sharePhone` is null and enabled otherwise. Run `npm run test:unit`.
 
 ## 6. E2E coverage (flows + negative-auth)
 
