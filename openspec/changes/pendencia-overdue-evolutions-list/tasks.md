@@ -1,8 +1,8 @@
 ## 1. Allowlist parser + days-overdue helper
 
-- [ ] 1.1 Create `src/modules/agenda/lib/agenda-list-filter.ts` exporting `AGENDA_LIST_FILTERS`, `AgendaListFilter`, and `resolveAgendaListFilter(raw: string | string[] | undefined): AgendaListFilter | null` (closed allowlist `['sem-evolucao']`; unknown/empty/array → null; never throws — design D1, RF-12.03/RNF-12.05).
-- [ ] 1.2 Add a pure `overdueDays(startAt: Date, now: Date): number` helper (elapsed full days, duration-based, not SP-midnight) in `src/modules/agenda/lib/` (design D2). Barrel-export the parser + type.
-- [ ] 1.3 Unit test `src/__tests__/unit/modules/agenda/lib/agenda-list-filter.test.ts` (`'sem-evolucao'→…`, `'xyz'/''/undefined/array→null`) and `overdue-days.test.ts` (16d, the 7d boundary, <7d, with injected `now`). Run `npm run test:unit`.
+- [x] 1.1 Create `src/modules/agenda/lib/agenda-list-filter.ts` exporting `AGENDA_LIST_FILTERS`, `AgendaListFilter`, and `resolveAgendaListFilter(raw: string | string[] | undefined): AgendaListFilter | null` (closed allowlist `['sem-evolucao']`; unknown/empty/array → null; never throws — design D1, RF-12.03/RNF-12.05).
+- [x] 1.2 Add a pure `overdueDays(startAt: Date, now: Date): number` helper (elapsed full days, duration-based, not SP-midnight) in `src/modules/agenda/lib/` (design D2). Barrel-export the parser + type.
+- [x] 1.3 Unit test `src/__tests__/unit/modules/agenda/lib/agenda-list-filter.test.ts` (`'sem-evolucao'→…`, `'xyz'/''/undefined/array→null`) and `overdue-days.test.ts` (16d, the 7d boundary, <7d, with injected `now`). Run `npm run test:unit`.
 
 ## 2. Overdue-evolutions query
 

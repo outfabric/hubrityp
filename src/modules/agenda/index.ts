@@ -145,3 +145,13 @@ export {
 
 // ---- Zod Schema — cancellation input ----------------------------------------
 export { cancelSessionInputSchema, type CancelSessionInput } from './lib/cancellation-schema';
+
+// ---- Lib — list-filter allowlist parser -------------------------------------
+export {
+  AGENDA_LIST_FILTERS,
+  type AgendaListFilter,
+  resolveAgendaListFilter,
+} from './lib/agenda-list-filter';
+
+// ---- Lib — overdue-days helper ----------------------------------------------
+export { overdueDays } from './lib/overdue-days';
