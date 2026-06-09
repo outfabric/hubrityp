@@ -50,5 +50,5 @@
 
 ## 10. E2E — seeded suite
 
-- [ ] 10.1 Add `src/__tests__/e2e/seeded/patient-session-history/*.spec.ts`: open the tab and see the summary + grouped list; apply a status filter; "Carregar mais" appends a page; "Registrar" / "Ver" CTAs navigate to the correct evolution URLs; couple session shows the tag with no partner data; empty-state CTA goes to `/agenda`; "Abrir na agenda" deep-links with `?focusSession=`.
-- [ ] 10.2 **E2E negative-auth test**: an anonymous visit to `/pacientes/:id` redirects to `/login` (middleware gating), proving the gated surface is not reachable without a session.
+- [x] 10.1 Add `src/__tests__/e2e/seeded/patient-session-history/*.spec.ts`: open the tab and see the summary + grouped list; apply a status filter; "Carregar mais" appends a page; "Registrar" / "Ver" CTAs navigate to the correct evolution URLs; couple session shows the tag with no partner data; empty-state CTA goes to `/agenda`; "Abrir na agenda" deep-links with `?focusSession=`.
+- [x] 10.2 **E2E negative-auth test**: an anonymous visit to `/pacientes/:id` redirects to `/login` (middleware gating), proving the gated surface is not reachable without a session.
