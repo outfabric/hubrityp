@@ -61,7 +61,7 @@ interface PatientTabsProps {
   patientId: string;
   /** Content for the "Visao geral" tab. */
   overviewContent: ReactNode;
-  /** Content for the "Historico de sessoes" tab. */
+  /** Content for the "Histórico de sessões" tab. */
   sessionsContent: ReactNode;
   /** Content for the "Anamnese" tab. */
   anamnesisContent: ReactNode;
