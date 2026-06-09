@@ -360,6 +360,91 @@ describe('getPatientSessionHistoryList', () => {
     expect(list.sessions).toHaveLength(1);
   });
 
+  it('time-bounds the list: multiple future occurrences never leak (only past returned)', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    await seedAuthUser(userId);
+    await seedPatient(userId, patientId);
+
+    // A recurrence: 10 future weekly occurrences (scheduled/confirmed alternating).
+    const futureIds: string[] = [];
+    for (let week = 1; week <= 10; week++) {
+      const id = await seedSession({
+        userId,
+        patientId,
+        status: week % 2 === 0 ? 'confirmed' : 'scheduled',
+        startAt: daysFromNow(week * 7),
+      });
+      futureIds.push(id);
+    }
+    // Plus a handful of genuine past sessions.
+    const pastIds: string[] = [];
+    for (let d = 1; d <= 4; d++) {
+      pastIds.push(await seedSession({ userId, patientId, status: 'done', startAt: daysAgo(d) }));
+    }
+
+    // The nearest-future session is excluded by id, but the time bound — not the
+    // id exclusion — is what must keep the other 9 future occurrences out.
+    const nearest = await getNearestFutureSession(fakeSupabaseClient(userId), patientId);
+    expect(nearest.ok).toBe(true);
+    if (!nearest.ok) return;
+    const nearestId = nearest.session?.id ?? null;
+
+    const list = await getPatientSessionHistoryList(
+      fakeSupabaseClient(userId),
+      { patientId, limit: 50 },
+      nearestId,
+    );
+    expect(list.ok).toBe(true);
+    if (!list.ok) return;
+
+    const returnedIds = new Set(list.sessions.map((s) => s.id));
+    // Exactly the past sessions, zero future ones.
+    expect(list.sessions).toHaveLength(pastIds.length);
+    expect(pastIds.every((id) => returnedIds.has(id))).toBe(true);
+    expect(futureIds.some((id) => returnedIds.has(id))).toBe(false);
+  });
+
+  it('overdue non-terminal session is excluded from nearest-future but appears in history', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    await seedAuthUser(userId);
+    await seedPatient(userId, patientId);
+
+    // Past start_at but still `scheduled` (overdue, not yet done/no_show/cancelled).
+    const overdueId = await seedSession({
+      userId,
+      patientId,
+      status: 'scheduled',
+      startAt: daysAgo(1),
+    });
+    // A genuine upcoming session so getNearestFutureSession has something to return.
+    const upcomingId = await seedSession({
+      userId,
+      patientId,
+      status: 'scheduled',
+      startAt: daysFromNow(3),
+    });
+
+    // The overdue session is in the past, so it is NOT the nearest future one.
+    const nearest = await getNearestFutureSession(fakeSupabaseClient(userId), patientId);
+    expect(nearest.ok).toBe(true);
+    if (!nearest.ok) return;
+    expect(nearest.session?.id).toBe(upcomingId);
+
+    // It DOES appear in the historical list under "Sessões anteriores".
+    const list = await getPatientSessionHistoryList(
+      fakeSupabaseClient(userId),
+      { patientId },
+      nearest.session?.id ?? null,
+    );
+    expect(list.ok).toBe(true);
+    if (!list.ok) return;
+    const returnedIds = list.sessions.map((s) => s.id);
+    expect(returnedIds).toContain(overdueId);
+    expect(returnedIds).not.toContain(upcomingId);
+  });
+
   it('excludes soft-deleted and blocking rows from the list (RN-13.01, RN-13.02)', async () => {
     const userId = randomUUID();
     const patientId = randomUUID();
