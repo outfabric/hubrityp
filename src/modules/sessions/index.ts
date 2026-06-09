@@ -45,6 +45,20 @@ export {
 // ---- Lib — attendance rate (RN-13.03) ---------------------------------------
 export { computeAttendanceRate, type AttendanceRateBuckets } from './lib/compute-attendance-rate';
 
+// ---- Lib — session-history presentation helpers (RF-13.06, RN-13.05) --------
+export {
+  monthGroupKey,
+  monthGroupLabel,
+  formatFullDateWithWeekday,
+  formatTime,
+  formatTimeRange,
+  STATUS_PRESENTATION,
+  MODALITY_ICON,
+  isFinalizedReadOnly,
+  type SessionDisplayStatus,
+  type StatusPresentation,
+} from './lib/session-history-formatters';
+
 // ---- Lib — recurrence instance generation -----------------------------------
 export {
   generateRecurrenceInstances,

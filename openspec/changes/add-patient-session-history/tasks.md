@@ -24,8 +24,8 @@
 
 ## 5. Frontend — presentation utilities (module lib)
 
-- [ ] 5.1 Add client-safe helpers in `src/modules/sessions/lib/`: SP-timezone month/year group key + label via `formatInTimeZone(..., 'America/Sao_Paulo', ...)` with `pt-BR` (dez→jan correct); full-date-with-weekday and time-range formatters; the status → `{ badgeVariant, lucideIcon, label }` map (RF-13.06); the modality → icon map (`MapPin`/`Video`); and `isFinalizedReadOnly(finalizedAt)` = set AND older than 30 days (RN-13.05).
-- [ ] 5.2 **Unit test** the helpers: month grouping across the year boundary, status/modality maps, and `isFinalizedReadOnly` (set+>30d = true, set+10d = false, null = false).
+- [x] 5.1 Add client-safe helpers in `src/modules/sessions/lib/`: SP-timezone month/year group key + label via `formatInTimeZone(..., 'America/Sao_Paulo', ...)` with `pt-BR` (dez→jan correct); full-date-with-weekday and time-range formatters; the status → `{ badgeVariant, lucideIcon, label }` map (RF-13.06); the modality → icon map (`MapPin`/`Video`); and `isFinalizedReadOnly(finalizedAt)` = set AND older than 30 days (RN-13.05).
+- [x] 5.2 **Unit test** the helpers: month grouping across the year boundary, status/modality maps, and `isFinalizedReadOnly` (set+>30d = true, set+10d = false, null = false).
 
 ## 6. Frontend — session card
 
