@@ -109,3 +109,21 @@ export {
   type SessionHistoryFilterChipsProps,
   type SessionHistoryFilterValue,
 } from './components/session-history-filter-chips';
+
+// ---- Components — history tab container (RF-13.04, RF-13.16–13.19) -----------
+export {
+  PatientSessionHistory,
+  type PatientSessionHistoryProps,
+} from './components/patient-session-history';
+
+// ---- Hooks — hybrid (client ≤50 / server >50) status filter (D5) ------------
+export {
+  useSessionHistoryFilter,
+  selectVisibleSessions,
+  resolveServerStatus,
+  shouldFilterServerSide,
+  CLIENT_FILTER_THRESHOLD,
+  SessionHistoryFetchError,
+  type FetchSessionHistoryPage,
+  type UseSessionHistoryFilterParams,
+} from './hooks/use-session-history-filter';
