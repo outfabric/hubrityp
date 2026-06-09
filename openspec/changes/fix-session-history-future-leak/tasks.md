@@ -5,6 +5,3 @@
 - [ ] 1.3 Add a regression case to `src/__tests__/integration/sessions/get-patient-session-history-list.int.test.ts` that seeds multiple future `scheduled`/`confirmed` occurrences plus some past sessions and asserts the list returns only the past sessions and zero future ones (covers the "Multiple future sessions never leak" scenario)
 - [ ] 1.4 Add an integration case asserting an overdue non-terminal session (past `start_at`, status `scheduled`) is NOT returned by `getNearestFutureSession` and DOES appear in `getPatientSessionHistoryList` (covers the "Overdue non-terminal session" scenario)
 
-## 2. Validate
-
-- [ ] 2.1 Run `npm run lint`, `npm run typecheck`, `npm run test:unit`, and the sessions integration suite (`npm run test:integration -- --changed`) and confirm all pass
