@@ -53,6 +53,8 @@ import {
   updatePatientImpl,
   upsertAnamnesisImpl,
 } from '@/modules/patients';
+import type { SessionHistoryResult, SessionHistoryStatus } from '@/modules/sessions';
+import { getPatientSessionHistoryImpl } from '@/modules/sessions/server';
 import { createServerClient } from '@/shared/supabase/server';
 
 export async function getPatient(patientId: string): Promise<GetPatientResult> {
@@ -181,4 +183,28 @@ export async function confirmAudioUpload(input: {
 }): Promise<ConfirmAudioUploadResult> {
   const supabase = await createServerClient();
   return confirmAudioUploadImpl(supabase, input);
+}
+
+// ---------------------------------------------------------------------------
+// Patient Session-History Server Action (D2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Single read entrypoint for the patient session-history tab. The RLS-scoped
+ * Supabase client is created from request cookies here (at the call site) and
+ * passed to the impl, which authenticates via `getUser()` and owner-scopes
+ * every query on the verified session. An initial open (no cursor) returns the
+ * summary, the nearest-future session, and the first page; a load-more (cursor
+ * present) returns only the next page.
+ */
+export async function getPatientSessionHistory(input: {
+  patientId: string;
+  cursor?: string;
+  status?: SessionHistoryStatus;
+  limit?: number;
+}): Promise<SessionHistoryResult> {
+  // The impl Zod-validates `input` at the boundary, so the loose client-facing
+  // shape (raw `patientId` string, not the branded `PatientId`) is intentional.
+  const supabase = await createServerClient();
+  return getPatientSessionHistoryImpl(supabase, input);
 }

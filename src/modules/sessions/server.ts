@@ -46,3 +46,6 @@ export {
   getPatientSessionHistoryList,
   type SessionHistoryListResult,
 } from './server/get-patient-session-history-list';
+
+// ---- Read entrypoint (patient session-history single read — D2) -------------
+export { getPatientSessionHistoryImpl } from './server/get-patient-session-history';

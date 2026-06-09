@@ -17,10 +17,10 @@
 
 ## 4. Backend — read entrypoint, audit, and Server Action wiring
 
-- [ ] 4.1 Implement `getPatientSessionHistoryImpl(supabase, input)`: authenticate via `supabase.auth.getUser()` (never `getSession()`), validate with the Zod schema, owner-scope on the verified `user.id`. When `cursor` is absent (initial open): run summary + nearest-future + first page and return all three. When `cursor` is present: run only the list page. Return the sanitized discriminated-union result; log internal errors without PII (RF-13.02, D2, D7).
-- [ ] 4.2 On initial open only, write one `audit_log` entry (`action: 'patient.session_history.read'`, `resource_type: 'patient'`, `resource_id: patientId`, verified `user_id`) via direct Drizzle, best-effort (failure logged without PII, does not fail the read). No audit on `cursor` calls (LGPD-13.01).
-- [ ] 4.3 Expose the impl through the server-only `src/modules/sessions/server.ts` barrel and add the thin `'use server'` Server Action wrapper used by the client (create the RLS-scoped Supabase client from cookies at the call site). Do NOT export the impl from the client-safe `index.ts`.
-- [ ] 4.4 **Integration test** the entrypoint: unauthenticated → `{ ok: false, code: 'UNAUTHORIZED' }`; cross-tenant `patientId` → no other tenant's rows; exactly one `audit_log` row on initial open and **zero** on a `cursor` (load-more) call; audit row contains only identifiers (no name/notes). This is the mandatory negative-auth coverage at the action layer.
+- [x] 4.1 Implement `getPatientSessionHistoryImpl(supabase, input)`: authenticate via `supabase.auth.getUser()` (never `getSession()`), validate with the Zod schema, owner-scope on the verified `user.id`. When `cursor` is absent (initial open): run summary + nearest-future + first page and return all three. When `cursor` is present: run only the list page. Return the sanitized discriminated-union result; log internal errors without PII (RF-13.02, D2, D7).
+- [x] 4.2 On initial open only, write one `audit_log` entry (`action: 'patient.session_history.read'`, `resource_type: 'patient'`, `resource_id: patientId`, verified `user_id`) via direct Drizzle, best-effort (failure logged without PII, does not fail the read). No audit on `cursor` calls (LGPD-13.01).
+- [x] 4.3 Expose the impl through the server-only `src/modules/sessions/server.ts` barrel and add the thin `'use server'` Server Action wrapper used by the client (create the RLS-scoped Supabase client from cookies at the call site). Do NOT export the impl from the client-safe `index.ts`.
+- [x] 4.4 **Integration test** the entrypoint: unauthenticated → `{ ok: false, code: 'UNAUTHORIZED' }`; cross-tenant `patientId` → no other tenant's rows; exactly one `audit_log` row on initial open and **zero** on a `cursor` (load-more) call; audit row contains only identifiers (no name/notes). This is the mandatory negative-auth coverage at the action layer.
 
 ## 5. Frontend — presentation utilities (module lib)
 
