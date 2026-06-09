@@ -90,3 +90,9 @@ export { LateRecordToggle, type LateRecordToggleProps } from './components/late-
 
 // ---- Components — recurrence form section -----------------------------------
 export { RecurrenceFormSection } from './components/recurrence-form-section';
+
+// ---- Components — session history card (RF-13.05–13.08, RN-13.04–13.06) ------
+export {
+  SessionHistoryCard,
+  type SessionHistoryCardProps,
+} from './components/session-history-card';
