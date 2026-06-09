@@ -1,8 +1,8 @@
 ## 1. Backend — types, schemas, and pure helpers
 
-- [ ] 1.1 In `src/modules/sessions/lib/`, add the Zod input schema for the history read: `patientId` (uuid), optional `cursor` (string), optional `status` enum (`done | cancelled | no_show`), `limit` int clamped 1–50 default 12. Derive types via `z.infer`. Export the discriminated-union result types (`{ ok: true; summary?; futureSession?; sessions; nextCursor } | { ok: false; code: 'UNAUTHORIZED' | 'INVALID_INPUT' | 'ERROR' }`).
-- [ ] 1.2 Add a pure helper `computeAttendanceRate({ done, cancelledByPatient, noShow })` returning an integer percentage, with denominator = `done + cancelledByPatient + noShow` and `0%` when the denominator is 0 (RN-13.03; therapist/NULL cancellations excluded by the caller's query, not here).
-- [ ] 1.3 **Unit test** the input schema (valid/invalid `patientId`, `limit` clamping, `status` enum) and `computeAttendanceRate` (8/(8+1+1)=80%, all-cancelled=0%, zero-denominator=0%) — co-located mirror under `src/__tests__/unit/modules/sessions/`.
+- [x] 1.1 In `src/modules/sessions/lib/`, add the Zod input schema for the history read: `patientId` (uuid), optional `cursor` (string), optional `status` enum (`done | cancelled | no_show`), `limit` int clamped 1–50 default 12. Derive types via `z.infer`. Export the discriminated-union result types (`{ ok: true; summary?; futureSession?; sessions; nextCursor } | { ok: false; code: 'UNAUTHORIZED' | 'INVALID_INPUT' | 'ERROR' }`).
+- [x] 1.2 Add a pure helper `computeAttendanceRate({ done, cancelledByPatient, noShow })` returning an integer percentage, with denominator = `done + cancelledByPatient + noShow` and `0%` when the denominator is 0 (RN-13.03; therapist/NULL cancellations excluded by the caller's query, not here).
+- [x] 1.3 **Unit test** the input schema (valid/invalid `patientId`, `limit` clamping, `status` enum) and `computeAttendanceRate` (8/(8+1+1)=80%, all-cancelled=0%, zero-denominator=0%) — co-located mirror under `src/__tests__/unit/modules/sessions/`.
 
 ## 2. Backend — summary aggregate query
 

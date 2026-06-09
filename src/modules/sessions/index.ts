@@ -27,6 +27,24 @@ export {
   type LateRecordInput,
 } from './lib/recurrence-schema';
 
+// ---- Lib — session history schema + result types ---------------------------
+export {
+  sessionHistoryInputSchema,
+  type SessionHistoryInput,
+  PatientIdSchema,
+  type PatientId,
+  SESSION_HISTORY_STATUSES,
+  type SessionHistoryStatus,
+  type SessionModality,
+  type SessionHistoryItem,
+  type SessionHistorySummary,
+  type SessionHistoryErrorCode,
+  type SessionHistoryResult,
+} from './lib/session-history-schema';
+
+// ---- Lib — attendance rate (RN-13.03) ---------------------------------------
+export { computeAttendanceRate, type AttendanceRateBuckets } from './lib/compute-attendance-rate';
+
 // ---- Lib — recurrence instance generation -----------------------------------
 export {
   generateRecurrenceInstances,
