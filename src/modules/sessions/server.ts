@@ -36,3 +36,13 @@ export {
   getPatientSessionSummary,
   type PatientSessionSummaryResult,
 } from './server/get-patient-session-summary';
+
+// ---- Read queries (patient session-history list + future session) -----------
+export {
+  getNearestFutureSession,
+  type NearestFutureSessionResult,
+} from './server/get-nearest-future-session';
+export {
+  getPatientSessionHistoryList,
+  type SessionHistoryListResult,
+} from './server/get-patient-session-history-list';
