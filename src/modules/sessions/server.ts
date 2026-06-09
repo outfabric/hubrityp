@@ -30,3 +30,9 @@ export {
 
 // ---- Server Actions (late records) ------------------------------------------
 export { createLateRecordImpl, type CreateLateRecordResult } from './server/create-late-record';
+
+// ---- Read queries (patient session-history summary) -------------------------
+export {
+  getPatientSessionSummary,
+  type PatientSessionSummaryResult,
+} from './server/get-patient-session-summary';

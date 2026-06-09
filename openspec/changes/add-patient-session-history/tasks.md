@@ -6,8 +6,8 @@
 
 ## 2. Backend — summary aggregate query
 
-- [ ] 2.1 Implement `getPatientSessionSummary` (server, `import 'server-only'`) as a single aggregate query over visible sessions (`user_id = :uid AND patient_id = :pid AND deleted_at IS NULL AND is_blocking = false`) using `count(*) filter (where ...)`: `doneTotal`, `cancelledByPatient` (`status='cancelled' AND cancelled_by='patient'`), `noShow`, `doneWithoutEvolution` (`LEFT JOIN evolutions e ON e.session_id = s.id`, count where `status='done' AND e.id IS NULL`), and `lastDoneAt` (`max(start_at) filter (where status='done')`). Owner-scope every condition on `user_id` (RF-13.01, RF-13.02, RN-13.04).
-- [ ] 2.2 **Integration test** (Testcontainers + RLS) the summary: correct `doneTotal`, attendance denominator excludes therapist/NULL cancellations (RN-13.03), `doneWithoutEvolution` reflects the evolution join (RN-13.04), `lastDoneAt` is the newest `done`, and soft-deleted/blocking rows are excluded (RN-13.01, RN-13.02). Include a cross-tenant case proving psychologist A sees none of B's data.
+- [x] 2.1 Implement `getPatientSessionSummary` (server, `import 'server-only'`) as a single aggregate query over visible sessions (`user_id = :uid AND patient_id = :pid AND deleted_at IS NULL AND is_blocking = false`) using `count(*) filter (where ...)`: `doneTotal`, `cancelledByPatient` (`status='cancelled' AND cancelled_by='patient'`), `noShow`, `doneWithoutEvolution` (`LEFT JOIN evolutions e ON e.session_id = s.id`, count where `status='done' AND e.id IS NULL`), and `lastDoneAt` (`max(start_at) filter (where status='done')`). Owner-scope every condition on `user_id` (RF-13.01, RF-13.02, RN-13.04).
+- [x] 2.2 **Integration test** (Testcontainers + RLS) the summary: correct `doneTotal`, attendance denominator excludes therapist/NULL cancellations (RN-13.03), `doneWithoutEvolution` reflects the evolution join (RN-13.04), `lastDoneAt` is the newest `done`, and soft-deleted/blocking rows are excluded (RN-13.01, RN-13.02). Include a cross-tenant case proving psychologist A sees none of B's data.
 
 ## 3. Backend — paginated list + future session
 
