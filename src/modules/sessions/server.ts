@@ -30,3 +30,22 @@ export {
 
 // ---- Server Actions (late records) ------------------------------------------
 export { createLateRecordImpl, type CreateLateRecordResult } from './server/create-late-record';
+
+// ---- Read queries (patient session-history summary) -------------------------
+export {
+  getPatientSessionSummary,
+  type PatientSessionSummaryResult,
+} from './server/get-patient-session-summary';
+
+// ---- Read queries (patient session-history list + future session) -----------
+export {
+  getNearestFutureSession,
+  type NearestFutureSessionResult,
+} from './server/get-nearest-future-session';
+export {
+  getPatientSessionHistoryList,
+  type SessionHistoryListResult,
+} from './server/get-patient-session-history-list';
+
+// ---- Read entrypoint (patient session-history single read — D2) -------------
+export { getPatientSessionHistoryImpl } from './server/get-patient-session-history';

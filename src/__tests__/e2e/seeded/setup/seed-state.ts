@@ -444,6 +444,109 @@ export const SEED_OVERDUE_EVOLUTIONS_USER = {
   },
 } as const;
 
+/**
+ * Dedicated user for the patient session-history E2E spec
+ * (patient-session-history/session-history.spec.ts — PRD §13, section 10).
+ *
+ * The session-history tab surfaces owner-scoped aggregates (realized total,
+ * attendance rate, pending-evolution count), a future "Próxima sessão", a
+ * month-grouped historical list with keyset pagination (page size 12), status
+ * filter chips, per-card evolution CTAs ("Registrar" / "Ver"), a couple tag with
+ * NO partner data, and an "Abrir na agenda" deep-link. Every one of those
+ * assertions is count- and ordering-sensitive, so the spec needs a deterministic
+ * session set it fully owns.
+ *
+ * Driving this on the GLOBAL seed user is unsafe: its three `SEED_PATIENTS` rows
+ * and their sessions are read (and asserted) by many sibling specs under
+ * `fullyParallel`, and several specs add/remove/mutate sessions on it — which
+ * would shift this spec's summary counts, pagination boundary, and list ordering.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, owning two patients seeded deterministically in
+ * `global-setup.ts`:
+ *
+ *   - `withHistory` — owns a fixed terminal-session set so:
+ *       • doneTotal            = 14 (13 individual `done` + 1 couple `done`)
+ *       • cancelled (patient)  =  1
+ *       • no_show              =  1
+ *       • attendanceRate       = round(14 / (14+1+1) * 100) = 88%
+ *       • doneWithoutEvolution = 13 (1 of the 13 individual dones is evolved)
+ *       • a single future `scheduled` session (the "Próxima sessão")
+ *     So the unfiltered history list has 16 rows (the future session is rendered
+ *     separately and excluded), exceeding the page size of 12 → exactly one
+ *     "Carregar mais" reveals the remaining 4. The "Realizadas" filter yields 14
+ *     done rows → first page 12 + one load-more reveals 2. One individual `done`
+ *     carries an evolution ("Ver"); the rest show "Registrar". The couple `done`
+ *     carries `patient_ids = [withHistory, partnerHidden]` so the card shows the
+ *     "Sessão de casal" tag while the projection never exposes the partner.
+ *
+ *   - `noHistory` — owns NO sessions, so its tab renders the empty state with the
+ *     "Agendar primeira sessão" CTA pointing at `/agenda`.
+ *
+ * `tour_completed_at` is stamped and `first_access_at` left NULL in
+ * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
+ * auto-runs and intercepts the tab/chip/CTA clicks this spec needs. The mock
+ * GoTrue never authenticates this user by default; the spec signs in at runtime
+ * via the shared `signInAsDedicatedUser` helper.
+ */
+export const SEED_SESSION_HISTORY_USER = {
+  id: '00000000-0000-4000-8000-0000000000b0',
+  email: 'session-history-e2e@example.com',
+  fullName: 'Session History E2E',
+  patients: {
+    /** Owns the full deterministic terminal-session set + the future session. */
+    withHistory: {
+      id: '00000000-0000-4000-8000-0000000000b1',
+      fullName: 'Paciente Com Historico',
+    },
+    /** Owns NO sessions — drives the empty state. */
+    noHistory: {
+      id: '00000000-0000-4000-8000-0000000000b2',
+      fullName: 'Paciente Sem Historico',
+    },
+    /**
+     * Partner of the couple `done` session. Its id appears only inside the couple
+     * session's `patient_ids` array — the spec asserts this patient's NAME never
+     * surfaces on the history card (couple-safe projection, LGPD-13.03).
+     */
+    partnerHidden: {
+      id: '00000000-0000-4000-8000-0000000000b3',
+      fullName: 'Parceiro Confidencial Casal',
+    },
+  },
+  sessions: {
+    /** The future `scheduled` session → "Próxima sessão" + "Abrir na agenda". */
+    future: {
+      id: '00000000-0000-4000-8000-0000000000b4',
+    },
+    /** The one individual `done` session WITH an evolution → "Ver". */
+    doneEvolved: {
+      id: '00000000-0000-4000-8000-0000000000b5',
+      evolutionId: '00000000-0000-4000-8000-0000000000b6',
+    },
+    /** The couple `done` session (carries `patient_ids`) → "Sessão de casal". */
+    doneCouple: {
+      id: '00000000-0000-4000-8000-0000000000b7',
+    },
+  },
+  /** Page size used by the history list — keep in sync with `HISTORY_LIMIT_DEFAULT`. */
+  pageSize: 12,
+  counts: {
+    /** Individual `done` sessions WITHOUT an evolution (each shows "Registrar"). */
+    doneWithoutEvolution: 12,
+    /** Patient-initiated cancellations. */
+    cancelledByPatient: 1,
+    /** No-show sessions. */
+    noShow: 1,
+    /** Total `done` (13 individual + 1 couple). */
+    doneTotal: 14,
+    /** Total historical rows in the unfiltered list (excludes the future session). */
+    historyTotal: 16,
+    /** Attendance rate: round(14 / (14 + 1 + 1) * 100). */
+    attendanceRate: 88,
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 
 import {
   getAgendaSettingsImpl,
+  getSessionByIdImpl,
   listLocationsImpl,
   listOverdueEvolutionsImpl,
   listSessionsImpl,
@@ -18,12 +19,27 @@ import { AgendaCalendarLoader } from './agenda-calendar-loader';
 // Inner async component — fetches initial data for the calendar
 // ---------------------------------------------------------------------------
 
-async function AgendaDataServer() {
+async function AgendaDataServer({ focusSessionId }: { focusSessionId?: string }) {
   const supabase = await createServerClient();
 
-  const now = new Date();
-  const weekStart = startOfWeek(now, { weekStartsOn: 0 });
-  const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
+  // When deep-linked via `?focusSession=:id`, anchor the initial week on the
+  // owner-scoped focused session instead of "today". The session id is resolved
+  // server-side from the authenticated session (ownership enforced in the
+  // helper), so a tampered id simply resolves to nothing and falls back to the
+  // current week — never to another psychologist's session.
+  let anchorDate = new Date();
+  let resolvedFocusSessionId: string | undefined;
+
+  if (focusSessionId) {
+    const focusResult = await getSessionByIdImpl(supabase, focusSessionId);
+    if (focusResult.ok) {
+      anchorDate = focusResult.session.startAt;
+      resolvedFocusSessionId = focusResult.session.id;
+    }
+  }
+
+  const weekStart = startOfWeek(anchorDate, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(anchorDate, { weekStartsOn: 0 });
 
   const [sessionsResult, settingsResult, locationsResult] = await Promise.all([
     listSessionsImpl(supabase, weekStart, weekEnd),
@@ -50,6 +66,8 @@ async function AgendaDataServer() {
       initialStart={weekStart.toISOString()}
       initialEnd={weekEnd.toISOString()}
       locations={locations}
+      initialDate={anchorDate.toISOString()}
+      focusSessionId={resolvedFocusSessionId}
     />
   );
 }
@@ -78,12 +96,16 @@ async function OverdueEvolutionsListServer() {
 // ---------------------------------------------------------------------------
 
 interface AgendaPageProps {
-  searchParams: Promise<{ filtro?: string | string[] }>;
+  searchParams: Promise<{ filtro?: string | string[]; focusSession?: string | string[] }>;
 }
 
 export default async function AgendaPage({ searchParams }: AgendaPageProps) {
-  const { filtro } = await searchParams;
+  const { filtro, focusSession } = await searchParams;
   const view = resolveAgendaListFilter(filtro);
+
+  // Normalize the deep-link param: take the first value if a duplicate query key
+  // was supplied. Ownership of the id is validated server-side downstream.
+  const focusSessionId = Array.isArray(focusSession) ? focusSession[0] : focusSession;
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -103,7 +125,11 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
           </div>
         }
       >
-        {view === 'sem-evolucao' ? <OverdueEvolutionsListServer /> : <AgendaDataServer />}
+        {view === 'sem-evolucao' ? (
+          <OverdueEvolutionsListServer />
+        ) : (
+          <AgendaDataServer focusSessionId={focusSessionId} />
+        )}
       </Suspense>
     </div>
   );

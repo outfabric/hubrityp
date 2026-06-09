@@ -16,6 +16,7 @@ import {
   SEED_ONBOARDING_TOUR_USER,
   SEED_OVERDUE_EVOLUTIONS_USER,
   SEED_PATIENTS,
+  SEED_SESSION_HISTORY_USER,
   SEED_SESSIONS,
 } from './seed-state';
 
@@ -1291,6 +1292,244 @@ export default async function globalSetup() {
         ${'{"text":"Evolucao de controle"}'}::jsonb
       )
       ON CONFLICT (id) DO NOTHING;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated patient session-history user
+    // (patient-session-history/session-history.spec.ts — PRD §13, section 10).
+    //
+    // An eighth active psychologist touched by NOTHING else, owning a fully
+    // deterministic terminal-session set so the history tab's summary counts,
+    // attendance rate, pagination boundary (page size 12), status filter,
+    // per-card evolution CTAs, couple tag, future session, and empty state are
+    // all stable under `fullyParallel`. See SEED_SESSION_HISTORY_USER for the
+    // full rationale and the exact expected counts. `tour_completed_at` is
+    // stamped and `first_access_at` left NULL so neither overlay (guided tour /
+    // day-7 NPS modal) auto-runs and steals the tab/chip/CTA clicks.
+    // -----------------------------------------------------------------------
+    const shUser = SEED_SESSION_HISTORY_USER;
+    const shMetadata = JSON.stringify({
+      fullName: shUser.fullName,
+      crpNumber: '88888-H',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${shUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${shUser.email},
+        ${shMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${shUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          tour_completed_at = COALESCE(tour_completed_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          requires_password_reset = false
+      WHERE user_id = ${shUser.id};
+    `;
+    // Wipe stale rows (FK-ordered: evolutions reference sessions) so the spec
+    // starts from a known set on the reused container.
+    await sql`DELETE FROM public.evolutions WHERE user_id = ${shUser.id}`;
+    await sql`DELETE FROM public.session_history WHERE user_id = ${shUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${shUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${shUser.id}`;
+
+    const shp = shUser.patients;
+    for (const patient of [shp.withHistory, shp.noHistory, shp.partnerHidden]) {
+      await sql`
+        INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at)
+        VALUES (
+          ${patient.id}, ${shUser.id}, ${patient.fullName}, 'individual', 'active', NULL
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          user_id     = EXCLUDED.user_id,
+          full_name   = EXCLUDED.full_name,
+          status      = 'active',
+          archived_at = NULL;
+      `;
+    }
+
+    // The 12 individual `done` sessions WITHOUT an evolution → each shows the
+    // "Registrar" CTA. Spread across distinct past months (every ~35 days back,
+    // anchored to `now()`) so the month dividers and DESC ordering are exercised
+    // and the relationship to "past" holds on every run regardless of the date.
+    // Deterministic UUIDs in the `...b1xx` range keep them out of the way of the
+    // named fixtures above.
+    for (let i = 0; i < shUser.counts.doneWithoutEvolution; i++) {
+      const seq = String(i + 10).padStart(3, '0');
+      const sessionId = `00000000-0000-4000-8000-0000000b1${seq}`;
+      const ageDays = 5 + i * 35;
+      await sql`
+        INSERT INTO public.sessions (
+          id, user_id, patient_id,
+          start_at, end_at, duration_minutes,
+          status, modality, is_blocking
+        )
+        VALUES (
+          ${sessionId},
+          ${shUser.id},
+          ${shp.withHistory.id},
+          (now() - (${ageDays} || ' days')::interval),
+          (now() - (${ageDays} || ' days')::interval + interval '50 minutes'),
+          50, 'done', 'in_person', false
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          start_at   = EXCLUDED.start_at,
+          end_at     = EXCLUDED.end_at,
+          status     = 'done',
+          modality   = 'in_person',
+          patient_id = EXCLUDED.patient_id,
+          deleted_at = NULL;
+      `;
+    }
+
+    // One individual `done` session WITH an evolution → "Ver". Newest so it lands
+    // on the first page regardless of pagination.
+    const shs = shUser.sessions;
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking
+      )
+      VALUES (
+        ${shs.doneEvolved.id},
+        ${shUser.id},
+        ${shp.withHistory.id},
+        (now() - interval '3 days'),
+        (now() - interval '3 days' + interval '50 minutes'),
+        50, 'done', 'online', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at   = EXCLUDED.start_at,
+        end_at     = EXCLUDED.end_at,
+        status     = 'done',
+        modality   = 'online',
+        patient_id = EXCLUDED.patient_id,
+        deleted_at = NULL;
+    `;
+    await sql`
+      INSERT INTO public.evolutions (id, user_id, patient_id, session_id, template_type, content)
+      VALUES (
+        ${shs.doneEvolved.evolutionId},
+        ${shUser.id},
+        ${shp.withHistory.id},
+        ${shs.doneEvolved.id},
+        'livre',
+        ${'{"text":"Evolucao registrada do historico"}'}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+
+    // The couple `done` session — carries `patient_ids = [withHistory, partner]`
+    // so the card renders the "Sessão de casal" tag, while the projection only
+    // ever exposes the boolean presence (never the partner id/name).
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id, patient_ids,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking
+      )
+      VALUES (
+        ${shs.doneCouple.id},
+        ${shUser.id},
+        ${shp.withHistory.id},
+        ARRAY[${shp.withHistory.id}, ${shp.partnerHidden.id}]::uuid[],
+        (now() - interval '4 days'),
+        (now() - interval '4 days' + interval '50 minutes'),
+        50, 'done', 'in_person', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at    = EXCLUDED.start_at,
+        end_at      = EXCLUDED.end_at,
+        status      = 'done',
+        patient_ids = EXCLUDED.patient_ids,
+        patient_id  = EXCLUDED.patient_id,
+        deleted_at  = NULL;
+    `;
+
+    // One patient-initiated `cancelled` and one `no_show` — the attendance-rate
+    // denominator buckets, plus the negative cases for the status filter.
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking,
+        cancelled_at, cancelled_by, cancellation_reason, cancellation_notice, charge_cancellation
+      )
+      VALUES (
+        '00000000-0000-4000-8000-0000000b1200',
+        ${shUser.id},
+        ${shp.withHistory.id},
+        (now() - interval '6 days'),
+        (now() - interval '6 days' + interval '50 minutes'),
+        50, 'cancelled', 'in_person', false,
+        (now() - interval '7 days'), 'patient', 'Imprevisto pessoal', 'less_than_24h', true
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        status              = 'cancelled',
+        cancelled_by        = 'patient',
+        cancellation_reason = EXCLUDED.cancellation_reason,
+        cancellation_notice = EXCLUDED.cancellation_notice,
+        charge_cancellation = EXCLUDED.charge_cancellation,
+        deleted_at          = NULL;
+    `;
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking
+      )
+      VALUES (
+        '00000000-0000-4000-8000-0000000b1201',
+        ${shUser.id},
+        ${shp.withHistory.id},
+        (now() - interval '8 days'),
+        (now() - interval '8 days' + interval '50 minutes'),
+        50, 'no_show', 'in_person', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        status     = 'no_show',
+        patient_id = EXCLUDED.patient_id,
+        deleted_at = NULL;
+    `;
+
+    // The single future `scheduled` session → rendered as "Próxima sessão" and
+    // the "Abrir na agenda" deep-link target. Anchored a few days ahead so it
+    // stays in the future across the whole run.
+    await sql`
+      INSERT INTO public.sessions (
+        id, user_id, patient_id,
+        start_at, end_at, duration_minutes,
+        status, modality, is_blocking
+      )
+      VALUES (
+        ${shs.future.id},
+        ${shUser.id},
+        ${shp.withHistory.id},
+        (now() + interval '7 days'),
+        (now() + interval '7 days' + interval '50 minutes'),
+        50, 'scheduled', 'online', false
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        start_at   = EXCLUDED.start_at,
+        end_at     = EXCLUDED.end_at,
+        status     = 'scheduled',
+        patient_id = EXCLUDED.patient_id,
+        deleted_at = NULL;
     `;
   } finally {
     await sql.end();

@@ -41,7 +41,7 @@ The system SHALL render a patient detail page at `/app/pacientes/:id` with a hea
 
 ### Requirement: Patient detail page uses a tab layout
 
-The system SHALL organize patient details into tabs. The available tabs SHALL be, in this order: "Visão geral", "Histórico de sessões", "Prontuário", "Anamnese", "Financeiro". The "Visão geral" and "Anamnese" tabs are functional content tabs. The "Prontuário" tab SHALL render a redirect panel pointing to the patient's prontuario page at `/pacientes/[id]/prontuario`. The "Histórico de sessões" and "Financeiro" tabs SHALL be rendered as placeholders with the "Em breve" message. The "Documentos" tab SHALL NOT exist in the tab layout — clinical documents are accessible exclusively via the prontuario page. The "Financeiro" tab icon SHALL be the `Receipt` icon (recibo), aligning with the Brazilian fiscal context of session receipts for IR deduction.
+The system SHALL organize patient details into tabs. The available tabs SHALL be, in this order: "Visão geral", "Histórico de sessões", "Prontuário", "Anamnese", "Financeiro". The "Visão geral" and "Anamnese" tabs are functional content tabs. The "Prontuário" tab SHALL render a redirect panel pointing to the patient's prontuario page at `/pacientes/[id]/prontuario`. The "Histórico de sessões" tab SHALL render the patient session history (see the `patient-session-history` capability), no longer a placeholder. The "Financeiro" tab SHALL be rendered as a placeholder with the "Em breve" message. The "Documentos" tab SHALL NOT exist in the tab layout — clinical documents are accessible exclusively via the prontuario page. The "Financeiro" tab icon SHALL be the `Receipt` icon (recibo), aligning with the Brazilian fiscal context of session receipts for IR deduction. The "Histórico de sessões" tab icon SHALL be the `Calendar` icon.
 
 #### Scenario: Default tab is "Visão geral"
 
@@ -71,10 +71,11 @@ The system SHALL organize patient details into tabs. The available tabs SHALL be
 - **THEN** system shows the tab content area with message "Em breve"
 - **AND** the tab trigger displays the `Receipt` (recibo) icon, not the `Wallet` icon
 
-#### Scenario: Histórico de sessões tab remains a placeholder
+#### Scenario: Histórico de sessões tab renders the session history
 
 - **WHEN** psychologist clicks on "Histórico de sessões" tab
-- **THEN** system shows the tab content area with message "Em breve"
+- **THEN** system renders the session history view (summary strip + session list, or the appropriate empty/loading/error state) inside `data-testid="patient-tab-content-sessions"`
+- **AND** the "Em breve" placeholder is NOT shown for this tab
 
 ### Requirement: Visão geral shows patient overview
 

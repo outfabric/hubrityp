@@ -91,14 +91,9 @@ test.describe('@patients patient detail page', () => {
     const tabsList = page.getByTestId('patient-tabs-list');
     await expect(tabsList).toBeVisible();
 
-    const sessionsTab = page.getByTestId('patient-tab-sessions');
-    await expect(sessionsTab).toBeVisible();
-    await sessionsTab.click();
-
-    const placeholder = page.getByTestId('patient-tab-placeholder-sessions');
-    await expect(placeholder).toBeVisible();
-    await expect(placeholder).toHaveText('Em breve');
-
+    // The "Histórico de sessões" tab is no longer a placeholder — it now hosts
+    // the real session-history view (PRD §13). Only the "Financeiro" tab still
+    // renders the generic "Em breve" placeholder.
     const financialTab = page.getByTestId('patient-tab-financial');
     await expect(financialTab).toBeVisible();
     await financialTab.click();

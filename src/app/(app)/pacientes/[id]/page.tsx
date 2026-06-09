@@ -16,6 +16,7 @@ import { AnamnesisTab } from '@/modules/patients/components/anamnesis-tab';
 import { PatientDetailHeader } from '@/modules/patients/components/patient-detail-header';
 import { PatientOverviewTab } from '@/modules/patients/components/patient-overview-tab';
 import { PatientTabs } from '@/modules/patients/components/patient-tabs';
+import { PatientSessionHistory } from '@/modules/sessions';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
 
@@ -147,6 +148,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
               unlinkCoupleAction={unlinkCouple}
             />
           }
+          sessionsContent={<PatientSessionHistory patientId={id} patientName={patient.fullName} />}
           anamnesisContent={
             <AnamnesisTab
               patientId={id}

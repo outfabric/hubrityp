@@ -27,6 +27,38 @@ export {
   type LateRecordInput,
 } from './lib/recurrence-schema';
 
+// ---- Lib — session history schema + result types ---------------------------
+export {
+  sessionHistoryInputSchema,
+  type SessionHistoryInput,
+  PatientIdSchema,
+  type PatientId,
+  SESSION_HISTORY_STATUSES,
+  type SessionHistoryStatus,
+  type SessionModality,
+  type SessionHistoryItem,
+  type SessionHistorySummary,
+  type SessionHistoryErrorCode,
+  type SessionHistoryResult,
+} from './lib/session-history-schema';
+
+// ---- Lib — attendance rate (RN-13.03) ---------------------------------------
+export { computeAttendanceRate, type AttendanceRateBuckets } from './lib/compute-attendance-rate';
+
+// ---- Lib — session-history presentation helpers (RF-13.06, RN-13.05) --------
+export {
+  monthGroupKey,
+  monthGroupLabel,
+  formatFullDateWithWeekday,
+  formatTime,
+  formatTimeRange,
+  STATUS_PRESENTATION,
+  MODALITY_ICON,
+  isFinalizedReadOnly,
+  type SessionDisplayStatus,
+  type StatusPresentation,
+} from './lib/session-history-formatters';
+
 // ---- Lib — recurrence instance generation -----------------------------------
 export {
   generateRecurrenceInstances,
@@ -58,3 +90,40 @@ export { LateRecordToggle, type LateRecordToggleProps } from './components/late-
 
 // ---- Components — recurrence form section -----------------------------------
 export { RecurrenceFormSection } from './components/recurrence-form-section';
+
+// ---- Components — session history card (RF-13.05–13.08, RN-13.04–13.06) ------
+export {
+  SessionHistoryCard,
+  type SessionHistoryCardProps,
+} from './components/session-history-card';
+
+// ---- Components — summary strip (RF-13.01, RN-13.03) -------------------------
+export {
+  SessionHistorySummaryStrip,
+  type SessionHistorySummaryStripProps,
+} from './components/session-history-summary-strip';
+
+// ---- Components — filter chips (RF-13.10) ------------------------------------
+export {
+  SessionHistoryFilterChips,
+  type SessionHistoryFilterChipsProps,
+  type SessionHistoryFilterValue,
+} from './components/session-history-filter-chips';
+
+// ---- Components — history tab container (RF-13.04, RF-13.16–13.19) -----------
+export {
+  PatientSessionHistory,
+  type PatientSessionHistoryProps,
+} from './components/patient-session-history';
+
+// ---- Hooks — hybrid (client ≤50 / server >50) status filter (D5) ------------
+export {
+  useSessionHistoryFilter,
+  selectVisibleSessions,
+  resolveServerStatus,
+  shouldFilterServerSide,
+  CLIENT_FILTER_THRESHOLD,
+  SessionHistoryFetchError,
+  type FetchSessionHistoryPage,
+  type UseSessionHistoryFilterParams,
+} from './hooks/use-session-history-filter';
