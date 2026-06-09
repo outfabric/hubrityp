@@ -32,7 +32,7 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AlertCircle, Calendar, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowRight, Calendar, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { getPatientSessionHistory } from '@/app/(app)/pacientes/[id]/actions';
@@ -131,6 +131,19 @@ function PatientSessionHistoryView({ patientId, patientName }: PatientSessionHis
         <div className="flex flex-col gap-3">
           <SectionSeparator label="Próxima sessão" />
           <SessionHistoryCard session={futureSession} />
+          {/* Deep-link to the agenda, positioned on this session (RF-13.09). */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="self-start"
+            data-testid="open-in-agenda"
+          >
+            <a href={`/agenda?focusSession=${futureSession.id}`}>
+              Abrir na agenda
+              <ArrowRight aria-hidden className="size-4" />
+            </a>
+          </Button>
         </div>
       )}
 

@@ -30,7 +30,7 @@ const TABS: TabDefinition[] = [
     value: 'sessions',
     label: 'Histórico de sessões',
     icon: <Calendar className="h-4 w-4" aria-hidden="true" />,
-    placeholder: true,
+    placeholder: false,
   },
   {
     value: 'records',
@@ -61,6 +61,8 @@ interface PatientTabsProps {
   patientId: string;
   /** Content for the "Visao geral" tab. */
   overviewContent: ReactNode;
+  /** Content for the "Historico de sessoes" tab. */
+  sessionsContent: ReactNode;
   /** Content for the "Anamnese" tab. */
   anamnesisContent: ReactNode;
 }
@@ -69,7 +71,12 @@ interface PatientTabsProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function PatientTabs({ patientId, overviewContent, anamnesisContent }: PatientTabsProps) {
+export function PatientTabs({
+  patientId,
+  overviewContent,
+  sessionsContent,
+  anamnesisContent,
+}: PatientTabsProps) {
   return (
     <Tabs defaultValue="overview" data-testid="patient-tabs">
       <TabsList className="w-full overflow-x-auto" data-testid="patient-tabs-list">
@@ -84,6 +91,11 @@ export function PatientTabs({ patientId, overviewContent, anamnesisContent }: Pa
       {/* Active tab: overview */}
       <TabsContent value="overview" data-testid="patient-tab-content-overview">
         {overviewContent}
+      </TabsContent>
+
+      {/* Active tab: sessions — patient session history */}
+      <TabsContent value="sessions" data-testid="patient-tab-content-sessions">
+        {sessionsContent}
       </TabsContent>
 
       {/* Active tab: anamnesis */}

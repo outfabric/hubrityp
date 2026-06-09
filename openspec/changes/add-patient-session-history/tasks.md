@@ -44,9 +44,9 @@
 
 ## 9. Frontend — integration into PatientTabs, page, and agenda deep-link
 
-- [ ] 9.1 Add a `sessionsContent: ReactNode` prop to `PatientTabs` (`src/modules/patients/components/patient-tabs.tsx`); render it in the `sessions` `TabsContent` instead of the placeholder; keep `Calendar` icon and `data-testid="patient-tab-content-sessions"`. Wire `src/app/(app)/pacientes/[id]/page.tsx` to pass `<PatientSessionHistory patientId=... patientName=... />`. Keep Financeiro as the placeholder.
-- [ ] 9.2 Handle `?focusSession=:id` in the agenda page (`src/app/(app)/agenda/page.tsx` + calendar loader): read the param and focus/position the calendar on that owner-scoped session; add the `ghost` "Abrir na agenda" button (Lucide `ArrowRight`) on the future-session card linking to `/agenda?focusSession=:id` (RF-13.09).
-- [ ] 9.3 **Integration test** (RTL with real providers) the wired tab: opening the sessions tab renders the history (summary + list), the empty state renders for a patient with no sessions, and the placeholder is gone; assert the Financeiro tab still shows "Em breve".
+- [x] 9.1 Add a `sessionsContent: ReactNode` prop to `PatientTabs` (`src/modules/patients/components/patient-tabs.tsx`); render it in the `sessions` `TabsContent` instead of the placeholder; keep `Calendar` icon and `data-testid="patient-tab-content-sessions"`. Wire `src/app/(app)/pacientes/[id]/page.tsx` to pass `<PatientSessionHistory patientId=... patientName=... />`. Keep Financeiro as the placeholder.
+- [x] 9.2 Handle `?focusSession=:id` in the agenda page (`src/app/(app)/agenda/page.tsx` + calendar loader): read the param and focus/position the calendar on that owner-scoped session; add the `ghost` "Abrir na agenda" button (Lucide `ArrowRight`) on the future-session card linking to `/agenda?focusSession=:id` (RF-13.09).
+- [x] 9.3 **Integration test** (RTL with real providers) the wired tab: opening the sessions tab renders the history (summary + list), the empty state renders for a patient with no sessions, and the placeholder is gone; assert the Financeiro tab still shows "Em breve".
 
 ## 10. E2E — seeded suite
 

@@ -38,6 +38,11 @@ export { updateSessionImpl, type UpdateSessionResult } from './server/update-ses
 export { deleteSessionImpl, type DeleteSessionResult } from './server/delete-session';
 export { markSessionDoneImpl, type MarkSessionDoneResult } from './server/mark-session-done';
 export { getSessionHistoryImpl, type GetSessionHistoryResult } from './server/get-session-history';
+export {
+  getSessionByIdImpl,
+  type GetSessionByIdResult,
+  type SessionLocator,
+} from './server/get-session-by-id';
 
 // ---- Server Actions (status transitions) ------------------------------------
 export { confirmSessionImpl, type ConfirmSessionResult } from './server/confirm-session';

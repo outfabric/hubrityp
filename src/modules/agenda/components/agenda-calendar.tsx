@@ -58,6 +58,17 @@ export interface AgendaCalendarProps {
   initialStart: string;
   initialEnd: string;
   locations: LocationOption[];
+  /**
+   * ISO instant the calendar should open on. When deep-linked via
+   * `?focusSession=:id` this is the focused session's start; otherwise omitted
+   * and the calendar opens on "today" (RF-13.09).
+   */
+  initialDate?: string;
+  /**
+   * Owner-scoped id of the session to focus. When present and found in
+   * `initialSessions`, its detail drawer opens automatically on mount.
+   */
+  focusSessionId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,16 +211,30 @@ export function AgendaCalendar({
   initialSessions,
   agendaSettings,
   locations,
+  initialDate,
+  focusSessionId,
 }: AgendaCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
   const [currentView, setCurrentView] = useState<CalendarViewName>(getInitialView);
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(() =>
+    initialDate ? new Date(initialDate) : new Date(),
+  );
   const [sessions, setSessions] = useState<SessionWithDetails[]>(initialSessions);
 
+  // When deep-linked via `?focusSession=:id`, resolve the focused session once
+  // at mount so its detail drawer opens immediately — derived synchronously
+  // from the initial props (no effect / cascading render). A stale or
+  // not-yet-loaded id simply resolves to `null` and the drawer stays closed.
+  const initialFocusedSession = useState(
+    () => initialSessions.find((s) => s.id === focusSessionId) ?? null,
+  )[0];
+
   // Session detail drawer state
-  const [selectedSession, setSelectedSession] = useState<SessionWithDetails | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<SessionWithDetails | null>(
+    initialFocusedSession,
+  );
+  const [drawerOpen, setDrawerOpen] = useState(initialFocusedSession !== null);
 
   // Session form modal state
   const [sessionModalOpen, setSessionModalOpen] = useState(false);

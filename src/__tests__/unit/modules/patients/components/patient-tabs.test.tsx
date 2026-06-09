@@ -33,7 +33,12 @@ const PATIENT_ID = 'abc-123';
 
 function renderTabs() {
   return render(
-    <PatientTabs patientId={PATIENT_ID} overviewContent={<div />} anamnesisContent={<div />} />,
+    <PatientTabs
+      patientId={PATIENT_ID}
+      overviewContent={<div />}
+      sessionsContent={<div />}
+      anamnesisContent={<div />}
+    />,
   );
 }
 
