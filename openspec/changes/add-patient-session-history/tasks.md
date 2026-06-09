@@ -34,8 +34,8 @@
 
 ## 7. Frontend — summary strip and filter chips
 
-- [ ] 7.1 Build `SessionHistorySummaryStrip` (realized total, attendance rate with `0%` shown, `warning` pending-evolution badge hidden when zero, last-session date) and `SessionHistoryFilterChips` (single-select: Todas/Realizadas/Canceladas/Não compareceu) per Sálvia tokens (RF-13.01, RF-13.10, §8 zero-rate edge case).
-- [ ] 7.2 **Unit test** (RTL) the strip (badge hidden at zero, `0%` rendering) and the chips (single-select toggle, default "Todas").
+- [x] 7.1 Build `SessionHistorySummaryStrip` (realized total, attendance rate with `0%` shown, `warning` pending-evolution badge hidden when zero, last-session date) and `SessionHistoryFilterChips` (single-select: Todas/Realizadas/Canceladas/Não compareceu) per Sálvia tokens (RF-13.01, RF-13.10, §8 zero-rate edge case).
+- [x] 7.2 **Unit test** (RTL) the strip (badge hidden at zero, `0%` rendering) and the chips (single-select toggle, default "Todas").
 
 ## 8. Frontend — history view container
 

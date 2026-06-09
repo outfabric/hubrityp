@@ -96,3 +96,16 @@ export {
   SessionHistoryCard,
   type SessionHistoryCardProps,
 } from './components/session-history-card';
+
+// ---- Components — summary strip (RF-13.01, RN-13.03) -------------------------
+export {
+  SessionHistorySummaryStrip,
+  type SessionHistorySummaryStripProps,
+} from './components/session-history-summary-strip';
+
+// ---- Components — filter chips (RF-13.10) ------------------------------------
+export {
+  SessionHistoryFilterChips,
+  type SessionHistoryFilterChipsProps,
+  type SessionHistoryFilterValue,
+} from './components/session-history-filter-chips';
