@@ -48,9 +48,15 @@ export type SessionHistoryListResult =
  * row) becomes the opaque `nextCursor` for keyset pagination — stable under
  * concurrent inserts, unlike OFFSET.
  *
- * Future-session exclusion: the nearest upcoming session is rendered separately
- * (see `getNearestFutureSession`), so its id is excluded here to avoid showing
- * it twice. The caller passes `excludeSessionId`.
+ * Future-session exclusion (no-leak guarantee): the list is bounded by time —
+ * only sessions with `start_at < now()` are returned. This time bound, NOT the
+ * id exclusion, is the primary mechanism that keeps recurrence-generated future
+ * occurrences out of the historical list (a recurrence may produce many future
+ * sessions; only the nearest is rendered separately). The id exclusion below is
+ * defense-in-depth: it guards the `now()` race between the nearest-future read
+ * (`getNearestFutureSession`) and this list read, which evaluate `now()` at
+ * slightly different instants — without it, a session straddling that instant
+ * could surface in both places. The caller passes `excludeSessionId`.
  *
  * Security (D7 — owner-scope everything):
  *   1. Authenticate via `supabase.auth.getUser()` (NEVER `getSession()`).
@@ -93,6 +99,10 @@ export async function getPatientSessionHistoryList(
       eq(sessions.patientId, patientId),
       isNull(sessions.deletedAt),
       eq(sessions.isBlocking, false),
+      // Time bound (primary no-leak mechanism): only past sessions belong in the
+      // historical list. Uses database `now()` for the same clock source as
+      // `getNearestFutureSession`, so the two reads agree on what is "future".
+      lt(sessions.startAt, sql`now()`),
     ];
 
     // Optional terminal-status filter (RF-13.03).
