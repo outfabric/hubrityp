@@ -90,6 +90,7 @@ hubrityp/
 ├── scripts/db-migrate.ts               # CLI used by `npm run db:migrate`
 ├── docs/                               # human docs — prd/, runbooks/, design-system/, app/auth flows
 ├── openspec/                           # OpenSpec change tracker (active changes + archived specs)
+├── public/                             # Brand images
 │
 ├── next.config.ts                      # Next.js config + security headers
 ├── drizzle.config.ts                   # Drizzle Kit config
