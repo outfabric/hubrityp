@@ -7,7 +7,7 @@ import { sendEmailViaResend, type SendEmailResult } from './resend';
 
 const SUBJECT = 'Sua conta foi temporariamente bloqueada';
 
-function buildHtml(recipientEmail: string): string {
+export function buildHtml(recipientEmail: string): string {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -19,12 +19,12 @@ function buildHtml(recipientEmail: string): string {
   <p>Por segurança, sua conta foi bloqueada temporariamente. Você poderá tentar novamente após o período de espera.</p>
   <p>Se você não reconhece essas tentativas, recomendamos alterar sua senha assim que o acesso for restabelecido.</p>
   <br/>
-  <p>— Equipe HubrityP</p>
+  <p>— Equipe Hubrity</p>
 </body>
 </html>`.trim();
 }
 
-function buildText(recipientEmail: string): string {
+export function buildText(recipientEmail: string): string {
   return [
     'Sua conta foi temporariamente bloqueada',
     '',
@@ -36,7 +36,7 @@ function buildText(recipientEmail: string): string {
     '',
     'Se você não reconhece essas tentativas, recomendamos alterar sua senha assim que o acesso for restabelecido.',
     '',
-    '— Equipe HubrityP',
+    '— Equipe Hubrity',
   ].join('\n');
 }
 

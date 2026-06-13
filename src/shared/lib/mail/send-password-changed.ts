@@ -7,7 +7,7 @@ import { sendEmailViaResend, type SendEmailResult } from './resend';
 
 const SUBJECT = 'Sua senha foi alterada';
 
-function buildHtml(recipientEmail: string): string {
+export function buildHtml(recipientEmail: string): string {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -18,12 +18,12 @@ function buildHtml(recipientEmail: string): string {
   <p>A senha da conta associada a <strong>${recipientEmail}</strong> foi alterada com sucesso.</p>
   <p>Se você não realizou essa alteração, entre em contato conosco imediatamente respondendo este e-mail.</p>
   <br/>
-  <p>— Equipe HubrityP</p>
+  <p>— Equipe Hubrity</p>
 </body>
 </html>`.trim();
 }
 
-function buildText(recipientEmail: string): string {
+export function buildText(recipientEmail: string): string {
   return [
     'Sua senha foi alterada',
     '',
@@ -33,7 +33,7 @@ function buildText(recipientEmail: string): string {
     '',
     'Se você não realizou essa alteração, entre em contato conosco imediatamente respondendo este e-mail.',
     '',
-    '— Equipe HubrityP',
+    '— Equipe Hubrity',
   ].join('\n');
 }
 

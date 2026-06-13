@@ -12,10 +12,10 @@
 
 ## 3. E-mails transacionais e PDF
 
-- [ ] 3.1 `src/shared/lib/mail/resend.ts`: remetente `'HubrityP <noreply@hubrityp.com>'` → `'Hubrity <noreply@hubrity.com>'` (nome **e** domínio).
-- [ ] 3.2 Atualizar sign-off e corpo (partes HTML **e** texto) em `src/shared/lib/mail/send-account-locked.ts`, `src/shared/lib/mail/send-password-changed.ts` e `src/shared/lib/mail/send-nps-detractor-followup.ts`: "— Equipe HubrityP" → "— Equipe Hubrity"; no NPS, "sua experiência recente com o HubrityP" → "… com o Hubrity".
-- [ ] 3.3 `src/modules/medical-records/inngest/export-pdf.ts` (linhas ~826/845): rodapé "— Equipe HubrityP" → "— Equipe Hubrity" (HTML e texto).
-- [ ] 3.4 Testes unitários: estender/criar specs para os builders de e-mail afirmando display name "Hubrity" e sign-off "— Equipe Hubrity" nas partes HTML e texto; e um teste do `metadata.title` do root layout = "Hubrity".
+- [x] 3.1 `src/shared/lib/mail/resend.ts`: remetente `'HubrityP <noreply@hubrityp.com>'` → `'Hubrity <noreply@hubrity.com>'` (nome **e** domínio).
+- [x] 3.2 Atualizar sign-off e corpo (partes HTML **e** texto) em `src/shared/lib/mail/send-account-locked.ts`, `src/shared/lib/mail/send-password-changed.ts` e `src/shared/lib/mail/send-nps-detractor-followup.ts`: "— Equipe HubrityP" → "— Equipe Hubrity"; no NPS, "sua experiência recente com o HubrityP" → "… com o Hubrity".
+- [x] 3.3 `src/modules/medical-records/inngest/export-pdf.ts` (linhas ~826/845): rodapé "— Equipe HubrityP" → "— Equipe Hubrity" (HTML e texto).
+- [x] 3.4 Testes unitários: estender/criar specs para os builders de e-mail afirmando display name "Hubrity" e sign-off "— Equipe Hubrity" nas partes HTML e texto; e um teste do `metadata.title` do root layout = "Hubrity".
 
 ## 4. Domínio da aplicação (hubrityp.com.br → hubrity.com)
 

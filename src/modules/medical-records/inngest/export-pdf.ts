@@ -823,7 +823,7 @@ function buildExportEmailHtml(params: ExportEmailParams): string {
   <p><a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Baixar prontuário</a></p>
   <p style="font-size: 0.85em; color: #666;">Se você não solicitou esta exportação, por favor desconsidere este e-mail.</p>
   <br/>
-  <p>— Equipe HubrityP</p>
+  <p>— Equipe Hubrity</p>
 </body>
 </html>`.trim();
 }
@@ -842,6 +842,6 @@ function buildExportEmailText(params: ExportEmailParams): string {
     '',
     'Se você não solicitou esta exportação, por favor desconsidere este e-mail.',
     '',
-    '— Equipe HubrityP',
+    '— Equipe Hubrity',
   ].join('\n');
 }
