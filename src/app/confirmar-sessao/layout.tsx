@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Confirmar presença — HubrityP',
+  title: 'Confirmar presença — Hubrity',
   description: 'Confirme ou cancele sua sessão agendada.',
 };
 

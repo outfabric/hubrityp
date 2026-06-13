@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Termo de Consentimento — HubrityP',
+  title: 'Termo de Consentimento — Hubrity',
   description: 'Leia e assine o termo de consentimento informado.',
 };
 

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Questionário — HubrityP',
+  title: 'Questionário — Hubrity',
   description: 'Responda ao questionário enviado pelo seu psicólogo.',
 };
 

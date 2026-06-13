@@ -1,7 +1,7 @@
 ## 1. Metadados / titles
 
-- [ ] 1.1 Em `src/app/layout.tsx` (linha ~30), alterar o `title` base de `'HubrityP'` para `'Hubrity'`.
-- [ ] 1.2 Nos layouts públicos, alterar o `title` de metadados de "… — HubrityP" para "… — Hubrity": `src/app/termo/layout.tsx`, `src/app/escala/layout.tsx`, `src/app/confirmar-sessao/layout.tsx`, `src/app/v/[token]/layout.tsx`. NÃO tocar o `<span>` visível do header (tratado pela change da logo).
+- [x] 1.1 Em `src/app/layout.tsx` (linha ~30), alterar o `title` base de `'HubrityP'` para `'Hubrity'`.
+- [x] 1.2 Nos layouts públicos, alterar o `title` de metadados de "… — HubrityP" para "… — Hubrity": `src/app/termo/layout.tsx`, `src/app/escala/layout.tsx`, `src/app/confirmar-sessao/layout.tsx`, `src/app/v/[token]/layout.tsx`. NÃO tocar o `<span>` visível do header (tratado pela change da logo).
 
 ## 2. Copy de UI
 

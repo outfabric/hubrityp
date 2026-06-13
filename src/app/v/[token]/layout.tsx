@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Sessão de vídeo — HubrityP',
+  title: 'Sessão de vídeo — Hubrity',
   robots: { index: false, follow: false },
 };
 

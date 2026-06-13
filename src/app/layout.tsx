@@ -27,7 +27,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'HubrityP',
+  title: 'Hubrity',
   description: 'Plataforma para psicólogos autônomos brasileiros.',
 };
 
