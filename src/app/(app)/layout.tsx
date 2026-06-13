@@ -16,6 +16,7 @@ import { db } from '@/shared/db/client';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
+import { Logo } from '@/shared/ui/logo';
 
 import {
   dismissNpsAction,
@@ -127,7 +128,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-svh flex-col">
       <AiRealtimeBoundary userId={userId} />
       <header className="border-border bg-surface flex items-center justify-between border-b px-6 py-3 pl-14 md:pl-6">
-        <span className="text-lg font-semibold">HubrityP</span>
+        {/*
+          Header brand mark. Two non-interactive instances are rendered and
+          swapped purely by CSS (no JS, SSR-safe): the horizontal lockup at
+          `md`+, the symbol below `md`. `hidden` (`display:none`) — not
+          `visibility`/`opacity` — removes the inactive copy from the
+          accessibility tree, so the name "Hubrity" is announced exactly once.
+        */}
+        <Logo variant="lockup-h" className="hidden h-7 md:block" />
+        <Logo variant="symbol" className="h-7 md:hidden" />
         <div className="flex items-center gap-2">
           <NotificationBellBoundary
             userId={userId}

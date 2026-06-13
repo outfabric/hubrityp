@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { Logo } from '@/shared/ui/logo';
+
 export const metadata: Metadata = {
   title: 'Questionário — HubrityP',
   description: 'Responda ao questionário enviado pelo seu psicólogo.',
@@ -27,7 +29,7 @@ export default function EscalaLayout({ children }: { children: React.ReactNode }
     <div className="flex min-h-svh flex-col">
       {/* Header — logo centered */}
       <header className="flex items-center justify-center px-4 py-6 md:px-8">
-        <span className="text-text-primary text-lg font-semibold">HubrityP</span>
+        <Logo variant="lockup-v" className="h-12 w-auto" />
       </header>
 
       {/* Main content */}

@@ -168,6 +168,7 @@ WAAPI
 
 # --- Project nouns ---
 Hubrity
+hubrity
 hubrityp
 
 # --- English code identifiers / log verbs (bilingual codebase) ---
