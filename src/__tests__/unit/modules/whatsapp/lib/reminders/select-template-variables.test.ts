@@ -25,7 +25,7 @@ function defaultSession(overrides?: Partial<SessionForVariables>): SessionForVar
     durationMinutes: 50,
     modality: 'in_person',
     videoLink: null,
-    confirmationLink: 'https://app.hubrityp.com.br/c/abc123',
+    confirmationLink: 'https://app.hubrity.com/c/abc123',
     cancelMessage: null,
     sessionValue: 200,
     ...overrides,
@@ -81,7 +81,7 @@ describe('selectTemplateVariables — kind "early"', () => {
       duracao_min: '50',
       endereco: 'Rua Domingos de Morais, 2564',
       instrucao_chegada: 'Prédio cinza, interfone 42',
-      link_confirmacao: 'https://app.hubrityp.com.br/c/abc123',
+      link_confirmacao: 'https://app.hubrity.com/c/abc123',
       valor: 'R$ 200,00',
     });
   });
@@ -280,7 +280,7 @@ describe('selectTemplateVariables — modality filtering', () => {
 describe('selectTemplateVariables — video link URL format', () => {
   it('populates link_video with correct patient video URL format when videoLink is provided', () => {
     const patientVideoUrl =
-      'https://app.hubrityp.com.br/v/a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+      'https://app.hubrity.com/v/a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
     const session = defaultSession({ modality: 'online', videoLink: patientVideoUrl });
     const result = selectTemplateVariables(
       session,

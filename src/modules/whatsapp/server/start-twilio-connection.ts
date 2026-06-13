@@ -120,7 +120,7 @@ export async function startTwilioConnectionImpl(
     // Webhook URLs are wired up by change 2 (whatsapp-reminders-engine).
     // For now, use a placeholder URL so sender registration succeeds with
     // valid-looking callback endpoints.
-    const webhookBaseUrl = 'https://placeholder.hubrityp.com.br';
+    const webhookBaseUrl = 'https://placeholder.hubrity.com';
 
     const body = new URLSearchParams({
       sender_id: `whatsapp:${phone}`,

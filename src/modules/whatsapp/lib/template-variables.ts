@@ -106,13 +106,13 @@ export const TEMPLATE_VARIABLES = [
   {
     key: 'link_confirmacao',
     label: 'Link de confirmação',
-    example: 'https://app.hubrityp.com.br/c/abc123',
+    example: 'https://app.hubrity.com/c/abc123',
     applicableTemplates: ['lembrete_24h', 'lembrete_2h'],
   },
   {
     key: 'link_video',
     label: 'Link de vídeo',
-    example: 'https://meet.hubrityp.com.br/xyz',
+    example: 'https://meet.hubrity.com/xyz',
     applicableTemplates: ['link_video'],
   },
   {

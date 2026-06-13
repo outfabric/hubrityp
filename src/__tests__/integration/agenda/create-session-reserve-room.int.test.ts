@@ -80,7 +80,7 @@ describe('createSessionImpl video-room reservation', () => {
   it('reserves a video_rooms row (stream_call_id NULL) for an online session', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
-    setAppUrl('https://app.hubrityp.com.br');
+    setAppUrl('https://app.hubrity.com');
     const client = fakeSupabaseClient(userId);
 
     const result = await createSessionImpl(client, {
@@ -109,7 +109,7 @@ describe('createSessionImpl video-room reservation', () => {
   it('includes patientVideoUrl when APP_URL is configured (online session)', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
-    setAppUrl('https://app.hubrityp.com.br');
+    setAppUrl('https://app.hubrity.com');
     const client = fakeSupabaseClient(userId);
 
     const result = await createSessionImpl(client, {
@@ -131,7 +131,7 @@ describe('createSessionImpl video-room reservation', () => {
     });
     const token = rooms[0]!.patientToken;
 
-    expect(result.patientVideoUrl).toBe(`https://app.hubrityp.com.br/v/${token}`);
+    expect(result.patientVideoUrl).toBe(`https://app.hubrity.com/v/${token}`);
   });
 
   it('omits patientVideoUrl when APP_URL is not configured (online session)', async () => {
@@ -162,7 +162,7 @@ describe('createSessionImpl video-room reservation', () => {
   it('does not reserve a video_rooms row for an in-person session', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
-    setAppUrl('https://app.hubrityp.com.br');
+    setAppUrl('https://app.hubrity.com');
     const client = fakeSupabaseClient(userId);
 
     const result = await createSessionImpl(client, {

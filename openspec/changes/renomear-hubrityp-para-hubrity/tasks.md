@@ -19,7 +19,7 @@
 
 ## 4. Domínio da aplicação (hubrityp.com.br → hubrity.com)
 
-- [ ] 4.1 Atualizar refs hardcoded de domínio em código (não-teste): `src/shared/env/schemas.ts` (comentário do `APP_URL`), `src/modules/telepsicologia/lib/video-url.ts` (JSDoc), `src/modules/whatsapp/lib/template-variables.ts` (exemplos `app.`/`meet.`), `src/modules/whatsapp/server/start-twilio-connection.ts` (placeholder de webhook) e `.env.example` (comentário). `app.hubrityp.com.br` → `app.hubrity.com` (abandonar o `.com.br`).
-- [ ] 4.2 Atualizar os ~20 fixtures de teste que usam `hubrityp.com`/`hubrityp.com.br` (agenda, whatsapp, telepsicologia, patients) para `hubrity.com`, mudando entrada **e** saída esperada juntas para manter os specs verdes (ex.: `create-session-reserve-room.int.test.ts`, `list-sessions-video-url.int.test.ts`, `reminders-dispatcher.int.test.ts`, `select-template-variables.test.ts`, `video-url.test.ts`, `consent-share.test.ts`, `session-form-modal-copy-toast.test.tsx`, `session-detail-drawer-copy-link.test.tsx`).
+- [x] 4.1 Atualizar refs hardcoded de domínio em código (não-teste): `src/shared/env/schemas.ts` (comentário do `APP_URL`), `src/modules/telepsicologia/lib/video-url.ts` (JSDoc), `src/modules/whatsapp/lib/template-variables.ts` (exemplos `app.`/`meet.`), `src/modules/whatsapp/server/start-twilio-connection.ts` (placeholder de webhook) e `.env.example` (comentário). `app.hubrityp.com.br` → `app.hubrity.com` (abandonar o `.com.br`).
+- [x] 4.2 Atualizar os ~20 fixtures de teste que usam `hubrityp.com`/`hubrityp.com.br` (agenda, whatsapp, telepsicologia, patients) para `hubrity.com`, mudando entrada **e** saída esperada juntas para manter os specs verdes (ex.: `create-session-reserve-room.int.test.ts`, `list-sessions-video-url.int.test.ts`, `reminders-dispatcher.int.test.ts`, `select-template-variables.test.ts`, `video-url.test.ts`, `consent-share.test.ts`, `session-form-modal-copy-toast.test.tsx`, `session-detail-drawer-copy-link.test.tsx`).
 
 
