@@ -5,10 +5,10 @@
 
 ## 2. Copy de UI
 
-- [ ] 2.1 `src/app/(auth)/login/page.tsx`: "Acesse sua conta HubrityP." → "Acesse sua conta Hubrity.".
-- [ ] 2.2 `src/app/(auth)/signup/page.tsx`: "Cadastre-se para começar a usar o HubrityP." → "… usar o Hubrity.".
-- [ ] 2.3 `src/modules/dashboard/components/first-steps-slot.tsx` (linha ~43): "Bem-vindo(a) ao HubrityP." → "Bem-vindo(a) ao Hubrity.".
-- [ ] 2.4 Rodapés dos layouts públicos: "HubrityP — Plataforma para psicólogos" → "Hubrity — Plataforma para psicólogos" (em `termo`, `escala`, `confirmar-sessao`, `v/[token]`).
+- [x] 2.1 `src/app/(auth)/login/page.tsx`: "Acesse sua conta HubrityP." → "Acesse sua conta Hubrity.".
+- [x] 2.2 `src/app/(auth)/signup/page.tsx`: "Cadastre-se para começar a usar o HubrityP." → "… usar o Hubrity.".
+- [x] 2.3 `src/modules/dashboard/components/first-steps-slot.tsx` (linha ~43): "Bem-vindo(a) ao HubrityP." → "Bem-vindo(a) ao Hubrity.".
+- [x] 2.4 Rodapés dos layouts públicos: "HubrityP — Plataforma para psicólogos" → "Hubrity — Plataforma para psicólogos" (em `termo`, `escala`, `confirmar-sessao`, `v/[token]`).
 
 ## 3. E-mails transacionais e PDF
 
