@@ -22,6 +22,6 @@
 
 ## 5. Validação
 
-- [ ] 5.1 Rodar `npm run lint` e `npm run typecheck` — ambos verdes.
-- [ ] 5.2 Rodar `npm run test:unit` (inclui `logo.test.tsx`) e os e2e seeded afetados (`smoke.spec.ts`, `whatsapp-health-banner.spec.ts`) — verdes.
-- [ ] 5.3 Conferência visual: header desktop (lockup) vs mobile (símbolo), home, layouts públicos e (se incluído) auth renderizam a logo corretamente nos tons esperados.
+- [x] 5.1 Rodar `npm run lint` e `npm run typecheck` — ambos verdes.
+- [x] 5.2 Rodar `npm run test:unit` (inclui `logo.test.tsx`) e os e2e seeded afetados (`smoke.spec.ts`, `whatsapp-health-banner.spec.ts`) — verdes.
+- [x] 5.3 Conferência visual: header desktop (lockup) vs mobile (símbolo), home, layouts públicos e (se incluído) auth renderizam a logo corretamente nos tons esperados.
