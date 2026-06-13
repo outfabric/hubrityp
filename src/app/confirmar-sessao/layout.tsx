@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { Logo } from '@/shared/ui/logo';
+
 export const metadata: Metadata = {
   title: 'Confirmar presença — HubrityP',
   description: 'Confirme ou cancele sua sessão agendada.',
@@ -24,7 +26,7 @@ export default function ConfirmarSessaoLayout({ children }: { children: React.Re
     <div className="flex min-h-svh flex-col">
       {/* Header — logo centered */}
       <header className="flex items-center justify-center px-4 py-6 md:px-8">
-        <span className="text-text-primary text-lg font-semibold">HubrityP</span>
+        <Logo variant="lockup-v" className="h-12 w-auto" />
       </header>
 
       {/* Main content */}

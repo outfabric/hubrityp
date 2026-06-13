@@ -8,11 +8,11 @@ import { expect, test } from '@playwright/test';
 //      uptime probes parse this, so the contract is pinned in e2e
 //      against the production-built Next.js server (not just unit/integration).
 test.describe('@health smoke', () => {
-  test('home page returns 200 and renders the HubrityP heading', async ({ page }) => {
+  test('home page returns 200 and renders the Hubrity logo', async ({ page }) => {
     const response = await page.goto('/');
 
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole('heading', { name: 'HubrityP' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Hubrity' })).toBeVisible();
   });
 
   test('GET /api/health returns 200 with the documented payload shape', async ({ request }) => {

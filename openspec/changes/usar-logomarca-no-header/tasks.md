@@ -12,9 +12,9 @@
 
 ## 3. Home e layouts públicos
 
-- [ ] 3.1 Em `src/app/page.tsx`, substituir o `<h1>HubrityP</h1>` pela `<Logo variant="lockup-v" />` em destaque (altura de DS, ex. `h-24`), mantendo a semântica de cabeçalho/centralização da página.
-- [ ] 3.2 Substituir o `<span>HubrityP</span>` centralizado pela `<Logo variant="lockup-v" />` nos quatro layouts públicos: `src/app/termo/layout.tsx`, `src/app/escala/layout.tsx`, `src/app/confirmar-sessao/layout.tsx`, `src/app/v/[token]/layout.tsx`. Não alterar a classificação de auth dessas rotas (seguem públicas).
-- [ ] 3.3 Atualizar o e2e `src/__tests__/e2e/seeded/smoke.spec.ts` (linha ~15): trocar `getByRole('heading', { name: 'HubrityP' })` por `getByRole('img', { name: 'Hubrity' })` na home; ajustar o título do teste se mencionar "HubrityP heading".
+- [x] 3.1 Em `src/app/page.tsx`, substituir o `<h1>HubrityP</h1>` pela `<Logo variant="lockup-v" />` em destaque (altura de DS, ex. `h-24`), mantendo a semântica de cabeçalho/centralização da página.
+- [x] 3.2 Substituir o `<span>HubrityP</span>` centralizado pela `<Logo variant="lockup-v" />` nos quatro layouts públicos: `src/app/termo/layout.tsx`, `src/app/escala/layout.tsx`, `src/app/confirmar-sessao/layout.tsx`, `src/app/v/[token]/layout.tsx`. Não alterar a classificação de auth dessas rotas (seguem públicas).
+- [x] 3.3 Atualizar o e2e `src/__tests__/e2e/seeded/smoke.spec.ts` (linha ~15): trocar `getByRole('heading', { name: 'HubrityP' })` por `getByRole('img', { name: 'Hubrity' })` na home; ajustar o título do teste se mencionar "HubrityP heading".
 
 ## 4. Telas de auth (opcional)
 
