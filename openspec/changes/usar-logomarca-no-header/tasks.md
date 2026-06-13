@@ -18,7 +18,7 @@
 
 ## 4. Telas de auth (opcional)
 
-- [ ] 4.1 (Opcional) Em `src/app/(auth)/layout.tsx`, adicionar `<Logo variant="lockup-v" />` centralizada onde hoje não há marca. Cortável sem afetar o resto do escopo; se incluído, não introduzir link nem alterar gating.
+- [x] 4.1 (Opcional) Em `src/app/(auth)/layout.tsx`, adicionar `<Logo variant="lockup-v" />` centralizada onde hoje não há marca. Cortável sem afetar o resto do escopo; se incluído, não introduzir link nem alterar gating.
 
 ## 5. Validação
 
