@@ -7,8 +7,8 @@
 
 ## 2. Header autenticado
 
-- [ ] 2.1 Em `src/app/(app)/layout.tsx`, substituir `<span className="text-lg font-semibold">HubrityP</span>` por duas instâncias responsivas, SSR-safe via CSS: `<Logo variant="lockup-h" className="hidden h-7 md:block" />` (desktop) e `<Logo variant="symbol" className="h-7 md:hidden" />` (mobile). Usar `hidden` (`display:none`) para excluir a cópia oculta da árvore de acessibilidade. Preservar o layout/espaçamento existente (`pl-14 md:pl-6`) e o caráter não-interativo.
-- [ ] 2.2 Atualizar o e2e `src/__tests__/e2e/seeded/whatsapp/whatsapp-health-banner.spec.ts` (linha ~158): trocar `getByText('HubrityP')` por `getByRole('img', { name: 'Hubrity' })` para confirmar a presença da logo no header.
+- [x] 2.1 Em `src/app/(app)/layout.tsx`, substituir `<span className="text-lg font-semibold">HubrityP</span>` por duas instâncias responsivas, SSR-safe via CSS: `<Logo variant="lockup-h" className="hidden h-7 md:block" />` (desktop) e `<Logo variant="symbol" className="h-7 md:hidden" />` (mobile). Usar `hidden` (`display:none`) para excluir a cópia oculta da árvore de acessibilidade. Preservar o layout/espaçamento existente (`pl-14 md:pl-6`) e o caráter não-interativo.
+- [x] 2.2 Atualizar o e2e `src/__tests__/e2e/seeded/whatsapp/whatsapp-health-banner.spec.ts` (linha ~158): trocar `getByText('HubrityP')` por `getByRole('img', { name: 'Hubrity' })` para confirmar a presença da logo no header.
 
 ## 3. Home e layouts públicos
 

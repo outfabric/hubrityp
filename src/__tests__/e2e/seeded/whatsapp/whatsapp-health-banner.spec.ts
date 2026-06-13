@@ -154,8 +154,11 @@ test.describe('@whatsapp health banner', () => {
     const cacheBust = Date.now();
     await page.goto(`/dashboard?_=${cacheBust}`, { waitUntil: 'networkidle' });
 
-    // Wait for the page to load
-    await expect(page.getByText('HubrityP')).toBeVisible({ timeout: 15000 });
+    // Wait for the page to load — the header logo exposes its accessible name
+    // "Hubrity" via role="img".
+    await expect(page.getByRole('img', { name: 'Hubrity' }).first()).toBeVisible({
+      timeout: 15000,
+    });
 
     // Verify the banner is NOT present
     await expect(page.getByTestId('whatsapp-health-banner')).not.toBeVisible();
