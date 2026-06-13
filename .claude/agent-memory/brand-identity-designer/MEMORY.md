@@ -1,0 +1,3 @@
+- [Brief de marca Hubrity](project_hubrity-brand-brief.md) — posicionamento, persona, atributos e concorrentes do SaaS para psicólogos
+- [Decisões de discovery da logo](project_hubrity-logo-decisions.md) — tipo combinação, cor sálvia+acento, símbolo cuidado-first, nome sem trocadilho
+- [Design System Sálvia (âncora visual)](reference_salvia-design-system.md) — tokens de cor/tipo e proibições que a logo deve respeitar
