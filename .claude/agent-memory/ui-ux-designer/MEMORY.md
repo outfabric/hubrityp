@@ -1,2 +1,2 @@
-- [Sálvia design system](project_salvia-design-system.md) — token source of truth, philosophy & hard constraints for the psychologist SaaS UI
+- [Sálvia design system](project_salvia-design-system.md) — Figma file is the canonical source of truth (code mirrors it); philosophy & hard constraints for the psychologist SaaS UI
 - [Figma DS build gotchas](reference_figma-ds-build-gotchas.md) — non-obvious use_figma quirks (clear-then-set fills, resize collapse, sharedPluginData) hit building the Figma library
