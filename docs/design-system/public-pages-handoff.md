@@ -258,6 +258,5 @@ serve de referência de contraste.
   Confirmar se o nome público é Hubrity (e não "Sálvia", que é o nome do design system).
 - **Estilos `Display/*` + `Lead`:** precisam ser adicionados ao DS em código + `rules.md`.
 - **Token de botão primário:** recomendo padronizar `brand/600` (AA) para o contexto público.
-- **Texto jurídico:** Privacidade e Termos estão com texto de referência; revisar com jurídico.
 - **SEO/Analytics:** `og:image`, sitemap, robots e o gate de analytics por consentimento são
   responsabilidade de implementação (não visuais) — ver RNF-14.06 e critérios de aceite.

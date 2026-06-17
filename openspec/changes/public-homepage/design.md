@@ -19,6 +19,9 @@ Real screenshots already exist in `docs/screenshots/` (`.webp` + `.png`). The DS
 
 ## Decisions
 
+### D0 — Figma is the mandatory visual source of truth
+Implementation MUST reproduce the `Public · Homepage` Figma screens faithfully (desktop `105:2`, mobile `133:2`; hero carousel `110:x`). Before and during every section/component task, the implementing agent inspects the frame via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. The handoff §5 and `rules.md` are complements, not replacements. Precedence: Figma prevails on visual form; specs + PRD 14 prevail on business rules/content (MVP-only, exact regulatory codes). Enforced by the design-fidelity QA task in `tasks.md`.
+
 ### D1 — Sections as composable Server Components; interactivity at leaves
 Each of the 10 sections is its own Server Component under `marketing/components/home/`, composed by `app/(public)/page.tsx`. Only genuinely interactive pieces (`carousel`, feature-card `lightbox`, `faq` toggle behavior, scroll fade-in observer) are `'use client'` leaves. Rationale: RSC-first per CLAUDE.md; keeps JS payload minimal for the LCP page.
 

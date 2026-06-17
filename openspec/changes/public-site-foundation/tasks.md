@@ -1,3 +1,11 @@
+> [!IMPORTANT]
+> **MANDATORY — design fidelity (read before implementing any UI task in this change).**
+> The final screens are designed in Figma and are the **visual source of truth**. You MUST open and **strictly follow** them — layout, tokens (color / spacing / radius / typography), spacing, states, and responsive behavior — for every UI surface here (header, footer, cookie banner, legal pages, 404, theme toggle). Do not improvise visuals or invent values not backed by DS tokens.
+> - **File:** Hubrity Design System — `https://www.figma.com/design/HoLOEqq9PXlo6IwLkz3FQ9/Hubrity-Design-System` (file key `HoLOEqq9PXlo6IwLkz3FQ9`).
+> - **Pages / nodes for this change:** header inside `Public · Homepage` (desktop `105:2`, mobile `133:2`); Footer (`126:7`); `Public · Library` → cookie banner (`132:2`); `Public · Legal & 404` → Privacidade (`142:2`), Termos (`143:2`), 404 (`144:2`).
+> - **How:** use the **Figma MCP** (`get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`) to inspect each frame and pull exact tokens **before and during** implementation. Complement (do not replace) with `docs/design-system/public-pages-handoff.md` and `docs/design-system/rules.md`.
+> - **Precedence:** on any conflict, the **Figma screens prevail on visual form**; this change's specs + PRD 14 prevail on business rules and content.
+
 ## 1. Marketing module scaffold + env
 
 - [ ] 1.1 Create `src/modules/marketing/` with `index.ts` barrel (public API) and internal `components/`, `lib/`, `server/` folders per the project module convention.
@@ -81,3 +89,7 @@
 - [ ] 12.1 E2E (seeded): anonymous visit to `/` returns 200 (not redirected to login); header shows "Entrar"/"Começar grátis"; footer legal links navigate to `/politica-de-privacidade` and `/termos-de-uso` (both 200); 404 page renders for an unknown path with both CTAs — `src/__tests__/e2e/seeded/public/public-shell.spec.ts`.
 - [ ] 12.2 E2E (seeded): cookie banner appears on first visit, "Aceitar" dismisses it and sets `cookie_consent`, and it does not reappear after navigation; no analytics request before consent — same/sibling spec.
 - [ ] 12.3 E2E (seeded): authenticated user sees "Acessar plataforma" on `/` and is not redirected (reuse a seeded active user) — same/sibling spec.
+
+## 13. Design-fidelity QA
+
+- [ ] 13.1 Compare each implemented UI surface against its Figma frame via the Figma MCP (`get_screenshot`/`get_design_context`): header (`105:2`/`133:2`), footer (`126:7`), cookie banner (`132:2`), legal pages (`142:2`/`143:2`), 404 (`144:2`). Verify tokens, spacing, radius, typography, states, dark mode, and responsive behavior match the screens; record any intentional deviation and its reason.

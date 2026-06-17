@@ -25,6 +25,9 @@ Constraints: LGPD (cookie consent before analytics, data residency in `sa-east-1
 
 ## Decisions
 
+### D0 — Figma is the mandatory visual source of truth
+Implementation MUST reproduce the Figma screens faithfully. Before and during every UI task, the implementing agent opens the relevant frame in the **Hubrity Design System** file (`HoLOEqq9PXlo6IwLkz3FQ9`) via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. Relevant nodes: header `105:2`/`133:2`, footer `126:7`, cookie banner `132:2`, legal `142:2`/`143:2`, 404 `144:2`. The handoff (`docs/design-system/public-pages-handoff.md`) and `rules.md` are complements, not replacements. Precedence: Figma prevails on visual form; specs + PRD 14 prevail on business rules/content. This is enforced by the design-fidelity QA task in `tasks.md`.
+
 ### D1 — Module location: `src/modules/marketing/`
 All public-site domain code (header, footer, cookie-consent, theme-toggle, plans config, SEO helpers) lives in a new `marketing` module with a barrel (`@/modules/marketing`). Rationale: matches the project's domain-first convention (CLAUDE.md folder rules); keeps `src/app/(public)/**` thin (composition only). The footer is exported so the authenticated app can reuse it. Alternative considered: scattering components under `src/shared/ui` — rejected because these are domain compositions, not primitives, and `shared/` must not depend on app concerns.
 
