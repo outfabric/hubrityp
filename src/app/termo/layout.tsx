@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Termo de Consentimento — HubrityP',
+  title: 'Termo de Consentimento — Hubrity',
   description: 'Leia e assine o termo de consentimento informado.',
 };
 
@@ -33,7 +33,7 @@ export default function TermoLayout({ children }: { children: React.ReactNode })
       {/* Footer — minimal caption text */}
       <footer className="px-4 py-6 text-center">
         <p className="text-text-tertiary text-xs font-medium">
-          HubrityP — Plataforma para psicólogos
+          Hubrity — Plataforma para psicólogos
         </p>
       </footer>
     </div>

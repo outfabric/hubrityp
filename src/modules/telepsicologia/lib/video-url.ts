@@ -12,7 +12,7 @@ const HEX_64_REGEX = /^[0-9a-f]{64}$/;
 /**
  * Build the patient-facing video URL for a telepsychology session.
  *
- * @param baseUrl - Application base URL (e.g. `https://app.hubrityp.com.br`).
+ * @param baseUrl - Application base URL (e.g. `https://app.hubrity.com`).
  *   A single trailing slash is stripped to avoid a double slash in the output.
  * @param token  - 64-character lowercase hex lookup token (`patient_token`).
  * @returns The full URL: `${baseUrl}/v/${token}`.

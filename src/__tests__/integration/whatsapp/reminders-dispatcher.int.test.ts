@@ -473,7 +473,7 @@ describe('fetchVideoLink()', () => {
     const userId = randomUUID();
     const sessionId = randomUUID();
     const patientToken = 'a'.repeat(64);
-    const appUrl = 'https://app.hubrityp.com.br';
+    const appUrl = 'https://app.hubrity.com';
 
     await seedAuthUser(userId);
     await seedProfile(userId);
@@ -500,7 +500,7 @@ describe('fetchVideoLink()', () => {
 
   it('returns null when no video room exists for the session', async () => {
     const db = await getServiceDb();
-    const result = await fetchVideoLink(db, randomUUID(), 'https://app.hubrityp.com.br');
+    const result = await fetchVideoLink(db, randomUUID(), 'https://app.hubrity.com');
 
     expect(result).toBeNull();
   });
@@ -521,7 +521,7 @@ describe('fetchVideoLinksBatch()', () => {
     const session3 = randomUUID();
     const token1 = 'b'.repeat(64);
     const token2 = 'c'.repeat(64);
-    const appUrl = 'https://app.hubrityp.com.br';
+    const appUrl = 'https://app.hubrity.com';
 
     await seedAuthUser(userId);
     await seedProfile(userId);
@@ -566,7 +566,7 @@ describe('fetchVideoLinksBatch()', () => {
 
   it('returns an empty Map when sessionIds array is empty', async () => {
     const db = await getServiceDb();
-    const result = await fetchVideoLinksBatch(db, [], 'https://app.hubrityp.com.br');
+    const result = await fetchVideoLinksBatch(db, [], 'https://app.hubrity.com');
 
     expect(result.size).toBe(0);
   });

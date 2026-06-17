@@ -17,7 +17,7 @@ export default function SignupPage() {
     <Card>
       <CardHeader>
         <CardTitle>Criar conta</CardTitle>
-        <CardDescription>Cadastre-se para começar a usar o HubrityP.</CardDescription>
+        <CardDescription>Cadastre-se para começar a usar o Hubrity.</CardDescription>
       </CardHeader>
       <CardContent>
         <SignupForm action={signUp} />

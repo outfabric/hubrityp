@@ -34,7 +34,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <Card>
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
-        <CardDescription>Acesse sua conta HubrityP.</CardDescription>
+        <CardDescription>Acesse sua conta Hubrity.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {banner ? (

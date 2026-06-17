@@ -35,7 +35,7 @@ function setAppUrl(url: string | undefined): void {
   envHolder.appUrl = url;
 }
 
-const APP_URL = 'https://app.hubrityp.com.br';
+const APP_URL = 'https://app.hubrity.com';
 
 // ---------------------------------------------------------------------------
 // Helpers
