@@ -8,10 +8,10 @@
 
 ## 1. Marketing module scaffold + env
 
-- [ ] 1.1 Create `src/modules/marketing/` with `index.ts` barrel (public API) and internal `components/`, `lib/`, `server/` folders per the project module convention.
-- [ ] 1.2 Add env config: `NEXT_PUBLIC_SITE_URL` (absolute base, validated `z.string().url()`) and optional analytics vars (`NEXT_PUBLIC_ANALYTICS_HOST`, `NEXT_PUBLIC_ANALYTICS_SITE_ID`/domain — optional) to `src/shared/env/client-schema.ts` and `src/shared/env/client.ts`. Analytics is a no-op when unset.
-- [ ] 1.3 Add a `siteUrl()` / `absoluteUrl(path)` helper in `marketing/lib/site.ts` deriving absolute URLs from `clientEnv.NEXT_PUBLIC_SITE_URL`.
-- [ ] 1.4 Unit test `absoluteUrl()` (env-driven base, trailing-slash handling, path joining) — `src/__tests__/unit/modules/marketing/site.test.ts`.
+- [x] 1.1 Create `src/modules/marketing/` with `index.ts` barrel (public API) and internal `components/`, `lib/`, `server/` folders per the project module convention.
+- [x] 1.2 Add env config: `NEXT_PUBLIC_SITE_URL` (absolute base, validated `z.string().url()`) and optional analytics vars (`NEXT_PUBLIC_ANALYTICS_HOST`, `NEXT_PUBLIC_ANALYTICS_SITE_ID`/domain — optional) to `src/shared/env/client-schema.ts` and `src/shared/env/client.ts`. Analytics is a no-op when unset.
+- [x] 1.3 Add a `siteUrl()` / `absoluteUrl(path)` helper in `marketing/lib/site.ts` deriving absolute URLs from `clientEnv.NEXT_PUBLIC_SITE_URL`.
+- [x] 1.4 Unit test `absoluteUrl()` (env-driven base, trailing-slash handling, path joining) — `src/__tests__/unit/modules/marketing/site.test.ts`.
 
 ## 2. Marketing typography tokens + Nunito wordmark
 

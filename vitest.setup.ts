@@ -35,6 +35,9 @@ process.env.LOG_LEVEL = 'silent';
 process.env.DATABASE_URL ??= 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://127.0.0.1:54321';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'unit-test-anon-key';
+// Public marketing-site base URL — required by clientEnvSchema. A valid URL so
+// any transitive `clientEnv`/`serverEnv` import passes Zod validation.
+process.env.NEXT_PUBLIC_SITE_URL ??= 'http://127.0.0.1:3000';
 process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'unit-test-service-key';
 // Stream SDK — dummy values so the Zod env validation passes when a test
 // transitively imports `serverEnv` or `clientEnv`.

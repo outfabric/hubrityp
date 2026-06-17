@@ -92,6 +92,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-anon-key
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
           SUPABASE_SERVICE_ROLE_KEY: ci-build-service-key
           NEXT_PUBLIC_STREAM_API_KEY: ci-build-stream-public-key
           STREAM_API_KEY: ci-build-stream-api-key
@@ -163,6 +164,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-anon-key
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
           SUPABASE_SERVICE_ROLE_KEY: ci-build-service-key
           NEXT_PUBLIC_STREAM_API_KEY: ci-build-stream-public-key
           STREAM_API_KEY: ci-build-stream-api-key
