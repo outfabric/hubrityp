@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Nunito } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { Toaster } from 'sonner';
+
+import { THEME_COOKIE_NAME, buildNoFlashThemeScript, parseStoredTheme } from '@/modules/marketing';
 
 import './globals.css';
 
@@ -57,9 +60,41 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /*
+   * Dark-mode substrate (D4). Two cooperating mechanisms keep the page free of
+   * a flash-of-wrong-theme (FOUC):
+   *
+   *  1. For returning visitors with an explicit choice, we read the `theme`
+   *     cookie server-side and render `data-theme` directly onto `<html>`, so
+   *     the very first byte streamed already carries the right theme — no
+   *     client round-trip, no flash.
+   *
+   *  2. For first visits (no cookie), the theme depends on the OS
+   *     `prefers-color-scheme`, which the server cannot know. The blocking
+   *     inline script in `<head>` resolves it (cookie -> OS -> light) and sets
+   *     `data-theme` before first paint. When the cookie is present, the script
+   *     simply re-affirms the same value the server already rendered.
+   */
+  const cookieStore = await cookies();
+  const storedTheme = parseStoredTheme(cookieStore.get(THEME_COOKIE_NAME)?.value);
+
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${nunito.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${inter.variable} ${nunito.variable}`}
+      {...(storedTheme ? { 'data-theme': storedTheme } : {})}
+    >
+      <head>
+        {/*
+         * Blocking, synchronous theme resolution. Injected as a raw string via
+         * `dangerouslySetInnerHTML` so it executes before first paint (a React
+         * element child would not be inline-executed early enough). The content
+         * is a fixed, build-time string with no user/interpolated data, so it
+         * is not an XSS sink.
+         */}
+        <script dangerouslySetInnerHTML={{ __html: buildNoFlashThemeScript() }} />
+      </head>
       <body className="bg-background text-text-primary min-h-screen font-sans antialiased">
         {children}
         <Toaster

@@ -23,10 +23,10 @@
 
 ## 3. Dark-mode toggle (no-flash, OS-aware, persisted)
 
-- [ ] 3.1 Add a no-flash inline theme-resolution script to `src/app/layout.tsx` `<head>` (reads `theme` cookie → else `prefers-color-scheme` → light; sets `data-theme` before first paint).
-- [ ] 3.2 Implement a `ThemeProvider` + `useTheme` (client) and a `ThemeToggle` leaf in `marketing/components/` that persists the choice to the `theme` cookie (`SameSite=Lax`) and updates `data-theme`.
-- [ ] 3.3 Unit test theme resolution logic (stored choice > OS > light) and the toggle's `aria-pressed`/keyboard behavior — `src/__tests__/unit/modules/marketing/theme.test.ts`.
-- [ ] 3.4 Integration test: with a `theme=dark` cookie, SSR output applies `data-theme='dark'` with no light-flash (no-flash script present) — `src/__tests__/integration/marketing/theme-no-flash.int.test.ts`.
+- [x] 3.1 Add a no-flash inline theme-resolution script to `src/app/layout.tsx` `<head>` (reads `theme` cookie → else `prefers-color-scheme` → light; sets `data-theme` before first paint).
+- [x] 3.2 Implement a `ThemeProvider` + `useTheme` (client) and a `ThemeToggle` leaf in `marketing/components/` that persists the choice to the `theme` cookie (`SameSite=Lax`) and updates `data-theme`.
+- [x] 3.3 Unit test theme resolution logic (stored choice > OS > light) and the toggle's `aria-pressed`/keyboard behavior — `src/__tests__/unit/modules/marketing/theme.test.ts`.
+- [x] 3.4 Integration test: with a `theme=dark` cookie, SSR output applies `data-theme='dark'` with no light-flash (no-flash script present) — `src/__tests__/integration/marketing/theme-no-flash.int.test.ts`.
 
 ## 4. Public route group, layout, landmarks, 404
 
