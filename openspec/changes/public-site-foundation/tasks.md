@@ -15,11 +15,11 @@
 
 ## 2. Marketing typography tokens + Nunito wordmark
 
-- [ ] 2.1 Add `Display/xl|lg|md` and `Lead` tokens to `src/app/globals.css` (CSS custom properties) and expose Tailwind utilities in `tailwind.config.ts` (Inter, weights 400/600 only).
-- [ ] 2.2 Load `Nunito` via `next/font/google` (self-hosted) in `src/app/layout.tsx`, expose `--ds-font-wordmark`; scope it to the wordmark only.
-- [ ] 2.3 Document the marketing type scale + Nunito wordmark in `docs/design-system/rules.md`.
-- [ ] 2.4 Update the `Logo` component (or wordmark variant) to use the Nunito wordmark variable.
-- [ ] 2.5 Unit test: marketing type utilities resolve to token-backed values and weight is 400/600; wordmark uses the Nunito variable — `src/__tests__/unit/modules/marketing/typography.test.ts` (or extend the brand-logo unit test).
+- [x] 2.1 Add `Display/xl|lg|md` and `Lead` tokens to `src/app/globals.css` (CSS custom properties) and expose Tailwind utilities in `tailwind.config.ts` (Inter, weights 400/600 only).
+- [x] 2.2 Load `Nunito` via `next/font/google` (self-hosted) in `src/app/layout.tsx`, expose `--ds-font-wordmark`; scope it to the wordmark only.
+- [x] 2.3 Document the marketing type scale + Nunito wordmark in `docs/design-system/rules.md`.
+- [x] 2.4 Update the `Logo` component (or wordmark variant) to use the Nunito wordmark variable.
+- [x] 2.5 Unit test: marketing type utilities resolve to token-backed values and weight is 400/600; wordmark uses the Nunito variable — `src/__tests__/unit/modules/marketing/typography.test.ts` (or extend the brand-logo unit test).
 
 ## 3. Dark-mode toggle (no-flash, OS-aware, persisted)
 

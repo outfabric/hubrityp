@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Nunito } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
@@ -26,6 +26,27 @@ const inter = Inter({
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
+/*
+ * Nunito is the brand wordmark font ("hubrity"), loaded via `next/font/google`
+ * so it is self-hosted at build time under `/_next/static` — no runtime request
+ * to `fonts.googleapis.com` / `fonts.gstatic.com`, satisfying the CSP
+ * `font-src 'self' data:` policy and the "Font is self-hosted" spec scenario.
+ *
+ * Scope: this font is exposed ONLY as `--ds-font-wordmark` and is referenced
+ * exclusively by the brand wordmark (the `font-wordmark` utility / the Logo
+ * text wordmark). Body and UI text MUST stay on Inter (`--ds-font-sans`); we do
+ * NOT apply Nunito to `<body>`. Only the SemiBold weight (600) is loaded — the
+ * single weight the wordmark uses — keeping the bundle minimal and honoring the
+ * DS weight rule (400/600 only, never >=700).
+ */
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['600'],
+  display: 'swap',
+  variable: '--ds-font-wordmark',
+  fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+});
+
 export const metadata: Metadata = {
   title: 'Hubrity',
   description: 'Plataforma para psicólogos autônomos brasileiros.',
@@ -38,7 +59,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={`${inter.variable} ${nunito.variable}`}>
       <body className="bg-background text-text-primary min-h-screen font-sans antialiased">
         {children}
         <Toaster
