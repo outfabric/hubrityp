@@ -32,7 +32,7 @@ const PATIENT = {
   whatsappOptOut: false,
 };
 
-const VIDEO_URL = 'https://app.hubrityp.com/sessao/abc-123-token/paciente';
+const VIDEO_URL = 'https://app.hubrity.com/sessao/abc-123-token/paciente';
 
 const LOCATIONS = [
   {

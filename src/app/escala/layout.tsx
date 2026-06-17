@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Questionário — HubrityP',
+  title: 'Questionário — Hubrity',
   description: 'Responda ao questionário enviado pelo seu psicólogo.',
 };
 
@@ -41,7 +41,7 @@ export default function EscalaLayout({ children }: { children: React.ReactNode }
           Suas respostas são protegidas pela LGPD e serão acessíveis apenas ao seu psicólogo.
         </p>
         <p className="text-text-tertiary mt-1 text-xs font-medium">
-          HubrityP — Plataforma para psicólogos
+          Hubrity — Plataforma para psicólogos
         </p>
       </footer>
     </div>

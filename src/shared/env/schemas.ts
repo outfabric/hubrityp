@@ -59,7 +59,7 @@ export const serverEnvSchema = clientEnvSchema.extend({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
-  // Public-facing application URL (e.g. https://app.hubrityp.com.br).
+  // Public-facing application URL (e.g. https://app.hubrity.com).
   // Used server-side to build absolute URLs for patient-facing links in
   // WhatsApp messages (video call links, etc.). Optional because local dev
   // and CI may not have it — features that need it degrade gracefully.

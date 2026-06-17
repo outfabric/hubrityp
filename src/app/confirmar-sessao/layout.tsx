@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '@/shared/ui/logo';
 
 export const metadata: Metadata = {
-  title: 'Confirmar presença — HubrityP',
+  title: 'Confirmar presença — Hubrity',
   description: 'Confirme ou cancele sua sessão agendada.',
 };
 
@@ -35,7 +35,7 @@ export default function ConfirmarSessaoLayout({ children }: { children: React.Re
       {/* Footer — minimal caption text */}
       <footer className="px-4 py-6 text-center md:px-8">
         <p className="text-text-tertiary text-xs font-medium">
-          HubrityP — Plataforma para psicólogos
+          Hubrity — Plataforma para psicólogos
         </p>
       </footer>
     </div>

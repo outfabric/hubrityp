@@ -3,7 +3,12 @@ import 'server-only';
 import { serverEnv } from '@/shared/env';
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'HubrityP <noreply@hubrityp.com>';
+
+/**
+ * Default `from` address for transactional emails.
+ * Exported so unit tests can assert the brand display name and domain.
+ */
+export const DEFAULT_FROM = 'Hubrity <noreply@hubrity.com>';
 
 export type SendEmailInput = {
   to: string;

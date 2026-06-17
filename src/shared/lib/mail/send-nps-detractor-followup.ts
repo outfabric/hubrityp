@@ -14,7 +14,7 @@ const SUBJECT = 'Queremos ouvir você';
  * and no echo of the psychologist's free-text NPS feedback (LGPD). It only
  * invites the recipient to share more about their experience.
  */
-function buildHtml(): string {
+export function buildHtml(): string {
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -22,28 +22,28 @@ function buildHtml(): string {
 <body style="font-family: sans-serif; color: #1a1a1a; line-height: 1.6;">
   <h2>Queremos ouvir você</h2>
   <p>Olá,</p>
-  <p>Percebemos que sua experiência recente com o HubrityP pode não ter sido a melhor possível, e isso é muito importante para nós.</p>
+  <p>Percebemos que sua experiência recente com o Hubrity pode não ter sido a melhor possível, e isso é muito importante para nós.</p>
   <p>Gostaríamos de entender o que podemos melhorar. Se puder, responda a este e-mail contando um pouco mais sobre o que não atendeu às suas expectativas.</p>
   <p>Seu retorno nos ajuda a construir uma plataforma melhor para psicólogos.</p>
   <br/>
-  <p>— Equipe HubrityP</p>
+  <p>— Equipe Hubrity</p>
 </body>
 </html>`.trim();
 }
 
-function buildText(): string {
+export function buildText(): string {
   return [
     'Queremos ouvir você',
     '',
     'Olá,',
     '',
-    'Percebemos que sua experiência recente com o HubrityP pode não ter sido a melhor possível, e isso é muito importante para nós.',
+    'Percebemos que sua experiência recente com o Hubrity pode não ter sido a melhor possível, e isso é muito importante para nós.',
     '',
     'Gostaríamos de entender o que podemos melhorar. Se puder, responda a este e-mail contando um pouco mais sobre o que não atendeu às suas expectativas.',
     '',
     'Seu retorno nos ajuda a construir uma plataforma melhor para psicólogos.',
     '',
-    '— Equipe HubrityP',
+    '— Equipe Hubrity',
   ].join('\n');
 }
 

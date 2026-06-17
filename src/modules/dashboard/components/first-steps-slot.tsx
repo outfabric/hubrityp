@@ -40,8 +40,8 @@ export function FirstStepsSlot({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <p className="text-text-secondary text-sm" data-testid="dashboard-first-steps-intro">
-          Bem-vindo(a) ao HubrityP. Para começar, adicione seu primeiro paciente ou agende uma
-          sessão — seu painel se monta sozinho a partir daí.
+          Bem-vindo(a) ao Hubrity. Para começar, adicione seu primeiro paciente ou agende uma sessão
+          — seu painel se monta sozinho a partir daí.
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Button asChild className="min-h-11 justify-start">

@@ -10,15 +10,15 @@ describe('generatePatientVideoUrl', () => {
   // ------------------------------------------------------------------
 
   it('returns the correct URL format with baseUrl and token', () => {
-    const url = generatePatientVideoUrl('https://app.hubrityp.com.br', validToken);
+    const url = generatePatientVideoUrl('https://app.hubrity.com', validToken);
 
-    expect(url).toBe(`https://app.hubrityp.com.br/v/${validToken}`);
+    expect(url).toBe(`https://app.hubrity.com/v/${validToken}`);
   });
 
   it('handles baseUrl with trailing slash by stripping it', () => {
-    const url = generatePatientVideoUrl('https://app.hubrityp.com.br/', validToken);
+    const url = generatePatientVideoUrl('https://app.hubrity.com/', validToken);
 
-    expect(url).toBe(`https://app.hubrityp.com.br/v/${validToken}`);
+    expect(url).toBe(`https://app.hubrity.com/v/${validToken}`);
   });
 
   it('produces the same URL regardless of trailing slash', () => {
