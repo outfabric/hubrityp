@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 // import is resolved to an empty module by Vitest, so it needs no stub.
 vi.mock('next/font/google', () => ({
   Inter: () => ({ variable: '--ds-font-sans', className: 'inter' }),
+  Nunito: () => ({ variable: '--ds-font-wordmark', className: 'nunito' }),
 }));
 vi.mock('sonner', () => ({ Toaster: () => null }));
 
