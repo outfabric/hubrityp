@@ -22,3 +22,15 @@ export {
   type PublicHeaderClientProps,
 } from './components/public-header-client';
 export { PublicFooter } from './components/public-footer';
+export {
+  CONSENT_COOKIE_NAME,
+  CONSENT_COOKIE_MAX_AGE,
+  parseConsent,
+  readConsentCookie,
+  serializeConsentCookie,
+  type ConsentChoice,
+} from './lib/cookie-consent';
+export { withUtm, withUtmFromLocation } from './lib/utm';
+export { CookieConsent } from './components/cookie-consent';
+export { AnalyticsLoader } from './components/analytics-loader';
+export { SignupCta, type SignupCtaProps } from './components/signup-cta';

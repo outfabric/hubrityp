@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button';
 import { Logo } from '@/shared/ui/logo';
 
 import { Container } from './container';
+import { SignupCta } from './signup-cta';
 import { ThemeToggle } from './theme-toggle';
 
 /**
@@ -66,9 +67,8 @@ function HeaderActions({ isAuthenticated }: PublicHeaderClientProps): React.JSX.
       <Button asChild variant="ghost" size="default">
         <Link href="/login">Entrar</Link>
       </Button>
-      <Button asChild size="default">
-        <Link href="/signup">Começar grátis</Link>
-      </Button>
+      {/* `/signup` CTA preserves UTM params from the current URL (opaque). */}
+      <SignupCta size="default">Começar grátis</SignupCta>
     </>
   );
 }
@@ -197,9 +197,8 @@ export function PublicHeaderClient({
               <Link href="/dashboard">Acessar plataforma</Link>
             </Button>
           ) : (
-            <Button asChild size="default">
-              <Link href="/signup">Começar grátis</Link>
-            </Button>
+            // `/signup` CTA preserves UTM params from the current URL (opaque).
+            <SignupCta size="default">Começar grátis</SignupCta>
           )}
           <Button
             ref={toggleRef}

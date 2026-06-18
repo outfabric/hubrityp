@@ -57,11 +57,11 @@
 
 ## 8. Cookie consent + analytics gating
 
-- [ ] 8.1 Implement the consent banner leaf (`marketing/components/cookie-consent.tsx`): shows only when no `cookie_consent` cookie; "Aceitar"/"Recusar"/"Saiba mais" → `/politica-de-privacidade`; persists `cookie_consent` (`SameSite=Lax; Secure; Max-Age=12mo; Path=/`); dismiss without reload.
-- [ ] 8.2 Implement the consent-gated analytics loader leaf: injects the provider script only when `cookie_consent=accepted` AND analytics host configured; no-op otherwise; deferred (non-blocking).
-- [ ] 8.3 Implement UTM preservation for `/signup` CTAs (opaque values, no PII logging).
-- [ ] 8.4 Unit test: banner visibility by cookie state; consent writes correct cookie attributes; analytics loader no-ops without consent/host; UTM forwarding — `src/__tests__/unit/modules/marketing/cookie-consent.test.tsx`.
-- [ ] 8.5 Integration test: no analytics script/network before consent; after `accepted` + host configured, script loads from the allowlisted host — `src/__tests__/integration/marketing/analytics-consent.int.test.ts`.
+- [x] 8.1 Implement the consent banner leaf (`marketing/components/cookie-consent.tsx`): shows only when no `cookie_consent` cookie; "Aceitar"/"Recusar"/"Saiba mais" → `/politica-de-privacidade`; persists `cookie_consent` (`SameSite=Lax; Secure; Max-Age=12mo; Path=/`); dismiss without reload.
+- [x] 8.2 Implement the consent-gated analytics loader leaf: injects the provider script only when `cookie_consent=accepted` AND analytics host configured; no-op otherwise; deferred (non-blocking).
+- [x] 8.3 Implement UTM preservation for `/signup` CTAs (opaque values, no PII logging).
+- [x] 8.4 Unit test: banner visibility by cookie state; consent writes correct cookie attributes; analytics loader no-ops without consent/host; UTM forwarding — `src/__tests__/unit/modules/marketing/cookie-consent.test.tsx`.
+- [x] 8.5 Integration test: no analytics script/network before consent; after `accepted` + host configured, script loads from the allowlisted host — `src/__tests__/integration/marketing/analytics-consent.int.test.ts`.
 
 ## 9. Legal pages
 

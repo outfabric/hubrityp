@@ -1,6 +1,8 @@
 import * as React from 'react';
 
 import {
+  AnalyticsLoader,
+  CookieConsent,
   MAIN_CONTENT_ID,
   PublicFooter,
   PublicHeader,
@@ -43,6 +45,12 @@ export default function PublicLayout({
         </main>
         <PublicFooter />
       </div>
+      {/* LGPD cookie-consent banner (shown until a choice is stored) + the
+          consent-gated analytics loader. Both are client leaves; the loader
+          is a no-op until consent is `accepted` and an analytics host is
+          configured, and is deferred so it never blocks first paint. */}
+      <CookieConsent />
+      <AnalyticsLoader />
     </ThemeProvider>
   );
 }

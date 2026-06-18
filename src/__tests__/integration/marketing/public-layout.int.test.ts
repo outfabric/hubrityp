@@ -86,11 +86,19 @@ describe('(public) layout never leaks PII', () => {
 
     // The layout chrome (header + footer) must carry no user-identifying data.
     // These patterns approximate the PII the public layout must never emit.
+    //
+    // The footer publishes a STATIC support address (`suporte@hubrity.com.br`).
+    // That is intentional public contact info, not user PII, so we strip the
+    // single known support mailto before applying the EMAIL guard — any OTHER
+    // email-shaped string (i.e. a real leaked user address) still fails.
+    const SUPPORT_EMAIL = 'suporte@hubrity.com.br';
+    const htmlWithoutSupport = html.split(SUPPORT_EMAIL).join('');
+
     const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
     const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     const CRP = /CRP\s?\d{2}\/\d{4,6}/i;
 
-    expect(EMAIL.test(html)).toBe(false);
+    expect(EMAIL.test(htmlWithoutSupport)).toBe(false);
     expect(UUID.test(html)).toBe(false);
     expect(CRP.test(html)).toBe(false);
   });
