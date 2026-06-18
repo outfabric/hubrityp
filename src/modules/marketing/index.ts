@@ -36,3 +36,17 @@ export { CookieConsent } from './components/cookie-consent';
 export { AnalyticsLoader } from './components/analytics-loader';
 export { SignupCta, type SignupCtaProps } from './components/signup-cta';
 export { LegalReviewNotice } from './components/legal-review-notice';
+export {
+  PLANS,
+  FEATURE_KEYS,
+  FEATURE_LABELS,
+  PRICING_SUPPORT_EMAIL,
+  planSlugSchema,
+  featureKeySchema,
+  emptyPlansFallback,
+  type Plan,
+  type PlanFeature,
+  type PlanSlug,
+  type FeatureKey,
+  type EmptyPlansFallback,
+} from './lib/plans';

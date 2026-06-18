@@ -80,9 +80,9 @@
 
 ## 11. Subscription plans configuration
 
-- [ ] 11.1 Implement `marketing/lib/plans.ts`: Zod-validated plans (`essencial` R$60/6000c, `avancado` R$90/9000c "Mais popular"), branded `PlanSlug`, integer cents, feature matrix; types via `z.infer`; exported from the module barrel.
-- [ ] 11.2 Add the empty-plans fallback helper (contact + support email) consumed by pricing surfaces.
-- [ ] 11.3 Unit test: config validates; exactly 2 plans; Essencial⊂Avançado with only WhatsApp + IA exclusive to Avançado; no post-MVP feature marked available; empty-plans fallback — `src/__tests__/unit/modules/marketing/plans.test.ts`.
+- [x] 11.1 Implement `marketing/lib/plans.ts`: Zod-validated plans (`essencial` R$60/6000c, `avancado` R$90/9000c "Mais popular"), branded `PlanSlug`, integer cents, feature matrix; types via `z.infer`; exported from the module barrel.
+- [x] 11.2 Add the empty-plans fallback helper (contact + support email) consumed by pricing surfaces.
+- [x] 11.3 Unit test: config validates; exactly 2 plans; Essencial⊂Avançado with only WhatsApp + IA exclusive to Avançado; no post-MVP feature marked available; empty-plans fallback — `src/__tests__/unit/modules/marketing/plans.test.ts`.
 
 ## 12. E2E (foundation flows)
 
