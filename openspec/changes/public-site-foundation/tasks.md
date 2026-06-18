@@ -86,9 +86,9 @@
 
 ## 12. E2E (foundation flows)
 
-- [ ] 12.1 E2E (seeded): anonymous visit to `/` returns 200 (not redirected to login); header shows "Entrar"/"Começar grátis"; footer legal links navigate to `/politica-de-privacidade` and `/termos-de-uso` (both 200); 404 page renders for an unknown path with both CTAs — `src/__tests__/e2e/seeded/public/public-shell.spec.ts`.
-- [ ] 12.2 E2E (seeded): cookie banner appears on first visit, "Aceitar" dismisses it and sets `cookie_consent`, and it does not reappear after navigation; no analytics request before consent — same/sibling spec.
-- [ ] 12.3 E2E (seeded): authenticated user sees "Acessar plataforma" on `/` and is not redirected (reuse a seeded active user) — same/sibling spec.
+- [x] 12.1 E2E (seeded): anonymous visit to `/` returns 200 (not redirected to login); header shows "Entrar"/"Começar grátis"; footer legal links navigate to `/politica-de-privacidade` and `/termos-de-uso` (both 200); 404 page renders for an unknown path with both CTAs — `src/__tests__/e2e/seeded/public/public-shell.spec.ts`.
+- [x] 12.2 E2E (seeded): cookie banner appears on first visit, "Aceitar" dismisses it and sets `cookie_consent`, and it does not reappear after navigation; no analytics request before consent — same/sibling spec.
+- [x] 12.3 E2E (seeded): authenticated user sees "Acessar plataforma" on `/` and is not redirected (reuse a seeded active user) — same/sibling spec.
 
 ## 13. Design-fidelity QA
 
