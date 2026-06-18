@@ -121,6 +121,7 @@ const config = [
       'src/__tests__/e2e/_shared/**',
       'src/__tests__/e2e/seeded/setup/**',
       'src/__tests__/e2e/real/setup/**',
+      'src/__tests__/e2e/real/**',
     ],
     rules: {
       'no-restricted-syntax': [
