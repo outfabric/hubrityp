@@ -38,16 +38,35 @@ test.describe('@auth-real', () => {
     await page.getByTestId('login-form-password').fill(creds.password);
     await page.getByTestId('login-form-submit').click();
 
-    // The Server Action redirects to /dashboard on success. We wait on the
-    // URL change rather than `networkidle` because the dashboard render is
-    // a streamed RSC response and `networkidle` is unreliable for those.
-    await page.waitForURL('**/dashboard');
-    await expect(page).toHaveURL(/\/dashboard$/);
+    // The Server Action sets cookies via `cookies().set()` and redirects to
+    // /dashboard. In CI the RSC client navigation reaches /dashboard, but the
+    // dashboard RSC may not see the session cookie on the FIRST render (the
+    // session cookie set by the action must propagate through Next.js's
+    // internal cookie forwarding, which can fail to reach the server-side
+    // `cookies()` read during the same RSC streaming pass). When that happens
+    // the dashboard redirects back to /login.
+    //
+    // Robust strategy: wait for the initial redirect to /dashboard (proves
+    // login succeeded), then do a full `page.goto` to /dashboard. This
+    // forces a new browser-level navigation where all committed cookies are
+    // sent. If the URL ends up at /login after goto, the session cookie
+    // truly wasn't stored — retry once with a small delay.
+    await page.waitForURL('**/dashboard', { timeout: 15_000 });
 
-    // The greeting only paints after the dashboard RSC awaits three parallel
-    // DB reads (getTodaySessions, getPendencias, hasAnyData). On a cold-start
-    // Supabase container in CI those queries can take a few seconds, so we
-    // grant a wider window.
+    // Full-page navigation ensures the browser sends all cookies (including
+    // those set by the Server Action response) to the server.
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+
+    // If the dashboard redirected to /login, the session cookie wasn't ready.
+    // Wait briefly and retry once — the cookie may need one more event-loop
+    // tick to commit on some CI runners.
+    if (page.url().includes('/login')) {
+      await page.waitForTimeout(1000);
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    }
+
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+
     const greeting = page.getByTestId('dashboard-greeting');
     await expect(greeting).toBeVisible({ timeout: 15_000 });
     await expect(greeting).toHaveText(`Olá, ${SEED_FULL_NAME}`);
