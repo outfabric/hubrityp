@@ -14,6 +14,8 @@ The codebase is organized in five top-level concerns inside `src/`: **routes** (
 hubrityp/
 ├── src/
 │   ├── app/                            # Next.js App Router — routes, layouts, Route Handlers
+│   │   ├── (public)/                    # public marketing site — shared layout (header/main/footer),
+│   │   │                               #   homepage, 404 (not-found.tsx)
 │   │   ├── (auth)/                     # public auth flows — login, signup, forgot/reset-password,
 │   │   │                               #   auth/callback (OAuth + email verify), auth/link-account
 │   │   ├── (app)/                      # authenticated app — dashboard, agenda, pacientes,

@@ -30,11 +30,11 @@
 
 ## 4. Public route group, layout, landmarks, 404
 
-- [ ] 4.1 Create `src/app/(public)/layout.tsx` (Server Component): header + single `<main id="conteudo">` + footer; skip link as first focusable element; reusable container (1200px / 720px reading variant, responsive padding) via `marketing/components`.
-- [ ] 4.2 Move the placeholder `src/app/page.tsx` into `(public)` (interim minimal `<main>` placeholder; homepage body ships in `public-homepage`).
-- [ ] 4.3 Create `src/app/(public)/not-found.tsx` (404: large `brand/600` "404", message, "Voltar para a homepage" → `/`, "Criar conta grátis" → `/signup`).
-- [ ] 4.4 Unit test the container width/padding variants and skip-link target — `src/__tests__/unit/modules/marketing/container.test.ts`.
-- [ ] 4.5 Integration test: `(public)` layout renders exactly one banner/main/contentinfo landmark in order; authenticated render leaks no PII (no email/id/CRP in HTML) — `src/__tests__/integration/marketing/public-layout.int.test.ts`.
+- [x] 4.1 Create `src/app/(public)/layout.tsx` (Server Component): header + single `<main id="conteudo">` + footer; skip link as first focusable element; reusable container (1200px / 720px reading variant, responsive padding) via `marketing/components`.
+- [x] 4.2 Move the placeholder `src/app/page.tsx` into `(public)` (interim minimal `<main>` placeholder; homepage body ships in `public-homepage`).
+- [x] 4.3 Create `src/app/(public)/not-found.tsx` (404: large `brand/600` "404", message, "Voltar para a homepage" → `/`, "Criar conta grátis" → `/signup`).
+- [x] 4.4 Unit test the container width/padding variants and skip-link target — `src/__tests__/unit/modules/marketing/container.test.ts`.
+- [x] 4.5 Integration test: `(public)` layout renders exactly one banner/main/contentinfo landmark in order; authenticated render leaks no PII (no email/id/CRP in HTML) — `src/__tests__/integration/marketing/public-layout.int.test.ts`.
 
 ## 5. Middleware public route gating
 
