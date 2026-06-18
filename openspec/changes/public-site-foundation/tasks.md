@@ -65,9 +65,9 @@
 
 ## 9. Legal pages
 
-- [ ] 9.1 Implement `src/app/(public)/politica-de-privacidade/page.tsx` (720px reading column, ≥8 sections incl. `#lgpd` and cookies, `info/50` legal-review notice, unique SEO metadata).
-- [ ] 9.2 Implement `src/app/(public)/termos-de-uso/page.tsx` (≥8 sections: elegibilidade CRP, planos, cancelamento, IP, responsabilidade, lei aplicável/CDC, legal-review notice, unique SEO metadata).
-- [ ] 9.3 Integration test: both routes return 200 anonymously (no login redirect), render reading-column + required sections/anchors + legal-review notice — `src/__tests__/integration/marketing/legal-pages.int.test.ts`.
+- [x] 9.1 Implement `src/app/(public)/politica-de-privacidade/page.tsx` (720px reading column, ≥8 sections incl. `#lgpd` and cookies, `info/50` legal-review notice, unique SEO metadata).
+- [x] 9.2 Implement `src/app/(public)/termos-de-uso/page.tsx` (≥8 sections: elegibilidade CRP, planos, cancelamento, IP, responsabilidade, lei aplicável/CDC, legal-review notice, unique SEO metadata).
+- [x] 9.3 Integration test: both routes return 200 anonymously (no login redirect), render reading-column + required sections/anchors + legal-review notice — `src/__tests__/integration/marketing/legal-pages.int.test.ts`.
 
 ## 10. SEO infrastructure
 
