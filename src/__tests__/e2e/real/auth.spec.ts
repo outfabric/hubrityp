@@ -36,32 +36,45 @@ test.describe('@auth-real', () => {
     await page.goto('/login');
     await page.getByTestId('login-form-email').fill(creds.email);
     await page.getByTestId('login-form-password').fill(creds.password);
-    await page.getByTestId('login-form-submit').click();
+    // Capture session cookies from the Server Action response. Next.js
+    // Server Actions use fetch internally; the `Set-Cookie` headers on the
+    // response should be processed by the browser, but in CI production
+    // builds the cookies sometimes don't persist to the jar before the RSC
+    // redirect fires. We intercept responses to capture them explicitly.
+    const capturedCookies: string[] = [];
+    page.on('response', (resp) => {
+      const headers = resp.headers();
+      const raw = headers['set-cookie'] ?? '';
+      for (const part of raw.split('\n')) {
+        if (part.startsWith('sb-')) capturedCookies.push(part);
+      }
+    });
 
-    // The Server Action sets cookies via `cookies().set()` and redirects to
-    // /dashboard. In CI the RSC client navigation reaches /dashboard, but the
-    // dashboard RSC may not see the session cookie on the FIRST render (the
-    // session cookie set by the action must propagate through Next.js's
-    // internal cookie forwarding, which can fail to reach the server-side
-    // `cookies()` read during the same RSC streaming pass). When that happens
-    // the dashboard redirects back to /login.
-    //
-    // Robust strategy: wait for the initial redirect to /dashboard (proves
-    // login succeeded), then do a full `page.goto` to /dashboard. This
-    // forces a new browser-level navigation where all committed cookies are
-    // sent. If the URL ends up at /login after goto, the session cookie
-    // truly wasn't stored — retry once with a small delay.
+    await page.getByTestId('login-form-submit').click();
     await page.waitForURL('**/dashboard', { timeout: 15_000 });
 
-    // Full-page navigation ensures the browser sends all cookies (including
-    // those set by the Server Action response) to the server.
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-
-    // If the dashboard redirected to /login, the session cookie wasn't ready.
-    // Wait briefly and retry once — the cookie may need one more event-loop
-    // tick to commit on some CI runners.
-    if (page.url().includes('/login')) {
-      await page.waitForTimeout(1000);
+    // If the dashboard RSC redirected to /login (session cookie not in jar),
+    // manually apply the captured cookies and retry.
+    if (
+      page.url().includes('/login') ||
+      !(await page
+        .getByTestId('dashboard-greeting')
+        .isVisible()
+        .catch(() => false))
+    ) {
+      if (capturedCookies.length > 0) {
+        const browserCookies = capturedCookies.map((raw) => {
+          const [nameValue] = raw.split(';');
+          const eqIdx = nameValue!.indexOf('=');
+          return {
+            name: nameValue!.substring(0, eqIdx),
+            value: nameValue!.substring(eqIdx + 1),
+            domain: 'localhost',
+            path: '/',
+          };
+        });
+        await page.context().addCookies(browserCookies);
+      }
       await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     }
 
