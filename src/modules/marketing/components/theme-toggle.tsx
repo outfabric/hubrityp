@@ -12,7 +12,12 @@ import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/modules/marketing/components/theme-provider';
 import { Button } from '@/shared/ui/button';
 
-export function ThemeToggle() {
+export interface ThemeToggleProps {
+  /** Optional class override (e.g. to enforce a ≥44px touch target on mobile). */
+  readonly className?: string;
+}
+
+export function ThemeToggle({ className }: ThemeToggleProps = {}) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -21,6 +26,7 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
       size="icon"
+      className={className}
       // `aria-pressed` represents "dark mode is on". The accessible name
       // describes the action the press will perform, in pt-BR (target locale).
       aria-pressed={isDark}

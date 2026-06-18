@@ -170,8 +170,12 @@ export function PublicHeaderClient({
           : 'border-b border-transparent bg-transparent',
       )}
     >
-      <Container className="flex h-[60px] items-center justify-between gap-4 md:h-[72px]">
-        <Link href="/" aria-label="Hubrity — página inicial" className="flex h-11 items-center">
+      <Container className="flex h-[60px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
+        <Link
+          href="/"
+          aria-label="Hubrity — página inicial"
+          className="flex h-11 shrink-0 items-center"
+        >
           <Logo variant="lockup-h" className="h-8 w-auto" />
         </Link>
 
@@ -189,22 +193,32 @@ export function PublicHeaderClient({
           <HeaderActions isAuthenticated={isAuthenticated} />
         </div>
 
-        {/* Mobile cluster — the primary CTA stays visible in the bar always. */}
-        <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
+        {/* Mobile cluster — the primary CTA stays visible in the bar always.
+            Every control is forced to ≥44×44px (DS/WCAG 2.5.5 mobile minimum);
+            the gap is tightened to `gap-1` and the CTA is allowed to shrink so
+            the cluster never overflows the 375/360px viewport. These overrides
+            apply only here (the cluster is `md:hidden`), so the desktop bar and
+            the shared Button primitive are untouched. */}
+        <div className="flex min-w-0 items-center gap-1 md:hidden">
+          <ThemeToggle className="size-11" />
           {isAuthenticated ? (
-            <Button asChild size="default">
-              <Link href="/dashboard">Acessar plataforma</Link>
+            <Button asChild size="default" className="h-11 min-w-0 shrink px-3">
+              <Link href="/dashboard" className="truncate">
+                Acessar plataforma
+              </Link>
             </Button>
           ) : (
             // `/signup` CTA preserves UTM params from the current URL (opaque).
-            <SignupCta size="default">Começar grátis</SignupCta>
+            <SignupCta size="default" className="h-11 min-w-0 shrink px-3">
+              <span className="truncate">Começar grátis</span>
+            </SignupCta>
           )}
           <Button
             ref={toggleRef}
             type="button"
             variant="ghost"
             size="icon"
+            className="size-11 shrink-0"
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={menuOpen}
             aria-controls={menuId}
