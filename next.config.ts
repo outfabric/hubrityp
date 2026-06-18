@@ -40,6 +40,23 @@ function supabaseConnectSrc(): string {
   }
 }
 
+// Privacy-friendly analytics origin the browser must reach when analytics is
+// enabled. Derived from NEXT_PUBLIC_ANALYTICS_HOST so the script load
+// (script-src) and any beacon/event POST (connect-src) are permitted by the
+// CSP. Returns the bare origin (scheme + host) with NO wildcard — only the
+// exact configured host is allowlisted. When the var is unset (local, dev, CI,
+// preview without analytics) it returns '' and the baseline CSP is unchanged.
+function analyticsOrigin(): string {
+  const raw = process.env.NEXT_PUBLIC_ANALYTICS_HOST;
+  if (!raw) return '';
+  try {
+    const { protocol, host } = new URL(raw);
+    return `${protocol}//${host}`;
+  } catch {
+    return '';
+  }
+}
+
 // Stream Video SDK endpoints the browser must reach:
 //   - REST API (join, token refresh, call metadata)
 //   - WebSocket (real-time signaling for video calls)
@@ -81,13 +98,13 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${analyticsOrigin() ? ` ${analyticsOrigin()}` : ''}`,
       "style-src 'self' 'unsafe-inline'",
       // Supabase Storage signed URLs serve images and PDFs from the project origin.
       // In Docker dev, SUPABASE_PUBLIC_URL is the browser-facing origin (signed
       // URLs are rewritten to it), so it must also be permitted.
       `img-src 'self' data: blob:${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,
-      `connect-src 'self'${supabaseConnectSrc()} ${STREAM_CONNECT_SRC}`,
+      `connect-src 'self'${supabaseConnectSrc()} ${STREAM_CONNECT_SRC}${analyticsOrigin() ? ` ${analyticsOrigin()}` : ''}`,
       "font-src 'self' data:",
       // PDF preview iframe loads signed URLs from Supabase Storage
       `frame-src 'self'${supabaseOrigin() ? ` ${supabaseOrigin()}` : ''}${supabasePublicOrigin() ? ` ${supabasePublicOrigin()}` : ''}`,

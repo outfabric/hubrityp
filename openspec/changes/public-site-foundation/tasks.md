@@ -71,12 +71,12 @@
 
 ## 10. SEO infrastructure
 
-- [ ] 10.1 Implement `buildPageMetadata()` in `marketing/lib/seo.ts` (unique title/description, canonical, OG + Twitter, absolute URLs via `metadataBase`).
-- [ ] 10.2 Set root `metadata` in `src/app/layout.tsx`: `metadataBase` from `NEXT_PUBLIC_SITE_URL`, default OG (site name, `pt_BR`, `website`, default image). Ship the default OG image (≥1200×630) under `public/`.
-- [ ] 10.3 Implement `src/app/sitemap.ts` (public indexable routes, absolute URLs) and `src/app/robots.ts` (allow public, disallow `/dashboard`, `/agenda`, `/pacientes`, `/caixa-de-entrada`, `/configuracoes`, `/onboarding`, `/sessao`, `/api`; `Sitemap:` line).
-- [ ] 10.4 Extend `next.config.ts` CSP: add the analytics host to `script-src`/`connect-src` only when configured (no wildcard; baseline unchanged when unset).
-- [ ] 10.5 Unit test `buildPageMetadata()` (distinct titles/canonicals per page; absolute OG urls) — `src/__tests__/unit/modules/marketing/seo.test.ts`.
-- [ ] 10.6 Integration test: `/sitemap.xml` lists public routes only; `/robots.txt` disallows authenticated prefixes + has `Sitemap:`; CSP includes analytics host only when configured — `src/__tests__/integration/marketing/seo-sitemap-robots.int.test.ts`.
+- [x] 10.1 Implement `buildPageMetadata()` in `marketing/lib/seo.ts` (unique title/description, canonical, OG + Twitter, absolute URLs via `metadataBase`).
+- [x] 10.2 Set root `metadata` in `src/app/layout.tsx`: `metadataBase` from `NEXT_PUBLIC_SITE_URL`, default OG (site name, `pt_BR`, `website`, default image). Ship the default OG image (≥1200×630) under `public/`.
+- [x] 10.3 Implement `src/app/sitemap.ts` (public indexable routes, absolute URLs) and `src/app/robots.ts` (allow public, disallow `/dashboard`, `/agenda`, `/pacientes`, `/caixa-de-entrada`, `/configuracoes`, `/onboarding`, `/sessao`, `/api`; `Sitemap:` line).
+- [x] 10.4 Extend `next.config.ts` CSP: add the analytics host to `script-src`/`connect-src` only when configured (no wildcard; baseline unchanged when unset).
+- [x] 10.5 Unit test `buildPageMetadata()` (distinct titles/canonicals per page; absolute OG urls) — `src/__tests__/unit/modules/marketing/seo.test.ts`.
+- [x] 10.6 Integration test: `/sitemap.xml` lists public routes only; `/robots.txt` disallows authenticated prefixes + has `Sitemap:`; CSP includes analytics host only when configured — `src/__tests__/integration/marketing/seo-sitemap-robots.int.test.ts`.
 
 ## 11. Subscription plans configuration
 

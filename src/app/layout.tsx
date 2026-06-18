@@ -3,7 +3,14 @@ import { Inter, Nunito } from 'next/font/google';
 import { cookies } from 'next/headers';
 import { Toaster } from 'sonner';
 
-import { THEME_COOKIE_NAME, buildNoFlashThemeScript, parseStoredTheme } from '@/modules/marketing';
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  THEME_COOKIE_NAME,
+  buildNoFlashThemeScript,
+  parseStoredTheme,
+  siteUrl,
+} from '@/modules/marketing';
 
 import './globals.css';
 
@@ -50,9 +57,37 @@ const nunito = Nunito({
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
+/*
+ * Root metadata for the whole app.
+ *
+ * `metadataBase` is set from `NEXT_PUBLIC_SITE_URL` (via `siteUrl()`) so Next.js
+ * resolves every relative metadata URL (canonical, og:image, etc.) declared by
+ * child segments into an absolute URL against the configured public host —
+ * never a hardcoded or relative origin.
+ *
+ * The default `openGraph` block (site name, `pt_BR` locale, `website` type, and
+ * the shipped default OG image) is the fallback social card for any page that
+ * does not override it via `buildPageMetadata()`.
+ */
 export const metadata: Metadata = {
-  title: 'Hubrity',
+  metadataBase: new URL(siteUrl()),
+  title: SITE_NAME,
   description: 'Plataforma para psicólogos autônomos brasileiros.',
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'pt_BR',
+    title: SITE_NAME,
+    description: 'Plataforma para psicólogos autônomos brasileiros.',
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

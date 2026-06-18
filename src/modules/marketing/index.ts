@@ -3,6 +3,7 @@
 // internal paths. Header, footer, cookie-consent, theme-toggle, plans config,
 // and SEO helpers will be exported here as the module grows.
 export { siteUrl, absoluteUrl } from './lib/site';
+export { buildPageMetadata, SITE_NAME, DEFAULT_OG_IMAGE, type PageMetadataInput } from './lib/seo';
 export {
   THEME_COOKIE_NAME,
   THEME_COOKIE_MAX_AGE,
