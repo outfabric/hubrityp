@@ -92,4 +92,4 @@
 
 ## 13. Design-fidelity QA
 
-- [ ] 13.1 Compare each implemented UI surface against its Figma frame via the Figma MCP (`get_screenshot`/`get_design_context`): header (`105:2`/`133:2`), footer (`126:7`), cookie banner (`132:2`), legal pages (`142:2`/`143:2`), 404 (`144:2`). Verify tokens, spacing, radius, typography, states, dark mode, and responsive behavior match the screens; record any intentional deviation and its reason.
+- [x] 13.1 Compare each implemented UI surface against its Figma frame via the Figma MCP (`get_screenshot`/`get_design_context`): header (`105:2`/`133:2`), footer (`126:7`), cookie banner (`132:2`), legal pages (`142:2`/`143:2`), 404 (`144:2`). Verify tokens, spacing, radius, typography, states, dark mode, and responsive behavior match the screens; record any intentional deviation and its reason.
