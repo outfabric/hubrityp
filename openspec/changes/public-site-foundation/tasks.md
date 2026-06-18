@@ -43,12 +43,12 @@
 
 ## 6. Public header
 
-- [ ] 6.1 Implement the sticky header (`marketing/components/public-header.tsx`): logo → `/`, "Funcionalidades" (`/#funcionalidades` / anchor), "Preços" → `/precos`, "Entrar" → `/login`, "Começar grátis" → `/signup`; heights 72/60.
-- [ ] 6.2 Implement the scrolled solid-opaque state (`bg/surface` + `border/subtle` + `Shadow/Light/xs`, NO backdrop-blur) as a client behavior.
-- [ ] 6.3 Implement the mobile hamburger (ARIA `aria-expanded`/`aria-controls`, Escape-to-close, focus trap, ≥44px targets, persistent "Começar grátis", `<noscript>` inline-links fallback).
-- [ ] 6.4 Implement the authenticated-visitor variant (server boolean via `supabase.auth.getUser()`; "Acessar plataforma" → `/dashboard`; no PII rendered; no redirect).
-- [ ] 6.5 Unit test header link destinations, scrolled-state class (no `backdrop-filter`), hamburger ARIA + Escape, and anon-vs-auth CTA swap — `src/__tests__/unit/modules/marketing/public-header.test.tsx`.
-- [ ] 6.6 Integration test: authenticated request → "Acessar plataforma" and no `/dashboard` redirect; anonymous → "Entrar"/"Começar grátis"; served HTML carries no PII — `src/__tests__/integration/marketing/public-header.int.test.ts`.
+- [x] 6.1 Implement the sticky header (`marketing/components/public-header.tsx`): logo → `/`, "Funcionalidades" (`/#funcionalidades` / anchor), "Preços" → `/precos`, "Entrar" → `/login`, "Começar grátis" → `/signup`; heights 72/60.
+- [x] 6.2 Implement the scrolled solid-opaque state (`bg/surface` + `border/subtle` + `Shadow/Light/xs`, NO backdrop-blur) as a client behavior.
+- [x] 6.3 Implement the mobile hamburger (ARIA `aria-expanded`/`aria-controls`, Escape-to-close, focus trap, ≥44px targets, persistent "Começar grátis", `<noscript>` inline-links fallback).
+- [x] 6.4 Implement the authenticated-visitor variant (server boolean via `supabase.auth.getUser()`; "Acessar plataforma" → `/dashboard`; no PII rendered; no redirect).
+- [x] 6.5 Unit test header link destinations, scrolled-state class (no `backdrop-filter`), hamburger ARIA + Escape, and anon-vs-auth CTA swap — `src/__tests__/unit/modules/marketing/public-header.test.tsx`.
+- [x] 6.6 Integration test: authenticated request → "Acessar plataforma" and no `/dashboard` redirect; anonymous → "Entrar"/"Começar grátis"; served HTML carries no PII — `src/__tests__/integration/marketing/public-header.int.test.ts`.
 
 ## 7. Public footer
 

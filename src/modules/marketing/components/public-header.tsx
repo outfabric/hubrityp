@@ -1,33 +1,40 @@
-import Link from 'next/link';
 import * as React from 'react';
 
-import { Logo } from '@/shared/ui/logo';
+import { createServerClient } from '@/shared/supabase/server';
 
-import { Container } from './container';
+import { PublicHeaderClient } from './public-header-client';
 
 /**
- * PublicHeader — placeholder banner for the public site.
+ * PublicHeader — server wrapper for the public marketing header.
  *
- * INTERIM: this renders the brand logo only. The full marketing header
- * (navigation, auth-aware CTAs, theme toggle) ships in the `public-header`
- * change (section 6). It is kept deliberately minimal and stateless so it
- * remains a Server Component and never fetches or renders any authenticated
- * data — the public layout exposes only a boolean "is authenticated" once the
- * real header lands.
+ * Its sole server responsibility is to resolve a single boolean: "is the
+ * visitor authenticated?". It does so via `supabase.auth.getUser()` (NEVER
+ * `getSession()`, which trusts the unverified cookie), then hands the boolean
+ * — and nothing else — to the {@link PublicHeaderClient} leaf.
  *
- * The single `role="banner"` (implicit on `<header>`) is the only banner
- * landmark on the page.
+ * Security / LGPD posture:
+ *   - Only a boolean crosses the server→client boundary. No email, id, CRP, or
+ *     any other user field reaches the public HTML, so an authenticated render
+ *     of a public page leaks no PII.
+ *   - This is a public surface: an authenticated visitor is NOT redirected. The
+ *     header simply swaps its CTA to "Acessar plataforma" → `/dashboard`.
+ *   - Uses the cookie-bound anon client (`createServerClient`), never the
+ *     service-role client — there is no privileged read here.
+ *
+ * The single `role="banner"` (implicit on the client's `<header>`) remains the
+ * only banner landmark on the page.
  */
-export function PublicHeader(): React.JSX.Element {
-  return (
-    <header className="border-border-subtle border-b py-4">
-      <Container className="flex items-center">
-        <Link href="/" aria-label="Hubrity — página inicial">
-          <Logo variant="lockup-h" className="h-8 w-auto" />
-        </Link>
-      </Container>
-    </header>
-  );
+export async function PublicHeader(): Promise<React.JSX.Element> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Coerce to a strict boolean — the client component never sees the user
+  // object, only whether a verified session exists.
+  const isAuthenticated = Boolean(user);
+
+  return <PublicHeaderClient isAuthenticated={isAuthenticated} />;
 }
 
 PublicHeader.displayName = 'PublicHeader';

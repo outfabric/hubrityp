@@ -17,4 +17,8 @@ export { ThemeToggle } from './components/theme-toggle';
 export { Container, CONTAINER_WIDTH_CLASS, type ContainerProps } from './components/container';
 export { SkipLink, MAIN_CONTENT_ID, type SkipLinkProps } from './components/skip-link';
 export { PublicHeader } from './components/public-header';
+export {
+  PublicHeaderClient,
+  type PublicHeaderClientProps,
+} from './components/public-header-client';
 export { PublicFooter } from './components/public-footer';
