@@ -38,8 +38,8 @@
 
 ## 5. Middleware public route gating
 
-- [ ] 5.1 Extend `classifyPath()` in `src/middleware.ts` to explicitly classify `/` (exact), `/precos`, `/politica-de-privacidade`, `/termos-de-uso` as `public`; keep 404 default-public. Use exact/prefix-with-separator semantics (no substring false matches).
-- [ ] 5.2 Integration (negative/positive auth) test: anonymous, pending, active, active+rpr, suspended/cancelled all `pass` on each public route; active user is NOT redirected from `/`; near-miss `/precos-internos` not falsely matched — `src/__tests__/integration/middleware/public-routes-gating.int.test.ts`.
+- [x] 5.1 Extend `classifyPath()` in `src/middleware.ts` to explicitly classify `/` (exact), `/precos`, `/politica-de-privacidade`, `/termos-de-uso` as `public`; keep 404 default-public. Use exact/prefix-with-separator semantics (no substring false matches).
+- [x] 5.2 Integration (negative/positive auth) test: anonymous, pending, active, active+rpr, suspended/cancelled all `pass` on each public route; active user is NOT redirected from `/`; near-miss `/precos-internos` not falsely matched — `src/__tests__/integration/middleware/public-routes-gating.int.test.ts`.
 
 ## 6. Public header
 
