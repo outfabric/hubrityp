@@ -38,18 +38,16 @@ test.describe('@auth-real', () => {
     await page.getByTestId('login-form-password').fill(creds.password);
     await page.getByTestId('login-form-submit').click();
 
-    // The Server Action sets the session cookie and redirects to /dashboard
-    // via RSC. Wait for the URL change first.
+    // The Server Action redirects to /dashboard on success. We wait on the
+    // URL change rather than `networkidle` because the dashboard render is
+    // a streamed RSC response and `networkidle` is unreliable for those.
     await page.waitForURL('**/dashboard');
+    await expect(page).toHaveURL(/\/dashboard$/);
 
-    // Known Next.js race: the RSC streaming fetch initiated by the Server
-    // Action redirect may not carry the just-set session cookie, causing the
-    // dashboard RSC to call getCurrentProfile() → null → redirect('/login').
-    // A reload forces a fresh navigation where the browser sends all
-    // committed cookies, guaranteeing the session is visible to the server.
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
-
+    // The greeting only paints after the dashboard RSC awaits three parallel
+    // DB reads (getTodaySessions, getPendencias, hasAnyData). On a cold-start
+    // Supabase container in CI those queries can take a few seconds, so we
+    // grant a wider window.
     const greeting = page.getByTestId('dashboard-greeting');
     await expect(greeting).toBeVisible({ timeout: 15_000 });
     await expect(greeting).toHaveText(`Olá, ${SEED_FULL_NAME}`);
