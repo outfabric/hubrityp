@@ -200,7 +200,7 @@ export function PublicHeaderClient({
             apply only here (the cluster is `md:hidden`), so the desktop bar and
             the shared Button primitive are untouched. */}
         <div className="flex min-w-0 items-center gap-1 md:hidden">
-          <ThemeToggle className="size-11" />
+          <ThemeToggle className="size-11 shrink-0" />
           {isAuthenticated ? (
             <Button asChild size="default" className="h-11 min-w-0 shrink px-3">
               <Link href="/dashboard" className="truncate">
