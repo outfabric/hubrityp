@@ -52,8 +52,8 @@
 
 ## 7. Public footer
 
-- [ ] 7.1 Implement the footer (`marketing/components/public-footer.tsx`, dark surface): brand + tagline, Produto/Legal/Contato columns, copyright; legal links → `/politica-de-privacidade`, `/termos-de-uso`, `#lgpd`; `mailto:` support email. Export for app reuse.
-- [ ] 7.2 Unit test footer link destinations + single `contentinfo` landmark + column headings — `src/__tests__/unit/modules/marketing/public-footer.test.tsx`.
+- [x] 7.1 Implement the footer (`marketing/components/public-footer.tsx`, dark surface): brand + tagline, Produto/Legal/Contato columns, copyright; legal links → `/politica-de-privacidade`, `/termos-de-uso`, `#lgpd`; `mailto:` support email. Export for app reuse.
+- [x] 7.2 Unit test footer link destinations + single `contentinfo` landmark + column headings — `src/__tests__/unit/modules/marketing/public-footer.test.tsx`.
 
 ## 8. Cookie consent + analytics gating
 
