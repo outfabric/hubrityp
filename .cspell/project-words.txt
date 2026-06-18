@@ -33,9 +33,21 @@ escala
 evolucao
 evolucoes
 sem-evolucao
+politica-de-privacidade
+termos-de-uso
+introducao
+seguranca
+aceitacao
+limitacao
+aplicavel
+lgpd
+precos
 
 # --- Stored enum / status / document tokens (persisted; must stay ASCII) ---
 declaracao
+avancado
+prescricao
+usuario
 atestado
 relatorio
 laudo
@@ -110,6 +122,7 @@ Realtime
 kong
 inbucket
 gstatic
+Umami
 
 # --- Protocols / standards / domain abbreviations ---
 PIX
@@ -129,6 +142,8 @@ SSRF
 IDOR
 CSRF
 HSTS
+FOUC
+FOUT
 MIME
 UUID
 NPS
@@ -214,8 +229,11 @@ unstub
 inlines
 navigations
 hrefs
+gclid
+fbclid
 
 # --- British-English spellings (in comments / log strings) ---
+artefacts
 authorises
 behaviour
 behavioural
@@ -257,6 +275,7 @@ transferencia
 Versao
 Visao
 Anonimização
+anonimização
 
 # --- Lowercase / alt-case scale & stored-key tokens (cspell is case-sensitive) ---
 limitrofe
