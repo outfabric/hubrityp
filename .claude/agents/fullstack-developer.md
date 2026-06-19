@@ -204,12 +204,12 @@ Every new authenticated surface requires a NEGATIVE TEST: an anonymous request (
 
 ## Sálvia Design System (UI work only)
 
-The canonical source for HubrityP's design system is `docs/design-system/rules.md`. To save context, it is **not pre-loaded** — read on demand.
+The canonical source for HubrityP's design system is the Figma file: `https://www.figma.com/design/HoLOEqq9PXlo6IwLkz3FQ9/Hubrity-Design-System`. To save context, it is **not pre-loaded** — read on demand.
 
 **Loading protocol**:
 
 1. **Purely backend task** (Server Action without UI, Drizzle schema/migration, RLS policy, Inngest function/cron, external integration, webhook, Zod validator, server helper): **do not read the file**. The cheat sheet below is enough for any incidental UI mention.
-2. **Task that touches UI, styling, components, or product copy**: read `docs/design-system/rules.md` **once** at the start of the task, before implementing. Do not re-read it in the same conversation — the content is already in context.
+2. **Task that touches UI, styling, components, or product copy**: read `https://www.figma.com/design/HoLOEqq9PXlo6IwLkz3FQ9/Hubrity-Design-System` **once** at the start of the task, before implementing. Do not re-read it in the same conversation — the content is already in context.
 
 ## Documentation lookup via Context7 MCP
 
