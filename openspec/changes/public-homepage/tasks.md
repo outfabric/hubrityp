@@ -59,8 +59,8 @@
 
 ## 10. FAQ accordion
 
-- [ ] 10.1 Implement `faq.tsx` using native `<details>/<summary>` with the 5 required MVP questions/answers; client enhancement for exclusive behavior + active `brand/200` border; all-open without JS.
-- [ ] 10.2 Unit test: 5–8 items incl. the 5 required; exclusive toggle closes previous; all expanded without JS; keyboard toggle — `src/__tests__/unit/modules/marketing/faq.test.tsx`.
+- [x] 10.1 Implement `faq.tsx` using native `<details>/<summary>` with the 5 required MVP questions/answers; client enhancement for exclusive behavior + active `brand/200` border; all-open without JS.
+- [x] 10.2 Unit test: 5–8 items incl. the 5 required; exclusive toggle closes previous; all expanded without JS; keyboard toggle — `src/__tests__/unit/modules/marketing/faq.test.tsx`.
 
 ## 11. Homepage assembly + metadata
 

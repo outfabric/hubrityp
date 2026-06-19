@@ -40,6 +40,7 @@ export { Funcionalidades } from './components/home/funcionalidades';
 export { DestaqueIa } from './components/home/destaque-ia';
 export { Confianca } from './components/home/confianca';
 export { PrecosResumo } from './components/home/precos-resumo';
+export { Faq } from './components/home/faq';
 export { CtaFinal } from './components/home/cta-final';
 export {
   ScreenshotLightbox,
