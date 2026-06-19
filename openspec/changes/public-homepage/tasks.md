@@ -14,9 +14,9 @@
 
 ## 2. Screenshot carousel
 
-- [ ] 2.1 Implement `marketing/components/home/screenshot-carousel.tsx` (client leaf): product-window frame, arrows (≥44px) + dots (active `brand/600` pill) + captions, swipe, keyboard (Arrow keys), ARIA region/group + current-slide, NO auto-play; SSR renders first slide for no-JS static fallback.
-- [ ] 2.2 Wire `next/image` WebP with explicit dims + lazy loading for off-screen slides.
-- [ ] 2.3 Unit test: arrows/dots/keyboard change slides + caption, no auto-advance timer, ARIA present, focus retained, first-slide static fallback markup — `src/__tests__/unit/modules/marketing/screenshot-carousel.test.tsx`.
+- [x] 2.1 Implement `marketing/components/home/screenshot-carousel.tsx` (client leaf): product-window frame, arrows (≥44px) + dots (active `brand/600` pill) + captions, swipe, keyboard (Arrow keys), ARIA region/group + current-slide, NO auto-play; SSR renders first slide for no-JS static fallback.
+- [x] 2.2 Wire `next/image` WebP with explicit dims + lazy loading for off-screen slides.
+- [x] 2.3 Unit test: arrows/dots/keyboard change slides + caption, no auto-advance timer, ARIA present, focus retained, first-slide static fallback markup — `src/__tests__/unit/modules/marketing/screenshot-carousel.test.tsx`.
 
 ## 3. Hero section
 

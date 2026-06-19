@@ -28,6 +28,11 @@ export { CookieConsent } from './components/cookie-consent';
 export { AnalyticsLoader } from './components/analytics-loader';
 export { SignupCta, type SignupCtaProps } from './components/signup-cta';
 export {
+  ScreenshotCarousel,
+  type ScreenshotCarouselProps,
+  type CarouselSlide,
+} from './components/home/screenshot-carousel';
+export {
   PLANS,
   FEATURE_KEYS,
   FEATURE_LABELS,
