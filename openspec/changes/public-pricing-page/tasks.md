@@ -14,9 +14,9 @@
 
 ## 2. Plan cards
 
-- [ ] 2.1 Implement `marketing/components/pricing/plan-cards.tsx`: 2 cards from config (name, R$ price, full feature checklist, "Popular" badge on Avançado), CTA "Experimentar grátis — 14 dias" → `/signup?plano=[slug]` (UTM preserved, slug allowlisted). Monthly only (no toggle).
-- [ ] 2.2 Implement the empty-plans fallback (hide cards, show "Entre em contato para saber mais" + support email) using the foundation helper.
-- [ ] 2.3 Unit test: card prices/slugs from config; Avançado has "Popular"; CTA targets `/signup?plano=essencial|avancado`; no annual toggle; empty config → contact fallback — `src/__tests__/unit/modules/marketing/plan-cards.test.tsx`.
+- [x] 2.1 Implement `marketing/components/pricing/plan-cards.tsx`: 2 cards from config (name, R$ price, full feature checklist, "Popular" badge on Avançado), CTA "Experimentar grátis — 14 dias" → `/signup?plano=[slug]` (UTM preserved, slug allowlisted). Monthly only (no toggle).
+- [x] 2.2 Implement the empty-plans fallback (hide cards, show "Entre em contato para saber mais" + support email) using the foundation helper.
+- [x] 2.3 Unit test: card prices/slugs from config; Avançado has "Popular"; CTA targets `/signup?plano=essencial|avancado`; no annual toggle; empty config → contact fallback — `src/__tests__/unit/modules/marketing/plan-cards.test.tsx`.
 
 ## 3. Comparison table
 

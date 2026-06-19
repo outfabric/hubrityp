@@ -66,6 +66,7 @@ export {
   type ComparisonRow,
 } from './lib/plans';
 export { PRICING_PAGE, BILLING_FAQ_ENTRIES } from './lib/pricing-content';
+export { PlanCards } from './components/pricing/plan-cards';
 export {
   HERO,
   SOCIAL_PROOF_STATS,
