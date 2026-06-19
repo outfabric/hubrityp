@@ -173,14 +173,20 @@ describe('getTodaySessions — real Postgres', () => {
     await seedAuthUser(userId);
     await seedPatient(userId, patientId, 'Carla');
 
-    const past = new Date(Date.now() - 60 * 60 * 1000); // 1h ago, still today
-    const soon = new Date(Date.now() + 30 * 60 * 1000); // 30m from now
-    const later = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3h from now
+    // Pin "now" to midday on a fixed SP day and seed sessions relative to it.
+    // Anchoring to a stable midday (instead of the real wall clock) keeps all
+    // three sessions inside the same SP calendar window, so the test never
+    // flakes when the suite runs in the final minutes before SP midnight —
+    // where `now + 30m`/`now + 3h` would otherwise spill into the next SP day.
+    const now = new Date('2030-06-17T15:00:00Z'); // 12:00 in America/Sao_Paulo
+    const past = new Date(now.getTime() - 60 * 60 * 1000); // 1h ago, still today
+    const soon = new Date(now.getTime() + 30 * 60 * 1000); // 30m from now
+    const later = new Date(now.getTime() + 3 * 60 * 60 * 1000); // 3h from now
     await seedSession({ userId, patientId, startAt: past, status: 'done' });
     const soonId = await seedSession({ userId, patientId, startAt: soon });
     await seedSession({ userId, patientId, startAt: later });
 
-    const result = await getTodaySessions(fakeSupabaseClient(userId));
+    const result = await getTodaySessions(fakeSupabaseClient(userId), now);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.next).not.toBeNull();
@@ -193,14 +199,19 @@ describe('getTodaySessions — real Postgres', () => {
     await seedAuthUser(userId);
     await seedPatient(userId, patientId, 'Diego');
 
+    // Pinned midday clock: seeding `now - 2h` against the real wall clock lands
+    // on the previous SP day when the suite runs in the first ~2h after SP
+    // midnight, dropping the row out of today's window (sessions.length 0, not
+    // 1). Anchoring to midday keeps it the same SP day.
+    const now = new Date('2030-06-17T15:00:00Z'); // 12:00 in America/Sao_Paulo
     await seedSession({
       userId,
       patientId,
-      startAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      startAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
       status: 'done',
     });
 
-    const result = await getTodaySessions(fakeSupabaseClient(userId));
+    const result = await getTodaySessions(fakeSupabaseClient(userId), now);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.next).toBeNull();
