@@ -42,6 +42,8 @@ limitacao
 aplicavel
 lgpd
 precos
+confianca
+solucao
 
 # --- Stored enum / status / document tokens (persisted; must stay ASCII) ---
 declaracao
