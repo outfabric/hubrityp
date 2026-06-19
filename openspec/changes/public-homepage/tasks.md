@@ -31,9 +31,9 @@
 
 ## 5. Solução timeline + reduced-motion fade-in
 
-- [ ] 5.1 Implement `solucao-timeline.tsx`: 6 connected steps (horizontal desktop / vertical mobile), Lucide icon in `brand/50` chip, one-line text, closer.
-- [ ] 5.2 Implement the IntersectionObserver scroll fade-in as a client enhancement — default CSS visible; hidden-until-seen only when JS runs AND not `prefers-reduced-motion`.
-- [ ] 5.3 Unit test: 6 ordered steps + closer; content visible by default; fade-in disabled under reduced-motion; never stuck at opacity 0 — `src/__tests__/unit/modules/marketing/solucao-timeline.test.tsx`.
+- [x] 5.1 Implement `solucao-timeline.tsx`: 6 connected steps (horizontal desktop / vertical mobile), Lucide icon in `brand/50` chip, one-line text, closer.
+- [x] 5.2 Implement the IntersectionObserver scroll fade-in as a client enhancement — default CSS visible; hidden-until-seen only when JS runs AND not `prefers-reduced-motion`.
+- [x] 5.3 Unit test: 6 ordered steps + closer; content visible by default; fade-in disabled under reduced-motion; never stuck at opacity 0 — `src/__tests__/unit/modules/marketing/solucao-timeline.test.tsx`.
 
 ## 6. Funcionalidades grid + lightbox
 

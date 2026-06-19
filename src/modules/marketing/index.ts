@@ -35,6 +35,7 @@ export {
 export { Hero } from './components/home/hero';
 export { ProvaSocial } from './components/home/prova-social';
 export { Problema } from './components/home/problema';
+export { SolucaoTimeline } from './components/home/solucao-timeline';
 export {
   PLANS,
   FEATURE_KEYS,
