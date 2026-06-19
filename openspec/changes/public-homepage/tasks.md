@@ -37,9 +37,9 @@
 
 ## 6. Funcionalidades grid + lightbox
 
-- [ ] 6.1 Implement `funcionalidades.tsx` (`#funcionalidades`): 7 cards (3×2 + Dashboard full/double-width), icon + `Heading/h3` title + benefit description + clickable screenshot thumbnail; copy from content module.
-- [ ] 6.2 Implement the accessible screenshot lightbox/modal leaf (Escape + close button, focus trap + restore).
-- [ ] 6.3 Unit test: 7 cards with correct titles + thumbnails; section id `funcionalidades`; lightbox opens/closes via keyboard and restores focus — `src/__tests__/unit/modules/marketing/funcionalidades.test.tsx`.
+- [x] 6.1 Implement `funcionalidades.tsx` (`#funcionalidades`): 7 cards (3×2 + Dashboard full/double-width), icon + `Heading/h3` title + benefit description + clickable screenshot thumbnail; copy from content module.
+- [x] 6.2 Implement the accessible screenshot lightbox/modal leaf (Escape + close button, focus trap + restore).
+- [x] 6.3 Unit test: 7 cards with correct titles + thumbnails; section id `funcionalidades`; lightbox opens/closes via keyboard and restores focus — `src/__tests__/unit/modules/marketing/funcionalidades.test.tsx`.
 
 ## 7. Destaque IA section
 
