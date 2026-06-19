@@ -1,5 +1,6 @@
 # Memory index
 
+- [E2E manual-upload Inngest race](feedback_e2e_manual_upload_inngest_race.md) — ai-transcription manual-upload-flow.spec flaky: DB row sometimes 0; fire-and-forget Inngest event races assertion; passes on CI retry, NOT a regression unless branch touches ai-transcription
 - [E2E shared-seed session slot collision](feedback_e2e_shared_seed_session_slot_collision.md) — two seeded specs scheduling SAME seed patient at SAME tomorrow slot race detectConflicts under fullyParallel; loser → conflict_warning, modal stays open, toBeHidden fails
 - [E2E build Supabase URL must be local](feedback_e2e_build_supabase_url_must_be_local.md) — e2e build MUST set NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321; wrong value bakes wrong URL into edge middleware → EVERY authenticated spec redirects to /login (looks like auth regression, is build-env mistake)
 - [NPS modal overlay blocks feedback card](feedback_nps_modal_overlay_blocks_feedback_card.md) — day-7 NPS modal renders on every (app) route incl /configuracoes/feedback; eligible user → dup testids + Radix overlay intercepts card clicks
@@ -22,6 +23,7 @@
 - [E2E dedicated-user refresh token](feedback_e2e_dedicated_user_refresh_token.md) — runtime-registered dedicated e2e users need a UNIQUE refresh token + a mock refresh_token grant, else a Server Action's server-side getUser resolves the wrong user; use signInAsDedicatedUser helper
 - [Tour overlay blocks shared-seed specs](feedback_tour_overlay_blocks_shared_seed_specs.md) — default-ON dashboard overlay gated by NULL profile col auto-runs for shared seed user, intercepts clicks across every /dashboard spec; stamp the col done in global-setup for all non-overlay users
 - [today-sessions int SP-midnight flake](feedback_today_sessions_int_sp_midnight_flake.md) — dashboard today-sessions.int.test.ts "all past" case fails when run in first ~2h after São Paulo midnight (seeds "2h ago" → previous SP day); date-deterministic, not load flakiness
+- [reminders-dispatcher int date bomb](feedback_reminders_dispatcher_int_date_bomb.md) — FIXED 2026-06-18: "early window"+"both due" dropped early reminder once real date passed 2026-06-15 because DB-default created_at tripped RN-04.03; fix = pin dates to 2030 + explicit createdAt before startAt
 - [Tests interleaved with code in tasks.md](feedback_tests_interleaved_with_code.md) — user wants each test task placed right after the code task that motivates it (never batched at change end) so the code agent keeps context when writing the test
 
 Notes:

@@ -3,6 +3,7 @@
 - [Module barrel server-only leakage pattern](project_barrel_server_only_leakage.md) — module barrels co-exporting Server Actions (server-only) and Client Components cause a build error in Next.js App Router
 - [Radix Popover type=button bug](project_radix_popover_type_button.md) — PopoverTrigger asChild sets type="button" on Input children, breaking combobox text input
 - [App mobile sidebar overflow](project_app_mobile_sidebar_overflow.md) — STALE/likely-fixed: as of 2026-05-30 sidebar collapses behind a hamburger at 375px with NO horizontal overflow; re-verify before citing
+- [Patient detail mobile overflow](project_patient_detail_mobile_overflow.md) — /pacientes/[id] route overflows horizontally at 375px (main ~729px, sidebar correctly off-canvas); pre-existing route-level bug, NOT caused by tab content — don't blame new tabs
 - [Local env setup notes](project_local_env_setup_notes.md) — migrations, Mailpit, user creation steps for local QA testing
 - [Prontuario nav architecture](project_prontuario_nav_architecture.md) — patient detail vs prontuario page have separate tab systems; prontuario features live at /pacientes/[id]/prontuario
 - [AI consent flow patterns](project_ai_consent_flow_patterns.md) — 4-state consent model, token format, expiry logic inconsistency between status query and generate action
@@ -21,3 +22,6 @@
 - [Copy patient video link QA](project_copy_patient_video_link_qa.md) — APP_URL (unset in docker-compose) silently gates whole feature; drawer status gating; toast accent tells branch; testids; modal-toast clipboard no-catch (LOW)
 - [Consent filter QA](project_consent_filter_qa.md) — /pacientes?filtro=sem-consentimento allowlist+chip+count, copy/WhatsApp row actions, minor guardian-phone routing, 2 fragile spots (mobile a11y names, stale consentShare on page 2+), seeding recipe+testids
 - [Diacritics QA scope](project_diacritics_qa_scope.md) — ptbr-diacritics regressions hide in settings H1s (drift from breadcrumb label map) + scale metadata (label/desc/severity in-scope, item wording deferred to clinical-review); bare-word scanner recipe
+- [Telepsicologia lobby browser QA](project_telepsicologia_lobby_browser_qa.md) — reach the live pre-call lobby via E2E_STREAM_STUB bypass (token mint normally blocks it); lobby is browser-QA-able, in-call surfaces are not (need live Stream WS)
+- [formatAddress QA](project_format_address_qa.md) — address column is JSON text; formatAddress renders in overview tab (null→'-') + PDF (null→omit line); defensive edge cases; insert empty/corrupt via DB, verify PDF with pdftotext
+- [Public site foundation QA](project_public_site_foundation_qa.md) — anonymous (public) route group (no auth/migrations); cookie-consent client-leaf mounts post-hydration; recurring mobile-header overflow+sub-44px MÉDIO; dev-only no-flash theming warnings (LOW); /precos & #funcionalidades forward-referenced (INFO, deferred)
