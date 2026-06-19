@@ -12,7 +12,11 @@ test.describe('@health smoke', () => {
     const response = await page.goto('/');
 
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole('img', { name: 'Hubrity' })).toBeVisible();
+    // The Logo renders in both the header (banner) and footer (contentinfo),
+    // so the role query is scoped to the banner landmark to stay unambiguous
+    // under Playwright strict mode.
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('img', { name: 'Hubrity' })).toBeVisible();
   });
 
   test('GET /api/health returns 200 with the documented payload shape', async ({ request }) => {

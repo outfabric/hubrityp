@@ -172,7 +172,8 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 
 ## Tipografia
 
-**Família única:** Inter via `next/font` (self-host).
+**Família única:** Inter via `next/font` (self-host) para todo texto de corpo e UI.
+Única exceção: o **wordmark** da marca usa Nunito (ver [Wordmark — Nunito](#wordmark--nunito)).
 
 **Escala (base 1.125 modular):**
 | Token | Tamanho | Peso | Uso |
@@ -194,6 +195,37 @@ Sistema visual do SaaS para psicólogos. **Sempre seguir.** Sobre regras gerais,
 **Linha máxima de leitura:** 72ch ou 720px em prontuário/evoluções.
 
 **Italic:** apenas citações e termos técnicos. Underline: apenas links em texto corrido.
+
+### Escala marketing (site público)
+
+Escala de display usada **apenas no site público** (landing, preços, blog). Mesma
+família do app — **Inter**, pesos **400 ou 600 apenas** (nunca ≥700). Exposta como
+utilitários Tailwind `text-display-xl|lg|md` e `text-lead`, cada um já embutindo
+tamanho + line-height + tracking + peso (tokens `--ds-text-*` em `globals.css`).
+
+| Token      | Utilitário        | Tamanho / line-height | Peso | Tracking | Uso                               |
+| ---------- | ----------------- | --------------------- | ---- | -------- | --------------------------------- |
+| Display/xl | `text-display-xl` | 52px / 56px           | 600  | -0.5%    | Hero principal                    |
+| Display/lg | `text-display-lg` | 40px / 46px           | 600  | -0.4%    | Título de seção (landing)         |
+| Display/md | `text-display-md` | 32px / 40px           | 600  | -0.2%    | Sub-seção / destaque              |
+| Lead       | `text-lead`       | 20px / 30px           | 400  | 0        | Parágrafo de abertura / subtítulo |
+
+> Regra de peso: o site público mantém a regra do DS — apenas 400 e 600. Nenhum
+> token de marketing usa ≥700.
+
+### Wordmark — Nunito
+
+A marca textual **"hubrity"** (minúsculas) usa **Nunito SemiBold (600)**, tracking
+≈ -1%, cor `#21261F` (ink) em fundo claro e `#FAFAF9` (inverse) em fundo escuro.
+É a **única** exceção à família Inter, e seu escopo é estritamente o wordmark —
+texto de corpo e de UI permanecem em Inter.
+
+- Carregada via `next/font/google` (self-host, sem requisição a `fonts.googleapis.com`),
+  exposta como a variável CSS `--ds-font-wordmark` e o utilitário Tailwind `font-wordmark`.
+- Apenas o peso 600 é carregado (o único que o wordmark usa).
+- Os lockups SVG (`Logo` variantes `lockup-h` / `lockup-v`) já trazem as letras do
+  Nunito SemiBold como geometria vetorial; a variante `wordmark-text` do `Logo`
+  renderiza texto vivo usando `--ds-font-wordmark`.
 
 ## Espaçamento
 

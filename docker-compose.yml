@@ -35,6 +35,10 @@ services:
       # if you point the app at a different stack.
       DATABASE_URL: postgresql://postgres:postgres@supabase_db_hubrityp:5432/postgres
       NEXT_PUBLIC_SUPABASE_URL: http://supabase_kong_hubrityp:8000
+      # Absolute base URL of the public marketing site. Required by clientEnv;
+      # inlined at build time. In local dev the app serves both the public site
+      # and the app at localhost:3000.
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
       # Browser-facing Supabase URL — Kong is port-mapped to 54321 on the host.
       # Signed Storage URLs are rewritten from the internal hostname to this
       # origin before being returned to the browser (CSP also permits it).

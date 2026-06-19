@@ -173,9 +173,17 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     await seedPatient(userId, patientId);
 
     // Session 24 hours from "now", but "now" is set to 24h before session
-    // so the early reminder is due
-    const sessionStart = new Date('2026-06-15T14:00:00Z');
-    await seedSession(userId, sessionId, sessionStart, { patientId });
+    // so the early reminder is due. Dates are pinned far in the future so the
+    // real wall clock never overtakes the fixture (the DB-default created_at
+    // would otherwise land after the RN-04.03 threshold and suppress the early
+    // reminder). The explicit createdAt places creation well before startAt so
+    // RN-04.03 (skip early when created < early_reminder_hours before start)
+    // does not fire.
+    const sessionStart = new Date('2030-06-15T14:00:00Z');
+    await seedSession(userId, sessionId, sessionStart, {
+      patientId,
+      createdAt: new Date('2030-06-10T12:00:00Z'),
+    });
     await seedTemplate(
       userId,
       'lembrete_24h',
@@ -184,7 +192,7 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     );
 
     // Set "now" to exactly when the early reminder should fire (24h before session)
-    const now = new Date('2026-06-14T14:00:00Z');
+    const now = new Date('2030-06-14T14:00:00Z');
     const emittedEvents: ReminderSendFanOutEvent[] = [];
 
     const deps: DispatcherDeps = {
@@ -435,14 +443,19 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     await seedPatient(userId, patientId);
 
     // Session at 14:00. "now" is 12:30 — both early (24h ago was 12:30 yesterday) and
-    // final (2h before = 12:00) are due.
-    const sessionStart = new Date('2026-06-15T14:00:00Z');
-    await seedSession(userId, sessionId, sessionStart, { patientId });
+    // final (2h before = 12:00) are due. Dates are pinned far in the future so the
+    // real wall clock never overtakes the fixture; the explicit createdAt places
+    // creation well before startAt so RN-04.03 does not suppress the early reminder.
+    const sessionStart = new Date('2030-06-15T14:00:00Z');
+    await seedSession(userId, sessionId, sessionStart, {
+      patientId,
+      createdAt: new Date('2030-06-10T12:00:00Z'),
+    });
     await seedTemplate(userId, 'lembrete_24h', 'Ola {nome_paciente}', 'HX_early');
     await seedTemplate(userId, 'lembrete_2h', 'Ola {nome_paciente}, faltam 2h', 'HX_final');
 
     // Set "now" to 12:30 on session day — both early and final are past due
-    const now = new Date('2026-06-15T12:30:00Z');
+    const now = new Date('2030-06-15T12:30:00Z');
     const emittedEvents: ReminderSendFanOutEvent[] = [];
 
     const deps: DispatcherDeps = {

@@ -1,6 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Nunito } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { Toaster } from 'sonner';
+
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  THEME_COOKIE_NAME,
+  buildNoFlashThemeScript,
+  parseStoredTheme,
+  siteUrl,
+} from '@/modules/marketing';
 
 import './globals.css';
 
@@ -26,9 +36,58 @@ const inter = Inter({
   fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
+/*
+ * Nunito is the brand wordmark font ("hubrity"), loaded via `next/font/google`
+ * so it is self-hosted at build time under `/_next/static` — no runtime request
+ * to `fonts.googleapis.com` / `fonts.gstatic.com`, satisfying the CSP
+ * `font-src 'self' data:` policy and the "Font is self-hosted" spec scenario.
+ *
+ * Scope: this font is exposed ONLY as `--ds-font-wordmark` and is referenced
+ * exclusively by the brand wordmark (the `font-wordmark` utility / the Logo
+ * text wordmark). Body and UI text MUST stay on Inter (`--ds-font-sans`); we do
+ * NOT apply Nunito to `<body>`. Only the SemiBold weight (600) is loaded — the
+ * single weight the wordmark uses — keeping the bundle minimal and honoring the
+ * DS weight rule (400/600 only, never >=700).
+ */
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['600'],
+  display: 'swap',
+  variable: '--ds-font-wordmark',
+  fallback: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+});
+
+/*
+ * Root metadata for the whole app.
+ *
+ * `metadataBase` is set from `NEXT_PUBLIC_SITE_URL` (via `siteUrl()`) so Next.js
+ * resolves every relative metadata URL (canonical, og:image, etc.) declared by
+ * child segments into an absolute URL against the configured public host —
+ * never a hardcoded or relative origin.
+ *
+ * The default `openGraph` block (site name, `pt_BR` locale, `website` type, and
+ * the shipped default OG image) is the fallback social card for any page that
+ * does not override it via `buildPageMetadata()`.
+ */
 export const metadata: Metadata = {
-  title: 'Hubrity',
+  metadataBase: new URL(siteUrl()),
+  title: SITE_NAME,
   description: 'Plataforma para psicólogos autônomos brasileiros.',
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'pt_BR',
+    title: SITE_NAME,
+    description: 'Plataforma para psicólogos autônomos brasileiros.',
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -36,9 +95,41 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /*
+   * Dark-mode substrate (D4). Two cooperating mechanisms keep the page free of
+   * a flash-of-wrong-theme (FOUC):
+   *
+   *  1. For returning visitors with an explicit choice, we read the `theme`
+   *     cookie server-side and render `data-theme` directly onto `<html>`, so
+   *     the very first byte streamed already carries the right theme — no
+   *     client round-trip, no flash.
+   *
+   *  2. For first visits (no cookie), the theme depends on the OS
+   *     `prefers-color-scheme`, which the server cannot know. The blocking
+   *     inline script in `<head>` resolves it (cookie -> OS -> light) and sets
+   *     `data-theme` before first paint. When the cookie is present, the script
+   *     simply re-affirms the same value the server already rendered.
+   */
+  const cookieStore = await cookies();
+  const storedTheme = parseStoredTheme(cookieStore.get(THEME_COOKIE_NAME)?.value);
+
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html
+      lang="pt-BR"
+      className={`${inter.variable} ${nunito.variable}`}
+      {...(storedTheme ? { 'data-theme': storedTheme } : {})}
+    >
+      <head>
+        {/*
+         * Blocking, synchronous theme resolution. Injected as a raw string via
+         * `dangerouslySetInnerHTML` so it executes before first paint (a React
+         * element child would not be inline-executed early enough). The content
+         * is a fixed, build-time string with no user/interpolated data, so it
+         * is not an XSS sink.
+         */}
+        <script dangerouslySetInnerHTML={{ __html: buildNoFlashThemeScript() }} />
+      </head>
       <body className="bg-background text-text-primary min-h-screen font-sans antialiased">
         {children}
         <Toaster

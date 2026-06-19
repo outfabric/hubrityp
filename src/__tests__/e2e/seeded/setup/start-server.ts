@@ -111,6 +111,9 @@ async function main(): Promise<void> {
       DATABASE_URL: connectionString,
       NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'e2e-anon-key',
+      // Public marketing-site base URL — required by clientEnvSchema. The
+      // seeded server runs on localhost:3000, so the base matches the host.
+      NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
       SUPABASE_SERVICE_ROLE_KEY: 'e2e-service-key',
       // Stream SDK — dummy values so the Zod env validation in
       // `src/shared/env/` passes at module-evaluation time.

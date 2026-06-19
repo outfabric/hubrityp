@@ -86,6 +86,16 @@ const ONBOARDING_PATH = '/onboarding/pending';
 const DASHBOARD_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 
+// Public marketing + legal routes (the `(public)` route group). Classified
+// with exact-or-prefix+separator semantics so a near-miss substring such as
+// `/precos-internos` is NOT matched. The homepage `/` is matched separately
+// (exact only) because a bare-prefix check on `/` would match every path.
+const PUBLIC_MARKETING_PREFIXES = [
+  '/precos',
+  '/politica-de-privacidade',
+  '/termos-de-uso',
+] as const;
+
 // Each distinct row in the decision table maps to one PathClass value.
 type PathClass =
   | 'auth'
@@ -166,6 +176,23 @@ function classifyPath(pathname: string): PathClass {
   // Public patient video join page — token in URL is the auth credential, not a Supabase session
   if (pathname === '/v' || pathname.startsWith('/v/')) {
     return 'public';
+  }
+  // Public marketing + legal routes (the `(public)` route group). Explicit
+  // classification prevents accidental gating if the classifier is ever
+  // refactored to default-deny instead of default-public. These routes serve
+  // anonymous and authenticated visitors alike: an active user on `/` or
+  // `/precos` stays on the page (the `'public'` class never redirects), so
+  // marketing pages are reachable from inside the app without bouncing to
+  // /dashboard. The exact-match for `/` plus the exact-or-prefix+separator
+  // check for the named routes rejects near-miss substrings like
+  // `/precos-internos` -- see public-routes-gating.int.test.ts.
+  if (pathname === '/') {
+    return 'public';
+  }
+  for (const prefix of PUBLIC_MARKETING_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return 'public';
+    }
   }
   return 'public';
 }

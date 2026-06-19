@@ -24,10 +24,33 @@ import { cn } from '@/shared/lib/utils';
  * The component is purely presentational and MUST stay non-interactive: it
  * renders no `<a>`/`<button>` wrapper. Wrap it at the call site if a link is
  * needed (e.g. a header logo that navigates to the dashboard).
+ *
+ * Variants: `lockup-h` / `lockup-v` / `symbol` render inline SVG; the
+ * `wordmark-text` variant renders the "hubrity" wordmark as live text in
+ * Nunito SemiBold via the `--ds-font-wordmark` variable (see the wordmark spec
+ * note below). The SVG lockups carry the same Nunito letterforms as traced
+ * geometry, so they render identically without depending on the loaded font.
  */
 
-type LogoVariant = 'lockup-h' | 'lockup-v' | 'symbol';
+type LogoVariant = 'lockup-h' | 'lockup-v' | 'symbol' | 'wordmark-text';
 type LogoTone = 'color' | 'white' | 'mono';
+
+/*
+ * Wordmark spec (docs/design-system/rules.md → Wordmark):
+ *   - text: "hubrity" (lowercase)
+ *   - font: Nunito SemiBold (600) via `--ds-font-wordmark`
+ *   - tracking: ~ -1%
+ *   - color: ink `#21261F` (light) / `#FAFAF9` (inverse, dark surfaces)
+ *
+ * The lockup SVG variants encode the Nunito SemiBold letterforms as traced
+ * `<path>` geometry, so they are font-independent (no FOUT, no font request to
+ * render). The `wordmark-text` variant below renders live text instead and is
+ * the one that actually consumes the Nunito `--ds-font-wordmark` variable —
+ * useful where selectable/scalable text is preferable to vector paths.
+ */
+const WORDMARK_TRACKING = '-0.01em'; // ~ -1%
+const WORDMARK_INK = '#21261F';
+const WORDMARK_INVERSE = '#FAFAF9';
 
 export interface LogoProps extends React.SVGProps<SVGSVGElement> {
   variant?: LogoVariant;
@@ -145,6 +168,29 @@ export function Logo({
     role: 'img' as const,
     'aria-label': 'Hubrity',
   };
+
+  if (variant === 'wordmark-text') {
+    // Live-text wordmark — the only variant that consumes the Nunito
+    // `--ds-font-wordmark` variable (the lockups use traced SVG paths). Renders
+    // a non-interactive <span>; SVG-specific props are intentionally not
+    // forwarded here (this is not an <svg>). `color` is set explicitly so the
+    // wordmark reads ink on light surfaces and inverse on dark/white tones,
+    // matching the brand spec.
+    const color = tone === 'color' || tone === 'mono' ? WORDMARK_INK : WORDMARK_INVERSE;
+    return (
+      <span
+        {...accessibleProps}
+        className={cn('font-wordmark font-semibold lowercase', className)}
+        style={{
+          fontFamily: 'var(--ds-font-wordmark)',
+          letterSpacing: WORDMARK_TRACKING,
+          color,
+        }}
+      >
+        hubrity
+      </span>
+    );
+  }
 
   if (variant === 'symbol') {
     // Symbol-only — square viewBox matching public/brand/simbolo.svg.

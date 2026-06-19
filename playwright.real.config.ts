@@ -200,6 +200,9 @@ export default defineConfig({
       DATABASE_URL: status.DB_URL,
       NEXT_PUBLIC_SUPABASE_URL: status.API_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: status.ANON_KEY,
+      // Public marketing-site base URL — required by clientEnvSchema. The
+      // @auth-real server runs on localhost:3000.
+      NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
       SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY,
       // Stream SDK — dummy values so the Zod env validation in
       // `src/shared/env/` passes at module-evaluation time.

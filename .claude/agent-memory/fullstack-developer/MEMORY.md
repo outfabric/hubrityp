@@ -1,5 +1,8 @@
 # Memory index
 
+- [Figma sources of truth](reference_figma_sources.md) — DS "Sálvia" file HoLOEqq9PXlo6IwLkz3FQ9 (public pages/chrome/tokens) + Brand file 4O3POARuvEYI1BCrxbOFg2 (tricolor logomark variants)
+- [Public pages: Figma is the only truth](feedback_public_pages_figma_source.md) — public-site built from obsolete handoff doc, drifted from live Figma; user declared handoff obsolete 2026-06-19, match live frames + flag AA/placeholder/LGPD-copy items
+
 - [E2E shared-seed session slot collision](feedback_e2e_shared_seed_session_slot_collision.md) — two seeded specs scheduling SAME seed patient at SAME tomorrow slot race detectConflicts under fullyParallel; loser → conflict_warning, modal stays open, toBeHidden fails
 - [E2E build Supabase URL must be local](feedback_e2e_build_supabase_url_must_be_local.md) — e2e build MUST set NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321; wrong value bakes wrong URL into edge middleware → EVERY authenticated spec redirects to /login (looks like auth regression, is build-env mistake)
 - [NPS modal overlay blocks feedback card](feedback_nps_modal_overlay_blocks_feedback_card.md) — day-7 NPS modal renders on every (app) route incl /configuracoes/feedback; eligible user → dup testids + Radix overlay intercepts card clicks
