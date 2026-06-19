@@ -20,8 +20,8 @@
 
 ## 3. Comparison table
 
-- [ ] 3.1 Implement `marketing/components/pricing/comparison-table.tsx`: data-driven `<table>` (9 rows × 2 plans), `<th scope>` headers, ✓ = `brand/700` check with SR label "incluído" / — = `border/strong` dash with SR label "não incluído", Avançado column `brand/50` tint; expandable; mobile = stacked per-plan blocks.
-- [ ] 3.2 Unit test: 9 rows; Essencial⊂Avançado invariant in the rendered table; accessible ✓/— labels present; expandable behavior — `src/__tests__/unit/modules/marketing/comparison-table.test.tsx`.
+- [x] 3.1 Implement `marketing/components/pricing/comparison-table.tsx`: data-driven `<table>` (9 rows × 2 plans), `<th scope>` headers, ✓ = `brand/700` check with SR label "incluído" / — = `border/strong` dash with SR label "não incluído", Avançado column `brand/50` tint; expandable; mobile = stacked per-plan blocks.
+- [x] 3.2 Unit test: 9 rows; Essencial⊂Avançado invariant in the rendered table; accessible ✓/— labels present; expandable behavior — `src/__tests__/unit/modules/marketing/comparison-table.test.tsx`.
 
 ## 4. Billing FAQ + final CTA
 

@@ -67,6 +67,7 @@ export {
 } from './lib/plans';
 export { PRICING_PAGE, BILLING_FAQ_ENTRIES } from './lib/pricing-content';
 export { PlanCards } from './components/pricing/plan-cards';
+export { ComparisonTable } from './components/pricing/comparison-table';
 export {
   HERO,
   SOCIAL_PROOF_STATS,
