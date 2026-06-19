@@ -41,7 +41,7 @@
 
 ## 6. 404 fidelity (frame `144:2`)
 
-- [ ] 6.1 Update `src/app/(public)/not-found.tsx`: h1 "Não encontramos esta página."; body "O endereço pode ter mudado ou não existe mais. Vamos te levar de volta ao começo."; CTA order secondary "Voltar para a homepage" → `/` then primary "Criar conta grátis" → `/signup`; keep the "404" numeral in `brand/600` and a single `<h1>`.
-- [ ] 6.2 Update the 404 assertions in `src/__tests__/e2e/seeded/public/public-shell.spec.ts` (headline + CTA copy/order).
+- [x] 6.1 Update `src/app/(public)/not-found.tsx`: h1 "Não encontramos esta página."; body "O endereço pode ter mudado ou não existe mais. Vamos te levar de volta ao começo."; CTA order secondary "Voltar para a homepage" → `/` then primary "Criar conta grátis" → `/signup`; keep the "404" numeral in `brand/600` and a single `<h1>`.
+- [x] 6.2 Update the 404 assertions in `src/__tests__/e2e/seeded/public/public-shell.spec.ts` (headline + CTA copy/order).
 
 

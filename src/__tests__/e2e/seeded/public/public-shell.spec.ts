@@ -85,9 +85,24 @@ test.describe('public shell — anonymous visitor', () => {
     expect(response?.status()).toBe(404);
     expect(new URL(page.url()).pathname).toBe('/rota-que-nao-existe-12345');
 
-    // The branded 404 renders both CTAs.
-    await expect(page.getByRole('link', { name: 'Criar conta grátis' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Voltar para a homepage' })).toBeVisible();
+    // The branded 404 renders the headline and both CTAs.
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Não encontramos esta página.' }),
+    ).toBeVisible();
+
+    const secondaryCta = page.getByRole('link', { name: 'Voltar para a homepage' });
+    const primaryCta = page.getByRole('link', { name: 'Criar conta grátis' });
+    await expect(secondaryCta).toBeVisible();
+    await expect(primaryCta).toBeVisible();
+    await expect(secondaryCta).toHaveAttribute('href', '/');
+    await expect(primaryCta).toHaveAttribute('href', '/signup');
+
+    // CTA order: secondary "Voltar para a homepage" first (left), primary
+    // "Criar conta grátis" second (right).
+    const ctaNames = await page
+      .getByRole('link', { name: /Voltar para a homepage|Criar conta grátis/ })
+      .allInnerTexts();
+    expect(ctaNames).toEqual(['Voltar para a homepage', 'Criar conta grátis']);
 
     // The chrome is preserved (header + footer) — it is the public 404, not a
     // bare error page.
