@@ -25,9 +25,9 @@
 
 ## 4. Prova social + Problema sections
 
-- [ ] 4.1 Implement `prova-social.tsx` (2 market stats, `bg/surface-muted`, no fabricated testimonials).
-- [ ] 4.2 Implement `problema.tsx` ("Você ainda faz isso?", 5 mirror items, recognition closer).
-- [ ] 4.3 Unit test both sections (stat content + no testimonial; 5 items + closer) — `src/__tests__/unit/modules/marketing/prova-problema.test.tsx`.
+- [x] 4.1 Implement `prova-social.tsx` (2 market stats, `bg/surface-muted`, no fabricated testimonials).
+- [x] 4.2 Implement `problema.tsx` ("Você ainda faz isso?", 5 mirror items, recognition closer).
+- [x] 4.3 Unit test both sections (stat content + no testimonial; 5 items + closer) — `src/__tests__/unit/modules/marketing/prova-problema.test.tsx`.
 
 ## 5. Solução timeline + reduced-motion fade-in
 

@@ -33,6 +33,8 @@ export {
   type CarouselSlide,
 } from './components/home/screenshot-carousel';
 export { Hero } from './components/home/hero';
+export { ProvaSocial } from './components/home/prova-social';
+export { Problema } from './components/home/problema';
 export {
   PLANS,
   FEATURE_KEYS,
