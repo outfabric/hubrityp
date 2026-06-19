@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import * as React from 'react';
 
-import { Container, LegalReviewNotice, absoluteUrl } from '@/modules/marketing';
+import { Container, absoluteUrl } from '@/modules/marketing';
 
 /**
  * Termos de Uso — public legal page (task 9.2).
@@ -16,8 +16,7 @@ import { Container, LegalReviewNotice, absoluteUrl } from '@/modules/marketing';
  * the `<main>` landmark), wrapped in the `reading` Container variant (720px max)
  * per the DS reading-column convention.
  *
- * Content is REFERENCE text (see `LegalReviewNotice`) — a placeholder draft to
- * be reviewed with legal before publishing. Required sections per the spec:
+ * Required sections per the spec:
  * elegibilidade (CRP ativo), planos, cancelamento, propriedade intelectual,
  * responsabilidade, lei aplicável / CDC.
  */
@@ -143,8 +142,6 @@ export default function TermsOfUsePage(): React.JSX.Element {
   return (
     <Container width="reading" className="py-16">
       <h1 className="text-display-md text-text-primary">Termos de Uso</h1>
-
-      <LegalReviewNotice className="mt-6" />
 
       <div className="mt-10 flex flex-col gap-10">
         {SECTIONS.map((section) => (

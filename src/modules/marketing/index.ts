@@ -27,7 +27,6 @@ export { withUtm, withUtmFromLocation } from './lib/utm';
 export { CookieConsent } from './components/cookie-consent';
 export { AnalyticsLoader } from './components/analytics-loader';
 export { SignupCta, type SignupCtaProps } from './components/signup-cta';
-export { LegalReviewNotice } from './components/legal-review-notice';
 export {
   PLANS,
   FEATURE_KEYS,

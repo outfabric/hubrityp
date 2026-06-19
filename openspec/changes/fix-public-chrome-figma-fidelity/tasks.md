@@ -35,9 +35,9 @@
 
 ## 5. Legal pages — remove the review notice (frames `142:2` / `143:2`)
 
-- [ ] 5.1 Remove `<LegalReviewNotice/>` from `src/app/(public)/politica-de-privacidade/page.tsx` and `src/app/(public)/termos-de-uso/page.tsx`; drop the `LegalReviewNotice` export from `src/modules/marketing/index.ts`; delete `src/modules/marketing/components/legal-review-notice.tsx`; clean the "REFERENCE text (see LegalReviewNotice)" doc-comments.
-- [ ] 5.2 If the privacy/terms DPO-contact section surfaces a support email, align it to `hubrity.platform@gmail.com`.
-- [ ] 5.3 Update any test asserting the legal-review notice (e.g. `src/__tests__/e2e/seeded/public/public-shell.spec.ts` and marketing integration tests) to assert it is absent.
+- [x] 5.1 Remove `<LegalReviewNotice/>` from `src/app/(public)/politica-de-privacidade/page.tsx` and `src/app/(public)/termos-de-uso/page.tsx`; drop the `LegalReviewNotice` export from `src/modules/marketing/index.ts`; delete `src/modules/marketing/components/legal-review-notice.tsx`; clean the "REFERENCE text (see LegalReviewNotice)" doc-comments.
+- [x] 5.2 If the privacy/terms DPO-contact section surfaces a support email, align it to `hubrity.platform@gmail.com`.
+- [x] 5.3 Update any test asserting the legal-review notice (e.g. `src/__tests__/e2e/seeded/public/public-shell.spec.ts` and marketing integration tests) to assert it is absent.
 
 ## 6. 404 fidelity (frame `144:2`)
 
