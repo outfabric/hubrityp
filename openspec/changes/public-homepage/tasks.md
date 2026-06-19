@@ -43,8 +43,8 @@
 
 ## 7. Destaque IA section
 
-- [ ] 7.1 Implement `destaque-ia.tsx`: solid `brand/50` surface, quantified title, subtitle, antes/depois pair (empty editor vs AI-filled evolução with the two labels), 4 trust items, CTA → `/signup`.
-- [ ] 7.2 Unit test: solid surface (no gradient/blur), antes/depois labels, 4 trust items, CTA target — `src/__tests__/unit/modules/marketing/destaque-ia.test.tsx`.
+- [x] 7.1 Implement `destaque-ia.tsx`: solid `brand/50` surface, quantified title, subtitle, antes/depois pair (empty editor vs AI-filled evolução with the two labels), 4 trust items, CTA → `/signup`.
+- [x] 7.2 Unit test: solid surface (no gradient/blur), antes/depois labels, 4 trust items, CTA target — `src/__tests__/unit/modules/marketing/destaque-ia.test.tsx`.
 
 ## 8. Confiança section
 
