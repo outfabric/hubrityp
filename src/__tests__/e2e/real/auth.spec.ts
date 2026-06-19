@@ -51,14 +51,8 @@ test.describe('@auth-real', () => {
     // Server Component called `supabase.auth.getUser`, the profile row was
     // materialized by the `handle_new_user` trigger, and `getCurrentProfile`
     // read it back.
-    // The greeting only paints after the dashboard RSC awaits three parallel
-    // DB reads (getTodaySessions, getPendencias, hasAnyData). On a cold-start
-    // Supabase container in CI those queries can exceed the default 5s
-    // assertion timeout even though the page renders correctly, so we grant a
-    // wider window before asserting visibility. The subsequent text assertion
-    // then runs against an already-painted element.
     const greeting = page.getByTestId('dashboard-greeting');
-    await expect(greeting).toBeVisible({ timeout: 15_000 });
+    await expect(greeting).toBeVisible();
     await expect(greeting).toHaveText(`Olá, ${SEED_FULL_NAME}`);
 
     // 2. Log out.
