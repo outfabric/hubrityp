@@ -4,14 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { PublicFooter } from '@/modules/marketing/components/public-footer';
 
 /*
- * PublicFooter (Server Component, presentational) — task 7.2.
+ * PublicFooter (Server Component, presentational) — Figma frame `131:32`.
  *
  * Covers the spec contracts exercisable in jsdom:
- *   - legal link destinations (Política de Privacidade, Termos de Uso, LGPD anchor);
+ *   - legal link destinations (Política de Privacidade, Termos de Uso) — exactly
+ *     two links, no standalone LGPD link;
  *   - the support contact rendered as a `mailto:` link;
  *   - a SINGLE `contentinfo` landmark;
  *   - accessible column headings (Produto / Legal / Contato).
  */
+
+const SUPPORT_EMAIL = 'hubrity.platform@gmail.com';
 
 function hrefOf(name: RegExp | string): string | null {
   const link = screen.getByRole('link', { name });
@@ -24,8 +27,20 @@ describe('PublicFooter — legal link destinations', () => {
 
     expect(hrefOf(/^Política de Privacidade$/i)).toBe('/politica-de-privacidade');
     expect(hrefOf(/^Termos de Uso$/i)).toBe('/termos-de-uso');
-    // LGPD deep-links into the LGPD section anchor of the privacy page.
-    expect(hrefOf(/^LGPD$/i)).toBe('/politica-de-privacidade#lgpd');
+  });
+
+  it('exposes exactly two links in the Legal column — no standalone LGPD link', () => {
+    render(<PublicFooter />);
+
+    const legal = screen.getByRole('navigation', { name: /^Legal$/i });
+    const links = within(legal).getAllByRole('link');
+
+    expect(links).toHaveLength(2);
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Política de Privacidade',
+      'Termos de Uso',
+    ]);
+    expect(screen.queryByRole('link', { name: /^LGPD$/i })).toBeNull();
   });
 
   it('points the Produto links at their spec destinations', () => {
@@ -40,7 +55,9 @@ describe('PublicFooter — contact', () => {
   it('renders the support email as a mailto: link', () => {
     render(<PublicFooter />);
 
-    expect(hrefOf(/suporte@hubrity\.com\.br/i)).toBe('mailto:suporte@hubrity.com.br');
+    expect(hrefOf(new RegExp(SUPPORT_EMAIL.replace('.', '\\.'), 'i'))).toBe(
+      `mailto:${SUPPORT_EMAIL}`,
+    );
   });
 });
 
@@ -70,14 +87,22 @@ describe('PublicFooter — landmarks & headings', () => {
   });
 });
 
-describe('PublicFooter — copyright', () => {
-  it('renders the static 2026 copyright line with Brazil data-residency note', () => {
+describe('PublicFooter — copy', () => {
+  it('renders the Figma tagline in the brand block', () => {
     render(<PublicFooter />);
 
     expect(
-      screen.getByText(
-        /© 2026 Hubrity\. Dados armazenados no Brasil\. Feito para psicólogos autônomos brasileiros\./i,
-      ),
+      screen.getByText(/O sistema único para o consultório de psicólogos autônomos no Brasil\./i),
     ).toBeInTheDocument();
+  });
+
+  it('renders the static 2026 copyright line without the data-residency note', () => {
+    render(<PublicFooter />);
+
+    expect(
+      screen.getByText(/© 2026 Hubrity\. Feito para psicólogos autônomos brasileiros\./i),
+    ).toBeInTheDocument();
+    // The standalone "Dados armazenados no Brasil." note was dropped per Figma.
+    expect(screen.queryByText(/Dados armazenados no Brasil/i)).toBeNull();
   });
 });

@@ -14,10 +14,10 @@
 
 ## 2. Footer fidelity (frame `131:32`)
 
-- [ ] 2.1 Rework `src/modules/marketing/components/public-footer.tsx`: brand block left + Produto/Legal/Contato columns clustered right; column headings in uppercase tertiary caption style; render the brand lockup with the new dark-surface tone (not `tone="white"`).
-- [ ] 2.2 Apply the Figma copy: tagline "O sistema único para o consultório de psicólogos autônomos no Brasil."; copyright "© 2026 Hubrity. Feito para psicólogos autônomos brasileiros." (drop "Dados armazenados no Brasil."); remove the standalone "LGPD" link from the Legal column (keep only Privacidade + Termos).
-- [ ] 2.3 Set the contact email to `hubrity.platform@gmail.com` in `public-footer.tsx` (`SUPPORT_EMAIL`) and in `src/modules/marketing/lib/plans.ts` (`PRICING_SUPPORT_EMAIL`).
-- [ ] 2.4 Update tests `src/__tests__/unit/modules/marketing/public-footer.test.tsx` and `src/__tests__/integration/marketing/public-layout.int.test.ts`: Legal column has exactly 2 links (no LGPD), new tagline/copyright/email, contentinfo landmark intact.
+- [x] 2.1 Rework `src/modules/marketing/components/public-footer.tsx`: brand block left + Produto/Legal/Contato columns clustered right; column headings in uppercase tertiary caption style; render the brand lockup with the new dark-surface tone (not `tone="white"`).
+- [x] 2.2 Apply the Figma copy: tagline "O sistema único para o consultório de psicólogos autônomos no Brasil."; copyright "© 2026 Hubrity. Feito para psicólogos autônomos brasileiros." (drop "Dados armazenados no Brasil."); remove the standalone "LGPD" link from the Legal column (keep only Privacidade + Termos).
+- [x] 2.3 Set the contact email to `hubrity.platform@gmail.com` in `public-footer.tsx` (`SUPPORT_EMAIL`) and in `src/modules/marketing/lib/plans.ts` (`PRICING_SUPPORT_EMAIL`).
+- [x] 2.4 Update tests `src/__tests__/unit/modules/marketing/public-footer.test.tsx` and `src/__tests__/integration/marketing/public-layout.int.test.ts`: Legal column has exactly 2 links (no LGPD), new tagline/copyright/email, contentinfo landmark intact.
 
 ## 3. Header fidelity (frame `128:3`)
 

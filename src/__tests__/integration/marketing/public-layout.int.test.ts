@@ -91,7 +91,7 @@ describe('(public) layout never leaks PII', () => {
     // That is intentional public contact info, not user PII, so we strip the
     // single known support mailto before applying the EMAIL guard — any OTHER
     // email-shaped string (i.e. a real leaked user address) still fails.
-    const SUPPORT_EMAIL = 'suporte@hubrity.com.br';
+    const SUPPORT_EMAIL = 'hubrity.platform@gmail.com';
     const htmlWithoutSupport = html.split(SUPPORT_EMAIL).join('');
 
     const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
