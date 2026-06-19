@@ -9,8 +9,8 @@
 
 ## 1. Logo dark-surface tone (DS primitive)
 
-- [ ] 1.1 Add a dark-surface tone to `src/shared/ui/logo.tsx` (e.g. `tone="inverse"`) that keeps the symbol's tricolor fills (sage / slate-blue / teal, per brand `16:7`/`17:2`) and renders the "hubrity" wordmark light (`#FAFAF9`); leave `color`/`white`/`mono` untouched.
-- [ ] 1.2 Unit test `src/__tests__/unit/shared/ui/logo.test.tsx`: the new tone renders a tricolor symbol + light wordmark, and `color`/`white`/`mono` keep their prior output.
+- [x] 1.1 Add a dark-surface tone to `src/shared/ui/logo.tsx` (e.g. `tone="inverse"`) that keeps the symbol's tricolor fills (sage / slate-blue / teal, per brand `16:7`/`17:2`) and renders the "hubrity" wordmark light (`#FAFAF9`); leave `color`/`white`/`mono` untouched.
+- [x] 1.2 Unit test `src/__tests__/unit/shared/ui/logo.test.tsx`: the new tone renders a tricolor symbol + light wordmark, and `color`/`white`/`mono` keep their prior output.
 
 ## 2. Footer fidelity (frame `131:32`)
 
