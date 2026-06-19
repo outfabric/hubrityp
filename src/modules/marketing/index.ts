@@ -38,6 +38,7 @@ export { Problema } from './components/home/problema';
 export { SolucaoTimeline } from './components/home/solucao-timeline';
 export { Funcionalidades } from './components/home/funcionalidades';
 export { DestaqueIa } from './components/home/destaque-ia';
+export { Confianca } from './components/home/confianca';
 export {
   ScreenshotLightbox,
   type ScreenshotLightboxProps,

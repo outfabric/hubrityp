@@ -48,8 +48,8 @@
 
 ## 8. Confiança section
 
-- [ ] 8.1 Implement `confianca.tsx`: title, 8 checkmark guarantees (exact codes, `brand/700` checks), closer.
-- [ ] 8.2 Unit test: exactly 8 guarantees with all required literal codes/years — `src/__tests__/unit/modules/marketing/confianca.test.tsx`.
+- [x] 8.1 Implement `confianca.tsx`: title, 8 checkmark guarantees (exact codes, `brand/700` checks), closer.
+- [x] 8.2 Unit test: exactly 8 guarantees with all required literal codes/years — `src/__tests__/unit/modules/marketing/confianca.test.tsx`.
 
 ## 9. Preços resumo + CTA final
 
