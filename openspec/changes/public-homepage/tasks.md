@@ -64,8 +64,8 @@
 
 ## 11. Homepage assembly + metadata
 
-- [ ] 11.1 Implement `src/app/(public)/page.tsx`: compose the 10 sections in order; single `<h1>`; set homepage SEO metadata via the foundation `buildPageMetadata()` (unique title/description/canonical/OG); preload hero image.
-- [ ] 11.2 Integration test: homepage renders all 10 sections in order with exactly one `<h1>`; pricing values match central config; regulatory codes present; metadata (title/description/canonical/og) set — `src/__tests__/integration/marketing/homepage.int.test.ts`.
+- [x] 11.1 Implement `src/app/(public)/page.tsx`: compose the 10 sections in order; single `<h1>`; set homepage SEO metadata via the foundation `buildPageMetadata()` (unique title/description/canonical/OG); preload hero image.
+- [x] 11.2 Integration test: homepage renders all 10 sections in order with exactly one `<h1>`; pricing values match central config; regulatory codes present; metadata (title/description/canonical/og) set — `src/__tests__/integration/marketing/homepage.int.test.ts`.
 
 ## 12. E2E (homepage critical flows)
 
