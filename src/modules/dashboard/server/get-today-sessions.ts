@@ -55,6 +55,10 @@ function buildOpenHref(
  */
 export async function getTodaySessions(
   supabase: SupabaseClient,
+  // Injectable clock. Production never passes this (defaults to the real wall
+  // clock); tests pin it so the SP-calendar-day window is deterministic and
+  // does not flake when the suite runs near the São Paulo midnight boundary.
+  now: Date = new Date(),
 ): Promise<TodaySessionsResult | UnauthorizedResult> {
   const {
     data: { user },
@@ -71,7 +75,6 @@ export async function getTodaySessions(
   const { sessions } = await import('@/shared/db/schema/agenda/tables');
   const { patients } = await import('@/shared/db/schema/patients/tables');
 
-  const now = new Date();
   const dayStart = startOfSaoPauloDay(now);
   const dayEnd = startOfNextSaoPauloDay(now);
 
