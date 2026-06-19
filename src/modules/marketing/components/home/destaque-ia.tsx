@@ -96,7 +96,17 @@ export function DestaqueIa(): React.JSX.Element {
           ))}
         </ul>
 
-        <SignupCta size="lg">{AI_HIGHLIGHT.cta.label}</SignupCta>
+        {/* The label is long ("Comece grátis e experimente na primeira sessão");
+            the DS Button is `whitespace-nowrap` + `px-8`, which forces a ~437px
+            wide button and overflows the viewport at <768px. Allow the label to
+            wrap (and stay centered when it does) on mobile, restoring the DS
+            single-line treatment from `md` up. */}
+        <SignupCta
+          size="lg"
+          className="h-auto max-w-full py-3 text-center whitespace-normal md:h-12 md:py-2 md:whitespace-nowrap"
+        >
+          {AI_HIGHLIGHT.cta.label}
+        </SignupCta>
       </Container>
     </section>
   );

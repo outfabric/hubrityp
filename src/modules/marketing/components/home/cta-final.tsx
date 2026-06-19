@@ -38,7 +38,15 @@ export function CtaFinal(): React.JSX.Element {
           {FINAL_CTA.title}
         </h2>
 
-        <SignupCta size="lg" variant="secondary">
+        {/* Same guard as the Destaque-IA CTA: the DS Button is `whitespace-nowrap`
+            + `px-8`, so a long label ("Criar conta grátis — 14 dias") can overflow
+            the viewport on the narrowest phones. Let it wrap on mobile and restore
+            the single-line DS treatment from `md` up. */}
+        <SignupCta
+          size="lg"
+          variant="secondary"
+          className="h-auto max-w-full py-3 text-center whitespace-normal md:h-12 md:py-2 md:whitespace-nowrap"
+        >
           {FINAL_CTA.cta.label}
         </SignupCta>
 

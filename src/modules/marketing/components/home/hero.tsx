@@ -67,11 +67,24 @@ export function Hero(): React.JSX.Element {
           <p className="text-lead text-text-secondary text-pretty">{HERO.subheadline}</p>
 
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-            <SignupCta size="lg" className="w-full sm:w-auto">
+            {/* Hero CTAs are already `w-full` on mobile (bounded by the column,
+                so they cannot drive horizontal scroll), but the DS Button is
+                `whitespace-nowrap`: relax it on mobile so a longer label would
+                wrap inside the full-width button instead of overflowing its box.
+                Restored to the single-line DS treatment from `sm` up. */}
+            <SignupCta
+              size="lg"
+              className="h-auto w-full py-3 text-center whitespace-normal sm:h-12 sm:w-auto sm:py-2 sm:whitespace-nowrap"
+            >
               {HERO.primaryCta.label}
             </SignupCta>
 
-            <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
+            <Button
+              asChild
+              variant="secondary"
+              size="lg"
+              className="h-auto w-full py-3 text-center whitespace-normal sm:h-12 sm:w-auto sm:py-2 sm:whitespace-nowrap"
+            >
               <Link href={HERO.secondaryCta.href}>{HERO.secondaryCta.label}</Link>
             </Button>
           </div>
