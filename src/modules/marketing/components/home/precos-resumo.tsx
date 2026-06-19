@@ -63,7 +63,7 @@ export function PrecosResumo(): React.JSX.Element {
                   </span>
                 ) : null}
               </div>
-              <p className="text-text-primary text-display-sm font-semibold">
+              <p className="text-text-primary text-display-md font-semibold">
                 <span>{formatMonthlyPrice(plan.priceCents)}</span>
                 <span className="text-text-tertiary text-base font-normal"> /mês</span>
               </p>

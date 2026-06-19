@@ -121,7 +121,7 @@ export function ScreenshotLightbox({
         aria-hidden="true"
         tabIndex={-1}
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-black/70"
       />
 
       {/* Dialog surface. Stops propagation so a click on the image/frame does not
