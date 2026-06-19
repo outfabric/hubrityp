@@ -1,6 +1,6 @@
 ## Context
 
-This change renders the `/precos` page body inside the `(public)` shell from `public-site-foundation`, consuming the central `subscription-plans-config`. Visual source of truth: Figma `Public · Pricing` (`128:2`) + `docs/design-system/public-pages-handoff.md` §6. Billing is monthly only (RF-14.28/RN-14.05). The page must satisfy CDC (clear price display) and DS prohibitions (no gradients/blur; contrast via solid `brand/*` surfaces).
+This change renders the `/precos` page body inside the `(public)` shell from `public-site-foundation`, consuming the central `subscription-plans-config`. Visual source of truth: Figma `Public · Pricing` (`128:2`). Billing is monthly only (RF-14.28/RN-14.05). The page must satisfy CDC (clear price display) and DS prohibitions (no gradients/blur; contrast via solid `brand/*` surfaces).
 
 It depends on `public-site-foundation` (mandatory) and can reuse two components from `public-homepage` (the `<details>` FAQ accordion and the `cta-final`) if that change merges first; otherwise it re-implements the same shared pattern.
 
@@ -19,7 +19,7 @@ It depends on `public-site-foundation` (mandatory) and can reuse two components 
 ## Decisions
 
 ### D0 — Figma is the mandatory visual source of truth
-Implementation MUST reproduce the `Public · Pricing` Figma screen faithfully (desktop `128:2`; mobile follows the homepage stacking pattern). Before and during every UI task, the implementing agent inspects the frame via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. The handoff §6 and `rules.md` are complements, not replacements. Precedence: Figma prevails on visual form; specs + PRD 14 prevail on business rules/content (monthly-only, plan composition, MVP-only). Enforced by the design-fidelity QA task in `tasks.md`.
+Implementation MUST reproduce the `Public · Pricing` Figma screen faithfully (desktop `128:2`; mobile follows the homepage stacking pattern). Before and during every UI task, the implementing agent inspects the frame via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. Precedence: Figma prevails on visual form; specs prevail on business rules/content (monthly-only, plan composition, MVP-only). Enforced by the design-fidelity QA task in `tasks.md`.
 
 ### D1 — Reuse the central plans config and shared components
 Plan cards, comparison table, and pricing summary all read from `subscription-plans-config`. The comparison table is derived from the same feature matrix the config exposes, so the homepage summary and `/precos` can never disagree. The FAQ uses the homepage `<details>` accordion component (shared) and the final CTA reuses `cta-final`. Rationale: DRY across the two pricing surfaces; the invariant is tested once at the config level.

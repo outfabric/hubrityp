@@ -1,10 +1,10 @@
 > [!IMPORTANT]
 > **MANDATORY — design fidelity (read before implementing any UI task in this change).**
-> The pricing screen is designed in Figma and is the **visual source of truth**. You MUST open and **strictly follow** it — layout, tokens (color / spacing / radius / typography), spacing, states, and responsive behavior — for the plan cards, comparison table, billing FAQ, and final CTA. Do not improvise visuals or invent values not backed by DS tokens.
+> The pricing screen is designed in Figma and is the **visual source of truth**. The ´fullstack-developer´ MUST open and **strictly follow** it — layout, tokens (color / spacing / radius / typography), spacing, states, and responsive behavior — for the plan cards, comparison table, billing FAQ, and final CTA. Do not improvise visuals or invent values not backed by DS tokens.
 > - **File:** Hubrity Design System — `https://www.figma.com/design/HoLOEqq9PXlo6IwLkz3FQ9/Hubrity-Design-System` (file key `HoLOEqq9PXlo6IwLkz3FQ9`).
 > - **Pages / nodes for this change:** `Public · Pricing` — desktop `128:2` (mobile follows the homepage stacking pattern).
-> - **How:** use the **Figma MCP** (`get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`) to inspect the frame and pull exact tokens **before and during** implementation. Complement (do not replace) with `docs/design-system/public-pages-handoff.md` §6 and `docs/design-system/rules.md`.
-> - **Precedence:** on any conflict, the **Figma screen prevails on visual form**; this change's specs + PRD 14 prevail on business rules and content (monthly-only, plan composition, MVP-only).
+> - **How:** The ´fullstack-developer´ MUST use the **Figma MCP** (`get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs` etc) to inspect the frame and pull exact tokens **before and during** implementation.
+> - **Precedence:** on any conflict, the **Figma screen prevails on visual form**; this change's specs prevail on business rules and content (monthly-only, plan composition, MVP-only).
 
 ## 1. Pricing content + comparison matrix
 
@@ -44,6 +44,3 @@
 - [ ] 7.2 E2E (seeded): expand the comparison table → WhatsApp + IA rows are ✓ only for Avançado; billing FAQ opens/closes exclusively.
 - [ ] 7.3 E2E (seeded): homepage "Ver planos completos →" navigates to `/precos` (cross-page link integrity).
 
-## 8. Design-fidelity QA
-
-- [ ] 8.1 Compare the implemented `/precos` page against the Figma frame (`128:2`) via the Figma MCP (`get_screenshot`/`get_design_context`): verify plan cards, comparison table (✓/—, Avançado `brand/50` tint), billing FAQ, and final CTA match tokens, spacing, radius, typography, states, dark mode, and mobile stacking; record any intentional deviation and its reason.
