@@ -3,8 +3,8 @@
 > The homepage screens are designed in Figma and are the **visual source of truth**. You MUST open and **strictly follow** them — layout, tokens (color / spacing / radius / typography), spacing, states, and responsive behavior — for every section and component (hero, carousel, timeline, feature cards, lightbox, FAQ, CTAs). Do not improvise visuals or invent values not backed by DS tokens.
 > - **File:** Hubrity Design System — `https://www.figma.com/design/HoLOEqq9PXlo6IwLkz3FQ9/Hubrity-Design-System` (file key `HoLOEqq9PXlo6IwLkz3FQ9`).
 > - **Pages / nodes for this change:** `Public · Homepage` — desktop `105:2`, mobile `133:2` (carousel within the hero `110:x`).
-> - **How:** use the **Figma MCP** (`get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`) to inspect each section frame and pull exact tokens **before and during** implementation. Complement (do not replace) with `docs/design-system/public-pages-handoff.md` §5 and `docs/design-system/rules.md`.
-> - **Precedence:** on any conflict, the **Figma screens prevail on visual form**; this change's specs + PRD 14 prevail on business rules and content (MVP-only, exact regulatory codes).
+> - **How:** use the **Figma MCP** (`get_design_context`, `get_screenshot`, `get_metadata`, `get_variable_defs`) to inspect each section frame and pull exact tokens **before and during** implementation.
+> - **Precedence:** on any conflict, the **Figma screens prevail on visual form**; this change's specs prevail on business rules and content (MVP-only, exact regulatory codes).
 
 ## 1. Content constants + assets
 
@@ -74,7 +74,4 @@
 - [ ] 12.3 E2E (seeded): FAQ — opening one item closes the previously open one; reduced-motion emulation disables scroll animation (content visible).
 - [ ] 12.4 E2E (seeded): UTM params on `/?utm_source=...` are preserved on the hero "Começar grátis" navigation to `/signup`.
 
-## 13. Design-fidelity QA
-
-- [ ] 13.1 Compare every implemented homepage section against the Figma frames (desktop `105:2`, mobile `133:2`) via the Figma MCP (`get_screenshot`/`get_design_context`): verify each of the 10 sections + carousel + lightbox + FAQ match tokens, spacing, radius, typography, states, dark mode, and responsive behavior; record any intentional deviation and its reason.
 

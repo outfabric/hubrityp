@@ -1,6 +1,6 @@
 ## Context
 
-This change renders the homepage body inside the `(public)` shell delivered by `public-site-foundation` (header, footer, theme, SEO helper, plans config). The visual source of truth is the Figma `Public · Homepage` (desktop `105:2`, mobile `133:2`) and `docs/design-system/public-pages-handoff.md` §5. The homepage is the conversion + LCP page, so performance and accessibility are first-class.
+This change renders the homepage body inside the `(public)` shell delivered by `public-site-foundation` (header, footer, theme, SEO helper, plans config). The visual source of truth is the Figma `Public · Homepage` (desktop `105:2`, mobile `133:2`). The homepage is the conversion + LCP page, so performance and accessibility are first-class.
 
 Real screenshots already exist in `docs/screenshots/` (`.webp` + `.png`). The DS (Sálvia) forbids gradients, colored shadows, glassmorphism/blur/glow, > 3 functional colors per screen, weights ≥ 700, and emojis in UI; contrast for the Destaque IA / CTA-final sections comes from solid brand surfaces (`brand/50`, `brand/700`).
 
@@ -20,7 +20,7 @@ Real screenshots already exist in `docs/screenshots/` (`.webp` + `.png`). The DS
 ## Decisions
 
 ### D0 — Figma is the mandatory visual source of truth
-Implementation MUST reproduce the `Public · Homepage` Figma screens faithfully (desktop `105:2`, mobile `133:2`; hero carousel `110:x`). Before and during every section/component task, the implementing agent inspects the frame via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. The handoff §5 and `rules.md` are complements, not replacements. Precedence: Figma prevails on visual form; specs + PRD 14 prevail on business rules/content (MVP-only, exact regulatory codes). Enforced by the design-fidelity QA task in `tasks.md`.
+Implementation MUST reproduce the `Public · Homepage` Figma screens faithfully (desktop `105:2`, mobile `133:2`; hero carousel `110:x`). Before and during every section/component task, the implementing agent inspects the frame via the Figma MCP (`get_design_context`/`get_screenshot`/`get_metadata`/`get_variable_defs`) and pulls exact tokens. Precedence: Figma prevails on visual form; specs prevail on business rules/content (MVP-only, exact regulatory codes). Enforced by the design-fidelity QA task in `tasks.md`.
 
 ### D1 — Sections as composable Server Components; interactivity at leaves
 Each of the 10 sections is its own Server Component under `marketing/components/home/`, composed by `app/(public)/page.tsx`. Only genuinely interactive pieces (`carousel`, feature-card `lightbox`, `faq` toggle behavior, scroll fade-in observer) are `'use client'` leaves. Rationale: RSC-first per CLAUDE.md; keeps JS payload minimal for the LCP page.
@@ -54,5 +54,5 @@ The Preços-resumo section reads from `subscription-plans-config` (foundation) �
 
 ## Open Questions
 
-- Hero screenshot choice: `painel.webp` vs `hoje-pendencias.webp` for the "Dashboard operacional" slide — pick the one matching the Figma hero frame.
+- Hero screenshot choice: `painel.webp` for the "Dashboard operacional" slide.
 - Whether the feature-card lightbox should support arrow-navigation across all 7 screenshots or open a single image (default: single image with close; revisit per Figma).
