@@ -7,7 +7,6 @@ import {
   PublicFooter,
   PublicHeader,
   SkipLink,
-  ThemeProvider,
 } from '@/modules/marketing';
 import { Button } from '@/shared/ui/button';
 
@@ -34,7 +33,7 @@ import { Button } from '@/shared/ui/button';
  */
 export default function NotFound(): React.JSX.Element {
   return (
-    <ThemeProvider>
+    <>
       <div className="flex min-h-svh flex-col">
         <SkipLink />
         <PublicHeader />
@@ -59,6 +58,6 @@ export default function NotFound(): React.JSX.Element {
         </main>
         <PublicFooter />
       </div>
-    </ThemeProvider>
+    </>
   );
 }

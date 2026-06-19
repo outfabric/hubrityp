@@ -7,7 +7,6 @@ import {
   PublicFooter,
   PublicHeader,
   SkipLink,
-  ThemeProvider,
 } from '@/modules/marketing';
 
 /**
@@ -33,10 +32,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    // ThemeProvider wraps the public subtree so the header's ThemeToggle has a
-    // theme context. It carries no user data — only the light/dark choice the
-    // no-flash script already applied to <html>.
-    <ThemeProvider>
+    // Dark mode follows the OS `prefers-color-scheme` only (applied to <html>
+    // by the no-flash script in the root layout) — there is no theme provider
+    // or toggle, so no theme state needs to wrap the public subtree.
+    <>
       <div className="flex min-h-svh flex-col">
         <SkipLink />
         <PublicHeader />
@@ -51,6 +50,6 @@ export default function PublicLayout({
           configured, and is deferred so it never blocks first paint. */}
       <CookieConsent />
       <AnalyticsLoader />
-    </ThemeProvider>
+    </>
   );
 }

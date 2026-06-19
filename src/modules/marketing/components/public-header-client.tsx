@@ -10,7 +10,6 @@ import { Logo } from '@/shared/ui/logo';
 
 import { Container } from './container';
 import { SignupCta } from './signup-cta';
-import { ThemeToggle } from './theme-toggle';
 
 /**
  * PublicHeaderClient — the interactive sticky marketing header (leaf).
@@ -30,7 +29,12 @@ import { ThemeToggle } from './theme-toggle';
  *     glassmorphism/blur);
  *   - heights 72px (desktop) / 60px (mobile);
  *   - all interactive targets are ≥44px;
- *   - brand-primary CTA uses the Button `default` variant (`bg-brand-500`).
+ *   - brand-primary CTA uses the Button `default` variant (`bg-brand-500`);
+ *   - the "Entrar" control uses the Button `secondary` (bordered) variant.
+ *
+ * There is NO theme toggle: dark mode follows the OS `prefers-color-scheme`
+ * only (resolved by the blocking no-flash script in the root layout), so no
+ * theme control exists anywhere in this chrome.
  */
 
 /** Public navigation links shared by the desktop bar and the mobile menu. */
@@ -64,7 +68,7 @@ function HeaderActions({ isAuthenticated }: PublicHeaderClientProps): React.JSX.
 
   return (
     <>
-      <Button asChild variant="ghost" size="default">
+      <Button asChild variant="secondary" size="default">
         <Link href="/login">Entrar</Link>
       </Button>
       {/* `/signup` CTA preserves UTM params from the current URL (opaque). */}
@@ -179,18 +183,22 @@ export function PublicHeaderClient({
           <Logo variant="lockup-h" className="h-8 w-auto" />
         </Link>
 
-        {/* Desktop navigation — collapses into the hamburger below `md`. */}
-        <nav aria-label="Navegação principal" className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Button key={link.href} asChild variant="ghost" size="default">
-              <Link href={link.href}>{link.label}</Link>
-            </Button>
-          ))}
-        </nav>
-
-        <div className="hidden items-center gap-2 md:flex">
-          <ThemeToggle />
-          <HeaderActions isAuthenticated={isAuthenticated} />
+        {/* Desktop cluster — the nav links and the CTAs are grouped together in
+            a single right-aligned group (Figma `128:3`): the logo sits alone on
+            the left (above), this cluster is pushed to the right edge by the
+            Container's `justify-between`. The nav is NOT center-spread.
+            Collapses into the hamburger below `md`. */}
+        <div className="hidden items-center gap-4 md:flex">
+          <nav aria-label="Navegação principal" className="flex items-center gap-1">
+            {NAV_LINKS.map((link) => (
+              <Button key={link.href} asChild variant="ghost" size="default">
+                <Link href={link.href}>{link.label}</Link>
+              </Button>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <HeaderActions isAuthenticated={isAuthenticated} />
+          </div>
         </div>
 
         {/* Mobile cluster — the primary CTA stays visible in the bar always.
@@ -200,7 +208,6 @@ export function PublicHeaderClient({
             apply only here (the cluster is `md:hidden`), so the desktop bar and
             the shared Button primitive are untouched. */}
         <div className="flex min-w-0 items-center gap-1 md:hidden">
-          <ThemeToggle className="size-11 shrink-0" />
           {isAuthenticated ? (
             <Button asChild size="default" className="h-11 min-w-0 shrink px-3">
               <Link href="/dashboard" className="truncate">
@@ -257,7 +264,12 @@ export function PublicHeaderClient({
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="ghost" size="default" className="h-11 w-full justify-start">
+              <Button
+                asChild
+                variant="secondary"
+                size="default"
+                className="h-11 w-full justify-start"
+              >
                 <Link href="/login" onClick={() => setMenuOpen(false)}>
                   Entrar
                 </Link>

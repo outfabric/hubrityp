@@ -1,20 +1,12 @@
 // Public API (barrel) for the `marketing` module — the public-site domain.
 // External consumers import only from `@/modules/marketing`, never from
-// internal paths. Header, footer, cookie-consent, theme-toggle, plans config,
-// and SEO helpers will be exported here as the module grows.
+// internal paths. Header, footer, cookie-consent, plans config, and SEO
+// helpers will be exported here as the module grows.
 export { siteUrl, absoluteUrl } from './lib/site';
 export { buildPageMetadata, SITE_NAME, DEFAULT_OG_IMAGE, type PageMetadataInput } from './lib/seo';
-export {
-  THEME_COOKIE_NAME,
-  THEME_COOKIE_MAX_AGE,
-  parseStoredTheme,
-  resolveTheme,
-  serializeThemeCookie,
-  buildNoFlashThemeScript,
-  type Theme,
-} from './lib/theme';
-export { ThemeProvider, useTheme } from './components/theme-provider';
-export { ThemeToggle } from './components/theme-toggle';
+// Dark mode follows the OS `prefers-color-scheme` only — no toggle, no stored
+// choice. Only the blocking no-flash script (and the Theme type) are exported.
+export { buildNoFlashThemeScript, type Theme } from './lib/theme';
 export { Container, CONTAINER_WIDTH_CLASS, type ContainerProps } from './components/container';
 export { SkipLink, MAIN_CONTENT_ID, type SkipLinkProps } from './components/skip-link';
 export { PublicHeader } from './components/public-header';

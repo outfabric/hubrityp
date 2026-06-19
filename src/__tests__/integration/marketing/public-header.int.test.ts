@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,16 +43,12 @@ const CRP = /CRP\s?\d{2}\/\d{4,6}/i;
 
 async function renderHeader(): Promise<string> {
   const { PublicHeader } = await import('@/modules/marketing/components/public-header');
-  // Import ThemeProvider from the SAME (post-resetModules) module graph as the
-  // header so both share one ThemeContext instance — otherwise the toggle's
-  // useTheme() would read a different context and throw.
-  const { ThemeProvider } = await import('@/modules/marketing/components/theme-provider');
   // PublicHeader is async; awaiting it resolves the server auth check. If it
   // ever called redirect(), this await would reject — proving "no redirect".
-  // The header's ThemeToggle needs a ThemeProvider in context (mounted by the
-  // real public layout), so we wrap the resolved element here.
+  // The header no longer depends on a ThemeProvider (dark mode is OS-driven,
+  // there is no theme context), so the resolved element renders standalone.
   const element = await PublicHeader();
-  return renderToStaticMarkup(createElement(ThemeProvider, null, element));
+  return renderToStaticMarkup(element);
 }
 
 beforeEach(() => {
@@ -142,5 +137,34 @@ describe('PublicHeader — anonymous visitor', () => {
     expect(fallback).toContain('Funcionalidades');
     expect(fallback).toContain('href="/precos"');
     expect(fallback).toContain('href="/login"');
+  });
+});
+
+describe('PublicHeader — Figma 128:3 chrome fidelity', () => {
+  it('renders no theme-toggle control in the served HTML (OS-driven dark mode)', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: null });
+
+    const html = await renderHeader();
+
+    // The former toggle exposed these pt-BR accessible names + lucide icons; the
+    // chrome must now carry no theme control at all.
+    expect(html).not.toContain('Ativar tema claro');
+    expect(html).not.toContain('Ativar tema escuro');
+  });
+
+  it('renders "Entrar" as the DS secondary bordered button (not a ghost)', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: null });
+
+    const html = await renderHeader();
+
+    // At least one `/login` anchor must carry the secondary variant's bordered
+    // surface classes (the styled "Entrar" CTA, as opposed to the plain
+    // <noscript> text link). Scan every `/login` anchor open-tag for the marker.
+    const loginAnchorTags = html.match(/<a[^>]*href="\/login"[^>]*>/g) ?? [];
+    expect(loginAnchorTags.length).toBeGreaterThan(0);
+    const hasSecondaryEntrar = loginAnchorTags.some(
+      (tag) => tag.includes('border-border-strong') && tag.includes('bg-surface'),
+    );
+    expect(hasSecondaryEntrar).toBe(true);
   });
 });

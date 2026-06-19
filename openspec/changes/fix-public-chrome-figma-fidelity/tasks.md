@@ -21,12 +21,12 @@
 
 ## 3. Header fidelity (frame `128:3`)
 
-- [ ] 3.1 Remove `<ThemeToggle/>` from `src/modules/marketing/components/public-header-client.tsx` (desktop cluster + mobile cluster); keep the ≥44px touch targets and mobile layout balanced without it.
-- [ ] 3.2 Delete `src/modules/marketing/components/theme-toggle.tsx`; reduce/remove `theme-provider.tsx` so dark mode is driven only by `prefers-color-scheme` (no persisted/`localStorage` choice); drop the now-unused exports from `src/modules/marketing/index.ts` and unwrap `ThemeProvider` in `src/app/(public)/layout.tsx` if it no longer carries state.
-- [ ] 3.3 Update the no-flash inline script in the root layout / `globals.css` to resolve the theme from `prefers-color-scheme` only (remove any stored-preference branch).
-- [ ] 3.4 Regroup the desktop header so the logo stays at the left edge and the nav links ("Funcionalidades", "Preços") sit in the SAME right-aligned cluster as the "Entrar"/"Começar grátis" buttons (stop using `justify-between` to center-spread the nav); match the Figma spacing/alignment of `128:3`.
-- [ ] 3.5 Change "Entrar" from `variant="ghost"` to the DS **secondary** (bordered) button variant in both the desktop bar and the mobile menu; verify the exact border/fill against frame `128:3` (DS `secondary` vs `outline`).
-- [ ] 3.6 Delete `src/__tests__/unit/modules/marketing/theme-toggle.test.tsx`; update `public-header.test.tsx` and `src/__tests__/integration/marketing/public-header.int.test.ts` to assert: no theme-toggle control; nav links grouped with the CTAs in the right cluster; "Entrar" rendered as the secondary bordered button.
+- [x] 3.1 Remove `<ThemeToggle/>` from `src/modules/marketing/components/public-header-client.tsx` (desktop cluster + mobile cluster); keep the ≥44px touch targets and mobile layout balanced without it.
+- [x] 3.2 Delete `src/modules/marketing/components/theme-toggle.tsx`; reduce/remove `theme-provider.tsx` so dark mode is driven only by `prefers-color-scheme` (no persisted/`localStorage` choice); drop the now-unused exports from `src/modules/marketing/index.ts` and unwrap `ThemeProvider` in `src/app/(public)/layout.tsx` if it no longer carries state.
+- [x] 3.3 Update the no-flash inline script in the root layout / `globals.css` to resolve the theme from `prefers-color-scheme` only (remove any stored-preference branch).
+- [x] 3.4 Regroup the desktop header so the logo stays at the left edge and the nav links ("Funcionalidades", "Preços") sit in the SAME right-aligned cluster as the "Entrar"/"Começar grátis" buttons (stop using `justify-between` to center-spread the nav); match the Figma spacing/alignment of `128:3`.
+- [x] 3.5 Change "Entrar" from `variant="ghost"` to the DS **secondary** (bordered) button variant in both the desktop bar and the mobile menu; verify the exact border/fill against frame `128:3` (DS `secondary` vs `outline`).
+- [x] 3.6 Delete `src/__tests__/unit/modules/marketing/theme-toggle.test.tsx`; update `public-header.test.tsx` and `src/__tests__/integration/marketing/public-header.int.test.ts` to assert: no theme-toggle control; nav links grouped with the CTAs in the right cluster; "Entrar" rendered as the secondary bordered button.
 
 ## 4. Cookie banner fidelity (frame `132:2`)
 
