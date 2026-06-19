@@ -8,9 +8,9 @@
 
 ## 1. Pricing content + comparison matrix
 
-- [ ] 1.1 Extend `subscription-plans-config` (or add `marketing/lib/pricing-content.ts`) with the 9 comparison rows (verbatim RF-14.27 labels) and full per-plan feature lists, derived from the central config so cards + table + homepage summary share one source.
-- [ ] 1.2 Add pricing-page copy (title, subtitle, billing FAQ 3–5 entries incl. cancelamento, fim do teste/downgrade, nota fiscal) to the content module.
-- [ ] 1.3 Unit test: comparison matrix has 9 rows; Essencial⊂Avançado with only WhatsApp + IA exclusive to Avançado; no post-MVP feature row; `?plano=` slugs limited to known slugs — `src/__tests__/unit/modules/marketing/pricing-content.test.ts`.
+- [x] 1.1 Extend `subscription-plans-config` (or add `marketing/lib/pricing-content.ts`) with the 9 comparison rows (verbatim RF-14.27 labels) and full per-plan feature lists, derived from the central config so cards + table + homepage summary share one source.
+- [x] 1.2 Add pricing-page copy (title, subtitle, billing FAQ 3–5 entries incl. cancelamento, fim do teste/downgrade, nota fiscal) to the content module.
+- [x] 1.3 Unit test: comparison matrix has 9 rows; Essencial⊂Avançado with only WhatsApp + IA exclusive to Avançado; no post-MVP feature row; `?plano=` slugs limited to known slugs — `src/__tests__/unit/modules/marketing/pricing-content.test.ts`.
 
 ## 2. Plan cards
 

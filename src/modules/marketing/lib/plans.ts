@@ -25,16 +25,21 @@ export const planSlugSchema = z.enum(['essencial', 'avancado']).brand<'PlanSlug'
 export type PlanSlug = z.infer<typeof planSlugSchema>;
 
 /**
- * Stable identifiers for the MVP feature matrix. Each plan declares which of
- * these it includes. Adding a key here that is not actually shipped in the MVP
- * is a bug — see the MVP guard note at the top of this file.
+ * Stable identifiers for the MVP feature matrix — the 9 comparison rows defined
+ * by PRD RF-14.27, in display order. Each plan declares which of these it
+ * includes. Adding a key here that is not actually shipped in the MVP is a bug —
+ * see the MVP guard note at the top of this file. The labels (`FEATURE_LABELS`)
+ * are the verbatim RF-14.27 wording so the pricing cards, the comparison table,
+ * and the homepage summary all read from this single source.
  */
 export const FEATURE_KEYS = [
   'agenda',
+  'gestao_pacientes',
   'prontuario',
-  'cadastro_pacientes',
-  'prescricao_digital',
-  'confirmacao_sessao',
+  'dashboard',
+  'documentos_cfp',
+  'escalas_clinicas',
+  'telepsicologia',
   'lembretes_whatsapp',
   'transcricao_ia',
 ] as const;
@@ -43,14 +48,18 @@ export const featureKeySchema = z.enum(FEATURE_KEYS);
 export type FeatureKey = z.infer<typeof featureKeySchema>;
 
 /**
- * Human-readable label (pt-BR) for each MVP feature, shown on the pricing card.
+ * Human-readable label (pt-BR) for each MVP feature. The strings are the
+ * VERBATIM RF-14.27 labels (the comparison table is generated from this map, so
+ * the wording must match the PRD exactly) and are asserted by the unit test.
  */
 export const FEATURE_LABELS: Readonly<Record<FeatureKey, string>> = {
-  agenda: 'Agenda',
-  prontuario: 'Prontuário',
-  cadastro_pacientes: 'Cadastro de pacientes',
-  prescricao_digital: 'Prescrição digital',
-  confirmacao_sessao: 'Confirmação de sessão',
+  agenda: 'Agenda (dia, semana, mês, recorrência)',
+  gestao_pacientes: 'Gestão de pacientes (cadastro, tags, termos)',
+  prontuario: 'Prontuário (evoluções, templates por abordagem)',
+  dashboard: 'Dashboard operacional',
+  documentos_cfp: 'Documentos CFP (declaração, atestado, laudo)',
+  escalas_clinicas: 'Escalas clínicas (PHQ-9, GAD-7, etc.)',
+  telepsicologia: 'Telepsicologia (videochamada integrada)',
   lembretes_whatsapp: 'Lembretes automáticos via WhatsApp',
   transcricao_ia: 'Transcrição e nota com IA',
 };
@@ -90,10 +99,12 @@ const RAW_PLANS = [
     priceCents: 6000,
     features: [
       { key: 'agenda', included: true },
+      { key: 'gestao_pacientes', included: true },
       { key: 'prontuario', included: true },
-      { key: 'cadastro_pacientes', included: true },
-      { key: 'prescricao_digital', included: true },
-      { key: 'confirmacao_sessao', included: true },
+      { key: 'dashboard', included: true },
+      { key: 'documentos_cfp', included: true },
+      { key: 'escalas_clinicas', included: true },
+      { key: 'telepsicologia', included: true },
       { key: 'lembretes_whatsapp', included: false },
       { key: 'transcricao_ia', included: false },
     ],
@@ -105,10 +116,12 @@ const RAW_PLANS = [
     badge: 'Mais popular',
     features: [
       { key: 'agenda', included: true },
+      { key: 'gestao_pacientes', included: true },
       { key: 'prontuario', included: true },
-      { key: 'cadastro_pacientes', included: true },
-      { key: 'prescricao_digital', included: true },
-      { key: 'confirmacao_sessao', included: true },
+      { key: 'dashboard', included: true },
+      { key: 'documentos_cfp', included: true },
+      { key: 'escalas_clinicas', included: true },
+      { key: 'telepsicologia', included: true },
       { key: 'lembretes_whatsapp', included: true },
       { key: 'transcricao_ia', included: true },
     ],
@@ -120,6 +133,55 @@ const RAW_PLANS = [
  * config throws on import rather than rendering a broken pricing surface.
  */
 export const PLANS: ReadonlyArray<Plan> = plansSchema.parse(RAW_PLANS);
+
+/**
+ * A single row of the `/precos` comparison table: the verbatim RF-14.27 label
+ * plus, for each plan, whether the feature is included. Derived from `PLANS`
+ * (never hand-written) so the table can never disagree with the plan cards.
+ */
+export interface ComparisonRow {
+  /** Stable feature key (also the React list key). */
+  key: FeatureKey;
+  /** Verbatim RF-14.27 label. */
+  label: string;
+  /** `included.get(slug)` is whether the plan with that slug includes the
+   *  feature. A `Map` keyed by the branded `PlanSlug` (a plain object index
+   *  signature does not play well with branded string keys). */
+  included: ReadonlyMap<PlanSlug, boolean>;
+}
+
+/**
+ * Builds the comparison matrix (9 RF-14.27 rows × the configured plans) from the
+ * central `PLANS` config. The feature order follows `FEATURE_KEYS`; each row's
+ * `included` map is keyed by plan slug. Returns an empty array when there are no
+ * plans (the caller renders the empty-plans fallback instead).
+ */
+export function getComparisonMatrix(): ReadonlyArray<ComparisonRow> {
+  if (PLANS.length === 0) {
+    return [];
+  }
+  return FEATURE_KEYS.map((key) => {
+    const included = new Map<PlanSlug, boolean>(
+      PLANS.map((plan) => [plan.slug, plan.features.find((f) => f.key === key)?.included ?? false]),
+    );
+    return { key, label: FEATURE_LABELS[key], included };
+  });
+}
+
+/**
+ * The allowlist of known plan slugs (from the central config). The `/precos`
+ * CTA builds `/signup?plano=<slug>` only from these values, never from
+ * free-form input — see design decision D3.
+ */
+export const PLAN_SLUGS: ReadonlyArray<PlanSlug> = PLANS.map((p) => p.slug);
+
+/**
+ * Type guard: whether an arbitrary string is a known plan slug. Use this before
+ * emitting a `?plano=` link or trusting a slug taken from anywhere but `PLANS`.
+ */
+export function isKnownPlanSlug(value: string): value is PlanSlug {
+  return planSlugSchema.safeParse(value).success;
+}
 
 /**
  * Support contact shown by the empty-plans fallback (and elsewhere on the

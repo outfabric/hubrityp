@@ -51,16 +51,21 @@ export {
   PLANS,
   FEATURE_KEYS,
   FEATURE_LABELS,
+  PLAN_SLUGS,
   PRICING_SUPPORT_EMAIL,
   planSlugSchema,
   featureKeySchema,
   emptyPlansFallback,
+  getComparisonMatrix,
+  isKnownPlanSlug,
   type Plan,
   type PlanFeature,
   type PlanSlug,
   type FeatureKey,
   type EmptyPlansFallback,
+  type ComparisonRow,
 } from './lib/plans';
+export { PRICING_PAGE, BILLING_FAQ_ENTRIES } from './lib/pricing-content';
 export {
   HERO,
   SOCIAL_PROOF_STATS,
