@@ -32,6 +32,7 @@ export {
   type ScreenshotCarouselProps,
   type CarouselSlide,
 } from './components/home/screenshot-carousel';
+export { Hero } from './components/home/hero';
 export {
   PLANS,
   FEATURE_KEYS,

@@ -20,8 +20,8 @@
 
 ## 3. Hero section
 
-- [ ] 3.1 Implement `marketing/components/home/hero.tsx`: badge, `Display/xl` headline, `Lead` subhead, primary/secondary CTAs (UTM-preserving), microcopy, embedded carousel with the 5 ordered hero screenshots; hero image preloaded (LCP).
-- [ ] 3.2 Unit test: hero renders badge/headline/subhead naming MVP features + CFP/LGPD, CTAs target `/signup` (UTM preserved) and `#funcionalidades`, microcopy present — `src/__tests__/unit/modules/marketing/hero.test.tsx`.
+- [x] 3.1 Implement `marketing/components/home/hero.tsx`: badge, `Display/xl` headline, `Lead` subhead, primary/secondary CTAs (UTM-preserving), microcopy, embedded carousel with the 5 ordered hero screenshots; hero image preloaded (LCP).
+- [x] 3.2 Unit test: hero renders badge/headline/subhead naming MVP features + CFP/LGPD, CTAs target `/signup` (UTM preserved) and `#funcionalidades`, microcopy present — `src/__tests__/unit/modules/marketing/hero.test.tsx`.
 
 ## 4. Prova social + Problema sections
 
