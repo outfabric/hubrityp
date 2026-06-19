@@ -39,6 +39,8 @@ export { SolucaoTimeline } from './components/home/solucao-timeline';
 export { Funcionalidades } from './components/home/funcionalidades';
 export { DestaqueIa } from './components/home/destaque-ia';
 export { Confianca } from './components/home/confianca';
+export { PrecosResumo } from './components/home/precos-resumo';
+export { CtaFinal } from './components/home/cta-final';
 export {
   ScreenshotLightbox,
   type ScreenshotLightboxProps,

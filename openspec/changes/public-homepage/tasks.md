@@ -53,9 +53,9 @@
 
 ## 9. Preços resumo + CTA final
 
-- [ ] 9.1 Implement `precos-resumo.tsx`: 2 plan cards from `subscription-plans-config` (Essencial/Avançado "Mais popular", monthly only), microcopy, "Ver planos completos →" → `/precos`.
-- [ ] 9.2 Implement `cta-final.tsx`: solid `brand/700` + inverse text, title, CTA → `/signup` (UTM preserved), microcopy. No gradient.
-- [ ] 9.3 Unit test: prices come from central config (change config → change render); CTA-final solid surface + `/signup` target — `src/__tests__/unit/modules/marketing/precos-cta.test.tsx`.
+- [x] 9.1 Implement `precos-resumo.tsx`: 2 plan cards from `subscription-plans-config` (Essencial/Avançado "Mais popular", monthly only), microcopy, "Ver planos completos →" → `/precos`.
+- [x] 9.2 Implement `cta-final.tsx`: solid `brand/700` + inverse text, title, CTA → `/signup` (UTM preserved), microcopy. No gradient.
+- [x] 9.3 Unit test: prices come from central config (change config → change render); CTA-final solid surface + `/signup` target — `src/__tests__/unit/modules/marketing/precos-cta.test.tsx`.
 
 ## 10. FAQ accordion
 
