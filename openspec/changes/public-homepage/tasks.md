@@ -69,9 +69,9 @@
 
 ## 12. E2E (homepage critical flows)
 
-- [ ] 12.1 E2E (seeded): load `/` → hero renders; "Começar grátis — 14 dias" navigates to `/signup`; "Ver funcionalidades" scrolls to `#funcionalidades`; "Entrar" → `/login` — `src/__tests__/e2e/seeded/public/homepage.spec.ts`.
-- [ ] 12.2 E2E (seeded): carousel arrows/dots change slide without auto-advancing; feature-card thumbnail opens lightbox and Escape closes it.
-- [ ] 12.3 E2E (seeded): FAQ — opening one item closes the previously open one; reduced-motion emulation disables scroll animation (content visible).
-- [ ] 12.4 E2E (seeded): UTM params on `/?utm_source=...` are preserved on the hero "Começar grátis" navigation to `/signup`.
+- [x] 12.1 E2E (seeded): load `/` → hero renders; "Começar grátis — 14 dias" navigates to `/signup`; "Ver funcionalidades" scrolls to `#funcionalidades`; "Entrar" → `/login` — `src/__tests__/e2e/seeded/public/homepage.spec.ts`.
+- [x] 12.2 E2E (seeded): carousel arrows/dots change slide without auto-advancing; feature-card thumbnail opens lightbox and Escape closes it.
+- [x] 12.3 E2E (seeded): FAQ — opening one item closes the previously open one; reduced-motion emulation disables scroll animation (content visible).
+- [x] 12.4 E2E (seeded): UTM params on `/?utm_source=...` are preserved on the hero "Começar grátis" navigation to `/signup`.
 
 
