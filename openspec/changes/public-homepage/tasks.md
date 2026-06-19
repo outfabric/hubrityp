@@ -8,9 +8,9 @@
 
 ## 1. Content constants + assets
 
-- [ ] 1.1 Create `src/modules/marketing/lib/home-content.ts` with typed copy for all 10 sections: hero (badge/headline/subhead/CTAs/microcopy), prova social (2 stats), problema (5 items + closer), solução (6 steps), 7 feature cards, destaque IA (title/subtitle/labels/4 trust items/CTA), 8 regulatory guarantees (exact codes), preços-resumo strings, 5 FAQ entries, CTA-final strings.
-- [ ] 1.2 Copy real screenshots from `docs/screenshots/` into `public/screenshots/` as optimized WebP (< 200 KB each, explicit dims): `hoje-pendencias`/`painel`, `agenda`, `pacientes`, `whatsapp`, `prontuario`, `telepsicologia`, `evolucao`. Add descriptive pt-BR alt text mapping.
-- [ ] 1.3 Unit test: `home-content.ts` contains exactly 5 mirror items, 6 solution steps, 7 feature cards, 8 guarantees with literal codes ("001/2009", "06/2019", "09/2024", "13/2022", "AES-256", "TLS 1.3", "13.787/2018", "CRP ativo"), 5 FAQ items; no post-MVP feature string present — `src/__tests__/unit/modules/marketing/home-content.test.ts`.
+- [x] 1.1 Create `src/modules/marketing/lib/home-content.ts` with typed copy for all 10 sections: hero (badge/headline/subhead/CTAs/microcopy), prova social (2 stats), problema (5 items + closer), solução (6 steps), 7 feature cards, destaque IA (title/subtitle/labels/4 trust items/CTA), 8 regulatory guarantees (exact codes), preços-resumo strings, 5 FAQ entries, CTA-final strings.
+- [x] 1.2 Copy real screenshots from `docs/screenshots/` into `public/screenshots/` as optimized WebP (< 200 KB each, explicit dims): `hoje-pendencias`/`painel`, `agenda`, `pacientes`, `whatsapp`, `prontuario`, `telepsicologia`, `evolucao`. Add descriptive pt-BR alt text mapping.
+- [x] 1.3 Unit test: `home-content.ts` contains exactly 5 mirror items, 6 solution steps, 7 feature cards, 8 guarantees with literal codes ("001/2009", "06/2019", "09/2024", "13/2022", "AES-256", "TLS 1.3", "13.787/2018", "CRP ativo"), 5 FAQ items; no post-MVP feature string present — `src/__tests__/unit/modules/marketing/home-content.test.ts`.
 
 ## 2. Screenshot carousel
 
