@@ -27,6 +27,48 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--ds-font-sans)'],
         mono: ['var(--ds-font-mono)'],
+        // Brand wordmark only — Nunito. Body/UI text stays on `sans` (Inter).
+        wordmark: ['var(--ds-font-wordmark)'],
+      },
+      /*
+       * Marketing display scale (public site). Tuple syntax mirrors the
+       * `--text-*` modifiers declared in `globals.css`: each utility bundles
+       * font-size + line-height + letter-spacing + font-weight. Inter only,
+       * weight 400/600 — never >=700 (DS weight rule).
+       */
+      fontSize: {
+        'display-xl': [
+          'var(--ds-text-display-xl)',
+          {
+            lineHeight: 'var(--ds-text-display-xl-line-height)',
+            letterSpacing: 'var(--ds-text-display-xl-letter-spacing)',
+            fontWeight: 'var(--ds-text-display-xl-font-weight)',
+          },
+        ],
+        'display-lg': [
+          'var(--ds-text-display-lg)',
+          {
+            lineHeight: 'var(--ds-text-display-lg-line-height)',
+            letterSpacing: 'var(--ds-text-display-lg-letter-spacing)',
+            fontWeight: 'var(--ds-text-display-lg-font-weight)',
+          },
+        ],
+        'display-md': [
+          'var(--ds-text-display-md)',
+          {
+            lineHeight: 'var(--ds-text-display-md-line-height)',
+            letterSpacing: 'var(--ds-text-display-md-letter-spacing)',
+            fontWeight: 'var(--ds-text-display-md-font-weight)',
+          },
+        ],
+        lead: [
+          'var(--ds-text-lead)',
+          {
+            lineHeight: 'var(--ds-text-lead-line-height)',
+            letterSpacing: 'var(--ds-text-lead-letter-spacing)',
+            fontWeight: 'var(--ds-text-lead-font-weight)',
+          },
+        ],
       },
       colors: {
         background: 'var(--ds-background)',

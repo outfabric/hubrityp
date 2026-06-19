@@ -71,4 +71,38 @@ describe('Logo', () => {
     expect(container.querySelector('a')).toBeNull();
     expect(container.querySelector('button')).toBeNull();
   });
+
+  describe('wordmark-text variant (Nunito live text)', () => {
+    it('renders "hubrity" as a span using the --ds-font-wordmark variable', () => {
+      render(<Logo variant="wordmark-text" />);
+      const wordmark = screen.getByRole('img', { name: 'Hubrity' });
+
+      expect(wordmark.tagName).toBe('SPAN');
+      expect(wordmark.textContent).toBe('hubrity');
+      // The whole point of this variant: it consumes the Nunito wordmark
+      // variable, never Inter (`--ds-font-sans`).
+      expect(wordmark.style.fontFamily).toBe('var(--ds-font-wordmark)');
+      expect(wordmark.style.fontFamily).not.toContain('--ds-font-sans');
+      // ~ -1% brand tracking, semibold (600), lowercase.
+      expect(wordmark.style.letterSpacing).toBe('-0.01em');
+      expect(wordmark).toHaveClass('font-wordmark', 'font-semibold', 'lowercase');
+    });
+
+    it('uses ink color on light/mono tones and inverse on white tone', () => {
+      const { rerender } = render(<Logo variant="wordmark-text" tone="color" />);
+      // jsdom normalizes hex colors to rgb() in inline styles.
+      expect(screen.getByRole('img', { name: 'Hubrity' }).style.color).toBe('rgb(33, 38, 31)'); // #21261F
+
+      rerender(<Logo variant="wordmark-text" tone="white" />);
+      expect(screen.getByRole('img', { name: 'Hubrity' }).style.color).toBe('rgb(250, 250, 249)'); // #FAFAF9
+    });
+
+    it('stays non-interactive (no <a>/<button>) and renders no <svg>/<img>', () => {
+      const { container } = render(<Logo variant="wordmark-text" />);
+      expect(container.querySelector('a')).toBeNull();
+      expect(container.querySelector('button')).toBeNull();
+      expect(container.querySelector('svg')).toBeNull();
+      expect(container.querySelector('img')).toBeNull();
+    });
+  });
 });

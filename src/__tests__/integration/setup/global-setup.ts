@@ -11,6 +11,8 @@ export default async function globalSetup() {
   process.env.LOG_LEVEL = 'silent';
   process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'http://127.0.0.1:54321';
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= 'integration-anon-key';
+  // Public marketing-site base URL — required by clientEnvSchema.
+  process.env.NEXT_PUBLIC_SITE_URL ??= 'http://127.0.0.1:3000';
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'integration-service-key';
   // Stream SDK — dummy values for integration tests that import serverEnv
   // transitively. The real Stream client is mocked in tests that need it.

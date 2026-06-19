@@ -12,6 +12,7 @@ const validClient = {
   NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321',
   NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon-key',
   NEXT_PUBLIC_STREAM_API_KEY: 'stream-public-key',
+  NEXT_PUBLIC_SITE_URL: 'https://hubrity.com',
 };
 
 const validServer = {
