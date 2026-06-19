@@ -88,6 +88,17 @@ describe('CookieConsent banner visibility', () => {
     expect(await screen.findByTestId('cookie-consent-banner')).toBeInTheDocument();
   });
 
+  it('renders the title and the body copy ending in "Você escolhe."', async () => {
+    render(<CookieConsent />);
+    await screen.findByTestId('cookie-consent-banner');
+    expect(screen.getByRole('heading', { name: 'Cookies por aqui' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Usamos cookies para melhorar sua experiência e medir o desempenho do site. Você escolhe.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('does not show the banner when a consent cookie already exists (any value)', async () => {
     document.cookie = 'cookie_consent=accepted; Path=/';
     render(<CookieConsent />);
@@ -97,11 +108,12 @@ describe('CookieConsent banner visibility', () => {
     });
   });
 
-  it('links "Saiba mais" to the privacy policy', async () => {
+  it('links "Saiba mais na Política de Privacidade" to the privacy policy', async () => {
     render(<CookieConsent />);
     // `asChild` merges the Button props (incl. the testid) onto the inner <a>.
     const link = await screen.findByTestId('cookie-consent-learn-more');
     expect(link.tagName).toBe('A');
+    expect(link).toHaveTextContent('Saiba mais na Política de Privacidade');
     expect(link).toHaveAttribute('href', '/politica-de-privacidade');
   });
 });

@@ -1,70 +1,53 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 /*
- * No-flash dark-mode SSR proof (3.4).
+ * No-flash dark-mode SSR proof (3.4, revised for decision D1).
  *
- * The spec ("no light-flash") requires that a returning visitor with an
- * explicit `theme=dark` choice gets the dark theme on the very first byte of
- * HTML — not after a client round-trip. We render the real `RootLayout` Server
- * Component to static markup with a mocked `theme=dark` request cookie and
- * assert that:
- *   1. `<html>` carries `data-theme="dark"` directly from SSR (no flash for the
- *      stored-choice path), and
- *   2. the blocking no-flash inline script is present in `<head>` (covers the
- *      first-visit/OS path before first paint).
+ * The dark-mode substrate is now driven SOLELY by the OS `prefers-color-scheme`
+ * — there is no theme cookie, no localStorage, and no user-facing toggle (delta
+ * spec: "the `data-theme` attribute on `<html>` ... driven SOLELY by the OS
+ * `prefers-color-scheme`"). Because the server cannot know the OS preference, it
+ * MUST NOT stamp a `data-theme` attribute on `<html>`; the blocking no-flash
+ * inline script resolves it client-side before first paint.
+ *
+ * We render the real `RootLayout` Server Component to static markup and assert:
+ *   1. No `data-theme` attribute is server-rendered on `<html>` (neither dark
+ *      nor light) — the value is decided client-side by the script.
+ *   2. The blocking no-flash inline script is present and reads
+ *      `prefers-color-scheme` (not cookies / localStorage), and sets
+ *      `data-theme` from that media query.
  *
  * `next/font/google` is mocked because its real implementation is a build-time
  * transform that does not run under Vitest; we only need the CSS-variable
  * contract it exposes to the layout.
  */
 
-const cookieGet = vi.fn();
-
-vi.mock('next/headers', () => ({
-  cookies: vi.fn().mockResolvedValue({
-    get: cookieGet,
-  }),
-}));
-
 vi.mock('next/font/google', () => ({
   Inter: () => ({ variable: '--ds-font-sans' }),
   Nunito: () => ({ variable: '--ds-font-wordmark' }),
 }));
 
-beforeEach(() => {
-  cookieGet.mockReset();
-});
-
 describe('RootLayout no-flash dark-mode SSR', () => {
-  it('applies data-theme="dark" in SSR output when the theme cookie is dark', async () => {
-    cookieGet.mockImplementation((name: string) =>
-      name === 'theme' ? { value: 'dark' } : undefined,
-    );
-
+  it('does not server-render a data-theme attribute on <html>', async () => {
     const { default: RootLayout } = await import('@/app/layout');
-    const html = renderToStaticMarkup(await RootLayout({ children: 'content' }));
+    const html = renderToStaticMarkup(RootLayout({ children: 'content' }));
 
-    expect(html).toContain('data-theme="dark"');
-    // The blocking no-flash script must be inlined in <head>.
-    expect(html).toContain('data-theme'); // present inside the script too
-    expect(html).toContain('prefers-color-scheme: dark');
-    // There must be no light data-theme leaking into the same render.
+    // The server cannot know the OS preference, so it renders no concrete theme
+    // attribute on <html>; the blocking script resolves it before first paint.
+    expect(html).not.toContain('data-theme="dark"');
     expect(html).not.toContain('data-theme="light"');
   });
 
-  it('omits the server-rendered data-theme attribute when no theme cookie is set', async () => {
-    cookieGet.mockReturnValue(undefined);
-
+  it('ships a blocking no-flash script that reads prefers-color-scheme', async () => {
     const { default: RootLayout } = await import('@/app/layout');
-    const html = renderToStaticMarkup(await RootLayout({ children: 'content' }));
+    const html = renderToStaticMarkup(RootLayout({ children: 'content' }));
 
-    // First visit: the server cannot know the OS preference, so it renders no
-    // data-theme on <html>; the blocking script (still present) resolves it
-    // before first paint.
-    expect(html).not.toContain('data-theme="dark"');
-    expect(html).not.toContain('data-theme="light"');
-    // The no-flash script is always shipped.
+    // The script must resolve the theme from the OS media query only — no cookie
+    // or localStorage branch — and set the data-theme attribute client-side.
     expect(html).toContain('prefers-color-scheme: dark');
+    expect(html).toContain('data-theme');
+    expect(html).not.toMatch(/cookie/i);
+    expect(html).not.toMatch(/localStorage/i);
   });
 });

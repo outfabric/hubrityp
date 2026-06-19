@@ -7,7 +7,6 @@ import {
   PublicFooter,
   PublicHeader,
   SkipLink,
-  ThemeProvider,
 } from '@/modules/marketing';
 import { Button } from '@/shared/ui/button';
 
@@ -28,13 +27,13 @@ import { Button } from '@/shared/ui/button';
  * this 404. An unknown path is classified `public` by the middleware and passes
  * through; it never redirects to `/login`.
  *
- * Layout: large "404" in `brand/600`, a short message, then a primary CTA
- * ("Criar conta grátis" -> /signup) and a secondary CTA ("Voltar para a
- * homepage" -> /).
+ * Layout: large "404" in `brand/600`, the headline, a short message, then two
+ * CTAs in left-to-right visual order — a secondary CTA ("Voltar para a
+ * homepage" -> /) followed by a primary CTA ("Criar conta grátis" -> /signup).
  */
 export default function NotFound(): React.JSX.Element {
   return (
-    <ThemeProvider>
+    <>
       <div className="flex min-h-svh flex-col">
         <SkipLink />
         <PublicHeader />
@@ -43,22 +42,22 @@ export default function NotFound(): React.JSX.Element {
             <p className="text-brand-600 text-display-xl font-semibold" aria-hidden="true">
               404
             </p>
-            <h1 className="text-text-primary text-display-md mt-4">Página não encontrada</h1>
+            <h1 className="text-text-primary text-display-md mt-4">Não encontramos esta página.</h1>
             <p className="text-text-secondary mt-3 max-w-prose">
-              A página que você procura não existe ou foi movida.
+              O endereço pode ter mudado ou não existe mais. Vamos te levar de volta ao começo.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/signup">Criar conta grátis</Link>
-              </Button>
               <Button asChild variant="secondary" size="lg">
                 <Link href="/">Voltar para a homepage</Link>
+              </Button>
+              <Button asChild size="lg">
+                <Link href="/signup">Criar conta grátis</Link>
               </Button>
             </div>
           </Container>
         </main>
         <PublicFooter />
       </div>
-    </ThemeProvider>
+    </>
   );
 }

@@ -3,27 +3,25 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { PublicHeaderClient } from '@/modules/marketing/components/public-header-client';
-import { ThemeProvider } from '@/modules/marketing/components/theme-provider';
 
 /*
- * PublicHeaderClient (leaf) — DOM behavior (task 6.5).
+ * PublicHeaderClient (leaf) — DOM behavior.
  *
  * Covers the spec contracts that can be exercised in jsdom:
  *   - link destinations (logo, Funcionalidades, Preços, auth CTAs);
  *   - scrolled-state class swap WITHOUT any backdrop-filter/blur (DS rule);
  *   - hamburger ARIA (aria-expanded / aria-controls) + Escape-to-close;
- *   - anon-vs-auth CTA swap (Entrar/Começar grátis ↔ Acessar plataforma).
+ *   - anon-vs-auth CTA swap (Entrar/Começar grátis ↔ Acessar plataforma);
+ *   - NO theme-toggle control exists (dark mode is OS-driven only);
+ *   - nav links are grouped with the CTAs in a single right-aligned cluster;
+ *   - "Entrar" renders as the DS secondary (bordered) button (frame `128:3`).
  *
- * The header consumes `ThemeToggle`, which requires a ThemeProvider; we wrap
- * with the real provider (same approach as theme-toggle.test.tsx).
+ * The header no longer depends on a ThemeProvider — there is no theme context,
+ * so it renders standalone.
  */
 
 function renderHeader(isAuthenticated: boolean) {
-  return render(
-    <ThemeProvider>
-      <PublicHeaderClient isAuthenticated={isAuthenticated} />
-    </ThemeProvider>,
-  );
+  return render(<PublicHeaderClient isAuthenticated={isAuthenticated} />);
 }
 
 function hrefOf(name: RegExp | string): string | null {
@@ -57,6 +55,61 @@ describe('PublicHeaderClient — anonymous CTAs', () => {
     expect(hrefOf(/Entrar/i)).toBe('/login');
     expect(hrefOf(/Começar grátis/i)).toBe('/signup');
     expect(screen.queryAllByRole('link', { name: /Acessar plataforma/i })).toHaveLength(0);
+  });
+});
+
+describe('PublicHeaderClient — no theme toggle (OS-driven dark mode)', () => {
+  it('renders no theme-toggle control anywhere in the chrome', () => {
+    renderHeader(false);
+
+    // The former toggle exposed these pt-BR accessible names; neither must
+    // exist now that dark mode follows `prefers-color-scheme` only.
+    expect(screen.queryByRole('button', { name: /Ativar tema (claro|escuro)/i })).toBeNull();
+    expect(screen.queryByLabelText(/tema (claro|escuro)/i)).toBeNull();
+  });
+
+  it('still renders no theme toggle for an authenticated visitor', () => {
+    renderHeader(true);
+    expect(screen.queryByRole('button', { name: /Ativar tema (claro|escuro)/i })).toBeNull();
+  });
+});
+
+describe('PublicHeaderClient — desktop nav + CTAs grouped right (frame 128:3)', () => {
+  it('places "Funcionalidades"/"Preços" in the same right cluster as the CTAs, logo alone on the left', () => {
+    const { container } = renderHeader(false);
+
+    // The desktop nav and the CTA cluster live inside a single grouping div
+    // (the right-aligned cluster). The logo is the lone child on the left, so
+    // the Container is NOT spreading three peers — it spreads logo vs. cluster.
+    const nav = container.querySelector('nav[aria-label="Navegação principal"]');
+    expect(nav).not.toBeNull();
+    const cluster = (nav as HTMLElement).parentElement;
+    expect(cluster).not.toBeNull();
+
+    // The "Entrar" and "Começar grátis" CTAs sit in the SAME cluster as the nav.
+    const clusterEl = cluster as HTMLElement;
+    expect(within(clusterEl).getByRole('link', { name: /Funcionalidades/i })).toBeInTheDocument();
+    expect(within(clusterEl).getByRole('link', { name: /Preços/i })).toBeInTheDocument();
+    expect(within(clusterEl).getByRole('link', { name: /^Entrar$/i })).toBeInTheDocument();
+    expect(within(clusterEl).getByRole('link', { name: /Começar grátis/i })).toBeInTheDocument();
+
+    // The logo is NOT inside the cluster — it stays at the left edge.
+    expect(within(clusterEl).queryByRole('link', { name: /página inicial/i })).toBeNull();
+  });
+});
+
+describe('PublicHeaderClient — "Entrar" is the secondary bordered button', () => {
+  it('renders the desktop "Entrar" as the DS secondary (bordered) variant, not a ghost', () => {
+    renderHeader(false);
+
+    const entrar = screen.getAllByRole('link', { name: /^Entrar$/i }).at(0);
+    expect(entrar).toBeDefined();
+    const cls = (entrar as HTMLElement).className;
+    // The secondary variant is bordered with a surface fill (DS Button) — the
+    // border + surface fill are exactly what the borderless ghost variant lacks.
+    expect(cls).toContain('border');
+    expect(cls).toContain('border-border-strong');
+    expect(cls).toContain('bg-surface');
   });
 });
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import * as React from 'react';
 
-import { Container, LegalReviewNotice, absoluteUrl } from '@/modules/marketing';
+import { Container, absoluteUrl } from '@/modules/marketing';
 
 /**
  * Política de Privacidade — public legal page (task 9.1).
@@ -16,8 +16,7 @@ import { Container, LegalReviewNotice, absoluteUrl } from '@/modules/marketing';
  * the `<main>` landmark), wrapped in the `reading` Container variant (720px max)
  * for a comfortable prose measure per the DS reading-column convention.
  *
- * Content is REFERENCE text (see `LegalReviewNotice`) — a placeholder draft to
- * be reviewed with legal before publishing. Each section carries a stable
+ * Each section carries a stable
  * heading `id` so the footer / other pages can deep-link to it; the LGPD
  * section is anchored as `#lgpd` (linked from the footer's "LGPD" item).
  */
@@ -143,8 +142,6 @@ export default function PrivacyPolicyPage(): React.JSX.Element {
   return (
     <Container width="reading" className="py-16">
       <h1 className="text-display-md text-text-primary">Política de Privacidade</h1>
-
-      <LegalReviewNotice className="mt-6" />
 
       <div className="mt-10 flex flex-col gap-10">
         {SECTIONS.map((section) => (

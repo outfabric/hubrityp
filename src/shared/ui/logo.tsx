@@ -33,7 +33,7 @@ import { cn } from '@/shared/lib/utils';
  */
 
 type LogoVariant = 'lockup-h' | 'lockup-v' | 'symbol' | 'wordmark-text';
-type LogoTone = 'color' | 'white' | 'mono';
+type LogoTone = 'color' | 'white' | 'mono' | 'inverse';
 
 /*
  * Wordmark spec (docs/design-system/rules.md → Wordmark):
@@ -70,6 +70,9 @@ const INK = '#21261F';
  * Resolve the per-shape fills for the requested tone.
  *
  * - `color` keeps the brand palette (symbol tri-color + ink wordmark).
+ * - `inverse` keeps the symbol's brand tri-color but renders the wordmark light
+ *   (`#FAFAF9`) so the lockup reads on a dark surface (e.g. the footer) while
+ *   the symbol stays canonical (brand `16:7`/`17:2`).
  * - `mono` and `white` collapse every fill to `currentColor`; the visible
  *   color is then driven by the surrounding text color (white tone defaults
  *   to `text-white`, see `toneClassName`).
@@ -82,6 +85,9 @@ function resolveFills(tone: LogoTone): {
 } {
   if (tone === 'color') {
     return { hasteA: SALVIA, hasteB: AZUL, elo: TEAL, wordmark: INK };
+  }
+  if (tone === 'inverse') {
+    return { hasteA: SALVIA, hasteB: AZUL, elo: TEAL, wordmark: WORDMARK_INVERSE };
   }
   return {
     hasteA: 'currentColor',
@@ -174,8 +180,8 @@ export function Logo({
     // `--ds-font-wordmark` variable (the lockups use traced SVG paths). Renders
     // a non-interactive <span>; SVG-specific props are intentionally not
     // forwarded here (this is not an <svg>). `color` is set explicitly so the
-    // wordmark reads ink on light surfaces and inverse on dark/white tones,
-    // matching the brand spec.
+    // wordmark reads ink on light surfaces (`color`/`mono`) and light on
+    // dark/white surfaces (`white`/`inverse`), matching the brand spec.
     const color = tone === 'color' || tone === 'mono' ? WORDMARK_INK : WORDMARK_INVERSE;
     return (
       <span

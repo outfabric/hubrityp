@@ -56,6 +56,49 @@ describe('Logo', () => {
     }
   });
 
+  describe('tone="inverse" (dark-surface lockup)', () => {
+    // The symbol's tricolor brand fills (sage / slate-blue / teal).
+    const SYMBOL_HEX = ['#587355', '#5B7A93', '#3F6F63'];
+
+    it('keeps the symbol tricolor and renders the wordmark light (#FAFAF9)', () => {
+      const { container } = render(<Logo variant="lockup-h" tone="inverse" />);
+
+      // Symbol keeps its three brand fills...
+      for (const hex of SYMBOL_HEX) {
+        expect(container.innerHTML).toContain(hex);
+      }
+      // ...but the wordmark is light, not ink (#21261F).
+      expect(container.innerHTML).toContain('#FAFAF9');
+      expect(container.innerHTML).not.toContain('#21261F');
+    });
+
+    it('keeps the symbol tricolor for the symbol-only variant', () => {
+      const { container } = render(<Logo variant="symbol" tone="inverse" />);
+      for (const hex of SYMBOL_HEX) {
+        expect(container.innerHTML).toContain(hex);
+      }
+      // The symbol has no wordmark, so no <path> (light wordmark fill) leaks in.
+      expect(container.querySelectorAll('path').length).toBe(0);
+    });
+
+    it('does not collapse fills to currentColor (distinct from mono/white)', () => {
+      const { container } = render(<Logo variant="lockup-h" tone="inverse" />);
+      expect(container.innerHTML).not.toContain('currentColor');
+    });
+
+    it('does not force text-white (symbol uses literal hex, not inherited color)', () => {
+      render(<Logo variant="symbol" tone="inverse" />);
+      const svg = screen.getByRole('img', { name: 'Hubrity' });
+      expect(svg).not.toHaveClass('text-white');
+    });
+
+    it('renders the wordmark light on the live-text variant', () => {
+      render(<Logo variant="wordmark-text" tone="inverse" />);
+      // jsdom normalizes hex colors to rgb() in inline styles.
+      expect(screen.getByRole('img', { name: 'Hubrity' }).style.color).toBe('rgb(250, 250, 249)'); // #FAFAF9
+    });
+  });
+
   it('applies text-white by default for tone="white" so currentColor resolves to white', () => {
     render(<Logo variant="symbol" tone="white" />);
     const svg = screen.getByRole('img', { name: 'Hubrity' });

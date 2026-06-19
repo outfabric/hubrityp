@@ -17,7 +17,7 @@ import type * as RegistrationEdgeModule from '@/modules/registration/edge';
  *      and signup flows, so they MUST return 200 without a session.
  *
  *   2. Rendering — each page renders inside the `reading` (720px) Container,
- *      shows the legal-review notice, exposes at least 8 sections, and carries
+ *      does NOT show any legal-review notice, exposes at least 8 sections, and carries
  *      the required heading anchors (the privacy page must anchor `#lgpd` and a
  *      cookies section; the terms page must anchor elegibilidade, planos,
  *      cancelamento, propriedade intelectual, responsabilidade, lei aplicável).
@@ -114,9 +114,10 @@ describe('Política de Privacidade page', () => {
     expect(html).toContain('max-w-[720px]');
   });
 
-  it('shows the legal-review notice', async () => {
+  it('does not show any legal-review notice', async () => {
     const html = await renderPage();
-    expect(html).toContain('Texto de referência — revisar com o jurídico antes de publicar.');
+    expect(html).not.toContain('revisar com o jurídico');
+    expect(html).not.toContain('Texto de referência');
   });
 
   it('renders at least 8 sections', async () => {
@@ -159,9 +160,10 @@ describe('Termos de Uso page', () => {
     expect(html).toContain('max-w-[720px]');
   });
 
-  it('shows the legal-review notice', async () => {
+  it('does not show any legal-review notice', async () => {
     const html = await renderPage();
-    expect(html).toContain('Texto de referência — revisar com o jurídico antes de publicar.');
+    expect(html).not.toContain('revisar com o jurídico');
+    expect(html).not.toContain('Texto de referência');
   });
 
   it('renders at least 8 sections', async () => {
