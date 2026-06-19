@@ -28,6 +28,26 @@ export { CookieConsent } from './components/cookie-consent';
 export { AnalyticsLoader } from './components/analytics-loader';
 export { SignupCta, type SignupCtaProps } from './components/signup-cta';
 export {
+  ScreenshotCarousel,
+  type ScreenshotCarouselProps,
+  type CarouselSlide,
+} from './components/home/screenshot-carousel';
+export { Hero } from './components/home/hero';
+export { ProvaSocial } from './components/home/prova-social';
+export { Problema } from './components/home/problema';
+export { SolucaoTimeline } from './components/home/solucao-timeline';
+export { Funcionalidades } from './components/home/funcionalidades';
+export { DestaqueIa } from './components/home/destaque-ia';
+export { Confianca } from './components/home/confianca';
+export { PrecosResumo } from './components/home/precos-resumo';
+export { Faq } from './components/home/faq';
+export { CtaFinal } from './components/home/cta-final';
+export {
+  ScreenshotLightbox,
+  type ScreenshotLightboxProps,
+  type LightboxScreenshot,
+} from './components/home/screenshot-lightbox';
+export {
   PLANS,
   FEATURE_KEYS,
   FEATURE_LABELS,
@@ -41,3 +61,28 @@ export {
   type FeatureKey,
   type EmptyPlansFallback,
 } from './lib/plans';
+export {
+  HERO,
+  SOCIAL_PROOF_STATS,
+  PROBLEM,
+  SOLUTION_STEPS,
+  SOLUTION_CLOSER,
+  FEATURE_CARDS,
+  AI_HIGHLIGHT,
+  TRUST,
+  PRICING_SUMMARY,
+  FAQ_ENTRIES,
+  FINAL_CTA,
+  SCREENSHOTS,
+  HERO_CAROUSEL_SLIDES,
+  type HomeCta,
+  type SocialProofStat,
+  type LucideIconName,
+  type SolutionStep,
+  type FeatureCard,
+  type TrustItem,
+  type RegulatoryGuarantee,
+  type FaqEntry,
+  type ScreenshotKey,
+  type ScreenshotAsset,
+} from './lib/home-content';
