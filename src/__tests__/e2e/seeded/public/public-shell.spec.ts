@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
 import { STORAGE_STATE_PATH } from '../setup/seed-state';
 
@@ -19,6 +19,30 @@ import { STORAGE_STATE_PATH } from '../setup/seed-state';
 /** The page banner landmark — scopes header assertions away from the footer. */
 function header(page: Page) {
   return page.getByRole('banner');
+}
+
+/**
+ * Pre-seed the LGPD consent decision into the browser context so the first-visit
+ * cookie-consent banner never mounts.
+ *
+ * The banner is `fixed bottom-4` and, while present, legitimately intercepts
+ * pointer events over the page footer — that is the intended consent UX (a real
+ * visitor decides before interacting with bottom-of-page content). It mounts via
+ * `requestAnimationFrame` after hydration, so dismissing it imperatively races
+ * the click. Seeding the cookie up front makes the "returning visitor" path
+ * deterministic: the banner's mount guard sees an existing decision and renders
+ * nothing. The dedicated consent test below still exercises the banner's own
+ * first-visit + accept behavior.
+ */
+async function seedCookieConsent(context: BrowserContext) {
+  await context.addCookies([
+    {
+      name: 'cookie_consent',
+      value: 'accepted',
+      url: 'http://localhost:3000',
+      sameSite: 'Lax',
+    },
+  ]);
 }
 
 test.describe('public shell — anonymous visitor', () => {
@@ -45,7 +69,11 @@ test.describe('public shell — anonymous visitor', () => {
 
   test('footer legal links navigate to the privacy policy and terms pages (both 200)', async ({
     page,
+    context,
   }) => {
+    // Seed the consent decision so the fixed bottom cookie banner never mounts
+    // and cannot intercept clicks on the footer legal links beneath it.
+    await seedCookieConsent(context);
     await page.goto('/');
 
     // "Política de Privacidade" → /politica-de-privacidade.
@@ -64,7 +92,8 @@ test.describe('public shell — anonymous visitor', () => {
     const privacyResponse = await page.goto('/politica-de-privacidade');
     expect(privacyResponse?.status()).toBe(200);
 
-    // "Termos de Uso" → /termos-de-uso.
+    // "Termos de Uso" → /termos-de-uso. The consent cookie seeded above persists
+    // for the whole context, so the banner stays unmounted here too.
     await page.goto('/');
     await page.getByRole('contentinfo').getByRole('link', { name: 'Termos de Uso' }).click();
     await page.waitForURL('**/termos-de-uso');
