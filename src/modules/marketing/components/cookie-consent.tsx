@@ -13,9 +13,10 @@
 // the tracker eligible on the next render without a navigation.
 //
 // Design-system constraints (see docs/design-system/rules.md and the public
-// pages handoff `132:2`): bottom card, `radius/2xl`, `shadow-lg`, max ~460px,
-// surface background, no blur/glassmorphism. Buttons use the DS primary +
-// secondary variants. The "Saiba mais" link is the only underlined element.
+// pages Figma frame `132:2`): bottom card, `radius/2xl`, `shadow-lg`, max ~460px,
+// surface background, no blur/glassmorphism. A title heads the card, the body
+// explains the choice, and the "Saiba mais na Política de Privacidade" link sits
+// above the action row. Buttons use the DS primary + secondary variants.
 
 import Link from 'next/link';
 import * as React from 'react';
@@ -28,7 +29,9 @@ import {
 } from '@/modules/marketing/lib/cookie-consent';
 import { Button } from '@/shared/ui/button';
 
-const BANNER_TEXT = 'Usamos cookies para melhorar sua experiência e medir o desempenho do site.';
+const BANNER_TITLE = 'Cookies por aqui';
+const BANNER_TEXT =
+  'Usamos cookies para melhorar sua experiência e medir o desempenho do site. Você escolhe.';
 
 export function CookieConsent(): React.JSX.Element | null {
   // Start hidden: the banner only appears after we confirm (client-side, on
@@ -66,7 +69,17 @@ export function CookieConsent(): React.JSX.Element | null {
       data-testid="cookie-consent-banner"
       className="border-border bg-surface text-text-primary fixed inset-x-4 bottom-4 z-50 mx-auto max-w-[460px] rounded-2xl border p-6 shadow-lg"
     >
-      <p className="text-text-secondary text-sm">{BANNER_TEXT}</p>
+      <h2 className="text-text-primary text-base font-semibold">{BANNER_TITLE}</h2>
+      <p className="text-text-secondary mt-2 text-sm">{BANNER_TEXT}</p>
+      <Button
+        asChild
+        variant="link"
+        size="default"
+        className="mt-3 h-auto justify-start p-0"
+        data-testid="cookie-consent-learn-more"
+      >
+        <Link href="/politica-de-privacidade">Saiba mais na Política de Privacidade</Link>
+      </Button>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Button
           type="button"
@@ -84,9 +97,6 @@ export function CookieConsent(): React.JSX.Element | null {
           onClick={() => decide('rejected')}
         >
           Recusar
-        </Button>
-        <Button asChild variant="link" size="default" data-testid="cookie-consent-learn-more">
-          <Link href="/politica-de-privacidade">Saiba mais</Link>
         </Button>
       </div>
     </div>

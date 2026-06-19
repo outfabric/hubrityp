@@ -30,8 +30,8 @@
 
 ## 4. Cookie banner fidelity (frame `132:2`)
 
-- [ ] 4.1 Update `src/modules/marketing/components/cookie-consent.tsx`: add the title "Cookies por aqui"; set body to "Usamos cookies para melhorar sua experiência e medir o desempenho do site. Você escolhe."; render "Saiba mais na Política de Privacidade" as a link above an `Aceitar` (primary) / `Recusar` (secondary) button row. Keep the consent cookie + analytics-gating behavior unchanged.
-- [ ] 4.2 Update `src/__tests__/unit/modules/marketing/cookie-consent.test.tsx` for the title, new body, and link text; keep the show/hide-by-cookie assertions.
+- [x] 4.1 Update `src/modules/marketing/components/cookie-consent.tsx`: add the title "Cookies por aqui"; set body to "Usamos cookies para melhorar sua experiência e medir o desempenho do site. Você escolhe."; render "Saiba mais na Política de Privacidade" as a link above an `Aceitar` (primary) / `Recusar` (secondary) button row. Keep the consent cookie + analytics-gating behavior unchanged.
+- [x] 4.2 Update `src/__tests__/unit/modules/marketing/cookie-consent.test.tsx` for the title, new body, and link text; keep the show/hide-by-cookie assertions.
 
 ## 5. Legal pages — remove the review notice (frames `142:2` / `143:2`)
 
