@@ -40,7 +40,7 @@
 
 ## 7. E2E (pricing critical flows)
 
-- [ ] 7.1 E2E (seeded): load `/precos` → 2 plan cards with R$ 60 / R$ 90 and "Popular" on Avançado; "Experimentar grátis" on Avançado navigates to `/signup?plano=avancado` — `src/__tests__/e2e/seeded/public/pricing.spec.ts`.
-- [ ] 7.2 E2E (seeded): expand the comparison table → WhatsApp + IA rows are ✓ only for Avançado; billing FAQ opens/closes exclusively.
-- [ ] 7.3 E2E (seeded): homepage "Ver planos completos →" navigates to `/precos` (cross-page link integrity).
+- [x] 7.1 E2E (seeded): load `/precos` → 2 plan cards with R$ 60 / R$ 90 and "Popular" on Avançado; "Experimentar grátis" on Avançado navigates to `/signup?plano=avancado` — `src/__tests__/e2e/seeded/public/pricing.spec.ts`.
+- [x] 7.2 E2E (seeded): expand the comparison table → WhatsApp + IA rows are ✓ only for Avançado; billing FAQ opens/closes exclusively.
+- [x] 7.3 E2E (seeded): homepage "Ver planos completos →" navigates to `/precos` (cross-page link integrity).
 
