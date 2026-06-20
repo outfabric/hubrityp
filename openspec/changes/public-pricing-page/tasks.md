@@ -36,7 +36,7 @@
 
 ## 6. Middleware gating note
 
-- [ ] 6.1 Confirm `/precos` is classified `public` in `classifyPath()` (added by `public-site-foundation`); add a focused negative/positive-auth assertion if not already covered — extend `src/__tests__/integration/middleware/public-routes-gating.int.test.ts`.
+- [x] 6.1 Confirm `/precos` is classified `public` in `classifyPath()` (added by `public-site-foundation`); add a focused negative/positive-auth assertion if not already covered — extend `src/__tests__/integration/middleware/public-routes-gating.int.test.ts`.
 
 ## 7. E2E (pricing critical flows)
 
