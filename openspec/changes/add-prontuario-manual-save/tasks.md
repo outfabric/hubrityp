@@ -26,9 +26,9 @@
 
 ## 5. Integration tests (real server actions + RLS)
 
-- [ ] 5.1 In `src/__tests__/integration/sessions/` (or the evolutions integration folder), assert a manual save persists evolution content via the real `create/update-evolution` action under the owner's RLS context.
-- [ ] 5.2 In the treatment-plan integration folder, assert a manual save persists via `upsertTreatmentPlan` and snapshots a new `treatment_plan_versions` row, and that an invalid goal is rejected (no row written).
-- [ ] 5.3 In the personal-notes integration folder, assert a manual save persists via `upsertPersonalNotes` for an unlocked note under owner RLS, and is denied for a non-owner.
+- [x] 5.1 In `src/__tests__/integration/sessions/` (or the evolutions integration folder), assert a manual save persists evolution content via the real `create/update-evolution` action under the owner's RLS context.
+- [x] 5.2 In the treatment-plan integration folder, assert a manual save persists via `upsertTreatmentPlan` and snapshots a new `treatment_plan_versions` row, and that an invalid goal is rejected (no row written).
+- [x] 5.3 In the personal-notes integration folder, assert a manual save persists via `upsertPersonalNotes` for an unlocked note under owner RLS, and is denied for a non-owner.
 
 ## 6. E2E tests (Playwright, seeded suite)
 
