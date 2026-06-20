@@ -14,9 +14,9 @@
 
 ## 3. Plano — manual save button + validation toast (`treatment-plan/treatment-plan-tab.tsx`)
 
-- [ ] 3.1 Consume `isDirty`/`saveNow`; render the "Salvar" `Button` next to the `AutoSaveIndicator`, disabled when `!isDirty || status === 'saving'`.
-- [ ] 3.2 On click, await `saveNow()`; on the existing validation rejection (empty goal description / empty phase title), show a `sonner` toast with actionable pt-BR copy instead of relying on the silent error status.
-- [ ] 3.3 **Unit tests (immediately after 3.1–3.2)** in `src/__tests__/unit/modules/medical-records/components/treatment-plan-tab.test.tsx`: button disabled when clean, enabled after editing a goal/phase/resource/criterion, click with valid content calls `upsertTreatmentPlan`, click with an empty-description goal shows a toast and does not persist.
+- [x] 3.1 Consume `isDirty`/`saveNow`; render the "Salvar" `Button` next to the `AutoSaveIndicator`, disabled when `!isDirty || status === 'saving'`.
+- [x] 3.2 On click, await `saveNow()`; on the existing validation rejection (empty goal description / empty phase title), show a `sonner` toast with actionable pt-BR copy instead of relying on the silent error status.
+- [x] 3.3 **Unit tests (immediately after 3.1–3.2)** in `src/__tests__/unit/modules/medical-records/components/treatment-plan-tab.test.tsx`: button disabled when clean, enabled after editing a goal/phase/resource/criterion, click with valid content calls `upsertTreatmentPlan`, click with an empty-description goal shows a toast and does not persist.
 
 ## 4. Notas — manual save button (`personal-notes-tab.tsx`)
 
