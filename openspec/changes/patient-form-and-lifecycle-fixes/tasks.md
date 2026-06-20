@@ -24,8 +24,8 @@
 
 ## 4. Phone input — E2E regression (child registration multi-phone)
 
-- [ ] 4.1 Add a seeded E2E (`src/__tests__/e2e/seeded/`) that registers a `child` patient, typing into the patient phone, reminder phone, and guardian phone fields, asserting each displays the typed number (no `55` corruption) and the patient is created with canonical phones.
-- [ ] 4.2 Run the seeded E2E for this flow and confirm green.
+- [x] 4.1 Add a seeded E2E (`src/__tests__/e2e/seeded/`) that registers a `child` patient, typing into the patient phone, reminder phone, and guardian phone fields, asserting each displays the typed number (no `55` corruption) and the patient is created with canonical phones.
+- [x] 4.2 Run the seeded E2E for this flow and confirm green.
 
 ## 5. Lifecycle cache — `revalidatePath` in Server Actions (+ integration tests immediately)
 
