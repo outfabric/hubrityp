@@ -29,10 +29,10 @@
 
 ## 5. Lifecycle cache — `revalidatePath` in Server Actions (+ integration tests immediately)
 
-- [ ] 5.1 Import `revalidatePath` in `src/app/(app)/pacientes/[id]/actions.ts` and call it in `archivePatient` and `unarchivePatient` for `/pacientes` and `/pacientes/[id]` (page) after a successful mutation.
-- [ ] 5.2 Add `revalidatePath('/pacientes')` to `deletePatient` after a successful delete.
-- [ ] 5.3 Integration tests in `src/__tests__/integration/patients/` against real Postgres: archive then unarchive transitions (`status`/`archived_at`), and the `already_archived` / `not_archived` guards; assert the actions complete and return `ok` (revalidation invocation asserted via spy/mock where the harness allows).
-- [ ] 5.4 Run the integration suite for these tests and confirm green.
+- [x] 5.1 Import `revalidatePath` in `src/app/(app)/pacientes/[id]/actions.ts` and call it in `archivePatient` and `unarchivePatient` for `/pacientes` and `/pacientes/[id]` (page) after a successful mutation.
+- [x] 5.2 Add `revalidatePath('/pacientes')` to `deletePatient` after a successful delete.
+- [x] 5.3 Integration tests in `src/__tests__/integration/patients/` against real Postgres: archive then unarchive transitions (`status`/`archived_at`), and the `already_archived` / `not_archived` guards; assert the actions complete and return `ok` (revalidation invocation asserted via spy/mock where the harness allows).
+- [x] 5.4 Run the integration suite for these tests and confirm green.
 
 ## 6. Lifecycle cache — E2E regression (archive → navigate → re-open)
 

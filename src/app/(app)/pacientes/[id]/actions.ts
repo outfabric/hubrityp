@@ -8,6 +8,8 @@
 // point for the Next.js compiler. Every export of a `'use server'` file MUST
 // be an async function; types cannot be re-exported from here.
 
+import { revalidatePath } from 'next/cache';
+
 import type {
   ConfirmAudioUploadResult,
   RequestAudioUploadUrlResult,
@@ -72,17 +74,48 @@ export async function updatePatient(
 
 export async function archivePatient(patientId: string): Promise<ArchivePatientResult> {
   const supabase = await createServerClient();
-  return archivePatientImpl(supabase, patientId);
+  const result = await archivePatientImpl(supabase, patientId);
+
+  if (result.ok) {
+    // Status changed to 'archived' — invalidate both the listing (active/archived
+    // filters re-query) and this patient's detail route so a cross-navigation
+    // after archiving reflects the new status (design D3). The client-side
+    // router.refresh() in the header only covers the in-place view; revalidatePath
+    // fixes the cross-route staleness router.refresh() cannot.
+    revalidatePath('/pacientes');
+    revalidatePath(`/pacientes/${patientId}`, 'page');
+  }
+
+  return result;
 }
 
 export async function unarchivePatient(patientId: string): Promise<UnarchivePatientResult> {
   const supabase = await createServerClient();
-  return unarchivePatientImpl(supabase, patientId);
+  const result = await unarchivePatientImpl(supabase, patientId);
+
+  if (result.ok) {
+    // Status changed back to 'active' — same cross-route invalidation as
+    // archivePatient so the listing and detail reflect the restored patient
+    // after navigation (design D3).
+    revalidatePath('/pacientes');
+    revalidatePath(`/pacientes/${patientId}`, 'page');
+  }
+
+  return result;
 }
 
 export async function deletePatient(patientId: string): Promise<DeletePatientResult> {
   const supabase = await createServerClient();
-  return deletePatientImpl(supabase, patientId);
+  const result = await deletePatientImpl(supabase, patientId);
+
+  if (result.ok) {
+    // Patient row removed — invalidate the listing so the deleted patient no
+    // longer appears after navigation (design D3). No detail-route revalidation:
+    // the detail page is gone and the caller navigates away.
+    revalidatePath('/pacientes');
+  }
+
+  return result;
 }
 
 export async function getPatientPhotoUrl(patientId: string): Promise<GetPatientPhotoUrlResult> {
