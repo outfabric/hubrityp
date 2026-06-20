@@ -36,8 +36,8 @@
 
 ## 6. Lifecycle cache — E2E regression (archive → navigate → re-open)
 
-- [ ] 6.1 Add a seeded E2E: archive a patient from the detail page, navigate to `/pacientes`, confirm it is absent under the default active filter, re-open the patient, and assert the actions menu reads "Desarquivar" (never a stale "Arquivar"); then unarchive and assert it reads "Arquivar".
-- [ ] 6.2 Run the seeded E2E for this flow and confirm green.
+- [x] 6.1 Add a seeded E2E: archive a patient from the detail page, navigate to `/pacientes`, confirm it is absent under the default active filter, re-open the patient, and assert the actions menu reads "Desarquivar" (never a stale "Arquivar"); then unarchive and assert it reads "Arquivar".
+- [x] 6.2 Run the seeded E2E for this flow and confirm green.
 
 ## 7. Verification
 
