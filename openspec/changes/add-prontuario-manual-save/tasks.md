@@ -32,6 +32,6 @@
 
 ## 6. E2E tests (Playwright, seeded suite)
 
-- [ ] 6.1 Evoluções flow in `src/__tests__/e2e/seeded/`: open editor → button disabled → type → button enabled → click "Salvar" before 10s → indicator shows "Salvo às HH:MM" → reload shows persisted content.
-- [ ] 6.2 Plano flow: edit a goal → "Salvar" → persisted; add an empty-description goal → "Salvar" → toast shown, not persisted.
-- [ ] 6.3 Notas flow (unlocked): edit → "Salvar" → persisted; verify no "Salvar" button in the locked state.
+- [x] 6.1 Evoluções flow in `src/__tests__/e2e/seeded/`: open editor → button disabled → type → button enabled → click "Salvar" before 10s → indicator shows "Salvo às HH:MM" → reload shows persisted content.
+- [x] 6.2 Plano flow: edit a goal → "Salvar" → persisted; add an empty-description goal → "Salvar" → toast shown, not persisted.
+- [x] 6.3 Notas flow (unlocked): edit → "Salvar" → persisted; verify no "Salvar" button in the locked state.
