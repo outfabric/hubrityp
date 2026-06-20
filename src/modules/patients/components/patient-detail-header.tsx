@@ -502,6 +502,7 @@ export function PatientDetailHeader({
         onOpenChange={setArchiveModalOpen}
         onConfirm={handleArchiveConfirm}
         isPending={isPending}
+        isArchived={patient.status !== 'active'}
       />
 
       {/* Delete confirmation modal */}

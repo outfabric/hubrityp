@@ -220,6 +220,27 @@ describe('maskNationalPhone', () => {
     expect(maskNationalPhone('119123456789999')).toBe('11 91234-5678');
   });
 
+  describe('pasting a country-code-prefixed number', () => {
+    it('strips a leading 55 country code so paste matches typing', () => {
+      // `+55 11 91234-5678` pasted from a contact must produce the same
+      // national value as typing `11912345678`, not turn `55` into the DDD.
+      expect(maskNationalPhone('+55 11 91234-5678')).toBe('11 91234-5678');
+      expect(maskNationalPhone('5511912345678')).toBe('11 91234-5678');
+      expect(maskNationalPhone('+5511912345678')).toBe('11 91234-5678');
+    });
+
+    it('strips the country code even when the DDD itself starts with 9', () => {
+      // The previously silent case: `+55 91 91234-5678` must keep DDD 91,
+      // not collapse to DDD 55 (which passed the mobile regex unnoticed).
+      expect(maskNationalPhone('+55 91 91234-5678')).toBe('91 91234-5678');
+    });
+
+    it('does not strip a DDD-55 national number (no country code present)', () => {
+      // 11 national digits — `55` is the DDD here, never a country code.
+      expect(maskNationalPhone('55999887766')).toBe('55 99988-7766');
+    });
+  });
+
   it('returns empty string for empty input', () => {
     expect(maskNationalPhone('')).toBe('');
     expect(maskNationalPhone('(((')).toBe('');

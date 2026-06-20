@@ -80,9 +80,19 @@ export function maskPhone(raw: string): string {
  * The `+55` country code lives only at the boundary (see `toCanonical`), never
  * inside the editable value, which is why the old `maskPhone` re-fed its own
  * `5` digits back as data.
+ *
+ * Paste handling: when the raw input carries more than 11 digits and begins
+ * with the `55` country code (e.g. pasting `+55 11 91234-5678` from a contact),
+ * the leading `55` is stripped first so paste behaves identically to typing the
+ * national number. This is the same country-code rule `toNationalDisplay` uses
+ * for prefill. A genuine national number is at most 11 digits, so DDD `55`
+ * (`55 99988-7766`) is never mistaken for a country code.
  */
 export function maskNationalPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 11);
+  const allDigits = raw.replace(/\D/g, '');
+  const national =
+    allDigits.length > 11 && allDigits.startsWith('55') ? allDigits.slice(2) : allDigits;
+  const digits = national.slice(0, 11);
 
   if (digits.length === 0) return '';
   if (digits.length <= 2) return digits;
@@ -107,17 +117,13 @@ export function toCanonical(national: string): string {
  * Boundary helper: converts a canonical stored value (`+55 DD NNNNN-NNNN`)
  * back into the editable national display (`DD NNNNN-NNNN`).
  *
- * Strips a single leading `+55`/`55` country code (the canonical form always
- * carries one) before re-applying the national mask, so editing a stored
- * patient pre-fills the field without a duplicated country code.
+ * Delegates to `maskNationalPhone`, which strips a single leading `55` country
+ * code when the input exceeds national length (the canonical form always carries
+ * one), so editing a stored patient pre-fills the field without a duplicated
+ * country code — and never strips a `55` that is acting as the DDD.
  */
 export function toNationalDisplay(canonical: string): string {
-  const digits = canonical.replace(/\D/g, '');
-  // A canonical BR number is 13 digits (55 + DDD + 9). Drop the leading 55
-  // only when it is acting as the country code, never when it is the DDD of
-  // a national-length input.
-  const national = digits.length > 11 && digits.startsWith('55') ? digits.slice(2) : digits;
-  return maskNationalPhone(national);
+  return maskNationalPhone(canonical);
 }
 
 /**

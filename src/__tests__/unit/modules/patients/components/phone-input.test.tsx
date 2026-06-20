@@ -65,6 +65,23 @@ describe('PhoneInput', () => {
     expect((input as HTMLInputElement).value).not.toContain('+55');
   });
 
+  it('normalizes a pasted country-code-prefixed number to the national value', async () => {
+    const user = userEvent.setup();
+    const onChangeSpy = vi.fn();
+    render(<ControlledPhoneInput onChangeSpy={onChangeSpy} />);
+
+    const input = screen.getByTestId('phone-input');
+    input.focus();
+    // Pasting a full number copied from a contact (`+55 91 91234-5678`) must
+    // behave like typing the national number: DDD 91 preserved, no `55` DDD,
+    // canonical with exactly one country code.
+    await user.paste('+55 91 91234-5678');
+
+    expect(input).toHaveValue('91 91234-5678');
+    expect((input as HTMLInputElement).value).not.toContain('+55');
+    expect(onChangeSpy).toHaveBeenLastCalledWith('+55 91 91234-5678');
+  });
+
   it('emits empty string when the input is cleared', async () => {
     const user = userEvent.setup();
     const onChangeSpy = vi.fn();
