@@ -7,10 +7,10 @@
 
 ## 2. Phone input — shared `PhoneInput` component (+ unit/component tests immediately)
 
-- [ ] 2.1 Create `src/modules/patients/components/phone-input.tsx`: controlled component, external `value`/`onChange` in canonical `+55 DD NNNNN-NNNN` (or `''`), internal editable text = national mask, non-editable `+55` adornment (`aria-hidden`, design-system tokens), focus ring on the wrapper.
-- [ ] 2.2 Forward `data-testid`, `id`, `aria-invalid`, `placeholder`, `disabled`, `onBlur`, `name`, `ref` to the inner `<input>`; set `type="tel"` and `inputMode="numeric"`.
-- [ ] 2.3 Component/unit test for `PhoneInput`: typing digits emits canonical onChange values, the `+55` prefix is not part of the editable value, empty input emits `''`, and prefill of `+55 11 91234-5678` renders `11 91234-5678`. Assert `data-testid` lands on the `<input>`.
-- [ ] 2.4 Run the new component test and confirm green.
+- [x] 2.1 Create `src/modules/patients/components/phone-input.tsx`: controlled component, external `value`/`onChange` in canonical `+55 DD NNNNN-NNNN` (or `''`), internal editable text = national mask, non-editable `+55` adornment (`aria-hidden`, design-system tokens), focus ring on the wrapper.
+- [x] 2.2 Forward `data-testid`, `id`, `aria-invalid`, `placeholder`, `disabled`, `onBlur`, `name`, `ref` to the inner `<input>`; set `type="tel"` and `inputMode="numeric"`.
+- [x] 2.3 Component/unit test for `PhoneInput`: typing digits emits canonical onChange values, the `+55` prefix is not part of the editable value, empty input emits `''`, and prefill of `+55 11 91234-5678` renders `11 91234-5678`. Assert `data-testid` lands on the `<input>`.
+- [x] 2.4 Run the new component test and confirm green.
 
 ## 3. Wire `PhoneInput` into all five phone fields (+ adjust existing tests immediately)
 
