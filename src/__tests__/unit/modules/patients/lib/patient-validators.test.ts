@@ -4,6 +4,9 @@ import {
   formatPhone,
   isValidBrazilianPhone,
   isValidCpf,
+  maskNationalPhone,
+  toCanonical,
+  toNationalDisplay,
 } from '@/modules/patients/lib/patient-validators';
 
 describe('isValidBrazilianPhone', () => {
@@ -188,5 +191,88 @@ describe('formatPhone', () => {
 
   it('handles empty string gracefully', () => {
     expect(formatPhone('')).toBe('');
+  });
+});
+
+describe('maskNationalPhone', () => {
+  it('formats a full mobile number as DD NNNNN-NNNN without +55', () => {
+    expect(maskNationalPhone('11912345678')).toBe('11 91234-5678');
+  });
+
+  it('preserves DDD 55 (does not treat it as a country code)', () => {
+    expect(maskNationalPhone('55999887766')).toBe('55 99988-7766');
+  });
+
+  it('progresses partial input as the user types', () => {
+    expect(maskNationalPhone('1')).toBe('1');
+    expect(maskNationalPhone('11')).toBe('11');
+    expect(maskNationalPhone('119')).toBe('11 9');
+    expect(maskNationalPhone('1191234')).toBe('11 91234');
+    expect(maskNationalPhone('11912345')).toBe('11 91234-5');
+    expect(maskNationalPhone('11912345678')).toBe('11 91234-5678');
+  });
+
+  it('strips non-digit characters', () => {
+    expect(maskNationalPhone('(11) 91234-5678')).toBe('11 91234-5678');
+  });
+
+  it('caps input at 11 digits', () => {
+    expect(maskNationalPhone('119123456789999')).toBe('11 91234-5678');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(maskNationalPhone('')).toBe('');
+    expect(maskNationalPhone('(((')).toBe('');
+  });
+
+  it('is idempotent across keystrokes (exactly one country code, never any)', () => {
+    const inputs = ['', '1', '11', '119', '1191234', '11912345678', '55999887766'];
+    for (const input of inputs) {
+      const once = maskNationalPhone(input);
+      expect(maskNationalPhone(once)).toBe(once);
+      expect(once).not.toContain('+55');
+    }
+  });
+});
+
+describe('toCanonical', () => {
+  it('returns empty string for empty input', () => {
+    expect(toCanonical('')).toBe('');
+    expect(toCanonical('   ')).toBe('');
+  });
+
+  it('prefixes the national mask with the country code exactly once', () => {
+    expect(toCanonical('11 91234-5678')).toBe('+55 11 91234-5678');
+    expect(toCanonical('11912345678')).toBe('+55 11 91234-5678');
+  });
+
+  it('preserves a DDD-55 number', () => {
+    expect(toCanonical('55999887766')).toBe('+55 55 99988-7766');
+  });
+});
+
+describe('toNationalDisplay', () => {
+  it('strips the leading +55 country code and returns the national mask', () => {
+    expect(toNationalDisplay('+55 11 91234-5678')).toBe('11 91234-5678');
+  });
+
+  it('handles a canonical DDD-55 number without dropping the DDD', () => {
+    expect(toNationalDisplay('+55 55 99988-7766')).toBe('55 99988-7766');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(toNationalDisplay('')).toBe('');
+  });
+});
+
+describe('phone boundary round-trip', () => {
+  it('toNationalDisplay -> toCanonical reproduces the canonical value', () => {
+    const canonical = '+55 11 91234-5678';
+    expect(toCanonical(toNationalDisplay(canonical))).toBe(canonical);
+  });
+
+  it('round-trips a DDD-55 canonical value', () => {
+    const canonical = '+55 55 99988-7766';
+    expect(toCanonical(toNationalDisplay(canonical))).toBe(canonical);
   });
 });

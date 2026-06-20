@@ -1,9 +1,9 @@
 ## 1. Phone input — idempotent mask helper (+ unit tests immediately)
 
-- [ ] 1.1 Add `maskNationalPhone(raw)` to `src/modules/patients/lib/patient-validators.ts`: strip non-digits, cap at 11, format progressively as `DD NNNNN-NNNN`; no `+55` literal in the parsed/returned text.
-- [ ] 1.2 Add `toCanonical(national)` and `toNationalDisplay(canonical)` boundary helpers (colocated in `patient-validators.ts` or the component): `toCanonical('')` → `''`, otherwise `'+55 ' + maskNationalPhone(national)`; `toNationalDisplay` strips a leading `+55`/`55` and returns the national mask.
-- [ ] 1.3 Unit tests in `src/__tests__/unit/modules/patients/lib/patient-validators.test.ts`: idempotency (`maskNationalPhone(maskNationalPhone(x)) === maskNationalPhone(x)`), `11912345678` → `11 91234-5678`, DDD-55 (`55999887766` → `55 99988-7766`), partial-input progression, empty → `''`, and `toCanonical`/`toNationalDisplay` round-trip from `+55 11 91234-5678`.
-- [ ] 1.4 Run the unit suite for the file and confirm green before moving on.
+- [x] 1.1 Add `maskNationalPhone(raw)` to `src/modules/patients/lib/patient-validators.ts`: strip non-digits, cap at 11, format progressively as `DD NNNNN-NNNN`; no `+55` literal in the parsed/returned text.
+- [x] 1.2 Add `toCanonical(national)` and `toNationalDisplay(canonical)` boundary helpers (colocated in `patient-validators.ts` or the component): `toCanonical('')` → `''`, otherwise `'+55 ' + maskNationalPhone(national)`; `toNationalDisplay` strips a leading `+55`/`55` and returns the national mask.
+- [x] 1.3 Unit tests in `src/__tests__/unit/modules/patients/lib/patient-validators.test.ts`: idempotency (`maskNationalPhone(maskNationalPhone(x)) === maskNationalPhone(x)`), `11912345678` → `11 91234-5678`, DDD-55 (`55999887766` → `55 99988-7766`), partial-input progression, empty → `''`, and `toCanonical`/`toNationalDisplay` round-trip from `+55 11 91234-5678`.
+- [x] 1.4 Run the unit suite for the file and confirm green before moving on.
 
 ## 2. Phone input — shared `PhoneInput` component (+ unit/component tests immediately)
 

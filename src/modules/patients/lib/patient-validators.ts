@@ -68,6 +68,59 @@ export function maskPhone(raw: string): string {
 }
 
 /**
+ * Formats a national phone input progressively into `DD NNNNN-NNNN`.
+ *
+ * Strips non-digits, caps at 11 digits (2-digit DDD + 9-digit mobile), and
+ * applies the mask as the user types. The returned text NEVER contains the
+ * `+55` country code, so calling it on its own output is a no-op — that is what
+ * makes it idempotent across keystrokes in a controlled input:
+ *
+ *   maskNationalPhone(maskNationalPhone(x)) === maskNationalPhone(x)
+ *
+ * The `+55` country code lives only at the boundary (see `toCanonical`), never
+ * inside the editable value, which is why the old `maskPhone` re-fed its own
+ * `5` digits back as data.
+ */
+export function maskNationalPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+  return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+/**
+ * Boundary helper: converts an editable national value into the canonical
+ * stored format `+55 DD NNNNN-NNNN`.
+ *
+ * Returns `''` for empty input so an untouched optional field stays empty
+ * rather than becoming a bare `+55 `. Otherwise prefixes the national mask
+ * with the country code exactly once.
+ */
+export function toCanonical(national: string): string {
+  if (national.trim().length === 0) return '';
+  return `+55 ${maskNationalPhone(national)}`;
+}
+
+/**
+ * Boundary helper: converts a canonical stored value (`+55 DD NNNNN-NNNN`)
+ * back into the editable national display (`DD NNNNN-NNNN`).
+ *
+ * Strips a single leading `+55`/`55` country code (the canonical form always
+ * carries one) before re-applying the national mask, so editing a stored
+ * patient pre-fills the field without a duplicated country code.
+ */
+export function toNationalDisplay(canonical: string): string {
+  const digits = canonical.replace(/\D/g, '');
+  // A canonical BR number is 13 digits (55 + DDD + 9). Drop the leading 55
+  // only when it is acting as the country code, never when it is the DDD of
+  // a national-length input.
+  const national = digits.length > 11 && digits.startsWith('55') ? digits.slice(2) : digits;
+  return maskNationalPhone(national);
+}
+
+/**
  * Formats a raw phone string into the canonical `+55 DD NNNNN-NNNN` format.
  *
  * Strips all non-digit characters, then re-assembles. If the resulting digits
