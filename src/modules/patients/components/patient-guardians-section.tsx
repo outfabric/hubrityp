@@ -26,7 +26,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
 
-import { isValidBrazilianPhone, maskPhone } from '../lib/patient-validators';
+import { isValidBrazilianPhone } from '../lib/patient-validators';
+
+import { PhoneInput } from './phone-input';
 
 // ---------------------------------------------------------------------------
 // Form-specific schema (avoids input/output type mismatch from .default())
@@ -177,14 +179,11 @@ function GuardianForm({
               <FormItem>
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="+55 11 99999-9999"
+                  <PhoneInput
+                    placeholder="11 99999-9999"
                     data-testid="guardian-form-phone"
                     value={field.value}
-                    onChange={(e) => {
-                      const masked = maskPhone(e.target.value);
-                      field.onChange(masked);
-                    }}
+                    onChange={field.onChange}
                     onBlur={field.onBlur}
                     name={field.name}
                     ref={field.ref}

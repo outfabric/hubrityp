@@ -28,6 +28,8 @@ import {
 } from '../lib/patient-types';
 import { isValidBrazilianPhone, isValidCpf, maskPhone } from '../lib/patient-validators';
 
+import { PhoneInput } from './phone-input';
+
 // ---------------------------------------------------------------------------
 // Form schema — client-side with user-friendly pt-BR messages
 // ---------------------------------------------------------------------------
@@ -349,6 +351,10 @@ export function PatientForm(props: PatientFormProps) {
       phone: patient?.phone ?? '',
       whatsappOptOut: patient?.whatsappOptOut ?? false,
       whatsappOptOutReason: '',
+      // Prefill: stored reminder phones are E.164 (+55DDNNNNNNNNN). `maskPhone`
+      // normalizes them to the canonical `+55 DD NNNNN-NNNN` that `PhoneInput`
+      // expects as its controlled `value` (it derives the editable national text
+      // internally), so this is the one remaining `maskPhone` call site.
       reminderPhone: patient?.reminderPhone ? maskPhone(patient.reminderPhone) : '',
       guardians: [],
       partner: undefined,
@@ -782,16 +788,14 @@ export function PatientForm(props: PatientFormProps) {
 
           {/* Phone (masked) */}
           <FormField id="phone" label="Telefone" error={step1Form.formState.errors.phone?.message}>
-            <Input
+            <PhoneInput
               id="phone-form-item"
-              type="tel"
-              placeholder="+55 11 91234-5678"
+              placeholder="11 91234-5678"
               aria-invalid={Boolean(step1Form.formState.errors.phone)}
               data-testid="patient-form-phone"
               value={step1Form.watch('phone') ?? ''}
-              onChange={(e) => {
-                const masked = maskPhone(e.target.value);
-                step1Form.setValue('phone', masked, { shouldValidate: false });
+              onChange={(value) => {
+                step1Form.setValue('phone', value, { shouldValidate: false });
               }}
               onBlur={() => {
                 void step1Form.trigger('phone');
@@ -852,16 +856,14 @@ export function PatientForm(props: PatientFormProps) {
               label="Telefone alternativo para lembretes"
               error={step1Form.formState.errors.reminderPhone?.message}
             >
-              <Input
+              <PhoneInput
                 id="reminderPhone-form-item"
-                type="tel"
-                placeholder="+55 11 91234-5678"
+                placeholder="11 91234-5678"
                 aria-invalid={Boolean(step1Form.formState.errors.reminderPhone)}
                 data-testid="reminder-phone"
                 value={step1Form.watch('reminderPhone') ?? ''}
-                onChange={(e) => {
-                  const masked = maskPhone(e.target.value);
-                  step1Form.setValue('reminderPhone', masked, { shouldValidate: false });
+                onChange={(value) => {
+                  step1Form.setValue('reminderPhone', value, { shouldValidate: false });
                 }}
                 onBlur={() => {
                   void step1Form.trigger('reminderPhone');
@@ -975,16 +977,14 @@ export function PatientForm(props: PatientFormProps) {
                       error={step1Form.formState.errors.guardians?.[index]?.phone?.message}
                       required
                     >
-                      <Input
+                      <PhoneInput
                         id={`guardian-${index}-phone-form-item`}
-                        type="tel"
-                        placeholder="+55 11 91234-5678"
+                        placeholder="11 91234-5678"
                         aria-invalid={Boolean(step1Form.formState.errors.guardians?.[index]?.phone)}
                         data-testid={`guardian-${index}-phone`}
                         value={step1Form.watch(`guardians.${index}.phone`) ?? ''}
-                        onChange={(e) => {
-                          const masked = maskPhone(e.target.value);
-                          step1Form.setValue(`guardians.${index}.phone`, masked, {
+                        onChange={(value) => {
+                          step1Form.setValue(`guardians.${index}.phone`, value, {
                             shouldValidate: false,
                           });
                         }}
@@ -1083,16 +1083,14 @@ export function PatientForm(props: PatientFormProps) {
                   label="Telefone"
                   error={step1Form.formState.errors.partner?.phone?.message}
                 >
-                  <Input
+                  <PhoneInput
                     id="partner-phone-form-item"
-                    type="tel"
-                    placeholder="+55 11 91234-5678"
+                    placeholder="11 91234-5678"
                     aria-invalid={Boolean(step1Form.formState.errors.partner?.phone)}
                     data-testid="partner-phone"
                     value={step1Form.watch('partner.phone') ?? ''}
-                    onChange={(e) => {
-                      const masked = maskPhone(e.target.value);
-                      step1Form.setValue('partner.phone', masked, { shouldValidate: false });
+                    onChange={(value) => {
+                      step1Form.setValue('partner.phone', value, { shouldValidate: false });
                     }}
                     onBlur={() => {
                       void step1Form.trigger('partner.phone');

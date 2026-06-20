@@ -14,13 +14,13 @@
 
 ## 3. Wire `PhoneInput` into all five phone fields (+ adjust existing tests immediately)
 
-- [ ] 3.1 Replace the patient phone field wiring in `patient-form.tsx` (currently `onChange={maskPhone(...)}`) with `PhoneInput`, preserving `data-testid="patient-form-phone"`.
-- [ ] 3.2 Replace the reminder phone field with `PhoneInput` (`data-testid="reminder-phone"`); verify the existing `reminder_phone` submit normalization still yields a single `+55` (no double prefix).
-- [ ] 3.3 Replace the guardian phone field(s) in the creation form with `PhoneInput` (`data-testid="guardian-${index}-phone"`).
-- [ ] 3.4 Replace the partner phone field with `PhoneInput` (`data-testid="partner-phone"`).
-- [ ] 3.5 Replace the guardian phone field in `patient-guardians-section.tsx` (add/edit form, `data-testid="guardian-form-phone"`) with `PhoneInput`, keeping the shadcn `FormField` integration.
-- [ ] 3.6 Remove `maskPhone` (and its now-unused imports) if no call site remains; otherwise keep only for prefill normalization and note why. Update/adjust any existing unit/integration tests that referenced `maskPhone`.
-- [ ] 3.7 Run lint + type-check on the touched files and confirm green.
+- [x] 3.1 Replace the patient phone field wiring in `patient-form.tsx` (currently `onChange={maskPhone(...)}`) with `PhoneInput`, preserving `data-testid="patient-form-phone"`.
+- [x] 3.2 Replace the reminder phone field with `PhoneInput` (`data-testid="reminder-phone"`); verify the existing `reminder_phone` submit normalization still yields a single `+55` (no double prefix).
+- [x] 3.3 Replace the guardian phone field(s) in the creation form with `PhoneInput` (`data-testid="guardian-${index}-phone"`).
+- [x] 3.4 Replace the partner phone field with `PhoneInput` (`data-testid="partner-phone"`).
+- [x] 3.5 Replace the guardian phone field in `patient-guardians-section.tsx` (add/edit form, `data-testid="guardian-form-phone"`) with `PhoneInput`, keeping the shadcn `FormField` integration.
+- [x] 3.6 Remove `maskPhone` (and its now-unused imports) if no call site remains; otherwise keep only for prefill normalization and note why. Update/adjust any existing unit/integration tests that referenced `maskPhone`.
+- [x] 3.7 Run lint + type-check on the touched files and confirm green.
 
 ## 4. Phone input — E2E regression (child registration multi-phone)
 
