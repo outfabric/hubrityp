@@ -41,6 +41,7 @@ export { DestaqueIa } from './components/home/destaque-ia';
 export { Confianca } from './components/home/confianca';
 export { PrecosResumo } from './components/home/precos-resumo';
 export { Faq } from './components/home/faq';
+export { FaqAccordion, type FaqAccordionProps } from './components/home/faq-accordion';
 export { CtaFinal } from './components/home/cta-final';
 export {
   ScreenshotLightbox,
@@ -51,16 +52,24 @@ export {
   PLANS,
   FEATURE_KEYS,
   FEATURE_LABELS,
+  PLAN_SLUGS,
   PRICING_SUPPORT_EMAIL,
   planSlugSchema,
   featureKeySchema,
   emptyPlansFallback,
+  getComparisonMatrix,
+  isKnownPlanSlug,
   type Plan,
   type PlanFeature,
   type PlanSlug,
   type FeatureKey,
   type EmptyPlansFallback,
+  type ComparisonRow,
 } from './lib/plans';
+export { PRICING_PAGE, BILLING_FAQ_ENTRIES } from './lib/pricing-content';
+export { PlanCards } from './components/pricing/plan-cards';
+export { ComparisonTable } from './components/pricing/comparison-table';
+export { BillingFaq } from './components/pricing/billing-faq';
 export {
   HERO,
   SOCIAL_PROOF_STATS,

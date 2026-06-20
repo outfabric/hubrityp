@@ -48,6 +48,7 @@ solucao
 # --- Stored enum / status / document tokens (persisted; must stay ASCII) ---
 declaracao
 avancado
+gestao
 prescricao
 usuario
 atestado
@@ -241,6 +242,7 @@ behaviour
 behavioural
 behaviours
 Centralised
+emphasised
 initialise
 initialiser
 initialises
