@@ -8,9 +8,9 @@
 
 ## 2. Evoluções — manual save button (`evolution-editor.tsx`)
 
-- [ ] 2.1 Consume `isDirty` and `saveNow` from `useAutoSave`; render a shadcn `Button` labelled "Salvar" next to the `AutoSaveIndicator`.
-- [ ] 2.2 Disable the button when `!isDirty || status === 'saving'`; on click call `saveNow()`.
-- [ ] 2.3 **Unit tests (immediately after 2.1–2.2)** in `src/__tests__/unit/modules/medical-records/components/evolution-editor.test.tsx`: button disabled on clean mount, enabled after editing content, calls the save handler on click, disabled again after save resolves.
+- [x] 2.1 Consume `isDirty` and `saveNow` from `useAutoSave`; render a shadcn `Button` labelled "Salvar" next to the `AutoSaveIndicator`.
+- [x] 2.2 Disable the button when `!isDirty || status === 'saving'`; on click call `saveNow()`.
+- [x] 2.3 **Unit tests (immediately after 2.1–2.2)** in `src/__tests__/unit/modules/medical-records/components/evolution-editor.test.tsx`: button disabled on clean mount, enabled after editing content, calls the save handler on click, disabled again after save resolves.
 
 ## 3. Plano — manual save button + validation toast (`treatment-plan/treatment-plan-tab.tsx`)
 
