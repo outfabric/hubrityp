@@ -25,9 +25,9 @@
 
 ## 4. Billing FAQ + final CTA
 
-- [ ] 4.1 Implement the billing FAQ reusing the homepage `<details>` accordion component (exclusive open; all-open without JS) with the 3–5 billing questions; nota fiscal framed as provider-dependent/forward-looking (not an available feature).
-- [ ] 4.2 Reuse the `cta-final` component (solid `brand/700`, inverse text, `/signup` UTM-preserving).
-- [ ] 4.3 Unit test: billing FAQ shows required topics; exclusive toggle; all-open without JS; nota fiscal not presented as an included plan feature — `src/__tests__/unit/modules/marketing/billing-faq.test.tsx`.
+- [x] 4.1 Implement the billing FAQ reusing the homepage `<details>` accordion component (exclusive open; all-open without JS) with the 3–5 billing questions; nota fiscal framed as provider-dependent/forward-looking (not an available feature).
+- [x] 4.2 Reuse the `cta-final` component (solid `brand/700`, inverse text, `/signup` UTM-preserving).
+- [x] 4.3 Unit test: billing FAQ shows required topics; exclusive toggle; all-open without JS; nota fiscal not presented as an included plan feature — `src/__tests__/unit/modules/marketing/billing-faq.test.tsx`.
 
 ## 5. Page assembly + metadata
 
