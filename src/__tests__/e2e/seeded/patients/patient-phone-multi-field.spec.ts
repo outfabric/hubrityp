@@ -32,20 +32,25 @@ test.describe('@patients child registration multi-phone input', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
   // National numbers typed into each of the three fields. Distinct DDDs/numbers
-  // so a value leaking from one field into another would be detectable.
-  const PATIENT_PHONE_NATIONAL = '11 98765-4321';
-  const REMINDER_PHONE_NATIONAL = '21 97654-3210';
-  const GUARDIAN_PHONE_NATIONAL = '31 96543-2109';
+  // so a value leaking from one field into another would be detectable. The
+  // DDDs/numbers are deliberately chosen to be unused by any other seeded spec
+  // (e.g. the CSV-import fixture creates an "Ana Costa" patient with
+  // `+55 11 98765-4321`), because the patient phone carries a UNIQUE constraint
+  // and the seeded suite runs `fullyParallel` against a reused Postgres — a
+  // shared number would race that constraint and reject this submit.
+  const PATIENT_PHONE_NATIONAL = '27 99887-7665';
+  const REMINDER_PHONE_NATIONAL = '28 99776-6554';
+  const GUARDIAN_PHONE_NATIONAL = '47 99665-5443';
 
   // The raw digit strings a user actually types (no mask).
-  const PATIENT_PHONE_DIGITS = '11987654321';
-  const REMINDER_PHONE_DIGITS = '21976543210';
-  const GUARDIAN_PHONE_DIGITS = '31965432109';
+  const PATIENT_PHONE_DIGITS = '27998877665';
+  const REMINDER_PHONE_DIGITS = '28997766554';
+  const GUARDIAN_PHONE_DIGITS = '47996655443';
 
   // Canonical stored formats expected in the DB after submit.
-  const PATIENT_PHONE_CANONICAL = '+55 11 98765-4321';
-  const REMINDER_PHONE_E164 = '+5521976543210';
-  const GUARDIAN_PHONE_CANONICAL = '+55 31 96543-2109';
+  const PATIENT_PHONE_CANONICAL = '+55 27 99887-7665';
+  const REMINDER_PHONE_E164 = '+5528997766554';
+  const GUARDIAN_PHONE_CANONICAL = '+55 47 99665-5443';
 
   test('captures patient, reminder, and guardian phones without 55 corruption', async ({
     page,

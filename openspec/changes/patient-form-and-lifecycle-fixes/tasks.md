@@ -41,6 +41,6 @@
 
 ## 7. Verification
 
-- [ ] 7.1 Run the full unit + integration + seeded E2E patient suites; confirm all green.
-- [ ] 7.2 Run lint, format, and type-check across the change; confirm clean (no `--no-verify`).
-- [ ] 7.3 Manual smoke (or qa-tester): child registration phone entry and archive/unarchive label across navigation.
+- [x] 7.1 Run the full unit + integration + seeded E2E patient suites; confirm all green.
+- [x] 7.2 Run lint, format, and type-check across the change; confirm clean (no `--no-verify`).
+- [x] 7.3 Manual smoke (or qa-tester): child registration phone entry and archive/unarchive label across navigation.

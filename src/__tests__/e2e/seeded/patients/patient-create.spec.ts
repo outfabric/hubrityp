@@ -100,7 +100,10 @@ test.describe('@patients patient creation', () => {
     const phoneInput = page.getByTestId('patient-form-phone');
     await phoneInput.fill('11987654321');
 
-    // Should display with mask format
-    await expect(phoneInput).toHaveValue('+55 11 98765-4321');
+    // The shared `PhoneInput` renders `+55` as a non-editable, aria-hidden
+    // adornment, so the editable input value holds only the masked national
+    // portion (`DD NNNNN-NNNN`) — the `+55` is never part of the value. See
+    // `src/modules/patients/components/phone-input.tsx`.
+    await expect(phoneInput).toHaveValue('11 98765-4321');
   });
 });
