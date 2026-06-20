@@ -56,6 +56,23 @@ function planToPlanContent(plan: TreatmentPlan): PlanContent {
   };
 }
 
+/**
+ * Mirror of the validation rules `handleSave` enforces (empty goal description /
+ * empty phase title). Returns an actionable pt-BR message when the content is
+ * blocked, or `null` when it passes. Used by the manual save handler to surface
+ * a toast instead of relying on the silent `status='error'` set by the hook,
+ * which swallows the thrown error.
+ */
+function validatePlanContent(content: PlanContent): string | null {
+  if (content.goals.some((g) => g.description.trim() === '')) {
+    return 'Preencha a descrição de todas as metas antes de salvar.';
+  }
+  if (content.phases.some((p) => p.title.trim() === '')) {
+    return 'Preencha o título de todas as fases antes de salvar.';
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -182,7 +199,20 @@ export function TreatmentPlanTab({
     [patientId, upsertTreatmentPlan, planExists],
   );
 
-  const { status, lastSavedAt } = useAutoSave(content, handleSave, { interval: 10_000 });
+  const { status, lastSavedAt, isDirty, saveNow } = useAutoSave(content, handleSave, {
+    interval: 10_000,
+  });
+
+  // Manual save: validate up-front so we can surface an actionable toast (the
+  // auto-save hook swallows the validation throw into a silent error status).
+  const handleManualSave = useCallback(() => {
+    const validationError = validatePlanContent(content);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    void saveNow();
+  }, [content, saveNow]);
 
   // Load version history when sheet is opened
   const handleVersionHistoryOpen = useCallback(
@@ -285,6 +315,15 @@ export function TreatmentPlanTab({
               Tentar novamente
             </button>
           )}
+          <Button
+            type="button"
+            size="sm"
+            disabled={!isDirty || status === 'saving'}
+            onClick={handleManualSave}
+            data-testid="treatment-plan-save-button"
+          >
+            Salvar
+          </Button>
         </div>
       </div>
 

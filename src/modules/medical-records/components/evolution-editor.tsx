@@ -6,6 +6,7 @@ import type { TemplateType } from '@/modules/medical-records/lib/template-types'
 import { TiptapEditor } from '@/modules/patients/components/tiptap-editor';
 import { useAutoSave } from '@/modules/patients/lib/use-auto-save';
 import { cn } from '@/shared/lib/utils';
+import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
@@ -226,7 +227,9 @@ export function EvolutionEditor({ templateType, initialContent, onSave }: Evolut
     [onSave],
   );
 
-  const { status, lastSavedAt } = useAutoSave(content, handleSave, { interval: 10_000 });
+  const { status, lastSavedAt, isDirty, saveNow } = useAutoSave(content, handleSave, {
+    interval: 10_000,
+  });
 
   const fields = TEMPLATE_FIELDS[templateType];
 
@@ -236,8 +239,21 @@ export function EvolutionEditor({ templateType, initialContent, onSave }: Evolut
 
   return (
     <div className="flex max-w-[720px] flex-col gap-6" data-testid="evolution-editor">
-      {/* Auto-save indicator */}
-      <AutoSaveIndicator status={status} lastSavedAt={lastSavedAt} />
+      {/* Auto-save indicator + manual save button */}
+      <div className="flex items-center gap-3">
+        <AutoSaveIndicator status={status} lastSavedAt={lastSavedAt} />
+        <Button
+          type="button"
+          size="sm"
+          disabled={!isDirty || status === 'saving'}
+          onClick={() => {
+            void saveNow();
+          }}
+          data-testid="evolution-save-button"
+        >
+          Salvar
+        </Button>
+      </div>
 
       {/* Fields */}
       {fields.map((field) => (
