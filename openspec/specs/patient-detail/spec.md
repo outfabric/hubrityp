@@ -113,7 +113,7 @@ The system SHALL display the address in the "Visão geral" tab as a formatted hu
 
 ### Requirement: Patient detail page has an actions menu
 
-The system SHALL provide an actions menu (three-dot or dropdown) with options: Editar, Arquivar/Desarquivar (based on current status), **Exportar PDF**, and Excluir (only for patients without clinical records).
+The system SHALL provide an actions menu (three-dot or dropdown) with options: Editar, Arquivar/Desarquivar (based on current status), **Exportar PDF**, and Excluir (only for patients without clinical records). The Arquivar/Desarquivar label SHALL be derived from the patient's current persisted status and SHALL reflect the true status after a lifecycle mutation followed by any client-side navigation — after archiving, the menu MUST offer "Desarquivar"; after unarchiving, it MUST offer "Arquivar" — with no stale label served from a non-invalidated cache.
 
 #### Scenario: Actions menu for active patient
 
@@ -139,6 +139,11 @@ The system SHALL provide an actions menu (three-dot or dropdown) with options: E
 
 - **WHEN** psychologist clicks "Exportar PDF" in the actions menu
 - **THEN** system shows the secrecy confirmation dialog before generating PDF
+
+#### Scenario: Label reflects new status after archive and navigation
+
+- **WHEN** psychologist archives a patient from the detail page, navigates away (e.g. to the listing), and re-opens the same patient
+- **THEN** the actions menu offers "Desarquivar", reflecting the persisted archived status (it does not revert to "Arquivar")
 
 ### Requirement: Patient creation form has two steps
 
