@@ -20,9 +20,9 @@
 
 ## 4. Notas — manual save button (`personal-notes-tab.tsx`)
 
-- [ ] 4.1 Consume `isDirty`/`saveNow`; render the "Salvar" `Button` next to the `AutoSaveIndicator` only in the unlocked editor view, disabled when `!isDirty || status === 'saving'`.
-- [ ] 4.2 On click call `saveNow()`; confirm no button is rendered in the locked state.
-- [ ] 4.3 **Unit tests (immediately after 4.1–4.2)** in `src/__tests__/unit/modules/medical-records/components/personal-notes-tab.test.tsx`: button disabled on clean unlocked mount, enabled after editing, calls `upsertPersonalNotes` on click, absent while locked.
+- [x] 4.1 Consume `isDirty`/`saveNow`; render the "Salvar" `Button` next to the `AutoSaveIndicator` only in the unlocked editor view, disabled when `!isDirty || status === 'saving'`.
+- [x] 4.2 On click call `saveNow()`; confirm no button is rendered in the locked state.
+- [x] 4.3 **Unit tests (immediately after 4.1–4.2)** in `src/__tests__/unit/modules/medical-records/components/personal-notes-tab.test.tsx`: button disabled on clean unlocked mount, enabled after editing, calls `upsertPersonalNotes` on click, absent while locked.
 
 ## 5. Integration tests (real server actions + RLS)
 

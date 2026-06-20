@@ -11,6 +11,7 @@ import type {
 } from '@/modules/medical-records';
 import { TiptapEditor } from '@/modules/patients/components/tiptap-editor';
 import { useAutoSave } from '@/modules/patients/lib/use-auto-save';
+import { Button } from '@/shared/ui/button';
 
 import { AutoSaveIndicator } from './auto-save-indicator';
 import { PersonalNotesLock } from './personal-notes-lock';
@@ -153,7 +154,12 @@ export function PersonalNotesTab({
     [patientId, upsertPersonalNotes],
   );
 
-  const { status: saveStatus, lastSavedAt } = useAutoSave(content, handleSave, {
+  const {
+    status: saveStatus,
+    lastSavedAt,
+    isDirty,
+    saveNow,
+  } = useAutoSave(content, handleSave, {
     interval: 10_000,
   });
 
@@ -207,8 +213,21 @@ export function PersonalNotesTab({
         />
       ) : (
         <>
-          {/* Auto-save indicator */}
-          <AutoSaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+          {/* Auto-save indicator + manual save button */}
+          <div className="flex items-center gap-3">
+            <AutoSaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+            <Button
+              type="button"
+              size="sm"
+              disabled={!isDirty || saveStatus === 'saving'}
+              onClick={() => {
+                void saveNow();
+              }}
+              data-testid="personal-notes-save-button"
+            >
+              Salvar
+            </Button>
+          </div>
 
           {/* Tiptap editor — same config as evolutions */}
           <div className="max-w-[720px]">
