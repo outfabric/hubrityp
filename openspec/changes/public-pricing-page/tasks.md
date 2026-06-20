@@ -31,8 +31,8 @@
 
 ## 5. Page assembly + metadata
 
-- [ ] 5.1 Implement `src/app/(public)/precos/page.tsx`: compose title/subtitle + plan cards + comparison table + billing FAQ + final CTA; single `<h1>`; set unique SEO metadata via `buildPageMetadata()`.
-- [ ] 5.2 Integration test: `/precos` returns 200 anonymously (no login redirect); renders cards/table/FAQ/CTA; prices match central config; metadata set; `?plano=` links use known slugs — `src/__tests__/integration/marketing/pricing-page.int.test.ts`.
+- [x] 5.1 Implement `src/app/(public)/precos/page.tsx`: compose title/subtitle + plan cards + comparison table + billing FAQ + final CTA; single `<h1>`; set unique SEO metadata via `buildPageMetadata()`.
+- [x] 5.2 Integration test: `/precos` returns 200 anonymously (no login redirect); renders cards/table/FAQ/CTA; prices match central config; metadata set; `?plano=` links use known slugs — `src/__tests__/integration/marketing/pricing-page.int.test.ts`.
 
 ## 6. Middleware gating note
 
