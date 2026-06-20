@@ -13,6 +13,19 @@ export interface AutoSaveResult {
   status: AutoSaveStatus;
   /** Timestamp of the last successful save, or `null` if nothing was saved yet. */
   lastSavedAt: Date | null;
+  /**
+   * `true` when the current content differs from the last successfully saved
+   * snapshot (i.e. there are unsaved changes). Reactive — drives the enabled
+   * state of a manual "Salvar" button.
+   */
+  isDirty: boolean;
+  /**
+   * Persist the latest content immediately, bypassing the debounce timer.
+   * Cancels any pending debounced save, reuses the no-op check (unchanged
+   * content) and the in-flight guard, so it is safe to call while a debounced
+   * save is already running. Stable identity across renders.
+   */
+  saveNow: () => Promise<void>;
 }
 
 export interface AutoSaveOptions {
@@ -46,9 +59,25 @@ export function useAutoSave<T>(
 
   const [status, setStatus] = useState<AutoSaveStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  // Mirror of the dirty flag in React state so consumers re-render when the
+  // unsaved-changes condition flips. Derived from `content` vs the last saved
+  // snapshot; refs alone would not trigger a re-render.
+  const [isDirty, setIsDirty] = useState(false);
 
   // Ref holding the JSON snapshot of the last *successfully* saved content.
   const lastSavedContentRef = useRef<string>(JSON.stringify(content));
+
+  // Ref holding the latest content so `saveNow` can read it without being
+  // re-created (and without going stale) on every render. Updated in an effect
+  // (not during render) to satisfy the React Compiler.
+  const latestContentRef = useRef<T>(content);
+  useEffect(() => {
+    latestContentRef.current = content;
+  }, [content]);
+
+  // Ref to the pending debounce timer so `saveNow` can cancel it before
+  // saving immediately.
+  const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a stable reference to the latest saveFn without re-triggering the
   // debounce effect when the caller passes a new function identity.
@@ -80,6 +109,8 @@ export function useAutoSave<T>(
       lastSavedContentRef.current = serialized;
       setLastSavedAt(new Date());
       setStatus('saved');
+      // Clear dirty state on a successful save.
+      setIsDirty(false);
     } catch {
       setStatus('error');
     } finally {
@@ -92,18 +123,39 @@ export function useAutoSave<T>(
 
     // Don't schedule a timer if there's nothing new to save.
     if (serialized === lastSavedContentRef.current) {
+      setIsDirty(false);
       return;
     }
+
+    // Content differs from the last saved snapshot — mark as dirty.
+    setIsDirty(true);
 
     const timerId = setTimeout(() => {
       void executeSave(content);
     }, interval);
+    pendingTimerRef.current = timerId;
 
     // Each content change clears the previous timer, implementing debounce.
     return () => {
       clearTimeout(timerId);
+      if (pendingTimerRef.current === timerId) {
+        pendingTimerRef.current = null;
+      }
     };
   }, [content, interval, executeSave]);
 
-  return { status, lastSavedAt };
+  const saveNow = useCallback(async () => {
+    // Cancel any pending debounced save so it does not fire after this one.
+    if (pendingTimerRef.current !== null) {
+      clearTimeout(pendingTimerRef.current);
+      pendingTimerRef.current = null;
+    }
+
+    // Reuses `executeSave`'s no-op check (unchanged content) and the in-flight
+    // guard, so this is a safe no-op when there is nothing to save or a save is
+    // already running.
+    await executeSave(latestContentRef.current);
+  }, [executeSave]);
+
+  return { status, lastSavedAt, isDirty, saveNow };
 }

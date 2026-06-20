@@ -198,4 +198,136 @@ describe('useAutoSave', () => {
     expect(saveFn).toHaveBeenCalledOnce();
     expect(saveFn).toHaveBeenCalledWith({ text: 'world', count: 2 });
   });
+
+  describe('isDirty', () => {
+    it('is false initially', () => {
+      const saveFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useAutoSave('initial', saveFn, { interval: 5_000 }));
+
+      expect(result.current.isDirty).toBe(false);
+    });
+
+    it('becomes true after a content change and false again after save', async () => {
+      const saveFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) => useAutoSave(content, saveFn, { interval: 5_000 }),
+        { initialProps: { content: 'initial' } },
+      );
+
+      expect(result.current.isDirty).toBe(false);
+
+      rerender({ content: 'updated' });
+
+      expect(result.current.isDirty).toBe(true);
+
+      await advanceTimers(5_000);
+
+      expect(saveFn).toHaveBeenCalledOnce();
+      expect(result.current.isDirty).toBe(false);
+    });
+  });
+
+  describe('saveNow', () => {
+    it('persists immediately without waiting for the debounce timer', async () => {
+      const saveFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) => useAutoSave(content, saveFn, { interval: 10_000 }),
+        { initialProps: { content: 'v1' } },
+      );
+
+      rerender({ content: 'v2' });
+
+      // Save immediately, well before the 10s timer would fire.
+      await act(async () => {
+        await result.current.saveNow();
+      });
+
+      expect(saveFn).toHaveBeenCalledOnce();
+      expect(saveFn).toHaveBeenCalledWith('v2');
+      expect(result.current.status).toBe('saved');
+      expect(result.current.isDirty).toBe(false);
+    });
+
+    it('is a no-op when content is unchanged', async () => {
+      const saveFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useAutoSave('same', saveFn, { interval: 5_000 }));
+
+      await act(async () => {
+        await result.current.saveNow();
+      });
+
+      expect(saveFn).not.toHaveBeenCalled();
+    });
+
+    it('does not double-save when a debounced save is in flight', async () => {
+      let resolveSave!: () => void;
+      const saveFn = vi.fn().mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveSave = resolve;
+          }),
+      );
+
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) => useAutoSave(content, saveFn, { interval: 1_000 }),
+        { initialProps: { content: 'v1' } },
+      );
+
+      rerender({ content: 'v2' });
+
+      // Trigger the debounced save — it starts but does not resolve yet.
+      act(() => {
+        vi.advanceTimersByTime(1_000);
+      });
+
+      expect(result.current.status).toBe('saving');
+      expect(saveFn).toHaveBeenCalledOnce();
+
+      // saveNow while the debounced save is in flight — the in-flight guard
+      // must prevent a second invocation.
+      await act(async () => {
+        await result.current.saveNow();
+      });
+
+      expect(saveFn).toHaveBeenCalledOnce();
+
+      // Resolve the original save and flush the resulting state update.
+      await act(async () => {
+        resolveSave();
+        await Promise.resolve();
+      });
+
+      expect(result.current.status).toBe('saved');
+      expect(saveFn).toHaveBeenCalledOnce();
+    });
+
+    it('cancels the pending debounce so the debounced save does not fire afterward', async () => {
+      const saveFn = vi.fn().mockResolvedValue(undefined);
+
+      const { result, rerender } = renderHook(
+        ({ content }: { content: string }) => useAutoSave(content, saveFn, { interval: 10_000 }),
+        { initialProps: { content: 'v1' } },
+      );
+
+      rerender({ content: 'v2' });
+
+      // Click "Salvar" before the timer fires — this should cancel the timer.
+      await act(async () => {
+        await result.current.saveNow();
+      });
+
+      expect(saveFn).toHaveBeenCalledOnce();
+      expect(saveFn).toHaveBeenCalledWith('v2');
+
+      // Advance past the original debounce interval — the cancelled timer must
+      // not fire a second save.
+      await advanceTimers(10_000);
+
+      expect(saveFn).toHaveBeenCalledOnce();
+    });
+  });
 });

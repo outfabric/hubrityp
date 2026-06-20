@@ -1,10 +1,10 @@
 ## 1. Shared hook: extend `useAutoSave` with `isDirty` + `saveNow()`
 
-- [ ] 1.1 In `src/modules/patients/lib/use-auto-save.ts`, add `isDirty: boolean` and `saveNow: () => Promise<void>` to the `AutoSaveResult` interface (additive, backward compatible — Anamnese keeps destructuring `{ status, lastSavedAt }`).
-- [ ] 1.2 Mirror dirty state into React state: set it from the debounce `useEffect` (content vs `lastSavedContentRef`) and clear it on successful save inside `executeSave`.
-- [ ] 1.3 Implement `saveNow()` as a stable `useCallback` that reads the latest content via a ref, clears the pending debounce `setTimeout`, and calls the existing `executeSave` (reusing the no-op check and `isSavingRef` in-flight guard).
-- [ ] 1.4 **Unit tests (immediately after 1.1–1.3)** in `src/__tests__/unit/modules/patients/lib/use-auto-save.test.ts`: `isDirty` is false initially, true after a content change, false again after save; `saveNow()` persists immediately without waiting for the 10s timer; `saveNow()` is a no-op when content is unchanged; `saveNow()` does not double-save when a debounced save is in flight; clicking resets the timer so the debounced save does not fire afterward.
-- [ ] 1.5 **Regression check** that existing Anamnese auto-save behavior is unchanged (existing `use-auto-save` tests still green; no signature change).
+- [x] 1.1 In `src/modules/patients/lib/use-auto-save.ts`, add `isDirty: boolean` and `saveNow: () => Promise<void>` to the `AutoSaveResult` interface (additive, backward compatible — Anamnese keeps destructuring `{ status, lastSavedAt }`).
+- [x] 1.2 Mirror dirty state into React state: set it from the debounce `useEffect` (content vs `lastSavedContentRef`) and clear it on successful save inside `executeSave`.
+- [x] 1.3 Implement `saveNow()` as a stable `useCallback` that reads the latest content via a ref, clears the pending debounce `setTimeout`, and calls the existing `executeSave` (reusing the no-op check and `isSavingRef` in-flight guard).
+- [x] 1.4 **Unit tests (immediately after 1.1–1.3)** in `src/__tests__/unit/modules/patients/lib/use-auto-save.test.ts`: `isDirty` is false initially, true after a content change, false again after save; `saveNow()` persists immediately without waiting for the 10s timer; `saveNow()` is a no-op when content is unchanged; `saveNow()` does not double-save when a debounced save is in flight; clicking resets the timer so the debounced save does not fire afterward.
+- [x] 1.5 **Regression check** that existing Anamnese auto-save behavior is unchanged (existing `use-auto-save` tests still green; no signature change).
 
 ## 2. Evoluções — manual save button (`evolution-editor.tsx`)
 
