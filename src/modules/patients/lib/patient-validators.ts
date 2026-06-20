@@ -68,6 +68,65 @@ export function maskPhone(raw: string): string {
 }
 
 /**
+ * Formats a national phone input progressively into `DD NNNNN-NNNN`.
+ *
+ * Strips non-digits, caps at 11 digits (2-digit DDD + 9-digit mobile), and
+ * applies the mask as the user types. The returned text NEVER contains the
+ * `+55` country code, so calling it on its own output is a no-op — that is what
+ * makes it idempotent across keystrokes in a controlled input:
+ *
+ *   maskNationalPhone(maskNationalPhone(x)) === maskNationalPhone(x)
+ *
+ * The `+55` country code lives only at the boundary (see `toCanonical`), never
+ * inside the editable value, which is why the old `maskPhone` re-fed its own
+ * `5` digits back as data.
+ *
+ * Paste handling: when the raw input carries more than 11 digits and begins
+ * with the `55` country code (e.g. pasting `+55 11 91234-5678` from a contact),
+ * the leading `55` is stripped first so paste behaves identically to typing the
+ * national number. This is the same country-code rule `toNationalDisplay` uses
+ * for prefill. A genuine national number is at most 11 digits, so DDD `55`
+ * (`55 99988-7766`) is never mistaken for a country code.
+ */
+export function maskNationalPhone(raw: string): string {
+  const allDigits = raw.replace(/\D/g, '');
+  const national =
+    allDigits.length > 11 && allDigits.startsWith('55') ? allDigits.slice(2) : allDigits;
+  const digits = national.slice(0, 11);
+
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+  return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+/**
+ * Boundary helper: converts an editable national value into the canonical
+ * stored format `+55 DD NNNNN-NNNN`.
+ *
+ * Returns `''` for empty input so an untouched optional field stays empty
+ * rather than becoming a bare `+55 `. Otherwise prefixes the national mask
+ * with the country code exactly once.
+ */
+export function toCanonical(national: string): string {
+  if (national.trim().length === 0) return '';
+  return `+55 ${maskNationalPhone(national)}`;
+}
+
+/**
+ * Boundary helper: converts a canonical stored value (`+55 DD NNNNN-NNNN`)
+ * back into the editable national display (`DD NNNNN-NNNN`).
+ *
+ * Delegates to `maskNationalPhone`, which strips a single leading `55` country
+ * code when the input exceeds national length (the canonical form always carries
+ * one), so editing a stored patient pre-fills the field without a duplicated
+ * country code — and never strips a `55` that is acting as the DDD.
+ */
+export function toNationalDisplay(canonical: string): string {
+  return maskNationalPhone(canonical);
+}
+
+/**
  * Formats a raw phone string into the canonical `+55 DD NNNNN-NNNN` format.
  *
  * Strips all non-digit characters, then re-assembles. If the resulting digits
