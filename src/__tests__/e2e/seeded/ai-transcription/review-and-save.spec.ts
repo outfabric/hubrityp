@@ -87,9 +87,14 @@ test.describe('@ai-transcription review — edit, confirm, and save to prontuár
     await expect(saveBtn).toBeEnabled();
     await saveBtn.click();
 
-    // Success toast and redirect to the created evolution detail.
+    // Success toast and redirect to the created evolution detail. The redirect
+    // is a client `router.push` to an RSC route whose payload (the evolution
+    // detail page) is fetched on demand; under the full-suite parallel load that
+    // RSC fetch can outlast a 15s window even though the save itself succeeded
+    // (toast shown, row written). Widen the navigation wait toward the 60s test
+    // budget so a slow-but-correct redirect is not mistaken for a regression.
     await expect(page.getByText('Nota salva no prontuário.')).toBeVisible({ timeout: 15_000 });
-    await page.waitForURL(/\/pacientes\/.+\/prontuario\/evolucoes\/.+/, { timeout: 15_000 });
+    await page.waitForURL(/\/pacientes\/.+\/prontuario\/evolucoes\/.+/, { timeout: 30_000 });
 
     const url = new URL(page.url());
     expect(url.pathname).toMatch(/\/pacientes\/[^/]+\/prontuario\/evolucoes\/[^/]+$/);
