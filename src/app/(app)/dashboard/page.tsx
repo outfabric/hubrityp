@@ -10,14 +10,11 @@ import {
   SectionPendencias,
   SectionToday,
   SectionWeeklySkeleton,
-  stampFirstAccess,
   WeeklySummarySlot,
 } from '@/modules/dashboard';
-import { ChecklistSlot, DashboardTour } from '@/modules/onboarding';
+import { ChecklistSlot } from '@/modules/onboarding';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
-
-import { completeTour } from './actions';
 
 // Operational home for the authenticated psychologist.
 //
@@ -32,12 +29,15 @@ import { completeTour } from './actions';
 //
 // Composition (in render order):
 //   1. Authenticate + authorize the profile (defense in depth).
-//   2. Fire-and-forget `stampFirstAccess` — records the day-7 NPS anchor on
-//      the first authenticated render. We never block the page on it.
-//   3. Fetch the day's data + the empty-state signal in parallel (no waterfall).
-//   4. Brand-new user (no patients, no sessions) → the first-steps slot.
-//   5. Otherwise → the four sections in order: Hoje, Pendências, Resumo, Ações.
+//   2. Fetch the day's data + the empty-state signal in parallel (no waterfall).
+//   3. Brand-new user (no patients, no sessions) → the first-steps slot.
+//   4. Otherwise → the four sections in order: Hoje, Pendências, Resumo, Ações.
 //      Resumo streams inside <Suspense> so the day's data paints first.
+//
+// NOTE: `first_access_at` is stamped at the WIZARD entry (/onboarding/welcome
+// and /onboarding/setup), NOT here. Active psychologists with incomplete
+// onboarding are routed to the wizard before the dashboard, so stamping there
+// records the true first authenticated destination for the day-7 NPS anchor.
 export default async function DashboardPage() {
   const supabase = await createServerClient();
   const profile = await getCurrentProfile(supabase);
@@ -49,12 +49,6 @@ export default async function DashboardPage() {
   if (profile.status !== ProfileStatus.Active) {
     redirect('/onboarding/pending');
   }
-
-  // Idempotent, fire-and-forget. `stampFirstAccess` only writes when
-  // `first_access_at` is still NULL; we intentionally do not `await` it so a
-  // slow write never delays the first paint. Failures are swallowed (the next
-  // render retries) rather than crashing the dashboard.
-  void stampFirstAccess(supabase).catch(() => {});
 
   // Independent reads run together — no waterfall. Each helper authenticates
   // via getUser() and scopes to auth.uid() internally.
@@ -78,23 +72,6 @@ export default async function DashboardPage() {
           Olá, {profile.fullName}
         </span>
       </header>
-
-      {/* Guided product tour (Driver.js, client leaf, `dynamic ssr:false`).
-          Renders no markup — it is a side-effect controller over the
-          `data-tour-*` anchors. It auto-runs ONCE when `tour_completed_at` is
-          still NULL; the gate is this server-read timestamp, never localStorage.
-          On finish/skip it calls `completeTour` to stamp the row so it never
-          auto-runs again, on any device.
-
-          Note: a brand-new user (no patients/sessions) sees `FirstStepsSlot`
-          below instead of the four sections, so the Hoje/Pendências/Ações
-          anchors are absent on that very first visit; Driver.js degrades
-          gracefully (centered popover, no highlight) for missing anchors, so
-          the tour copy still shows and completion still stamps. */}
-      <DashboardTour
-        tourCompletedAt={profile.tourCompletedAt?.toISOString() ?? null}
-        completeTour={completeTour}
-      />
 
       {/* First-run onboarding checklist — renders at the top whenever a
           mandatory item is still pending, and disappears once setup is 100%

@@ -20,6 +20,11 @@ export type { SignInResult } from '@/modules/auth/lib/sign-in-result';
 
 const DEFAULT_TARGET = '/dashboard';
 const PENDING_TARGET = '/onboarding/pending';
+// First-run wizard entrypoint. An active user who has not finished (or
+// explicitly skipped) onboarding is funnelled here by the middleware. We mirror
+// that target in the login action so the redirect lands directly on the wizard
+// instead of bouncing /dashboard -> 307 -> /onboarding/welcome (see below).
+const WELCOME_TARGET = '/onboarding/welcome';
 
 /**
  * Anti-enumeration delay: add random 50–150ms delay to match the timing
@@ -154,6 +159,23 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
             event: 'login_success',
             metadata: { keepLoggedIn },
           });
+
+          // Active users split by onboarding completion, mirroring the
+          // middleware predicate (`onboarding_step == 'done'` OR
+          // `onboarding_completed_at IS NOT NULL`). When onboarding is
+          // incomplete we redirect straight to the first-run wizard and IGNORE
+          // any `redirectTo`: the middleware would 307 every app/auth target to
+          // `/onboarding/welcome` anyway, and that POST-stream redirect chain is
+          // what leaves the client RSC router stuck showing `/dashboard` in the
+          // URL bar while rendering the wizard. Resolving the final target here
+          // removes the bounce so the URL bar matches the rendered page.
+          const onboardingComplete =
+            profile.onboardingStep === 'done' || profile.onboardingCompletedAt !== null;
+
+          if (!onboardingComplete) {
+            redirectTarget = WELCOME_TARGET;
+            break;
+          }
 
           const rawTarget = formData.get('redirectTo');
           redirectTarget = safeRedirect(

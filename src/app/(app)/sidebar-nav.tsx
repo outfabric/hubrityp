@@ -194,12 +194,9 @@ export function SidebarNav() {
         {renderNavItems(closeMobile)}
       </nav>
 
-      {/* Desktop sidebar — always visible at md+. Carries the stable tour
-          anchor: the guided tour runs on the desktop layout where the sidebar
-          is always rendered (on mobile it lives behind the hamburger). */}
+      {/* Desktop sidebar — always visible at md+. */}
       <nav
         aria-label="Menu principal"
-        data-tour-anchor="sidebar-nav"
         className="bg-surface-muted border-border hidden w-60 flex-col gap-1 border-r px-3 py-6 md:flex"
       >
         {renderNavItems()}

@@ -16,19 +16,21 @@ import { ProfileStatus } from '@/modules/registration';
 // the empty-state branch, and the order of the four sections.
 // ---------------------------------------------------------------------------
 
-const { mockRedirect, mockGetCurrentProfile, mockStampFirstAccess } = vi.hoisted(() => ({
+const { mockRedirect, mockGetCurrentProfile } = vi.hoisted(() => ({
   // Next's redirect() throws to halt rendering — we mirror that so the page's
   // control flow stops exactly where it would in production.
   mockRedirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT:${url}`);
   }),
   mockGetCurrentProfile: vi.fn(),
-  mockStampFirstAccess: vi.fn(),
 }));
 
 const mockGetTodaySessions = vi.fn();
 const mockGetPendencias = vi.fn();
 const mockHasAnyData = vi.fn();
+// Kept as a spy so we can assert the dashboard page NEVER invokes it — the
+// first-access stamp moved to the wizard entry (welcome/setup pages).
+const mockStampFirstAccess = vi.fn();
 
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => mockRedirect(url),
@@ -51,6 +53,10 @@ vi.mock('@/modules/registration', async () => {
 // Replace the dashboard barrel: the data helpers are spies and the section
 // components / slots are lightweight stand-ins that emit a stable testid so we
 // can assert presence and DOM order without booting the real components.
+// `stampFirstAccess` is intentionally NOT mapped here: the dashboard page no
+// longer imports it (the first-access stamp moved to the wizard entry). If a
+// regression re-adds the import, the unmocked barrel export still resolves, but
+// the assertion in the greeting test below proves the page never invokes it.
 vi.mock('@/modules/dashboard', () => ({
   getTodaySessions: (...args: unknown[]) => mockGetTodaySessions(...args) as unknown,
   getPendencias: (...args: unknown[]) => mockGetPendencias(...args) as unknown,
@@ -97,9 +103,6 @@ function hasData(value: boolean): HasAnyDataResult {
 }
 
 async function renderPage() {
-  // `stampFirstAccess` is fire-and-forget (not awaited by the page); resolve it
-  // so the floating promise settles cleanly and never rejects under the test.
-  mockStampFirstAccess.mockResolvedValue({ ok: true, stamped: false });
   const ui = await DashboardPage();
   render(ui);
 }
@@ -143,7 +146,7 @@ describe('DashboardPage — composition', () => {
     expect(order2 & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('greets the user by name and stamps first access (fire-and-forget)', async () => {
+  it('greets the user by name and does NOT stamp first access (moved to the wizard entry)', async () => {
     mockGetCurrentProfile.mockResolvedValue(activeProfile({ fullName: 'Dra. Helena' }));
     mockGetTodaySessions.mockResolvedValue(TODAY_OK);
     mockGetPendencias.mockResolvedValue(PENDENCIAS_OK);
@@ -152,7 +155,9 @@ describe('DashboardPage — composition', () => {
     await renderPage();
 
     expect(screen.getByTestId('dashboard-greeting')).toHaveTextContent('Olá, Dra. Helena');
-    expect(mockStampFirstAccess).toHaveBeenCalledTimes(1);
+    // The day-7 NPS anchor is stamped at /onboarding/welcome (+ defensively at
+    // /onboarding/setup), NOT on the dashboard — so the page must never call it.
+    expect(mockStampFirstAccess).not.toHaveBeenCalled();
   });
 
   it('renders the first-steps slot (and no sections) when the user has zero data', async () => {
@@ -189,7 +194,6 @@ describe('DashboardPage — composition', () => {
 
   it('redirects to /login (defense in depth) when a data helper reports an invalid session', async () => {
     mockGetCurrentProfile.mockResolvedValue(activeProfile());
-    mockStampFirstAccess.mockResolvedValue({ ok: true, stamped: false });
     mockGetTodaySessions.mockResolvedValue({ ok: false, code: 'UNAUTHORIZED' });
     mockGetPendencias.mockResolvedValue(PENDENCIAS_OK);
     mockHasAnyData.mockResolvedValue(hasData(true));

@@ -29,6 +29,14 @@ export type UploadPhotoActionResult =
 
 export interface StepProfileProps {
   /**
+   * The owner's current `profiles.full_name`, read server-side and passed in to
+   * PRE-FILL the display-name field (confirm, don't re-type). Empty string when
+   * there is no name yet. This is the same value persisted on submit, so the
+   * data-aware wizard never asks the psychologist to re-enter what registration
+   * already captured (onboarding-wizard spec, "no double entry").
+   */
+  defaultDisplayName?: string;
+  /**
    * Persists the `profile` step server-side (authorized by `auth.uid()`). The
    * RHF-validated form values are passed through and re-validated on the server
    * (the display name lands in `profiles.full_name`). The client passes NO user
@@ -72,7 +80,11 @@ function emptyToUndefined(value: unknown): string | undefined {
  * {@link onSaveStep}. Server field errors are mapped back onto the matching RHF
  * fields; transport/unknown failures surface a non-blocking toast.
  */
-export function StepProfile({ onSaveStep, onUploadPhoto }: StepProfileProps) {
+export function StepProfile({
+  defaultDisplayName = '',
+  onSaveStep,
+  onUploadPhoto,
+}: StepProfileProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isUploading, startUpload] = useTransition();
@@ -94,7 +106,9 @@ export function StepProfile({ onSaveStep, onUploadPhoto }: StepProfileProps) {
   } = useForm<ProfileStepInput>({
     resolver: zodResolver(profileStepSchema),
     mode: 'onTouched',
-    defaultValues: { displayName: '', phone: '', bio: '' },
+    // Pre-fill the display name from the owner's current `full_name` (passed
+    // server-side); phone/bio have no persisted column yet, so they start empty.
+    defaultValues: { displayName: defaultDisplayName, phone: '', bio: '' },
   });
 
   function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {

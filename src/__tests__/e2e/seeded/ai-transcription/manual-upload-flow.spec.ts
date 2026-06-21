@@ -80,40 +80,51 @@ test.describe('@ai-transcription manual audio upload flow', () => {
     // The progress section should appear (mutation started)
     await expect(page.getByTestId('upload-progress-section')).toBeVisible({ timeout: 15_000 });
 
-    // Wait for either success (sheet closes) or error (toast appears).
-    // In the e2e environment, the full round-trip may fail due to Storage
-    // mock limitations or Inngest send timeout. We accept either outcome
-    // and verify the database state separately.
-    //
-    // The key assertion is that requestAudioUploadUrl created a row.
-    // Even if the flow errors after the INSERT, the row exists.
-    //
-    // Give the mutation time to reach the INSERT step (which happens
-    // before the signed URL is created from Storage).
-    await page.waitForTimeout(10_000);
-
     // Verify the ai_transcriptions row exists in the database.
     // requestAudioUploadUrl INSERTs a row with status='pending' before
     // calling Storage SDK. Even if Storage fails, the row should exist.
+    //
+    // In the e2e environment the full round-trip may fail (Storage mock limits
+    // or Inngest send timeout), so we don't assert the UI outcome — only the
+    // INSERT. Under the full-suite parallel load the mutation can take longer
+    // than a single fixed settle to reach the INSERT, so instead of a blind
+    // `waitForTimeout` we POLL the row into existence (deterministic, bounded by
+    // the 60s test budget) and capture it for the field assertions below.
     const seed = await readSeedState();
     const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
     try {
-      const rows = await sql`
-        SELECT id, status, source, audio_object_key, user_id, patient_id
-        FROM public.ai_transcriptions
-        WHERE user_id = ${seed.userId}
-          AND patient_id = ${patientId}
-          AND source = 'manual_upload'
-        ORDER BY created_at DESC
-        LIMIT 1;
-      `;
+      let row: Record<string, unknown> | undefined;
+      await expect
+        .poll(
+          async () => {
+            const rows = await sql`
+              SELECT id, status, source, audio_object_key, user_id, patient_id
+              FROM public.ai_transcriptions
+              WHERE user_id = ${seed.userId}
+                AND patient_id = ${patientId}
+                AND source = 'manual_upload'
+              ORDER BY created_at DESC
+              LIMIT 1;
+            `;
+            row = rows[0];
+            return rows.length;
+          },
+          { timeout: 30_000, intervals: [500, 1_000, 2_000] },
+        )
+        .toBe(1);
 
-      expect(rows).toHaveLength(1);
-      const row = rows[0]!;
-      expect(row.status).toBe('pending');
-      expect(row.source).toBe('manual_upload');
-      expect(row.user_id).toBe(seed.userId);
-      expect(row.patient_id).toBe(patientId);
+      expect(row).toBeDefined();
+      // The row is INSERTed as `pending` and then advances ASYNCHRONOUSLY
+      // (`pending → transcribing → generating → ready`) as Storage + the Inngest
+      // pipeline process it. The assertion here is that `requestAudioUploadUrl`
+      // created the row at all — its exact transient lifecycle status is a moving
+      // target (a slow poll, or a flake-retry, can legitimately observe a later
+      // state), so we accept any valid post-insert status instead of pinning the
+      // racy `pending`.
+      expect(['pending', 'transcribing', 'generating', 'ready', 'failed']).toContain(row!.status);
+      expect(row!.source).toBe('manual_upload');
+      expect(row!.user_id).toBe(seed.userId);
+      expect(row!.patient_id).toBe(patientId);
     } finally {
       await sql.end();
     }

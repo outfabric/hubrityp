@@ -1,10 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { notFound, redirect } from 'next/navigation';
 
+import { stampFirstAccess } from '@/modules/dashboard';
 import {
   isValidStep,
   type OnboardingSummary,
-  readOnboardingChecklistSummary,
+  readOnboardingSummaryFromData,
+  recomputeChecklistImpl,
   resumeOnboardingStepImpl,
   StepDone,
   StepLocation,
@@ -73,6 +75,15 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
     redirect('/onboarding/pending');
   }
 
+  // Idempotent, fire-and-forget `first_access_at` stamp. Active psychologists
+  // with incomplete onboarding are routed to the wizard BEFORE the dashboard, so
+  // this setup render can be the true first authenticated destination — stamping
+  // here (defensively, in addition to /onboarding/welcome) preserves the day-7
+  // NPS anchor. The write only fires when `first_access_at IS NULL`; we never
+  // `await` it so a slow write cannot delay the first paint, and failures are
+  // swallowed (the next render retries) rather than crashing the wizard.
+  void stampFirstAccess(supabase).catch(() => {});
+
   // 3. Resolve the resume point from the OWNER'S persisted state (server-side,
   // never client-supplied). The persisted `onboarding_step` already points at
   // the step the user should be on NEXT (each completed step advances it), so
@@ -92,12 +103,19 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
     redirect(`/onboarding/setup/${resume.resumeStep}`);
   }
 
-  // The terminal `done` summary reads the OWNER'S checklist server-side through
-  // the request's RLS-scoped Supabase client — `auth.uid()` is the only thing
-  // that can widen the result, so another user's row can never be returned. A
-  // brand-new user may have no row yet → all items default to "missing"
-  // (non-blocking links), never a crash.
+  // The terminal `done` summary derives from AUTHORITATIVE DOMAIN DATA (the same
+  // recompute source as the dashboard checklist), not the stored flags — so a
+  // location/patient created outside the wizard is reflected here, in parity
+  // with the panel (onboarding-wizard spec, "Step 4 summarizes from
+  // authoritative domain data"). `auth.uid()` scopes every read; a brand-new
+  // user with no data defaults to all-"missing" (non-blocking links), never a
+  // crash.
   const summary = step === 'done' ? await readSummary(supabase) : null;
+
+  // The patients step recognizes EXISTING patients as satisfying the step (no
+  // double entry). We derive that from real data via the recompute — the same
+  // source feeding the checklist — only when actually rendering step 3.
+  const hasExistingPatients = step === 'patients' ? await readHasActivePatient(supabase) : false;
 
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-8">
@@ -108,18 +126,45 @@ export default async function SetupStepPage({ params }: SetupStepPageProps) {
         </h1>
       </div>
 
-      {renderStep(step, profile.sensitiveDataConsentAt != null, summary)}
+      {renderStep(step, {
+        hasSensitiveDataConsent: profile.sensitiveDataConsentAt != null,
+        hasExistingPatients,
+        defaultDisplayName: profile.fullName,
+        summary,
+      })}
     </div>
   );
 }
 
 /**
- * Reads the owner's onboarding checklist through the RLS-scoped Supabase client
- * and projects it onto the three MVP summary items shown on step 4. Missing row
- * (or a read error) → all items "missing" (non-blocking).
+ * Reads the step-4 summary from authoritative domain data (the same recompute
+ * source as the dashboard checklist), projected onto the three MVP summary
+ * items. An unauthorized session → all items "missing" (non-blocking).
  */
 async function readSummary(supabase: SupabaseClient): Promise<OnboardingSummary> {
-  return readOnboardingChecklistSummary(supabase);
+  return readOnboardingSummaryFromData(supabase);
+}
+
+/**
+ * Whether the owner already has >= 1 active patient, derived from real data via
+ * the shared recompute (single source of truth with the dashboard checklist).
+ * On an unauthorized session it returns `false` so the step renders its default
+ * (empty) variant rather than crashing.
+ */
+async function readHasActivePatient(supabase: SupabaseClient): Promise<boolean> {
+  const recompute = await recomputeChecklistImpl(supabase);
+  return recompute.ok ? recompute.state.primeiro_paciente : false;
+}
+
+interface RenderStepOptions {
+  /** Whether the owner accepted the LGPD sensitive-data consent term (step 3). */
+  hasSensitiveDataConsent: boolean;
+  /** Whether the owner already has >= 1 active patient (step 3 recognition). */
+  hasExistingPatients: boolean;
+  /** The owner's current `profiles.full_name`, pre-filled into step 1. */
+  defaultDisplayName: string;
+  /** The owner's data-derived summary, non-null only for the `done` step. */
+  summary: OnboardingSummary | null;
 }
 
 /**
@@ -127,20 +172,24 @@ async function readSummary(supabase: SupabaseClient): Promise<OnboardingSummary>
  * `patients` (step 3), and the terminal `done` summary (step 4) are all
  * implemented.
  *
- * `hasSensitiveDataConsent` is read server-side from the owner's profile and
- * controls whether the step-3 CSV upload is enabled (RN-11.03). The server gate
- * in `importOnboardingPatients` enforces it regardless of this UI flag.
- *
- * `summary` is the owner's checklist projection, non-null only for the `done`
- * step (where it drives the check vs. "Configurar agora" rendering).
+ * `hasSensitiveDataConsent` controls whether the step-3 CSV upload is enabled
+ * (RN-11.03); the server gate in `importOnboardingPatients` enforces it
+ * regardless of this UI flag. `hasExistingPatients` lets step 3 recognize
+ * already-registered patients and advance without re-adding. `defaultDisplayName`
+ * pre-fills step 1 from the owner's current `full_name`. `summary` is non-null
+ * only for the `done` step (where it drives the check vs. "Configurar agora").
  */
-function renderStep(
-  step: WizardStep,
-  hasSensitiveDataConsent: boolean,
-  summary: OnboardingSummary | null,
-) {
+function renderStep(step: WizardStep, options: RenderStepOptions) {
+  const { hasSensitiveDataConsent, hasExistingPatients, defaultDisplayName, summary } = options;
+
   if (step === 'profile') {
-    return <StepProfile onSaveStep={saveProfileStep} onUploadPhoto={uploadProfilePhoto} />;
+    return (
+      <StepProfile
+        defaultDisplayName={defaultDisplayName}
+        onSaveStep={saveProfileStep}
+        onUploadPhoto={uploadProfilePhoto}
+      />
+    );
   }
 
   if (step === 'location') {
@@ -151,6 +200,7 @@ function renderStep(
     return (
       <StepPatients
         hasSensitiveDataConsent={hasSensitiveDataConsent}
+        hasExistingPatients={hasExistingPatients}
         onImportCsv={importOnboardingPatients}
         onQuickAdd={quickAddOnboardingPatient}
         onSkip={skipPatientsStep}

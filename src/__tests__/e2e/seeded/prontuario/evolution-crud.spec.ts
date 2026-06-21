@@ -121,8 +121,12 @@ test.describe('@prontuario evolution creation happy path', () => {
     // After successful creation, the page redirects to the detail view
     await page.waitForURL('**/prontuario/evolucoes/**', { timeout: 10_000 });
 
-    // 7. On the detail page, verify it loaded correctly
-    await expect(page.getByTestId('evolution-detail-page-title')).toBeVisible();
+    // 7. On the detail page, verify it loaded correctly. The redirect target is
+    //    an RSC route whose payload is fetched on demand; under the full-suite
+    //    parallel load that fetch can outlast the default 5s expect window even
+    //    though the navigation already settled. Widen the wait so a slow-but-
+    //    correct render is not mistaken for a regression.
+    await expect(page.getByTestId('evolution-detail-page-title')).toBeVisible({ timeout: 20_000 });
 
     // 8. Open VersionHistoryPanel ("Historico" button) and verify v1 exists
     await page.getByTestId('version-history-trigger').click();

@@ -288,6 +288,13 @@
       "when": 1780709964623,
       "tag": "0040_dapper_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1782039155550,
+      "tag": "0041_parallel_stature",
+      "breakpoints": true
     }
   ]
 }

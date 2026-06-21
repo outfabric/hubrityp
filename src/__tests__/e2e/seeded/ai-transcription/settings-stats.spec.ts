@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import pgModule from 'postgres';
 
-import { readSeedState, SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { signInAsDedicatedUser } from '../_shared/dedicated-user-auth';
+import { readSeedState, SEED_AI_STATS_USER } from '../setup/seed-state';
 
 /**
  * @ai-transcription -- Settings usage stats (section 5.3).
@@ -19,21 +20,29 @@ import { readSeedState, SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-
  *
  * acceptanceRatePercent = round(acceptedWithoutEdits / reviewed * 100), where
  * `acceptedWithoutEdits` = rows with `saved_to_prontuario AND user_edits_count
- * = 0`. We delete every transcription for the seed user up front so the counts
- * are fully controlled and not polluted by the global-setup review fixtures.
+ * = 0`. We delete every transcription for the user up front so the counts are
+ * fully controlled.
+ *
+ * Isolation: the acceptance rate aggregates EVERY transcription this user owns,
+ * so the spec must own that whole set. It therefore runs as a DEDICATED user
+ * (`SEED_AI_STATS_USER`) rather than the GLOBAL seed user — the up-front blanket
+ * delete and the sibling review specs' `reviewed` writes (`review-and-save`,
+ * `review-discard`) would otherwise collide under `fullyParallel` (the delete
+ * wiped their `ready` fixtures; their writes inflated this spec's count). See
+ * SEED_AI_STATS_USER for the full rationale.
  *
  * Spec: openspec/changes/ai-transcription-settings-ui.
  */
 test.describe('@ai-transcription settings — usage stats acceptance rate', () => {
-  test.use({ storageState: STORAGE_STATE_PATH });
+  const USER = SEED_AI_STATS_USER;
 
   // Deterministic ids for the rows this spec owns, so cleanup is exact.
   const STATS_ID_PREFIX = '00000000-0000-4000-8000-0000000005';
 
   /**
-   * Insert `count` reviewed transcriptions for the seed user, of which
-   * `acceptedCount` are saved to prontuário with zero edits (the acceptance
-   * numerator). `offset` keeps ids unique across the two phases.
+   * Insert `count` reviewed transcriptions for the user, of which `acceptedCount`
+   * are saved to prontuário with zero edits (the acceptance numerator). `offset`
+   * keeps ids unique across the two phases.
    */
   async function seedReviewed(
     sql: pgModule.Sql,
@@ -65,19 +74,25 @@ test.describe('@ai-transcription settings — usage stats acceptance rate', () =
     }
   }
 
-  test('withholds the rate under 5 reviews, then reports 70%', async ({ page }) => {
+  test('withholds the rate under 5 reviews, then reports 70%', async ({
+    page,
+    context,
+    request,
+  }) => {
     test.setTimeout(60_000);
 
+    await signInAsDedicatedUser(context, request, USER);
+
     const seed = await readSeedState();
-    const patientId = SEED_PATIENTS.activeMinimal.id;
+    const patientId = USER.patient.id;
     const sql = pgModule(seed.databaseUrl, { max: 1, onnotice: () => {} });
 
     try {
       // Clean slate: own all transcription counts for this user.
-      await sql`DELETE FROM public.ai_transcriptions WHERE user_id = ${seed.userId};`;
+      await sql`DELETE FROM public.ai_transcriptions WHERE user_id = ${USER.id};`;
 
       // Phase 1: 3 reviewed, 1 accepted without edits → reviewed < 5.
-      await seedReviewed(sql, seed.userId, patientId, 3, 1, 0);
+      await seedReviewed(sql, USER.id, patientId, 3, 1, 0);
 
       await page.goto('/configuracoes/transcricao-ia');
       // The metric grid renders (totalProcessed = 3 > 0), not the empty state.
@@ -87,19 +102,18 @@ test.describe('@ai-transcription settings — usage stats acceptance rate', () =
       await expect(page.getByText('Dados insuficientes')).toBeVisible();
 
       // Phase 2: 7 more reviewed, 6 accepted → reviewed=10, accepted=7 → 70%.
-      await seedReviewed(sql, seed.userId, patientId, 7, 6, 3);
+      await seedReviewed(sql, USER.id, patientId, 7, 6, 3);
 
       await page.goto('/configuracoes/transcricao-ia');
       await expect(page.getByTestId('transcription-stats-grid')).toBeVisible({ timeout: 15_000 });
       await expect(page.getByText('70%')).toBeVisible();
       await expect(page.getByText('Dados insuficientes')).toHaveCount(0);
     } finally {
-      // Restore the seed user's transcription fixtures for any later spec by
-      // removing only the rows this spec inserted; global-setup re-seeds the
-      // review fixtures on the next full run.
+      // Remove the rows this spec inserted so a reused container starts clean on
+      // the next run.
       await sql`
         DELETE FROM public.ai_transcriptions
-        WHERE user_id = ${seed.userId}
+        WHERE user_id = ${USER.id}
           AND id::text LIKE ${`${STATS_ID_PREFIX}%`};
       `;
       await sql.end();

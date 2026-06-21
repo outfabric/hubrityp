@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" DROP COLUMN "tour_completed_at";

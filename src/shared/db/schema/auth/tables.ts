@@ -96,8 +96,6 @@ export const profiles = pgTable(
     onboardingStep: text('onboarding_step').notNull().default('welcome'),
     // Stamped when the user finishes the onboarding flow. Nullable until done.
     onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
-    // Stamped when the user finishes the in-app product tour. Nullable until done.
-    tourCompletedAt: timestamp('tour_completed_at', { withTimezone: true }),
     // Stamped on the first authenticated dashboard render. Nullable until then.
     firstAccessAt: timestamp('first_access_at', { withTimezone: true }),
     // Stamped when a cancelled account is reactivated. Nullable until then.
@@ -122,7 +120,7 @@ export const profiles = pgTable(
 // Inferred row shape for `profiles`. Includes the auth-account-creation
 // columns, the login-hardening columns (auth-login-hardening), and the
 // onboarding/NPS columns (onboarding-data-model): `onboardingStep`,
-// `onboardingCompletedAt`, `tourCompletedAt`, `firstAccessAt`,
+// `onboardingCompletedAt`, `firstAccessAt`,
 // `reactivatedAt`, `npsScore`, `npsFeedback`, `npsRespondedAt`. Note that
 // `npsFeedback` is free text that may contain incidental PII — never log it.
 export type Profile = typeof profiles.$inferSelect;

@@ -338,12 +338,18 @@ describe('resumeOnboardingStepImpl', () => {
     expect(result).toEqual({ ok: false, error: 'unauthenticated' });
   });
 
-  it("maps the default 'welcome' to the first step 'profile'", async () => {
+  it("fast-forwards a default 'welcome' user past the satisfied profile step to 'location'", async () => {
     const userId = randomUUID();
+    // The seeded user has `full_name` set (registration always captures it), so
+    // the data-aware resume treats the profile step as satisfied and
+    // fast-forwards to the first PENDING step — `location` (no location yet).
     await seedAuthUser(userId);
 
     const result = await resumeOnboardingStepImpl(fakeSupabaseClient(userId));
-    expect(result).toEqual({ ok: true, resumeStep: 'profile' });
+    expect(result).toEqual({ ok: true, resumeStep: 'location' });
+
+    // The cursor is synchronized to the computed pending step (absolute write).
+    expect((await readProfile(userId))?.onboardingStep).toBe('location');
   });
 
   it('resumes at the persisted (advanced) step — completing profile resumes at location', async () => {
