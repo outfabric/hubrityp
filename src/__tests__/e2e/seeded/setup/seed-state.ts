@@ -583,6 +583,71 @@ export const SEED_ONBOARDING_REACTIVATED_USER = {
   },
 } as const;
 
+/**
+ * Dedicated patient (owned by the GLOBAL seed user) for the prontuário
+ * attachments & personal-notes E2E spec (prontuario/attachments-and-notes.spec.ts
+ * — section 8.1).
+ *
+ * That spec's `beforeEach` blank-slates the patient's consent state — it nulls
+ * `consent_signed_at` and DELETES every `consent_terms` row for the patient — so
+ * its "blocks audio upload when no consent term exists" test starts from a
+ * no-active-consent baseline, then seeds a signed term for the audio-success
+ * test. Run on a SHARED seed patient (previously `activeMinimal`) under
+ * `fullyParallel`, that blanket consent-term delete races
+ * `ai-transcription/termo-ai-flow.spec.ts`, which reads
+ * `SEED_AI_CONSENT_TERMS.alreadySigned` — also bound to `activeMinimal` — and
+ * asserts the public `/termo/:token` page shows "already signed". When the
+ * attachments spec deletes that AI term mid-test, the consent page renders
+ * "Termo nao encontrado" and the assertion fails. The two specs have genuinely
+ * INCOMPATIBLE requirements on the same patient's consent state (one needs zero
+ * terms, the other needs a signed AI term to exist), so they cannot share a
+ * patient.
+ *
+ * This is therefore a SEPARATE patient touched by NOTHING else, owned by the
+ * seed user (so the spec keeps using the shared `storageState`), seeded in
+ * `global-setup.ts` with no consent terms. The spec owns its consent state
+ * end-to-end without leaking onto the AI-consent fixtures.
+ */
+export const SEED_ATTACHMENTS_PATIENT = {
+  id: '00000000-0000-4000-8000-000000000013',
+  fullName: 'Paciente Anexos E2E',
+} as const;
+
+/**
+ * Dedicated user for the AI-transcription settings usage-stats E2E spec
+ * (ai-transcription/settings-stats.spec.ts — section 5.3).
+ *
+ * The acceptance-rate stat aggregates EVERY `ai_transcriptions` row the user
+ * owns, so the spec needs full, deterministic control of that set: it deletes
+ * all the user's transcriptions up front, seeds an exact count of `reviewed`
+ * rows (3 then 10), and asserts the derived percentage. Driving this on the
+ * GLOBAL seed user is unsafe under `fullyParallel`: that blanket delete races
+ * the sibling review specs (`review-and-save`, `review-discard`), which own
+ * their own `ready` review fixtures on the SAME seed user — the delete wipes
+ * their rows mid-test (review page renders "Transcrição não encontrada", save
+ * action returns NOT_FOUND), and those specs in turn flip rows to `reviewed`,
+ * polluting this spec's count. This is exactly the shared-fixture hazard the
+ * other dedicated users exist to avoid.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, owning ONE patient (FK target for the seeded transcription
+ * rows). `global-setup.ts` resets it to a transcription-free baseline on every
+ * run; the spec owns its counts end-to-end. `first_access_at` is left NULL so
+ * the day-7 NPS modal never auto-runs and intercepts the page render. The mock
+ * GoTrue never authenticates this user by default; the spec signs in at runtime
+ * via the shared `signInAsDedicatedUser` helper.
+ */
+export const SEED_AI_STATS_USER = {
+  id: '00000000-0000-4000-8000-0000000000d8',
+  email: 'ai-stats-e2e@example.com',
+  fullName: 'AI Stats E2E',
+  /** Single patient owning every seeded transcription for this user. */
+  patient: {
+    id: '00000000-0000-4000-8000-0000000000d9',
+    fullName: 'Paciente Stats IA',
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

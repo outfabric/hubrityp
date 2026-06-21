@@ -6,7 +6,9 @@ import { healthPings } from '@/shared/db/schema/health/tables';
 import {
   readSeedState,
   SEED_AI_CONSENT_TERMS,
+  SEED_AI_STATS_USER,
   SEED_AI_TRANSCRIPTIONS,
+  SEED_ATTACHMENTS_PATIENT,
   SEED_CONSENT_FILTER_USER,
   SEED_CONSENT_TERMS,
   SEED_DASHBOARD_EMPTY_USER,
@@ -148,6 +150,7 @@ export default async function globalSetup() {
       SEED_PATIENTS.activeWithPhone.id,
       SEED_PATIENTS.activeMinimal.id,
       SEED_PATIENTS.archived.id,
+      SEED_ATTACHMENTS_PATIENT.id,
     ];
     await sql`
       DELETE FROM public.consent_terms
@@ -184,6 +187,27 @@ export default async function globalSetup() {
           consent_revoked_at = NULL;
       `;
     }
+
+    // Dedicated patient for prontuario/attachments-and-notes.spec.ts. That spec
+    // blank-slates its patient's consent state (nulls consent + deletes every
+    // consent_terms row), which would otherwise wipe the AI-consent fixtures the
+    // termo-ai-flow spec depends on if they shared `activeMinimal`. Owned by the
+    // seed user (so the spec keeps the shared storageState); starts with no
+    // consent terms. See SEED_ATTACHMENTS_PATIENT for the full rationale.
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at, consent_signed_at, consent_revoked_at)
+      VALUES (
+        ${SEED_ATTACHMENTS_PATIENT.id}, ${seed.userId}, ${SEED_ATTACHMENTS_PATIENT.fullName},
+        'individual', 'active', NULL, NULL, NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id            = EXCLUDED.user_id,
+        full_name          = EXCLUDED.full_name,
+        status             = 'active',
+        archived_at        = NULL,
+        consent_signed_at  = NULL,
+        consent_revoked_at = NULL;
+    `;
 
     // Seed sessions for the public confirmation E2E tests.
     // Each session needs a future start_at (so the token is not expired),
@@ -1592,6 +1616,68 @@ export default async function globalSetup() {
       INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at)
       VALUES (
         ${orUser.patient.id}, ${orUser.id}, ${orUser.patient.fullName}, 'individual', 'active', NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id     = EXCLUDED.user_id,
+        full_name   = EXCLUDED.full_name,
+        status      = 'active',
+        archived_at = NULL;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated AI-stats user (ai-transcription/settings-stats.spec.ts).
+    //
+    // A separate active psychologist touched by NOTHING else, so the stats spec
+    // can blank-slate its `ai_transcriptions` set (the acceptance-rate stat
+    // aggregates every owned row) and seed an exact `reviewed` count WITHOUT
+    // racing the sibling review specs that own `ready` fixtures on the GLOBAL
+    // seed user. See SEED_AI_STATS_USER for the full rationale. `first_access_at`
+    // is left NULL so the day-7 NPS modal never auto-runs over the page render.
+    // -----------------------------------------------------------------------
+    const aiStatsUser = SEED_AI_STATS_USER;
+    const aiStatsMetadata = JSON.stringify({
+      fullName: aiStatsUser.fullName,
+      crpNumber: '77777-S',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${aiStatsUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${aiStatsUser.email},
+        ${aiStatsMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${aiStatsUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
+      WHERE user_id = ${aiStatsUser.id};
+    `;
+    // Reset to a transcription-free baseline (FK-ordered: evolutions ->
+    // transcriptions) so the spec fully owns the counts on a reused container.
+    await sql`DELETE FROM public.evolutions WHERE user_id = ${aiStatsUser.id}`;
+    await sql`DELETE FROM public.ai_transcriptions WHERE user_id = ${aiStatsUser.id}`;
+    // The single FK-target patient for every seeded transcription row.
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at)
+      VALUES (
+        ${aiStatsUser.patient.id}, ${aiStatsUser.id}, ${aiStatsUser.patient.fullName},
+        'individual', 'active', NULL
       )
       ON CONFLICT (id) DO UPDATE SET
         user_id     = EXCLUDED.user_id,

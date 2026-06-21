@@ -171,7 +171,13 @@ describe('signIn status-aware (real DB profiles)', () => {
     expect(signOutMock).not.toHaveBeenCalled();
   });
 
-  it('active → redirects to /dashboard', async () => {
+  it('active + incomplete onboarding → redirects to /onboarding/welcome', async () => {
+    // A freshly-promoted active profile keeps the `onboarding_step='welcome'`
+    // default with a NULL `onboarding_completed_at`, i.e. onboarding is
+    // incomplete. The login action must resolve the first-run wizard directly
+    // (instead of /dashboard) so the client RSC router lands on a URL that
+    // matches the rendered page — otherwise the middleware 307s /dashboard ->
+    // /onboarding/welcome and the URL bar desyncs.
     const seeded = await seedProfile();
     await markCrpValidated(seeded.userId);
     sessionRef.current = { id: seeded.userId, email: seeded.email };
@@ -185,7 +191,90 @@ describe('signIn status-aware (real DB profiles)', () => {
       caught = err;
     }
 
+    expect(extractRedirectTarget(caught)).toBe('/onboarding/welcome');
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it('active + incomplete onboarding → ignores redirectTo and goes to the wizard', async () => {
+    // Onboarding-incomplete users are funnelled to the wizard regardless of a
+    // deep-link `redirectTo`: the middleware would bounce the deep target to
+    // /onboarding/welcome anyway, so the action resolves it up front.
+    const seeded = await seedProfile();
+    await markCrpValidated(seeded.userId);
+    sessionRef.current = { id: seeded.userId, email: seeded.email };
+
+    const { signIn } = await import('@/app/(auth)/login/actions');
+
+    let caught: unknown = null;
+    try {
+      await signIn(
+        buildFormData({
+          email: seeded.email,
+          password: 'correct-horse',
+          redirectTo: '/agenda',
+        }),
+      );
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(extractRedirectTarget(caught)).toBe('/onboarding/welcome');
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it('active + completed onboarding → redirects to /dashboard', async () => {
+    const seeded = await seedProfile();
+    await markCrpValidated(seeded.userId);
+    // Mark onboarding done so the action falls through to the historical
+    // /dashboard (or `redirectTo`) target.
+    await runAsService(async (db) => {
+      await db
+        .update(profiles)
+        .set({ onboardingStep: 'done' })
+        .where(eq(profiles.userId, seeded.userId));
+    });
+    sessionRef.current = { id: seeded.userId, email: seeded.email };
+
+    const { signIn } = await import('@/app/(auth)/login/actions');
+
+    let caught: unknown = null;
+    try {
+      await signIn(buildFormData({ email: seeded.email, password: 'correct-horse' }));
+    } catch (err) {
+      caught = err;
+    }
+
     expect(extractRedirectTarget(caught)).toBe('/dashboard');
+    expect(signOutMock).not.toHaveBeenCalled();
+  });
+
+  it('active + completed onboarding → honors a safe redirectTo', async () => {
+    const seeded = await seedProfile();
+    await markCrpValidated(seeded.userId);
+    await runAsService(async (db) => {
+      await db
+        .update(profiles)
+        .set({ onboardingCompletedAt: dsql`now()` })
+        .where(eq(profiles.userId, seeded.userId));
+    });
+    sessionRef.current = { id: seeded.userId, email: seeded.email };
+
+    const { signIn } = await import('@/app/(auth)/login/actions');
+
+    let caught: unknown = null;
+    try {
+      await signIn(
+        buildFormData({
+          email: seeded.email,
+          password: 'correct-horse',
+          redirectTo: '/agenda',
+        }),
+      );
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(extractRedirectTarget(caught)).toBe('/agenda');
     expect(signOutMock).not.toHaveBeenCalled();
   });
 

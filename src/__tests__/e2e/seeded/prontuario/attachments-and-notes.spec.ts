@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 import { test } from '../setup/db-fixture';
-import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
+import { SEED_ATTACHMENTS_PATIENT, STORAGE_STATE_PATH } from '../setup/seed-state';
 
 /**
  * @prontuario -- Attachments & Personal Notes E2E tests.
@@ -24,14 +24,19 @@ import { SEED_PATIENTS, STORAGE_STATE_PATH } from '../setup/seed-state';
  *
  * Prerequisites:
  *   - Seeded storageState provides an authenticated psychologist.
- *   - Patient SEED_PATIENTS.activeMinimal exists (seeded in globalSetup).
+ *   - Patient SEED_ATTACHMENTS_PATIENT exists (seeded in globalSetup).
  *   - Supabase Storage is mocked via page.route() (no real storage).
  */
 
 const SEED_USER_ID = '00000000-0000-4000-8000-000000000001';
 
-// Use activeMinimal to avoid collision with evolution/session tests
-const patientId = SEED_PATIENTS.activeMinimal.id;
+// Dedicated patient owned by the seed user. This spec blank-slates the
+// patient's consent state (nulls consent + deletes every consent_terms row) in
+// `beforeEach`, so it must NOT share a patient with the AI-consent specs: on the
+// shared `activeMinimal` it raced `ai-transcription/termo-ai-flow.spec.ts`,
+// deleting `SEED_AI_CONSENT_TERMS.alreadySigned` (also bound to activeMinimal)
+// mid-test. See SEED_ATTACHMENTS_PATIENT for the rationale.
+const patientId = SEED_ATTACHMENTS_PATIENT.id;
 
 // ---------------------------------------------------------------------------
 // Helpers — Supabase Storage mocking
