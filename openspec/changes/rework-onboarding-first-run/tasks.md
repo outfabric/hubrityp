@@ -40,16 +40,16 @@
 
 ## 5. Wizard data-aware + `first_access_at` (Backend + Frontend)
 
-- [ ] 5.1 Tornar `configureLocationImpl` (`src/modules/onboarding/server/configure-location.ts`) **idempotente**: se o owner já tem ≥1 local, não inserir outro — garantir `agenda_settings`, marcar passo satisfeito e avançar o cursor; só inserir quando não há local.
-- [ ] 5.2 Teste de integração (real Postgres): conta com 1 local existente passa pelo passo 2 sem criar local duplicado e com `location_configured = TRUE` (cobre "An existing location is not duplicated" e o bug de conta reativada).
-- [ ] 5.3 Tornar o resume data-aware (`src/modules/onboarding/server/resume-step.ts`): derivar o primeiro passo pendente de dados reais (`full_name` setado, ≥1 location, ≥1 active patient) além do cursor, e sincronizar `onboarding_step` idempotentemente (escrita absoluta).
-- [ ] 5.4 Teste de integração: usuário com `onboarding_step='location'` e um local já criado em Configurações é roteado para `patients` (fast-forward) e o cursor é sincronizado.
-- [ ] 5.5 Frontend `StepProfile`: pré-preencher `displayName` a partir de `profiles.full_name` (passar o valor atual do perfil como prop a partir de `src/app/(app)/onboarding/setup/[step]/page.tsx`).
-- [ ] 5.6 Frontend `StepPatients`: reconhecer pacientes existentes como satisfazendo o passo (permitir avançar sem re-adicionar).
-- [ ] 5.7 Unificar o leitor do passo "done": `StepDone`/`readSummary` passa a derivar de dados reais (mesma fonte do `recomputeChecklistImpl`) em vez dos flags armazenados em `src/app/(app)/onboarding/setup/[step]/page.tsx`.
-- [ ] 5.8 Teste de integração: resumo do passo 4 reflete um local criado fora do wizard (paridade com o checklist do painel).
-- [ ] 5.9 Mover `stampFirstAccess`: remover a chamada do `src/app/(app)/dashboard/page.tsx` e disparar (fire-and-forget, idempotente, `auth.uid()`) no render do wizard (`/onboarding/welcome/page.tsx` e, defensivamente, `setup/[step]/page.tsx`), reusando o helper do módulo `dashboard` via barrel.
-- [ ] 5.10 Teste de integração: primeiro render do wizard com `first_access_at IS NULL` carimba `now()`; render subsequente não sobrescreve; o dashboard não carimba mais.
+- [x] 5.1 Tornar `configureLocationImpl` (`src/modules/onboarding/server/configure-location.ts`) **idempotente**: se o owner já tem ≥1 local, não inserir outro — garantir `agenda_settings`, marcar passo satisfeito e avançar o cursor; só inserir quando não há local.
+- [x] 5.2 Teste de integração (real Postgres): conta com 1 local existente passa pelo passo 2 sem criar local duplicado e com `location_configured = TRUE` (cobre "An existing location is not duplicated" e o bug de conta reativada).
+- [x] 5.3 Tornar o resume data-aware (`src/modules/onboarding/server/resume-step.ts`): derivar o primeiro passo pendente de dados reais (`full_name` setado, ≥1 location, ≥1 active patient) além do cursor, e sincronizar `onboarding_step` idempotentemente (escrita absoluta).
+- [x] 5.4 Teste de integração: usuário com `onboarding_step='location'` e um local já criado em Configurações é roteado para `patients` (fast-forward) e o cursor é sincronizado.
+- [x] 5.5 Frontend `StepProfile`: pré-preencher `displayName` a partir de `profiles.full_name` (passar o valor atual do perfil como prop a partir de `src/app/(app)/onboarding/setup/[step]/page.tsx`).
+- [x] 5.6 Frontend `StepPatients`: reconhecer pacientes existentes como satisfazendo o passo (permitir avançar sem re-adicionar).
+- [x] 5.7 Unificar o leitor do passo "done": `StepDone`/`readSummary` passa a derivar de dados reais (mesma fonte do `recomputeChecklistImpl`) em vez dos flags armazenados em `src/app/(app)/onboarding/setup/[step]/page.tsx`.
+- [x] 5.8 Teste de integração: resumo do passo 4 reflete um local criado fora do wizard (paridade com o checklist do painel).
+- [x] 5.9 Mover `stampFirstAccess`: remover a chamada do `src/app/(app)/dashboard/page.tsx` e disparar (fire-and-forget, idempotente, `auth.uid()`) no render do wizard (`/onboarding/welcome/page.tsx` e, defensivamente, `setup/[step]/page.tsx`), reusando o helper do módulo `dashboard` via barrel.
+- [x] 5.10 Teste de integração: primeiro render do wizard com `first_access_at IS NULL` carimba `now()`; render subsequente não sobrescreve; o dashboard não carimba mais.
 
 ## 6. E2E e verificação final
 

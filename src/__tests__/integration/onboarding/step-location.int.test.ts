@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, sql as dsql } from 'drizzle-orm';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { configureLocationImpl } from '@/modules/onboarding';
+import { configureLocationImpl, resumeOnboardingStepImpl } from '@/modules/onboarding';
 import { agendaSettings, locations } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { onboardingChecklist } from '@/shared/db/schema/onboarding/tables';
@@ -189,23 +189,35 @@ describe('configureLocationImpl (wizard step 2)', () => {
     expect(settings!.intervalMinutes).toBe(10);
   });
 
-  it('adding a second location keeps the flag TRUE without duplicating singleton rows', async () => {
+  it('is idempotent: a second pass does NOT create a duplicate location (existing reused)', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
-    await configureLocationImpl(fakeSupabaseClient(userId), {
+    const first = await configureLocationImpl(fakeSupabaseClient(userId), {
       name: 'Consultório Vila Madalena',
       type: 'in_person',
     });
+    expect(first.ok).toBe(true);
+    if (!first.ok) throw new Error('expected success');
+    expect(first.reusedExisting).toBe(false);
+    expect(typeof first.locationId).toBe('string');
+
+    // Second pass through step 2 — the owner already has a location, so the
+    // step is idempotent: NO new location row is inserted (the duplication bug
+    // on reactivated accounts), the flag stays TRUE, and the step advances.
     const second = await configureLocationImpl(fakeSupabaseClient(userId), {
       name: 'Atendimento Online',
       type: 'online',
     });
-
     expect(second.ok).toBe(true);
+    if (!second.ok) throw new Error('expected success');
+    expect(second.reusedExisting).toBe(true);
+    expect(second.locationId).toBeNull();
 
-    // Two locations, but exactly one checklist row and one settings row.
-    expect(await readLocations(userId)).toHaveLength(2);
+    // Exactly ONE location (the original), one checklist row, one settings row.
+    const locs = await readLocations(userId);
+    expect(locs).toHaveLength(1);
+    expect(locs[0]!.name).toBe('Consultório Vila Madalena');
 
     const checklistRows = await runAsService(async (db) =>
       db.select().from(onboardingChecklist).where(eq(onboardingChecklist.userId, userId)),
@@ -217,6 +229,65 @@ describe('configureLocationImpl (wizard step 2)', () => {
       db.select().from(agendaSettings).where(eq(agendaSettings.userId, userId)),
     );
     expect(settingsRows).toHaveLength(1);
+  });
+
+  it('An existing location is not duplicated: a pre-existing location satisfies step 2 with location_configured = TRUE', async () => {
+    // Models a REACTIVATED account / a location created in Configurações: the
+    // location row already exists before the wizard reaches step 2.
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    await runAsService(async (db) => {
+      await db
+        .insert(locations)
+        .values({ userId, name: 'Consultório A', type: 'in_person', isDefault: true });
+    });
+
+    // Passing through step 2 — even with a DIFFERENT name in the form — must NOT
+    // insert a second location; it ensures settings, flips the flag, advances.
+    const result = await configureLocationImpl(fakeSupabaseClient(userId), {
+      name: 'Outro Consultório',
+      type: 'in_person',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected success');
+    expect(result.reusedExisting).toBe(true);
+    expect(result.locationId).toBeNull();
+
+    // Still exactly one location — the original, untouched.
+    const locs = await readLocations(userId);
+    expect(locs).toHaveLength(1);
+    expect(locs[0]!.name).toBe('Consultório A');
+
+    // The flag is TRUE, agenda_settings exists, and the step advanced.
+    expect((await readChecklist(userId))!.locationConfigured).toBe(true);
+    expect(await readAgendaSettings(userId)).not.toBeNull();
+    expect((await readProfile(userId))?.onboardingStep).toBe('patients');
+  });
+
+  it("fast-forwards resume past an externally-created location: onboarding_step='location' + existing location routes to 'patients'", async () => {
+    // Task 5.4: a user whose cursor is `location` but who ALREADY created a
+    // location elsewhere (Configurações) is routed to the next pending step
+    // (`patients`) and the cursor is synchronized.
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    await runAsService(async (db) => {
+      // Pin the cursor at `location` and create the location out-of-band.
+      await db
+        .update(profiles)
+        .set({ onboardingStep: 'location' })
+        .where(eq(profiles.userId, userId));
+      await db
+        .insert(locations)
+        .values({ userId, name: 'Consultório A', type: 'in_person', isDefault: true });
+    });
+
+    const result = await resumeOnboardingStepImpl(fakeSupabaseClient(userId));
+    expect(result).toEqual({ ok: true, resumeStep: 'patients' });
+
+    // The cursor was synchronized to the computed pending step.
+    expect((await readProfile(userId))?.onboardingStep).toBe('patients');
   });
 
   it('ignores a client-supplied userId — writes only the session owner rows (IDOR)', async () => {

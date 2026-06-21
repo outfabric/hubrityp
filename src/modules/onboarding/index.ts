@@ -38,10 +38,12 @@ export {
   nextStep,
   isValidStep,
   resumeStepFromOnboardingStep,
+  resolveResumeStep,
   profileStepSchema,
   locationStepSchema,
   patientsStepSkipSchema,
   type WizardStep,
+  type WizardDataPresence,
   type ProfileStepInput,
   type LocationStepInput,
   type PatientsStepSkipInput,
@@ -53,6 +55,7 @@ export {
   readOnboardingChecklistSummary,
   type OnboardingChecklistSummary,
 } from './server/read-checklist-summary';
+export { readOnboardingSummaryFromData } from './server/read-summary-from-data';
 export { getNotificationPreferences } from './server/read-preferences';
 
 // ---- Checklist recompute (session-only authz; client userId ignored) ---------

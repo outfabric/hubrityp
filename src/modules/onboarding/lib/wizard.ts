@@ -91,6 +91,62 @@ const ONBOARDING_STEP_TO_WIZARD_STEP: Record<OnboardingStep, WizardStep> = {
   done: 'done',
 };
 
+/**
+ * Which of the owner's real domain data probes are already satisfied. Each flag
+ * mirrors a wizard step's "is this step's data already present?" question:
+ * - `profile`  → `profiles.full_name` is set
+ * - `location` → >= 1 row in `locations`
+ * - `patients` → >= 1 patient with status 'active'
+ *
+ * These are the SAME existence probes the dashboard recompute uses, so the
+ * wizard and the checklist agree on what counts as "done" (single source of
+ * truth = real domain rows).
+ */
+export interface WizardDataPresence {
+  readonly profile: boolean;
+  readonly location: boolean;
+  readonly patients: boolean;
+}
+
+/**
+ * Computes the wizard step the user should resume at by fast-forwarding through
+ * every step whose underlying domain data already exists.
+ *
+ * Resume is the first **pending** step: we start at the cursor-derived segment
+ * ({@link resumeStepFromOnboardingStep}) and advance forward through the ordered
+ * data-collecting steps (`profile` → `location` → `patients`) while each one's
+ * real data is present, stopping at the first whose data is missing. A step a
+ * user has effectively completed elsewhere (e.g. a location created in
+ * Configurações) is therefore never re-presented — matching the onboarding-
+ * wizard spec ("Steps already satisfied by real data are fast-forwarded").
+ *
+ * The `done` terminal step has no data probe; once every data step is satisfied
+ * the resume point is `done` (the summary screen). The derivation is total and
+ * pure — no DB, no I/O — so it is unit-testable in isolation.
+ */
+export function resolveResumeStep(
+  cursorStep: OnboardingStep,
+  presence: WizardDataPresence,
+): WizardStep {
+  const satisfied: Record<WizardStep, boolean> = {
+    profile: presence.profile,
+    location: presence.location,
+    patients: presence.patients,
+    // `done` has no underlying data probe — reaching it means everything before
+    // it is satisfied, so it must terminate the fast-forward rather than be
+    // "satisfied" (which would index past the end of WIZARD_STEPS).
+    done: false,
+  };
+
+  let index = WIZARD_STEPS.indexOf(resumeStepFromOnboardingStep(cursorStep));
+  // Advance while the current step's data already exists. Bounded by the last
+  // index, so `done` is the natural terminus.
+  while (index < WIZARD_STEPS.length - 1 && satisfied[WIZARD_STEPS[index]!]) {
+    index += 1;
+  }
+  return WIZARD_STEPS[index]!;
+}
+
 // ---- Per-step input schemas --------------------------------------------------
 
 /**
