@@ -84,7 +84,6 @@ function baseProfile(overrides: Partial<RegistrationEdgeModule.Profile>) {
     requiresPasswordReset: false,
     onboardingStep: 'complete',
     onboardingCompletedAt: null,
-    tourCompletedAt: null,
     firstAccessAt: null,
     reactivatedAt: null,
     npsScore: null,

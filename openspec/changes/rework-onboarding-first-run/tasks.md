@@ -22,12 +22,12 @@
 
 ## 3. Drop da coluna `tour_completed_at` (Backend / Dados)
 
-- [ ] 3.1 Remover `tourCompletedAt` de `src/shared/db/schema/auth/tables.ts` (e do docstring do tipo).
-- [ ] 3.2 Remover `'tour_completed_at'` do select e `tourCompletedAt` do mapeamento em `src/modules/registration/server/get-profile-edge.ts` (o tipo `Profile` deriva do schema, então some automaticamente).
-- [ ] 3.3 Gerar a migration com `drizzle-kit generate` (confirmar via **Context7** o fluxo `generate`→`migrate`); revisar o SQL emitido (`ALTER TABLE "profiles" DROP COLUMN "tour_completed_at"`), confirmar que nenhuma policy RLS referencia a coluna.
-- [ ] 3.4 Aplicar via `npm run db:migrate` no ambiente local (Docker Compose) e validar que a app sobe sem a coluna.
-- [ ] 3.5 Ajustar `src/__tests__/integration/onboarding/data-model.int.test.ts` (remover asserção de `tour_completed_at`) e qualquer seed/integração que selecione a coluna (ex.: `public-routes-gating.int.test.ts`).
-- [ ] 3.6 Teste de integração: novo perfil migrado mantém defaults das colunas remanescentes e `tour_completed_at` não existe no schema (cobre o cenário "The tour_completed_at column no longer exists").
+- [x] 3.1 Remover `tourCompletedAt` de `src/shared/db/schema/auth/tables.ts` (e do docstring do tipo).
+- [x] 3.2 Remover `'tour_completed_at'` do select e `tourCompletedAt` do mapeamento em `src/modules/registration/server/get-profile-edge.ts` (o tipo `Profile` deriva do schema, então some automaticamente).
+- [x] 3.3 Gerar a migration com `drizzle-kit generate` (confirmar via **Context7** o fluxo `generate`→`migrate`); revisar o SQL emitido (`ALTER TABLE "profiles" DROP COLUMN "tour_completed_at"`), confirmar que nenhuma policy RLS referencia a coluna.
+- [x] 3.4 Aplicar via `npm run db:migrate` no ambiente local (Docker Compose) e validar que a app sobe sem a coluna.
+- [x] 3.5 Ajustar `src/__tests__/integration/onboarding/data-model.int.test.ts` (remover asserção de `tour_completed_at`) e qualquer seed/integração que selecione a coluna (ex.: `public-routes-gating.int.test.ts`).
+- [x] 3.6 Teste de integração: novo perfil migrado mantém defaults das colunas remanescentes e `tour_completed_at` não existe no schema (cobre o cenário "The tour_completed_at column no longer exists").
 
 ## 4. Middleware — gating de onboarding (Backend / Edge)
 
