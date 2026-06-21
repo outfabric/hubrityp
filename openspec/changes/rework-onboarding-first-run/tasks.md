@@ -53,7 +53,7 @@
 
 ## 6. E2E e verificação final
 
-- [ ] 6.1 E2E (Playwright seeded) do fluxo feliz: psicólogo recém-validado (active, onboarding incompleto) é levado a `/onboarding/welcome`, completa profile+location, e só então alcança `/dashboard` — sem banner de "configuração inicial" coexistindo com o checklist.
-- [ ] 6.2 E2E: caminho "Pular e explorar" leva ao `/dashboard` (gate suave) com o checklist ainda nudificando e sem banner.
-- [ ] 6.3 E2E de regressão: usuário reativado com local pré-existente não vê o passo de local pedir criação nem gera local duplicado.
-- [ ] 6.5 `openspec validate "rework-onboarding-first-run"` permanece verde; conferir que `proposal`/`design`/`specs`/`tasks` estão coerentes com o implementado antes de `/opsx:archive`.
+- [x] 6.1 E2E (Playwright seeded) do fluxo feliz: psicólogo recém-validado (active, onboarding incompleto) é levado a `/onboarding/welcome`, completa profile+location, e só então alcança `/dashboard` — sem banner de "configuração inicial" coexistindo com o checklist.
+- [x] 6.2 E2E: caminho "Pular e explorar" leva ao `/dashboard` (gate suave) com o checklist ainda nudificando e sem banner.
+- [x] 6.3 E2E de regressão: usuário reativado com local pré-existente não vê o passo de local pedir criação nem gera local duplicado.
+- [x] 6.5 `openspec validate "rework-onboarding-first-run"` permanece verde; conferir que `proposal`/`design`/`specs`/`tasks` estão coerentes com o implementado antes de `/opsx:archive`.

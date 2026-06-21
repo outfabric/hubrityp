@@ -24,8 +24,13 @@
 //   80% caller does not also need to import `buildFixedJwt`. Callers that
 //   need to mint additional/custom tokens can still import `buildFixedJwt`.
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
+
+import postgres from 'postgres';
+
+import { SEED_STATE_PATH as SEED_STATE_FILE } from './seed-state';
 
 export type MockGoTrueUser = {
   id: string;
@@ -110,9 +115,63 @@ export type RegisteredOAuthUser = {
    * would resolve the wrong user.
    */
   refreshToken?: string;
-  /** When defined, the mock returns this profile row via the PostgREST shim. */
+  /**
+   * When defined, the mock returns this profile row via the PostgREST shim.
+   *
+   * If the row carries `__dynamicOnboarding: true`, the shim OVERLAYS the live
+   * `onboarding_step` / `onboarding_completed_at` read from Postgres on top of
+   * the static fields before responding. This keeps the Edge middleware's
+   * onboarding soft-gate decision in sync with the real DB the wizard's Server
+   * Actions mutate (e.g. a `skipOnboarding`/`completeOnboarding` write must let
+   * the next navigation reach `/dashboard` instead of looping back to the
+   * wizard). Specs that drive the wizard-to-dashboard completion flow set this
+   * sentinel; static dashboard specs omit it.
+   */
   profile?: Record<string, unknown> | null;
 };
+
+/**
+ * Reads the live `onboarding_step` / `onboarding_completed_at` for a user from
+ * the Testcontainers Postgres, using the connection string written to
+ * `seed-state.json` by `start-server.ts`. Opens a short-lived connection and
+ * always closes it. Returns `null` on any failure so the caller falls back to
+ * the static shim fields rather than erroring the request.
+ */
+async function readLiveOnboarding(
+  userId: string,
+): Promise<{ onboarding_step: string; onboarding_completed_at: string | null } | null> {
+  let databaseUrl: string;
+  try {
+    const raw = readFileSync(SEED_STATE_FILE, 'utf8');
+    databaseUrl = (JSON.parse(raw) as { databaseUrl: string }).databaseUrl;
+  } catch {
+    return null;
+  }
+  const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} });
+  try {
+    const rows = await sql<
+      { onboarding_step: string; onboarding_completed_at: Date | string | null }[]
+    >`
+      SELECT onboarding_step, onboarding_completed_at
+      FROM public.profiles
+      WHERE user_id = ${userId}
+      LIMIT 1;
+    `;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      onboarding_step: row.onboarding_step,
+      onboarding_completed_at:
+        row.onboarding_completed_at instanceof Date
+          ? row.onboarding_completed_at.toISOString()
+          : (row.onboarding_completed_at ?? null),
+    };
+  } catch {
+    return null;
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
 
 // Module-scoped registry — shared across all requests within the same process.
 const oauthUserRegistry = new Map<string, RegisteredOAuthUser>();
@@ -299,7 +358,18 @@ async function handleRequest(
     for (const entry of oauthUserRegistry.values()) {
       if (requestedUserId === entry.user.id && entry.profile !== undefined) {
         if (entry.profile !== null) {
-          respondJson(res, 200, acceptsObject ? entry.profile : [entry.profile]);
+          let profileRow = entry.profile;
+          // When the registration opted into dynamic onboarding, overlay the
+          // live `onboarding_step` / `onboarding_completed_at` from Postgres so
+          // the Edge middleware's soft-gate decision tracks the real DB the
+          // wizard's Server Actions mutate.
+          if (entry.profile.__dynamicOnboarding === true) {
+            const live = await readLiveOnboarding(entry.user.id);
+            const rest = { ...entry.profile };
+            delete rest.__dynamicOnboarding;
+            profileRow = live ? { ...rest, ...live } : rest;
+          }
+          respondJson(res, 200, acceptsObject ? profileRow : [profileRow]);
           return;
         }
         // profile is explicitly null — no profile for this user.
@@ -652,6 +722,13 @@ function buildSeededProfileRow(user: MockGoTrueUser): Record<string, unknown> {
     privacy_accepted_at: now,
     sensitive_data_consent_at: now,
     last_resend_at: null,
+    // The GLOBAL seed user is permanently onboarding-COMPLETE so the reworked
+    // soft gate lets it reach `/dashboard` (the many specs sharing its
+    // storageState all drive the app shell). First-run-wizard behaviour is
+    // exercised by dedicated incomplete-onboarding users instead, never by this
+    // shared row — keeping the Edge gating decision stable and race-free.
+    onboarding_step: 'done',
+    onboarding_completed_at: now,
     created_at: now,
     updated_at: now,
   };

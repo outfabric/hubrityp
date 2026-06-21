@@ -517,6 +517,72 @@ export const SEED_SESSION_HISTORY_USER = {
   },
 } as const;
 
+/**
+ * Dedicated user for the first-run onboarding-wizard E2E specs
+ * (onboarding/welcome.spec.ts, onboarding/wizard-flow.spec.ts, and the
+ * section-6 happy-path / skip specs in onboarding/first-run-*.spec.ts).
+ *
+ * Under the reworked middleware gating, an `active` user with INCOMPLETE
+ * onboarding (`onboarding_step != 'done'` AND `onboarding_completed_at IS NULL`)
+ * is funneled into `/onboarding/welcome` from every gated/auth surface. The
+ * GLOBAL seed user is deliberately kept onboarding-COMPLETE (so the many
+ * `/dashboard` specs sharing its `storageState` reach the app), which means it
+ * can no longer drive the wizard: the gate would bounce it straight to
+ * `/dashboard`.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row whose
+ * onboarding starts INCOMPLETE (`onboarding_step = 'welcome'`,
+ * `onboarding_completed_at = NULL`, `first_access_at = NULL`), owning NO domain
+ * data so the wizard collects everything from scratch. The onboarding specs OWN
+ * its state end-to-end and reset it to the pristine incomplete baseline before
+ * each test (on the reused container), so the four-step walkthrough, resume,
+ * skip, and first-access stamping are deterministic.
+ *
+ * The mock GoTrue never authenticates this user by default; specs sign in at
+ * runtime via the shared `signInAsDedicatedUser` helper, passing the per-user
+ * onboarding override so the Edge middleware's profile shim resolves it as
+ * active-but-incomplete (which is what routes it INTO the wizard).
+ */
+export const SEED_ONBOARDING_WIZARD_USER = {
+  id: '00000000-0000-4000-8000-0000000000c8',
+  email: 'onboarding-wizard-e2e@example.com',
+  fullName: 'Onboarding Wizard E2E',
+} as const;
+
+/**
+ * Dedicated user for the reactivated-account onboarding regression spec
+ * (onboarding/first-run-reactivated.spec.ts — section 6.3).
+ *
+ * Models a previously-cancelled psychologist brought back online whose
+ * onboarding is INCOMPLETE but who ALREADY has a configured location and an
+ * active patient from their prior life on the platform. The reworked wizard is
+ * data-aware: the resume resolver fast-forwards past every step whose real
+ * domain data already exists, and `configureLocationImpl` is idempotent (never
+ * blind-inserts a second location). The spec proves the reactivated user is
+ * never asked to RE-CREATE a location and that no duplicate location row is
+ * produced.
+ *
+ * A SEPARATE active `auth.users` + `profiles` row touched by NOTHING else,
+ * seeded with `onboarding_step = 'location'` (mid-wizard cursor),
+ * `reactivated_at` set, ONE pre-existing location, and ONE active patient.
+ * `global-setup.ts` resets it to this exact baseline on every run.
+ */
+export const SEED_ONBOARDING_REACTIVATED_USER = {
+  id: '00000000-0000-4000-8000-0000000000c9',
+  email: 'onboarding-reactivated-e2e@example.com',
+  fullName: 'Onboarding Reativado E2E',
+  /** The single pre-existing location — the wizard must NOT ask to re-create it. */
+  location: {
+    id: '00000000-0000-4000-8000-0000000000ca',
+    name: 'Consultório Pré-Existente',
+  },
+  /** The single pre-existing active patient — satisfies the patients step. */
+  patient: {
+    id: '00000000-0000-4000-8000-0000000000cb',
+    fullName: 'Paciente Pré-Existente',
+  },
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

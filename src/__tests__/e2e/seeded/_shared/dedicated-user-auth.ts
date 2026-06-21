@@ -30,6 +30,33 @@ export interface DedicatedUser {
   readonly fullName: string;
 }
 
+/**
+ * Onboarding state the Edge middleware's profile shim must report for this
+ * dedicated user. The reworked gating funnels an `active` user with INCOMPLETE
+ * onboarding into `/onboarding/welcome`, so a spec that drives the dashboard
+ * needs `onboarding_step: 'done'` (the default), while a spec that drives the
+ * first-run wizard needs the incomplete baseline (`'welcome'` + null
+ * completion). These fields are mapped by `getCurrentProfileEdge` exactly like
+ * the real `profiles` columns, so the middleware decision matches the DB the
+ * spec mutates.
+ */
+export interface DedicatedOnboardingState {
+  /** Persisted wizard cursor. Defaults to `'done'` (onboarding complete). */
+  readonly onboardingStep?: 'welcome' | 'profile' | 'location' | 'patients' | 'done';
+  /** Completion timestamp (ISO) or null. Defaults to a stamped value when complete. */
+  readonly onboardingCompletedAt?: string | null;
+  /**
+   * When `true`, the Edge profile shim OVERLAYS the live onboarding fields read
+   * from Postgres on top of the static row, so the middleware's soft-gate
+   * decision follows the real DB the wizard's Server Actions mutate (required by
+   * any spec that completes/skips the wizard and then navigates to /dashboard —
+   * otherwise the static shim keeps reporting "incomplete" and the navigation
+   * loops back to the wizard). The static `onboardingStep` is the fallback when
+   * the DB read fails. Static dashboard specs leave this off.
+   */
+  readonly dynamic?: boolean;
+}
+
 function buildMockUser(user: DedicatedUser): MockGoTrueUser {
   const nowIso = new Date().toISOString();
   return {
@@ -49,8 +76,21 @@ function buildMockUser(user: DedicatedUser): MockGoTrueUser {
   };
 }
 
-function buildActiveProfileRow(user: DedicatedUser): Record<string, unknown> {
+function buildActiveProfileRow(
+  user: DedicatedUser,
+  onboarding: DedicatedOnboardingState = {},
+): Record<string, unknown> {
   const now = new Date().toISOString();
+  // Default the shim to onboarding-COMPLETE so dashboard-driving dedicated users
+  // pass the reworked soft gate. Specs that drive the wizard pass the incomplete
+  // baseline explicitly (`onboardingStep: 'welcome'`).
+  const onboardingStep = onboarding.onboardingStep ?? 'done';
+  const onboardingCompletedAt =
+    onboarding.onboardingCompletedAt !== undefined
+      ? onboarding.onboardingCompletedAt
+      : onboardingStep === 'done'
+        ? now
+        : null;
   return {
     user_id: user.id,
     email: user.email,
@@ -65,6 +105,11 @@ function buildActiveProfileRow(user: DedicatedUser): Record<string, unknown> {
     privacy_accepted_at: now,
     sensitive_data_consent_at: now,
     last_resend_at: null,
+    onboarding_step: onboardingStep,
+    onboarding_completed_at: onboardingCompletedAt,
+    // Sentinel consumed by the mock GoTrue PostgREST shim: overlay live
+    // onboarding fields from Postgres on top of this static row.
+    ...(onboarding.dynamic ? { __dynamicOnboarding: true } : {}),
     created_at: now,
     updated_at: now,
   };
@@ -82,6 +127,7 @@ export async function signInAsDedicatedUser(
   context: BrowserContext,
   request: APIRequestContext,
   user: DedicatedUser,
+  onboarding: DedicatedOnboardingState = {},
 ): Promise<void> {
   const seed = await readSeedState();
   const nowSec = Math.floor(Date.now() / 1000);
@@ -111,7 +157,7 @@ export async function signInAsDedicatedUser(
       jwt: accessToken,
       refreshToken,
       code: `dedicated-${user.id}-${nowSec}`,
-      profile: buildActiveProfileRow(user),
+      profile: buildActiveProfileRow(user, onboarding),
     },
   });
   if (!registerRes.ok()) {

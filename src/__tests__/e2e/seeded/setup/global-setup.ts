@@ -13,6 +13,8 @@ import {
   SEED_IDOR,
   SEED_NPS_USER,
   SEED_ONBOARDING_CHECKLIST_USER,
+  SEED_ONBOARDING_REACTIVATED_USER,
+  SEED_ONBOARDING_WIZARD_USER,
   SEED_OVERDUE_EVOLUTIONS_USER,
   SEED_PATIENTS,
   SEED_SESSION_HISTORY_USER,
@@ -81,6 +83,13 @@ export default async function globalSetup() {
     // `status = 'pending_verification'`, which middleware would redirect
     // to `/onboarding/pending` instead). The UPDATE is idempotent and
     // safe to run on already-active rows.
+    // The GLOBAL seed user is permanently onboarding-COMPLETE: under the
+    // reworked middleware gating an `active` user with INCOMPLETE onboarding is
+    // funneled into `/onboarding/welcome`, which would break every `/dashboard`
+    // spec sharing this row's storageState. First-run-wizard behaviour is
+    // exercised by dedicated incomplete-onboarding users instead. We stamp the
+    // real DB (not just the Edge shim) so the layout's UnfinishedSetupBanner and
+    // every RSC onboarding read also see "complete".
     await sql`
       UPDATE public.profiles
       SET status = 'active',
@@ -90,7 +99,9 @@ export default async function globalSetup() {
           last_failed_login_at = NULL,
           lockout_until = NULL,
           consecutive_lockouts = 0,
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${seed.userId};
     `;
 
@@ -831,7 +842,9 @@ export default async function globalSetup() {
           full_name = ${emptyUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${emptyUser.id};
     `;
     // Guarantee the account is empty even on a reused container.
@@ -875,7 +888,9 @@ export default async function globalSetup() {
           full_name = ${checklistUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${checklistUser.id};
     `;
     // Wipe every owned source row + the denormalized checklist cache so the
@@ -934,7 +949,9 @@ export default async function globalSetup() {
           nps_responded_at = NULL,
           nps_score = NULL,
           nps_feedback = NULL,
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${npsUser.id};
     `;
 
@@ -978,7 +995,9 @@ export default async function globalSetup() {
           crp_validated_at = COALESCE(crp_validated_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${cfUser.id};
     `;
     // Wipe stale rows (FK-ordered) so the spec starts from a known set on the
@@ -1128,7 +1147,9 @@ export default async function globalSetup() {
           crp_validated_at = COALESCE(crp_validated_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${oeUser.id};
     `;
     // Wipe stale rows (FK-ordered: evolutions reference sessions) so the spec
@@ -1242,7 +1263,9 @@ export default async function globalSetup() {
           crp_validated_at = COALESCE(crp_validated_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
-          requires_password_reset = false
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
       WHERE user_id = ${shUser.id};
     `;
     // Wipe stale rows (FK-ordered: evolutions reference sessions) so the spec
@@ -1435,6 +1458,146 @@ export default async function globalSetup() {
         status     = 'scheduled',
         patient_id = EXCLUDED.patient_id,
         deleted_at = NULL;
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated first-run onboarding-wizard user
+    // (onboarding/welcome.spec.ts, onboarding/wizard-flow.spec.ts,
+    //  onboarding/first-run-happy-path.spec.ts, onboarding/first-run-skip.spec.ts).
+    //
+    // A dedicated active psychologist whose onboarding starts INCOMPLETE so the
+    // reworked middleware funnels it into `/onboarding/welcome`. It owns NO
+    // domain data, so the wizard collects everything from scratch. The
+    // onboarding specs OWN its onboarding state and reset it to this pristine
+    // incomplete baseline before each test (under a cross-worker advisory lock),
+    // so resume / skip / completion / first-access stamping are deterministic on
+    // the reused container. The GLOBAL seed user can no longer drive the wizard
+    // (it is permanently onboarding-complete), which is why this exists.
+    // -----------------------------------------------------------------------
+    const owUser = SEED_ONBOARDING_WIZARD_USER;
+    const owMetadata = JSON.stringify({
+      fullName: owUser.fullName,
+      crpNumber: '99999-W',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${owUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${owUser.email},
+        ${owMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    // Wipe any domain data left from a previous reused-container run so the
+    // wizard always starts from a genuinely empty account.
+    await sql`DELETE FROM public.consent_terms WHERE user_id = ${owUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${owUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${owUser.id}`;
+    await sql`DELETE FROM public.reminder_settings WHERE user_id = ${owUser.id}`;
+    await sql`DELETE FROM public.locations WHERE user_id = ${owUser.id}`;
+    await sql`DELETE FROM public.onboarding_checklist WHERE user_id = ${owUser.id}`;
+    // Active + onboarding INCOMPLETE baseline. `full_name` is the pristine
+    // "Onboarding Wizard E2E" so the step-1 persistence assertion can prove the
+    // display name actually changed; `first_access_at` NULL so the wizard render
+    // can stamp it.
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${owUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          requires_password_reset = false,
+          onboarding_step = 'welcome',
+          onboarding_completed_at = NULL,
+          first_access_at = NULL,
+          reactivated_at = NULL
+      WHERE user_id = ${owUser.id};
+    `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated reactivated-account onboarding user
+    // (onboarding/first-run-reactivated.spec.ts — section 6.3).
+    //
+    // A previously-cancelled psychologist brought back online: onboarding
+    // INCOMPLETE (`onboarding_step = 'location'`) but ALREADY owning a
+    // configured location and an active patient. The data-aware resume resolver
+    // must fast-forward past the location AND patients steps (their real data
+    // exists), and the idempotent `configureLocationImpl` must never produce a
+    // second location. The spec proves the user is never asked to RE-CREATE a
+    // location and that the location count stays exactly 1.
+    // -----------------------------------------------------------------------
+    const orUser = SEED_ONBOARDING_REACTIVATED_USER;
+    const orMetadata = JSON.stringify({
+      fullName: orUser.fullName,
+      crpNumber: '90909-R',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${orUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${orUser.email},
+        ${orMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    // Wipe stale rows (FK order) so the pre-existing set is exactly one location
+    // + one patient on every run.
+    await sql`DELETE FROM public.consent_terms WHERE user_id = ${orUser.id}`;
+    await sql`DELETE FROM public.sessions WHERE user_id = ${orUser.id}`;
+    await sql`DELETE FROM public.patients WHERE user_id = ${orUser.id}`;
+    await sql`DELETE FROM public.reminder_settings WHERE user_id = ${orUser.id}`;
+    await sql`DELETE FROM public.locations WHERE user_id = ${orUser.id}`;
+    await sql`DELETE FROM public.onboarding_checklist WHERE user_id = ${orUser.id}`;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${orUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          requires_password_reset = false,
+          onboarding_step = 'location',
+          onboarding_completed_at = NULL,
+          first_access_at = NULL,
+          reactivated_at = now()
+      WHERE user_id = ${orUser.id};
+    `;
+    // One pre-existing location — the wizard must NOT ask to re-create it.
+    await sql`
+      INSERT INTO public.locations (id, user_id, name, type, is_default)
+      VALUES (
+        ${orUser.location.id}, ${orUser.id}, ${orUser.location.name}, 'in_person', true
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id    = EXCLUDED.user_id,
+        name       = EXCLUDED.name,
+        type       = EXCLUDED.type,
+        is_default = true;
+    `;
+    // One pre-existing active patient — satisfies the patients step.
+    await sql`
+      INSERT INTO public.patients (id, user_id, full_name, patient_type, status, archived_at)
+      VALUES (
+        ${orUser.patient.id}, ${orUser.id}, ${orUser.patient.fullName}, 'individual', 'active', NULL
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        user_id     = EXCLUDED.user_id,
+        full_name   = EXCLUDED.full_name,
+        status      = 'active',
+        archived_at = NULL;
     `;
   } finally {
     await sql.end();

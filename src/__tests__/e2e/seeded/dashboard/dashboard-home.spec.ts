@@ -236,6 +236,11 @@ function buildEmptyProfileRow(): Record<string, unknown> {
     privacy_accepted_at: now,
     sensitive_data_consent_at: now,
     last_resend_at: null,
+    // Onboarding-COMPLETE so the reworked soft gate lets this zero-data user
+    // reach `/dashboard` (its first-steps empty state is the point of the test,
+    // not the onboarding wizard).
+    onboarding_step: 'done',
+    onboarding_completed_at: now,
     created_at: now,
     updated_at: now,
   };
