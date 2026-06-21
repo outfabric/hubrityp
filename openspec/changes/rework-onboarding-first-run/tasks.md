@@ -4,14 +4,14 @@
 
 ## 1. Remoção do tour — código (Frontend + Backend)
 
-- [ ] 1.1 Deletar componentes do tour: `src/modules/onboarding/components/dashboard-tour.tsx` e `dashboard-tour-impl.tsx`.
-- [ ] 1.2 Deletar o catálogo de passos `src/modules/onboarding/lib/tour-steps.ts` e a Server Action impl `src/modules/onboarding/server/complete-tour.ts`.
-- [ ] 1.3 Remover os exports de tour do barrel `src/modules/onboarding/index.ts` (`DashboardTour`, `TOUR_STEPS`, `TourStep`, `completeTourImpl`, `CompleteTourResult`).
-- [ ] 1.4 Em `src/app/(app)/dashboard/page.tsx`: remover o import e o render de `<DashboardTour>` (e o import de `completeTour`).
-- [ ] 1.5 Em `src/app/(app)/dashboard/actions.ts`: remover a Server Action `completeTour`.
-- [ ] 1.6 Remover o `ReplayTourButton` (`src/app/(app)/configuracoes/ajuda/primeiros-passos/replay-tour-button.tsx`) e seu uso em `.../primeiros-passos/page.tsx`, preservando o restante da página.
-- [ ] 1.7 Remover as 5 âncoras `data-tour-anchor` em `src/app/(app)/sidebar-nav.tsx`, `src/modules/dashboard/components/section-today.tsx`, `section-pendencias.tsx` e `section-actions.tsx` (2 âncoras).
-- [ ] 1.8 Remover a dependência `driver.js` do `package.json` e rodar `npm install` para atualizar o lockfile.
+- [x] 1.1 Deletar componentes do tour: `src/modules/onboarding/components/dashboard-tour.tsx` e `dashboard-tour-impl.tsx`.
+- [x] 1.2 Deletar o catálogo de passos `src/modules/onboarding/lib/tour-steps.ts` e a Server Action impl `src/modules/onboarding/server/complete-tour.ts`.
+- [x] 1.3 Remover os exports de tour do barrel `src/modules/onboarding/index.ts` (`DashboardTour`, `TOUR_STEPS`, `TourStep`, `completeTourImpl`, `CompleteTourResult`).
+- [x] 1.4 Em `src/app/(app)/dashboard/page.tsx`: remover o import e o render de `<DashboardTour>` (e o import de `completeTour`).
+- [x] 1.5 Em `src/app/(app)/dashboard/actions.ts`: remover a Server Action `completeTour`.
+- [x] 1.6 Remover o `ReplayTourButton` (`src/app/(app)/configuracoes/ajuda/primeiros-passos/replay-tour-button.tsx`) e seu uso em `.../primeiros-passos/page.tsx`, preservando o restante da página.
+- [x] 1.7 Remover as 5 âncoras `data-tour-anchor` em `src/app/(app)/sidebar-nav.tsx`, `src/modules/dashboard/components/section-today.tsx`, `section-pendencias.tsx` e `section-actions.tsx` (2 âncoras).
+- [x] 1.8 Remover a dependência `driver.js` do `package.json` e rodar `npm install` para atualizar o lockfile.
 
 ## 2. Remoção do tour — testes e specs
 

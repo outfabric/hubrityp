@@ -78,13 +78,6 @@ export {
 } from './server/complete-onboarding';
 export { skipOnboardingImpl, type SkipOnboardingResult } from './server/skip-onboarding';
 
-// ---- Guided product tour ------------------------------------------------------
-// `completeTourImpl` stamps `profiles.tour_completed_at` (session-scoped, no
-// payload). `TOUR_STEPS` is the pure 5-step catalog consumed by the client tour
-// leaf. `DashboardTour` is the client leaf itself (Driver.js, `dynamic ssr:false`).
-export { completeTourImpl, type CompleteTourResult } from './server/complete-tour';
-export { TOUR_STEPS, type TourStep } from './lib/tour-steps';
-export { DashboardTour, type DashboardTourProps } from './components/dashboard-tour';
 export { resumeOnboardingStepImpl, type ResumeOnboardingStepResult } from './server/resume-step';
 export {
   uploadProfilePhotoImpl,

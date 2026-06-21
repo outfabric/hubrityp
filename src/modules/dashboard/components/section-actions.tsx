@@ -49,7 +49,6 @@ export function SectionActions({
             onClick={onNewPatient}
             className="min-h-11 justify-start"
             data-testid="dashboard-actions-new-patient"
-            data-tour-anchor="novo-paciente"
           >
             <Plus aria-hidden="true" />
             Novo paciente
@@ -60,7 +59,6 @@ export function SectionActions({
             onClick={onNewSession}
             className="min-h-11 justify-start"
             data-testid="dashboard-actions-new-session"
-            data-tour-anchor="nova-sessao"
           >
             <Plus aria-hidden="true" />
             Nova sessão

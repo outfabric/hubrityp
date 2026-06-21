@@ -66,7 +66,7 @@ export function SectionToday({ result, agendaHref = '/agenda' }: SectionTodayPro
   const hasSessions = sessions.length > 0;
 
   return (
-    <Card data-testid="dashboard-section-today" data-tour-anchor="secao-hoje">
+    <Card data-testid="dashboard-section-today">
       <CardHeader className="flex-row items-center gap-2">
         <Calendar className="text-text-tertiary size-5" aria-hidden="true" />
         <CardTitle>Hoje</CardTitle>

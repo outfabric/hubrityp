@@ -59,7 +59,7 @@ export function SectionPendencias({ result }: SectionPendenciasProps) {
   const allClear = visibleRows.length === 0;
 
   return (
-    <Card data-testid="dashboard-section-pendencias" data-tour-anchor="secao-pendencias">
+    <Card data-testid="dashboard-section-pendencias">
       <CardHeader className="flex-row items-center gap-2">
         <AlertCircle className="text-text-tertiary size-5" aria-hidden="true" />
         <CardTitle>Pendências</CardTitle>
