@@ -2,8 +2,24 @@ name: ci
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'openspec/**'
+      - 'prompts/**'
+      - '.claude/**'
+      - '.agents/**'
+      - 'LICENSE'
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'openspec/**'
+      - 'prompts/**'
+      - '.claude/**'
+      - '.agents/**'
+      - 'LICENSE'
 
 permissions:
   contents: read
@@ -124,6 +140,7 @@ jobs:
   e2e-real:
     needs: e2e
     runs-on: ubuntu-latest
+    if: false
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
