@@ -112,8 +112,7 @@ async function gotoDashboard(page: Page): Promise<void> {
  *
  * The modal/form fire the action without awaiting on the client (submit runs in
  * a `useTransition`; dismiss is `void onDismiss()`), and the action reference is
- * bound only once the client leaf has hydrated. Two hazards, mirrored from the
- * tour spec's `endTourAndAwaitStamp`:
+ * bound only once the client leaf has hydrated. Two hazards:
  *   1. Acting too early posts a no-op the client cannot yet route to the action.
  *      We let the leaf settle first (a real user reads the modal for far longer).
  *   2. The POST is fire-and-forget, so polling the DB immediately races it. We

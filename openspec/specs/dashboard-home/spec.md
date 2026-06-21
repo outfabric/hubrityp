@@ -98,7 +98,7 @@ The system SHALL, on mobile widths, prioritize Seção Hoje and Seção Pendênc
 - **THEN** Hoje and Pendências are visible and Resumo + Ações are collapsed behind a chevron control that expands them
 
 ### Requirement: Empty dashboard surfaces the first-steps slot
-The system SHALL detect when the psychologist has zero patients AND zero sessions and, in that case, render the first-steps checklist slot in place of the four normal sections (RF-11.08). Once the psychologist has any data, the normal sections render. This change exposes the empty-state slot and the "has any data" detection; the checklist component is provided by the checklist/tour change.
+The system SHALL detect when the psychologist has zero patients AND zero sessions and, in that case, render the first-steps checklist slot in place of the four normal sections (RF-11.08). Once the psychologist has any data, the normal sections render. This change exposes the empty-state slot and the "has any data" detection; the checklist component is provided by the checklist change.
 
 #### Scenario: Zero-data dashboard shows the checklist slot
 - **GIVEN** a psychologist with zero patients and zero sessions

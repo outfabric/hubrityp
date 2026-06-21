@@ -13,7 +13,6 @@ import {
   SEED_IDOR,
   SEED_NPS_USER,
   SEED_ONBOARDING_CHECKLIST_USER,
-  SEED_ONBOARDING_TOUR_USER,
   SEED_OVERDUE_EVOLUTIONS_USER,
   SEED_PATIENTS,
   SEED_SESSION_HISTORY_USER,
@@ -82,19 +81,11 @@ export default async function globalSetup() {
     // `status = 'pending_verification'`, which middleware would redirect
     // to `/onboarding/pending` instead). The UPDATE is idempotent and
     // safe to run on already-active rows.
-    //
-    // `tour_completed_at` is stamped here so the guided dashboard tour does
-    // NOT auto-run for the GLOBAL seed user. Many parallel specs land this
-    // user on `/dashboard`; with `tour_completed_at IS NULL` the driver.js
-    // overlay auto-opens and intercepts pointer events, blocking unrelated
-    // clicks (logout, upload, tab switches, "Reconectar"). Only the dedicated
-    // tour user keeps `tour_completed_at` NULL so the auto-run is still tested.
     await sql`
       UPDATE public.profiles
       SET status = 'active',
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           failed_login_count = 0,
           last_failed_login_at = NULL,
           lockout_until = NULL,
@@ -840,7 +831,6 @@ export default async function globalSetup() {
           full_name = ${emptyUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           requires_password_reset = false
       WHERE user_id = ${emptyUser.id};
     `;
@@ -855,7 +845,7 @@ export default async function globalSetup() {
     // starts at exactly one item done (`cadastro_completo`: email verified +
     // CRP validated, both forced below). The spec writes its own owner-scoped
     // rows to flip the remaining items and drive the card 0% → 100%. We reset
-    // every owned table + the persisted checklist cache + `tour_completed_at`
+    // every owned table + the persisted checklist cache
     // on each run so the reused container never carries a prior state.
     // -----------------------------------------------------------------------
     const checklistUser = SEED_ONBOARDING_CHECKLIST_USER;
@@ -885,7 +875,6 @@ export default async function globalSetup() {
           full_name = ${checklistUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = now(),
           requires_password_reset = false
       WHERE user_id = ${checklistUser.id};
     `;
@@ -903,93 +892,13 @@ export default async function globalSetup() {
     await sql`DELETE FROM public.onboarding_checklist WHERE user_id = ${checklistUser.id}`;
 
     // -----------------------------------------------------------------------
-    // Dedicated onboarding-tour user (onboarding/tour.spec.ts).
-    //
-    // A fourth active psychologist that DOES own one active patient + one
-    // session, so `hasAnyData` is true and the dashboard renders the four
-    // operational sections — making all five `data-tour-anchor` surfaces
-    // present so the tour highlights real elements in order. We reset
-    // `tour_completed_at` to NULL here so the global-setup baseline is "tour
-    // never completed"; the spec controls it per-test thereafter.
-    // -----------------------------------------------------------------------
-    const tourUser = SEED_ONBOARDING_TOUR_USER;
-    const tourMetadata = JSON.stringify({
-      fullName: tourUser.fullName,
-      crpNumber: '44444-T',
-      crpUf: 'SP',
-      termsAcceptedAt: nowIso,
-      privacyAcceptedAt: nowIso,
-      sensitiveDataConsentAt: nowIso,
-    });
-    await sql`
-      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
-      VALUES (
-        ${tourUser.id},
-        '00000000-0000-0000-0000-000000000000',
-        'authenticated',
-        'authenticated',
-        ${tourUser.email},
-        ${tourMetadata}::jsonb
-      )
-      ON CONFLICT (id) DO NOTHING;
-    `;
-    await sql`
-      UPDATE public.profiles
-      SET status = 'active',
-          full_name = ${tourUser.fullName},
-          email_verified_at = COALESCE(email_verified_at, now()),
-          crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = NULL,
-          requires_password_reset = false
-      WHERE user_id = ${tourUser.id};
-    `;
-    // Clean stale data, then reseed exactly one patient + one session so
-    // `hasAnyData` is deterministically true.
-    await sql`DELETE FROM public.session_history WHERE user_id = ${tourUser.id}`;
-    await sql`DELETE FROM public.sessions WHERE user_id = ${tourUser.id}`;
-    await sql`DELETE FROM public.patients WHERE user_id = ${tourUser.id}`;
-    await sql`
-      INSERT INTO public.patients (id, user_id, full_name, patient_type, status)
-      VALUES (
-        ${tourUser.patientId}, ${tourUser.id}, 'Paciente Tour', 'individual', 'active'
-      )
-      ON CONFLICT (id) DO UPDATE SET
-        user_id     = EXCLUDED.user_id,
-        status      = 'active',
-        archived_at = NULL;
-    `;
-    await sql`
-      INSERT INTO public.sessions (
-        id, user_id, patient_id,
-        start_at, end_at, duration_minutes,
-        status, modality, is_blocking
-      )
-      VALUES (
-        ${tourUser.sessionId},
-        ${tourUser.id},
-        ${tourUser.patientId},
-        (now() + interval '1 day'),
-        (now() + interval '1 day' + interval '50 minutes'),
-        50, 'scheduled', 'online', false
-      )
-      ON CONFLICT (id) DO UPDATE SET
-        user_id    = EXCLUDED.user_id,
-        patient_id = EXCLUDED.patient_id,
-        start_at   = EXCLUDED.start_at,
-        end_at     = EXCLUDED.end_at,
-        status     = 'scheduled',
-        deleted_at = NULL;
-    `;
-
-    // -----------------------------------------------------------------------
     // Dedicated NPS day-7 user (nps/day7-modal.spec.ts).
     //
     // A fifth active psychologist touched by nothing else, so the NPS spec can
     // deterministically set `first_access_at` (7+ days ago) and reset
     // `nps_responded_at`/`nps_score`/`nps_feedback` to drive the day-7 modal
     // through submit / dismiss / later-answer paths without leaking onto
-    // siblings under `fullyParallel`. `tour_completed_at` is stamped here so the
-    // guided tour overlay never auto-runs and steals the modal's clicks. The
+    // siblings under `fullyParallel`. The
     // global-setup baseline leaves the survey UNANSWERED with `first_access_at`
     // NULL (never eligible until the spec sets it), so a stray render before the
     // spec's own setup never pops the modal.
@@ -1021,7 +930,6 @@ export default async function globalSetup() {
           full_name = ${npsUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
           nps_score = NULL,
@@ -1037,9 +945,9 @@ export default async function globalSetup() {
     // deterministic patient set so the "sem-consentimento" listing's header
     // count equals the dashboard pendência count for this same user (4 active
     // unconsented rows), with one signed + one archived as negative cases. See
-    // SEED_CONSENT_FILTER_USER for the full rationale. `tour_completed_at` is
-    // stamped and `first_access_at` left NULL so neither overlay (guided tour /
-    // day-7 NPS modal) auto-runs and steals the row-action clicks.
+    // SEED_CONSENT_FILTER_USER for the full rationale. `first_access_at` is
+    // left NULL so the day-7 NPS modal does not auto-run and steal the
+    // row-action clicks.
     // -----------------------------------------------------------------------
     const cfUser = SEED_CONSENT_FILTER_USER;
     const cfMetadata = JSON.stringify({
@@ -1068,7 +976,6 @@ export default async function globalSetup() {
           full_name = ${cfUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
           requires_password_reset = false
@@ -1189,8 +1096,8 @@ export default async function globalSetup() {
     // equals the dashboard pendência count for this same user (RF-12.18). Two
     // control sessions are EXCLUDED: one inside the 7-day window, one older but
     // already evolved (anti-join). See SEED_OVERDUE_EVOLUTIONS_USER for the full
-    // rationale. `tour_completed_at` is stamped and `first_access_at` left NULL
-    // so neither overlay auto-runs and steals the row CTA / chip clicks.
+    // rationale. `first_access_at` is left NULL
+    // so the day-7 NPS modal does not auto-run and steal the row CTA / chip clicks.
     // -----------------------------------------------------------------------
     const oeUser = SEED_OVERDUE_EVOLUTIONS_USER;
     const oeMetadata = JSON.stringify({
@@ -1219,7 +1126,6 @@ export default async function globalSetup() {
           full_name = ${oeUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
           requires_password_reset = false
@@ -1303,9 +1209,9 @@ export default async function globalSetup() {
     // attendance rate, pagination boundary (page size 12), status filter,
     // per-card evolution CTAs, couple tag, future session, and empty state are
     // all stable under `fullyParallel`. See SEED_SESSION_HISTORY_USER for the
-    // full rationale and the exact expected counts. `tour_completed_at` is
-    // stamped and `first_access_at` left NULL so neither overlay (guided tour /
-    // day-7 NPS modal) auto-runs and steals the tab/chip/CTA clicks.
+    // full rationale and the exact expected counts. `first_access_at` is
+    // left NULL so the day-7 NPS modal does not auto-run and steal the
+    // tab/chip/CTA clicks.
     // -----------------------------------------------------------------------
     const shUser = SEED_SESSION_HISTORY_USER;
     const shMetadata = JSON.stringify({
@@ -1334,7 +1240,6 @@ export default async function globalSetup() {
           full_name = ${shUser.fullName},
           email_verified_at = COALESCE(email_verified_at, now()),
           crp_validated_at = COALESCE(crp_validated_at, now()),
-          tour_completed_at = COALESCE(tour_completed_at, now()),
           first_access_at = NULL,
           nps_responded_at = NULL,
           requires_password_reset = false

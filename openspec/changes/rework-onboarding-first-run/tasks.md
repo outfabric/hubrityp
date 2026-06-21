@@ -15,10 +15,10 @@
 
 ## 2. Remoção do tour — testes e specs
 
-- [ ] 2.1 Deletar as suites do tour: `src/__tests__/unit/modules/onboarding/lib/tour-steps.test.ts`, `src/__tests__/integration/onboarding/complete-tour.int.test.ts`, `src/__tests__/e2e/seeded/onboarding/tour.spec.ts`.
-- [ ] 2.2 Remover o stamping/reset de `tour_completed_at` dos seeds e2e (`src/__tests__/e2e/seeded/setup/global-setup.ts`, `seed-state.ts`) — sem deixar referências órfãs à coluna.
-- [ ] 2.3 Remover o diretório de spec arquivada `openspec/specs/onboarding-tour/` (a remoção é formalizada pelo delta da change) e a menção ao "tour" em `openspec/specs/dashboard-home/spec.md`.
-- [ ] 2.4 Rodar a suíte unit + a relevante de integração para garantir que nenhuma referência a tour quebrou o build (`grep -r "tour" src` não deve achar código vivo, só ausência).
+- [x] 2.1 Deletar as suites do tour: `src/__tests__/unit/modules/onboarding/lib/tour-steps.test.ts`, `src/__tests__/integration/onboarding/complete-tour.int.test.ts`, `src/__tests__/e2e/seeded/onboarding/tour.spec.ts`.
+- [x] 2.2 Remover o stamping/reset de `tour_completed_at` dos seeds e2e (`src/__tests__/e2e/seeded/setup/global-setup.ts`, `seed-state.ts`) — sem deixar referências órfãs à coluna.
+- [x] 2.3 Remover o diretório de spec arquivada `openspec/specs/onboarding-tour/` (a remoção é formalizada pelo delta da change) e a menção ao "tour" em `openspec/specs/dashboard-home/spec.md`.
+- [x] 2.4 Rodar a suíte unit + a relevante de integração para garantir que nenhuma referência a tour quebrou o build (`grep -r "tour" src` não deve achar código vivo, só ausência).
 
 ## 3. Drop da coluna `tour_completed_at` (Backend / Dados)
 

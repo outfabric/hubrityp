@@ -171,7 +171,7 @@ export async function setupGoogleOAuthStub(
 
       // Cleanup: remove ONLY this stub's registration from the mock GoTrue
       // registry. We pass our own `code` so the clear is surgical — an unscoped
-      // clear would wipe the dedicated checklist/tour/empty users registered by
+      // clear would wipe the dedicated checklist/empty users registered by
       // sibling specs running in parallel, making the Edge profile shim resolve
       // "no profile" for them and bounce those specs to /login mid-test.
       await fetch(`${mockGoTrueUrl}/_test/clear-oauth-users`, {

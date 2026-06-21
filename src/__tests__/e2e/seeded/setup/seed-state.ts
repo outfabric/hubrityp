@@ -228,41 +228,13 @@ export const SEED_ONBOARDING_CHECKLIST_USER = {
 } as const;
 
 /**
- * Dedicated user for the onboarding-tour E2E test (onboarding/tour.spec.ts).
- *
- * The guided tour auto-runs on EVERY `/dashboard` visit while
- * `profiles.tour_completed_at` is NULL, and finishing/skipping stamps it. The
- * GLOBAL seed user's dashboard is visited by many parallel specs, so using it
- * for the tour spec would (a) let a sibling's `/dashboard` visit stamp
- * `tour_completed_at` between this spec's reset and assertion, and (b) leak this
- * spec's stamp onto siblings. This dedicated user is touched by NOTHING else, so
- * the spec can deterministically reset `tour_completed_at` to NULL, assert the
- * auto-run, complete it, and assert the stamp + no-replay.
- *
- * Unlike the checklist/empty users, the tour user OWNS one active patient and
- * one session so `hasAnyData` is true and the dashboard renders the four
- * operational sections — which is what makes all five `data-tour-anchor`
- * surfaces (`sidebar-nav`, `secao-hoje`, `secao-pendencias`, `novo-paciente`,
- * `nova-sessao`) present, so the tour highlights real elements in order.
- */
-export const SEED_ONBOARDING_TOUR_USER = {
-  id: '00000000-0000-4000-8000-0000000000c2',
-  email: 'tour-e2e@example.com',
-  fullName: 'Tour E2E',
-  /** One active patient so `hasAnyData` is true and the four sections render. */
-  patientId: '00000000-0000-4000-8000-0000000000c3',
-  /** One scheduled session so the Hoje/Pendências/Ações surfaces all render. */
-  sessionId: '00000000-0000-4000-8000-0000000000c4',
-} as const;
-
-/**
  * Dedicated user for the end-to-end NPS day-7 flow E2E test
  * (nps/day7-modal.spec.ts).
  *
  * The day-7 NPS modal auto-opens on the FIRST eligible `(app)` render (gate:
  * `first_access_at` ≥ 7 days ago AND `nps_responded_at IS NULL`) and a Radix
  * Dialog renders a full-screen overlay that intercepts pointer events across the
- * whole shell — exactly the hazard the tour overlay poses. Driving this on the
+ * whole shell. Driving this on the
  * GLOBAL seed user would make the modal pop on every parallel `/dashboard` spec
  * and block their clicks; mutating the shared user's `first_access_at` /
  * `nps_responded_at` would also leak across siblings under `fullyParallel`.
@@ -273,8 +245,6 @@ export const SEED_ONBOARDING_TOUR_USER = {
  * modal eligible, then drives submit / dismiss / reload assertions and the
  * later-answer path via Configurações > Feedback.
  *
- * `tour_completed_at` is stamped in `global-setup.ts` so the guided tour overlay
- * never auto-runs for this user and cannot steal the clicks the NPS modal needs.
  * The mock GoTrue never authenticates this user by default; the spec signs in at
  * runtime via the shared `signInAsDedicatedUser` helper.
  */
@@ -295,7 +265,7 @@ export const SEED_NPS_USER = {
  * (and their consent state asserted) by many sibling specs under
  * `fullyParallel`, so adding/removing unconsented patients there would shift
  * their counts and break them. Mutating the shared user is exactly the hazard the
- * tour/checklist/nps dedicated users were created to avoid.
+ * checklist/nps dedicated users were created to avoid.
  *
  * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
  * NOTHING else, owning a deterministic patient set seeded in `global-setup.ts`:
@@ -315,9 +285,9 @@ export const SEED_NPS_USER = {
  * minorWithGuardian, adultNoPhone, copyTarget — the four ACTIVE unconsented
  * rows). `signedAdult` and `archivedNoConsent` are the negative cases.
  *
- * `tour_completed_at` is stamped and `first_access_at` left NULL in
- * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
- * auto-runs and intercepts the row-action clicks this spec needs. The mock
+ * `first_access_at` is left NULL in
+ * `global-setup.ts` so the day-7 NPS modal does not
+ * auto-run and intercept the row-action clicks this spec needs. The mock
  * GoTrue never authenticates this user by default; the spec signs in at runtime
  * via the shared `signInAsDedicatedUser` helper.
  */
@@ -399,9 +369,9 @@ export const SEED_CONSENT_FILTER_USER = {
  * evolution for `overdueNewest` (and deletes it in afterEach), proving the row
  * disappears and the count drops to 2 on return.
  *
- * `tour_completed_at` is stamped and `first_access_at`/`nps_responded_at` left
- * so neither the guided tour overlay nor the day-7 NPS modal auto-runs and
- * intercepts the clicks this spec needs. The mock GoTrue never authenticates
+ * `first_access_at`/`nps_responded_at` are left
+ * so the day-7 NPS modal does not auto-run and
+ * intercept the clicks this spec needs. The mock GoTrue never authenticates
  * this user by default; the spec signs in at runtime via the shared
  * `signInAsDedicatedUser` helper.
  */
@@ -483,9 +453,9 @@ export const SEED_OVERDUE_EVOLUTIONS_USER = {
  *   - `noHistory` — owns NO sessions, so its tab renders the empty state with the
  *     "Agendar primeira sessão" CTA pointing at `/agenda`.
  *
- * `tour_completed_at` is stamped and `first_access_at` left NULL in
- * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
- * auto-runs and intercepts the tab/chip/CTA clicks this spec needs. The mock
+ * `first_access_at` is left NULL in
+ * `global-setup.ts` so the day-7 NPS modal does not
+ * auto-run and intercept the tab/chip/CTA clicks this spec needs. The mock
  * GoTrue never authenticates this user by default; the spec signs in at runtime
  * via the shared `signInAsDedicatedUser` helper.
  */
