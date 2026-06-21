@@ -175,7 +175,7 @@ interface RenderStepOptions {
  * `hasSensitiveDataConsent` controls whether the step-3 CSV upload is enabled
  * (RN-11.03); the server gate in `importOnboardingPatients` enforces it
  * regardless of this UI flag. `hasExistingPatients` lets step 3 recognize
- * already-cadastered patients and advance without re-adding. `defaultDisplayName`
+ * already-registered patients and advance without re-adding. `defaultDisplayName`
  * pre-fills step 1 from the owner's current `full_name`. `summary` is non-null
  * only for the `done` step (where it drives the check vs. "Configurar agora").
  */
