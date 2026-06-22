@@ -71,6 +71,15 @@ export interface StepPatientsProps {
    * regardless of the UI state.
    */
   hasSensitiveDataConsent: boolean;
+  /**
+   * Whether the owner already has ≥1 active patient (derived server-side from
+   * real data — the same probe the dashboard recompute uses). When `true` the
+   * step is ALREADY satisfied: the UI recognizes the existing patients and lets
+   * the psychologist advance WITHOUT re-adding, instead of asking for data they
+   * already have (onboarding-wizard spec, "no double entry"). Import/quick-add
+   * stay available for adding more.
+   */
+  hasExistingPatients?: boolean;
   /** Imports the mapped/validated CSV rows. Gated server-side by consent. */
   onImportCsv: (rows: OnboardingCsvPatientRow[]) => Promise<ImportPatientsStepResult>;
   /** Adds a single patient via the existing patient create path. */
@@ -129,6 +138,7 @@ type CsvStage = 'upload' | 'mapping' | 'preview';
  */
 export function StepPatients({
   hasSensitiveDataConsent,
+  hasExistingPatients = false,
   onImportCsv,
   onQuickAdd,
   onSkip,
@@ -144,11 +154,16 @@ export function StepPatients({
     router.push('/onboarding/setup/done');
   }, [router]);
 
+  // Advancing past the step — used by both the explicit "Pular por enquanto"
+  // skip and the "Continuar" control shown when the owner already has patients.
+  // Both reuse the same "advance to done, ingest nothing" server primitive; the
+  // existing patients already satisfy the checklist via recompute, so no flag
+  // needs flipping here.
   const handleSkip = useCallback(() => {
     startSkipping(async () => {
       const result = await onSkip();
       if (!result.ok) {
-        toast.error('Não foi possível pular esta etapa. Tente novamente.');
+        toast.error('Não foi possível continuar agora. Tente novamente.');
         return;
       }
       goToDone();
@@ -177,10 +192,28 @@ export function StepPatients({
 
   return (
     <div className="flex flex-col gap-6" data-testid="step-patients">
-      <p className="text-text-secondary text-base">
-        Traga seus pacientes para começar. Você pode importar uma planilha, adicionar um paciente
-        agora ou fazer isso depois.
-      </p>
+      {hasExistingPatients ? (
+        <Card
+          className="border-success-200 bg-success-50 flex items-start gap-3 p-4"
+          data-testid="step-patients-existing-banner"
+        >
+          <UserPlus className="text-success-700 mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          <div className="flex flex-col gap-1">
+            <p className="text-text-primary text-sm font-medium">
+              Você já tem pacientes cadastrados.
+            </p>
+            <p className="text-text-secondary text-sm">
+              Esta etapa já está concluída. Você pode importar ou adicionar mais pacientes, ou
+              seguir em frente.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <p className="text-text-secondary text-base">
+          Traga seus pacientes para começar. Você pode importar uma planilha, adicionar um paciente
+          agora ou fazer isso depois.
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {/* Option A — CSV upload */}
@@ -263,17 +296,32 @@ export function StepPatients({
         </Card>
       </div>
 
-      {/* Option C — Skip */}
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={handleSkip}
-        disabled={isSkipping}
-        data-testid="step-patients-skip"
-        className="self-start"
-      >
-        {isSkipping ? 'Pulando...' : 'Pular por enquanto'}
-      </Button>
+      {/* Option C — advance. When the owner already has patients the step is
+          satisfied, so this becomes a primary "Continuar" (recognize, don't
+          re-add); otherwise it is the non-blocking "Pular por enquanto" skip.
+          Both reuse the same advance-to-done primitive. */}
+      {hasExistingPatients ? (
+        <Button
+          type="button"
+          onClick={handleSkip}
+          disabled={isSkipping}
+          data-testid="step-patients-continue"
+          className="self-start"
+        >
+          {isSkipping ? 'Continuando...' : 'Continuar'}
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleSkip}
+          disabled={isSkipping}
+          data-testid="step-patients-skip"
+          className="self-start"
+        >
+          {isSkipping ? 'Pulando...' : 'Pular por enquanto'}
+        </Button>
+      )}
     </div>
   );
 }

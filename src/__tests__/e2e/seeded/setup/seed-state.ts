@@ -228,41 +228,13 @@ export const SEED_ONBOARDING_CHECKLIST_USER = {
 } as const;
 
 /**
- * Dedicated user for the onboarding-tour E2E test (onboarding/tour.spec.ts).
- *
- * The guided tour auto-runs on EVERY `/dashboard` visit while
- * `profiles.tour_completed_at` is NULL, and finishing/skipping stamps it. The
- * GLOBAL seed user's dashboard is visited by many parallel specs, so using it
- * for the tour spec would (a) let a sibling's `/dashboard` visit stamp
- * `tour_completed_at` between this spec's reset and assertion, and (b) leak this
- * spec's stamp onto siblings. This dedicated user is touched by NOTHING else, so
- * the spec can deterministically reset `tour_completed_at` to NULL, assert the
- * auto-run, complete it, and assert the stamp + no-replay.
- *
- * Unlike the checklist/empty users, the tour user OWNS one active patient and
- * one session so `hasAnyData` is true and the dashboard renders the four
- * operational sections — which is what makes all five `data-tour-anchor`
- * surfaces (`sidebar-nav`, `secao-hoje`, `secao-pendencias`, `novo-paciente`,
- * `nova-sessao`) present, so the tour highlights real elements in order.
- */
-export const SEED_ONBOARDING_TOUR_USER = {
-  id: '00000000-0000-4000-8000-0000000000c2',
-  email: 'tour-e2e@example.com',
-  fullName: 'Tour E2E',
-  /** One active patient so `hasAnyData` is true and the four sections render. */
-  patientId: '00000000-0000-4000-8000-0000000000c3',
-  /** One scheduled session so the Hoje/Pendências/Ações surfaces all render. */
-  sessionId: '00000000-0000-4000-8000-0000000000c4',
-} as const;
-
-/**
  * Dedicated user for the end-to-end NPS day-7 flow E2E test
  * (nps/day7-modal.spec.ts).
  *
  * The day-7 NPS modal auto-opens on the FIRST eligible `(app)` render (gate:
  * `first_access_at` ≥ 7 days ago AND `nps_responded_at IS NULL`) and a Radix
  * Dialog renders a full-screen overlay that intercepts pointer events across the
- * whole shell — exactly the hazard the tour overlay poses. Driving this on the
+ * whole shell. Driving this on the
  * GLOBAL seed user would make the modal pop on every parallel `/dashboard` spec
  * and block their clicks; mutating the shared user's `first_access_at` /
  * `nps_responded_at` would also leak across siblings under `fullyParallel`.
@@ -273,8 +245,6 @@ export const SEED_ONBOARDING_TOUR_USER = {
  * modal eligible, then drives submit / dismiss / reload assertions and the
  * later-answer path via Configurações > Feedback.
  *
- * `tour_completed_at` is stamped in `global-setup.ts` so the guided tour overlay
- * never auto-runs for this user and cannot steal the clicks the NPS modal needs.
  * The mock GoTrue never authenticates this user by default; the spec signs in at
  * runtime via the shared `signInAsDedicatedUser` helper.
  */
@@ -295,7 +265,7 @@ export const SEED_NPS_USER = {
  * (and their consent state asserted) by many sibling specs under
  * `fullyParallel`, so adding/removing unconsented patients there would shift
  * their counts and break them. Mutating the shared user is exactly the hazard the
- * tour/checklist/nps dedicated users were created to avoid.
+ * checklist/nps dedicated users were created to avoid.
  *
  * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
  * NOTHING else, owning a deterministic patient set seeded in `global-setup.ts`:
@@ -315,9 +285,9 @@ export const SEED_NPS_USER = {
  * minorWithGuardian, adultNoPhone, copyTarget — the four ACTIVE unconsented
  * rows). `signedAdult` and `archivedNoConsent` are the negative cases.
  *
- * `tour_completed_at` is stamped and `first_access_at` left NULL in
- * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
- * auto-runs and intercepts the row-action clicks this spec needs. The mock
+ * `first_access_at` is left NULL in
+ * `global-setup.ts` so the day-7 NPS modal does not
+ * auto-run and intercept the row-action clicks this spec needs. The mock
  * GoTrue never authenticates this user by default; the spec signs in at runtime
  * via the shared `signInAsDedicatedUser` helper.
  */
@@ -399,9 +369,9 @@ export const SEED_CONSENT_FILTER_USER = {
  * evolution for `overdueNewest` (and deletes it in afterEach), proving the row
  * disappears and the count drops to 2 on return.
  *
- * `tour_completed_at` is stamped and `first_access_at`/`nps_responded_at` left
- * so neither the guided tour overlay nor the day-7 NPS modal auto-runs and
- * intercepts the clicks this spec needs. The mock GoTrue never authenticates
+ * `first_access_at`/`nps_responded_at` are left
+ * so the day-7 NPS modal does not auto-run and
+ * intercept the clicks this spec needs. The mock GoTrue never authenticates
  * this user by default; the spec signs in at runtime via the shared
  * `signInAsDedicatedUser` helper.
  */
@@ -483,9 +453,9 @@ export const SEED_OVERDUE_EVOLUTIONS_USER = {
  *   - `noHistory` — owns NO sessions, so its tab renders the empty state with the
  *     "Agendar primeira sessão" CTA pointing at `/agenda`.
  *
- * `tour_completed_at` is stamped and `first_access_at` left NULL in
- * `global-setup.ts` so neither the guided tour overlay nor the day-7 NPS modal
- * auto-runs and intercepts the tab/chip/CTA clicks this spec needs. The mock
+ * `first_access_at` is left NULL in
+ * `global-setup.ts` so the day-7 NPS modal does not
+ * auto-run and intercept the tab/chip/CTA clicks this spec needs. The mock
  * GoTrue never authenticates this user by default; the spec signs in at runtime
  * via the shared `signInAsDedicatedUser` helper.
  */
@@ -544,6 +514,137 @@ export const SEED_SESSION_HISTORY_USER = {
     historyTotal: 16,
     /** Attendance rate: round(14 / (14 + 1 + 1) * 100). */
     attendanceRate: 88,
+  },
+} as const;
+
+/**
+ * Dedicated user for the first-run onboarding-wizard E2E specs
+ * (onboarding/welcome.spec.ts, onboarding/wizard-flow.spec.ts, and the
+ * section-6 happy-path / skip specs in onboarding/first-run-*.spec.ts).
+ *
+ * Under the reworked middleware gating, an `active` user with INCOMPLETE
+ * onboarding (`onboarding_step != 'done'` AND `onboarding_completed_at IS NULL`)
+ * is funneled into `/onboarding/welcome` from every gated/auth surface. The
+ * GLOBAL seed user is deliberately kept onboarding-COMPLETE (so the many
+ * `/dashboard` specs sharing its `storageState` reach the app), which means it
+ * can no longer drive the wizard: the gate would bounce it straight to
+ * `/dashboard`.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row whose
+ * onboarding starts INCOMPLETE (`onboarding_step = 'welcome'`,
+ * `onboarding_completed_at = NULL`, `first_access_at = NULL`), owning NO domain
+ * data so the wizard collects everything from scratch. The onboarding specs OWN
+ * its state end-to-end and reset it to the pristine incomplete baseline before
+ * each test (on the reused container), so the four-step walkthrough, resume,
+ * skip, and first-access stamping are deterministic.
+ *
+ * The mock GoTrue never authenticates this user by default; specs sign in at
+ * runtime via the shared `signInAsDedicatedUser` helper, passing the per-user
+ * onboarding override so the Edge middleware's profile shim resolves it as
+ * active-but-incomplete (which is what routes it INTO the wizard).
+ */
+export const SEED_ONBOARDING_WIZARD_USER = {
+  id: '00000000-0000-4000-8000-0000000000c8',
+  email: 'onboarding-wizard-e2e@example.com',
+  fullName: 'Onboarding Wizard E2E',
+} as const;
+
+/**
+ * Dedicated user for the reactivated-account onboarding regression spec
+ * (onboarding/first-run-reactivated.spec.ts — section 6.3).
+ *
+ * Models a previously-cancelled psychologist brought back online whose
+ * onboarding is INCOMPLETE but who ALREADY has a configured location and an
+ * active patient from their prior life on the platform. The reworked wizard is
+ * data-aware: the resume resolver fast-forwards past every step whose real
+ * domain data already exists, and `configureLocationImpl` is idempotent (never
+ * blind-inserts a second location). The spec proves the reactivated user is
+ * never asked to RE-CREATE a location and that no duplicate location row is
+ * produced.
+ *
+ * A SEPARATE active `auth.users` + `profiles` row touched by NOTHING else,
+ * seeded with `onboarding_step = 'location'` (mid-wizard cursor),
+ * `reactivated_at` set, ONE pre-existing location, and ONE active patient.
+ * `global-setup.ts` resets it to this exact baseline on every run.
+ */
+export const SEED_ONBOARDING_REACTIVATED_USER = {
+  id: '00000000-0000-4000-8000-0000000000c9',
+  email: 'onboarding-reactivated-e2e@example.com',
+  fullName: 'Onboarding Reativado E2E',
+  /** The single pre-existing location — the wizard must NOT ask to re-create it. */
+  location: {
+    id: '00000000-0000-4000-8000-0000000000ca',
+    name: 'Consultório Pré-Existente',
+  },
+  /** The single pre-existing active patient — satisfies the patients step. */
+  patient: {
+    id: '00000000-0000-4000-8000-0000000000cb',
+    fullName: 'Paciente Pré-Existente',
+  },
+} as const;
+
+/**
+ * Dedicated patient (owned by the GLOBAL seed user) for the prontuário
+ * attachments & personal-notes E2E spec (prontuario/attachments-and-notes.spec.ts
+ * — section 8.1).
+ *
+ * That spec's `beforeEach` blank-slates the patient's consent state — it nulls
+ * `consent_signed_at` and DELETES every `consent_terms` row for the patient — so
+ * its "blocks audio upload when no consent term exists" test starts from a
+ * no-active-consent baseline, then seeds a signed term for the audio-success
+ * test. Run on a SHARED seed patient (previously `activeMinimal`) under
+ * `fullyParallel`, that blanket consent-term delete races
+ * `ai-transcription/termo-ai-flow.spec.ts`, which reads
+ * `SEED_AI_CONSENT_TERMS.alreadySigned` — also bound to `activeMinimal` — and
+ * asserts the public `/termo/:token` page shows "already signed". When the
+ * attachments spec deletes that AI term mid-test, the consent page renders
+ * "Termo nao encontrado" and the assertion fails. The two specs have genuinely
+ * INCOMPATIBLE requirements on the same patient's consent state (one needs zero
+ * terms, the other needs a signed AI term to exist), so they cannot share a
+ * patient.
+ *
+ * This is therefore a SEPARATE patient touched by NOTHING else, owned by the
+ * seed user (so the spec keeps using the shared `storageState`), seeded in
+ * `global-setup.ts` with no consent terms. The spec owns its consent state
+ * end-to-end without leaking onto the AI-consent fixtures.
+ */
+export const SEED_ATTACHMENTS_PATIENT = {
+  id: '00000000-0000-4000-8000-000000000013',
+  fullName: 'Paciente Anexos E2E',
+} as const;
+
+/**
+ * Dedicated user for the AI-transcription settings usage-stats E2E spec
+ * (ai-transcription/settings-stats.spec.ts — section 5.3).
+ *
+ * The acceptance-rate stat aggregates EVERY `ai_transcriptions` row the user
+ * owns, so the spec needs full, deterministic control of that set: it deletes
+ * all the user's transcriptions up front, seeds an exact count of `reviewed`
+ * rows (3 then 10), and asserts the derived percentage. Driving this on the
+ * GLOBAL seed user is unsafe under `fullyParallel`: that blanket delete races
+ * the sibling review specs (`review-and-save`, `review-discard`), which own
+ * their own `ready` review fixtures on the SAME seed user — the delete wipes
+ * their rows mid-test (review page renders "Transcrição não encontrada", save
+ * action returns NOT_FOUND), and those specs in turn flip rows to `reviewed`,
+ * polluting this spec's count. This is exactly the shared-fixture hazard the
+ * other dedicated users exist to avoid.
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else, owning ONE patient (FK target for the seeded transcription
+ * rows). `global-setup.ts` resets it to a transcription-free baseline on every
+ * run; the spec owns its counts end-to-end. `first_access_at` is left NULL so
+ * the day-7 NPS modal never auto-runs and intercepts the page render. The mock
+ * GoTrue never authenticates this user by default; the spec signs in at runtime
+ * via the shared `signInAsDedicatedUser` helper.
+ */
+export const SEED_AI_STATS_USER = {
+  id: '00000000-0000-4000-8000-0000000000d8',
+  email: 'ai-stats-e2e@example.com',
+  fullName: 'AI Stats E2E',
+  /** Single patient owning every seeded transcription for this user. */
+  patient: {
+    id: '00000000-0000-4000-8000-0000000000d9',
+    fullName: 'Paciente Stats IA',
   },
 } as const;
 

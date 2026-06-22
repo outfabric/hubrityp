@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { stampFirstAccess } from '@/modules/dashboard';
 import { getCurrentProfile, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
 import { Button } from '@/shared/ui/button';
@@ -26,6 +27,15 @@ export default async function OnboardingWelcomePage() {
   if (profile.status !== ProfileStatus.Active) {
     redirect('/onboarding/pending');
   }
+
+  // Idempotent, fire-and-forget `first_access_at` stamp. The welcome screen is
+  // the wizard's entry point and the true first authenticated destination for an
+  // active psychologist with incomplete onboarding (the soft gate routes here
+  // before the dashboard), so stamping here — instead of on /dashboard — keeps
+  // the day-7 NPS anchor at the real first access. The write only fires when
+  // `first_access_at IS NULL`; we never `await` it (a slow write must not delay
+  // the first paint) and swallow failures (the next render retries).
+  void stampFirstAccess(supabase).catch(() => {});
 
   // First name only — `fullName` is "Marina Costa" → "Marina". A profile with
   // an empty/whitespace name (should not happen: the column is NOT NULL) falls

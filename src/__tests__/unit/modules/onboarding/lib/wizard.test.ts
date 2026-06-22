@@ -6,7 +6,9 @@ import {
   isValidStep,
   nextStep,
   profileStepSchema,
+  resolveResumeStep,
   resumeStepFromOnboardingStep,
+  type WizardDataPresence,
   type WizardStep,
 } from '@/modules/onboarding';
 
@@ -60,6 +62,49 @@ describe('resumeStepFromOnboardingStep', () => {
     ['done', 'done'],
   ])('maps persisted %s → resume at %s', (persisted, expected) => {
     expect(resumeStepFromOnboardingStep(persisted)).toBe(expected);
+  });
+});
+
+describe('resolveResumeStep (data-aware fast-forward)', () => {
+  const NONE: WizardDataPresence = { profile: false, location: false, patients: false };
+
+  it('a brand-new user with no data starts at profile (cursor welcome)', () => {
+    expect(resolveResumeStep('welcome', NONE)).toBe('profile');
+  });
+
+  it('fast-forwards a welcome user past a satisfied profile to the first pending step (location)', () => {
+    expect(resolveResumeStep('welcome', { ...NONE, profile: true })).toBe('location');
+  });
+
+  it('fast-forwards past profile + location to patients when both exist', () => {
+    expect(resolveResumeStep('welcome', { profile: true, location: true, patients: false })).toBe(
+      'patients',
+    );
+  });
+
+  it('terminates at done when every data step is satisfied', () => {
+    expect(resolveResumeStep('welcome', { profile: true, location: true, patients: true })).toBe(
+      'done',
+    );
+  });
+
+  it('fast-forwards from the cursor: location cursor + existing location → patients', () => {
+    expect(resolveResumeStep('location', { ...NONE, location: true })).toBe('patients');
+  });
+
+  it('does not rewind: a patients cursor with no patient stays at patients', () => {
+    // Earlier steps satisfied or not, the cursor never moves BACKWARD — resume
+    // starts at the cursor segment and only advances forward.
+    expect(
+      resolveResumeStep('patients', { profile: false, location: false, patients: false }),
+    ).toBe('patients');
+  });
+
+  it('a done cursor resolves to done regardless of probes', () => {
+    expect(resolveResumeStep('done', NONE)).toBe('done');
+    expect(resolveResumeStep('done', { profile: true, location: true, patients: true })).toBe(
+      'done',
+    );
   });
 });
 

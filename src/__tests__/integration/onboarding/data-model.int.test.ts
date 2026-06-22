@@ -88,7 +88,7 @@ describe('profiles — onboarding/NPS columns', () => {
 
     const rows = await runAsService(async (db) => {
       return db.execute(
-        dsql`SELECT onboarding_step, onboarding_completed_at, tour_completed_at,
+        dsql`SELECT onboarding_step, onboarding_completed_at,
                     first_access_at, reactivated_at, nps_score, nps_feedback, nps_responded_at
              FROM profiles WHERE user_id = ${userId}`,
       );
@@ -100,12 +100,42 @@ describe('profiles — onboarding/NPS columns', () => {
     expect(row.onboarding_step).toBe('welcome');
     // Nullable, no value supplied.
     expect(row.onboarding_completed_at).toBeNull();
-    expect(row.tour_completed_at).toBeNull();
     expect(row.first_access_at).toBeNull();
     expect(row.reactivated_at).toBeNull();
     expect(row.nps_score).toBeNull();
     expect(row.nps_feedback).toBeNull();
     expect(row.nps_responded_at).toBeNull();
+  });
+
+  it('no longer has a tour_completed_at column', async () => {
+    // The tour was removed (rework-onboarding-first-run, section 3). A freshly
+    // migrated profile must keep the remaining column defaults AND the dropped
+    // column must be absent from the table — querying information_schema is the
+    // authoritative way to assert the column does not exist.
+    const userId = randomUUID();
+    await seedAuthUser(userId);
+
+    const rows = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT column_name FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'profiles'
+               AND column_name = 'tour_completed_at'`,
+      );
+    });
+    expect(rows).toHaveLength(0);
+
+    // Remaining onboarding columns keep their defaults for the migrated profile.
+    const profileRows = await runAsService(async (db) => {
+      return db.execute(
+        dsql`SELECT onboarding_step, onboarding_completed_at, first_access_at
+             FROM profiles WHERE user_id = ${userId}`,
+      );
+    });
+    expect(profileRows).toHaveLength(1);
+    const profile = profileRows[0]!;
+    expect(profile.onboarding_step).toBe('welcome');
+    expect(profile.onboarding_completed_at).toBeNull();
+    expect(profile.first_access_at).toBeNull();
   });
 
   it('accepts nps_score within 0..10', async () => {

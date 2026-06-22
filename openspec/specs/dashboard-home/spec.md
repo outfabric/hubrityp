@@ -1,7 +1,7 @@
 # dashboard-home Specification
 
 ## Purpose
-The authenticated psychologist's operational home at `/dashboard`: four owner-scoped sections (Hoje, Pendências, Resumo da semana, Ações rápidas) built on Sálvia design-system primitives, with modality-aware session routing, MVP-only pendências, owner-only weekly metrics streamed behind `<Suspense>`, MVP quick-action shortcuts that reuse existing creation modals, mobile-first responsive collapse, a zero-data first-steps slot, and an idempotent `first_access_at` stamp on first render. Created by syncing the `dashboard-home` change.
+The authenticated psychologist's operational home at `/dashboard`: four owner-scoped sections (Hoje, Pendências, Resumo da semana, Ações rápidas) built on Sálvia design-system primitives, with modality-aware session routing, MVP-only pendências, owner-only weekly metrics streamed behind `<Suspense>`, MVP quick-action shortcuts that reuse existing creation modals, mobile-first responsive collapse, and a zero-data first-steps slot. Created by syncing the `dashboard-home` change.
 
 ## Requirements
 
@@ -98,7 +98,7 @@ The system SHALL, on mobile widths, prioritize Seção Hoje and Seção Pendênc
 - **THEN** Hoje and Pendências are visible and Resumo + Ações are collapsed behind a chevron control that expands them
 
 ### Requirement: Empty dashboard surfaces the first-steps slot
-The system SHALL detect when the psychologist has zero patients AND zero sessions and, in that case, render the first-steps checklist slot in place of the four normal sections (RF-11.08). Once the psychologist has any data, the normal sections render. This change exposes the empty-state slot and the "has any data" detection; the checklist component is provided by the checklist/tour change.
+The system SHALL detect when the psychologist has zero patients AND zero sessions and, in that case, render the first-steps checklist slot in place of the four normal sections (RF-11.08). Once the psychologist has any data, the normal sections render. This change exposes the empty-state slot and the "has any data" detection; the checklist component is provided by the checklist change.
 
 #### Scenario: Zero-data dashboard shows the checklist slot
 - **GIVEN** a psychologist with zero patients and zero sessions
@@ -110,10 +110,3 @@ The system SHALL detect when the psychologist has zero patients AND zero session
 - **WHEN** they visit `/dashboard`
 - **THEN** the four normal sections render and the empty-state slot is not shown
 
-### Requirement: First authenticated dashboard render stamps first_access_at
-The system SHALL set `profiles.first_access_at = now()` on the first time an authenticated psychologist renders `/dashboard` when `first_access_at IS NULL`, using a session-scoped, idempotent write. This value seeds the day-7 NPS trigger owned by a later change. The write MUST authorize from the session (`auth.uid()`) and never from input.
-
-#### Scenario: First access is stamped once
-- **GIVEN** a psychologist with `first_access_at IS NULL`
-- **WHEN** they render `/dashboard` for the first time
-- **THEN** `first_access_at` is set to now(); a subsequent render does not overwrite it

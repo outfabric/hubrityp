@@ -18,22 +18,36 @@ import { createMiddlewareClient } from '@/shared/supabase/middleware';
 //
 // Decision table (path x session state -- `null` represents "no session"):
 //
-//   Path requested              | null        | OAuth, no profile        | pending_*             | active + !rpr | active + rpr        | suspended/cancelled (*)
-//   ----------------------------|-------------|--------------------------|----------------------|---------------|---------------------|------------------------
-//   /login, /signup             | pass        | ->/onboarding/c-p         | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | pass + signOut
-//   /forgot-password            | pass        | ->/onboarding/c-p         | pass                 | ->/dashboard   | pass                | ->/login + signOut
-//   /reset-password             | pass        | ->/onboarding/c-p         | pass                 | pass          | pass                | ->/login + signOut
-//   /auth/link-account          | pass        | pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
-//   /onboarding/complete-profile| ->/login?...| pass                     | ->/onboarding/pending | ->/dashboard   | ->/forgot-password   | ->/login + signOut
-//   /onboarding/pending         | ->/login?...| ->/onboarding/c-p         | pass                 | ->/dashboard   | ->/forgot-password   | ->/login + signOut
-//   /onboarding/welcome,        | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
-//     /onboarding/setup*        |             |                          |                      |               |                     |
-//   /dashboard*, /sessao*,      | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass          | ->/forgot-password   | ->/login + signOut
-//     other (app)               |             |                          |                      |               |                     |
-//   /auth/callback              | pass        | pass                     | pass                 | pass          | pass                | pass
-//   /, /api/health, public      | pass        | pass                     | pass                 | pass          | pass                | pass
+// The `active + !rpr` column is split into two sub-columns by onboarding
+// completion: `onb!` (onboarding INCOMPLETE -- onboarding_step != 'done' AND
+// onboarding_completed_at IS NULL) and `onb✓` (onboarding COMPLETE). An active
+// user who has not finished (or skipped) the first-run wizard is funneled into
+// it; once complete, the historical behavior applies.
 //
-// Legend: rpr = requires_password_reset, c-p = complete-profile
+//   Path requested              | null        | OAuth, no profile        | pending_*             | active+!rpr onb! | active+!rpr onb✓ | active + rpr        | suspended/cancelled (*)
+//   ----------------------------|-------------|--------------------------|----------------------|------------------|------------------|---------------------|------------------------
+//   /login, /signup             | pass        | ->/onboarding/c-p         | ->/onboarding/pending | ->/onb/welcome    | ->/dashboard      | ->/forgot-password   | pass + signOut
+//   /forgot-password            | pass        | ->/onboarding/c-p         | pass                 | ->/onb/welcome    | ->/dashboard      | pass                | ->/login + signOut
+//   /reset-password             | pass        | ->/onboarding/c-p         | pass                 | pass             | pass             | pass                | ->/login + signOut
+//   /auth/link-account          | pass        | pass                     | ->/onboarding/pending | ->/onb/welcome    | ->/dashboard      | ->/forgot-password   | ->/login + signOut
+//   /onboarding/complete-profile| ->/login?...| pass                     | ->/onboarding/pending | ->/onb/welcome    | ->/dashboard      | ->/forgot-password   | ->/login + signOut
+//   /onboarding/pending         | ->/login?...| ->/onboarding/c-p         | pass                 | ->/onb/welcome    | ->/dashboard      | ->/forgot-password   | ->/login + signOut
+//   /onboarding/welcome,        | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | pass             | ->/dashboard      | ->/forgot-password   | ->/login + signOut
+//     /onboarding/setup*        |             |                          |                      |                  |                  |                     |
+//   /dashboard*, /sessao*,      | ->/login?...| ->/onboarding/c-p         | ->/onboarding/pending | ->/onb/welcome    | pass             | ->/forgot-password   | ->/login + signOut
+//     other (app)               |             |                          |                      |                  |                  |                     |
+//   /auth/callback              | pass        | pass                     | pass                 | pass             | pass             | pass                | pass
+//   /, /api/health, public      | pass        | pass                     | pass                 | pass             | pass             | pass                | pass
+//
+// Legend: rpr = requires_password_reset, c-p = complete-profile,
+//   /onb/welcome = /onboarding/welcome, onb! = onboarding incomplete,
+//   onb✓ = onboarding complete.
+//
+// The onboarding wizard routes (`/onboarding/welcome`, `/onboarding/setup*`)
+// form their own `'onboarding-wizard'` path class so the active-incomplete
+// branch can `pass` on them WITHOUT looping (an incomplete user redirected to
+// /onboarding/welcome must then pass on /onboarding/welcome). For anon/pending/
+// suspended/cancelled the class behaves identically to the `'app'` class.
 //
 // (*) Suspended/cancelled with a live cookie MUST have the session cleared
 // before any redirect is emitted -- otherwise the next request still carries
@@ -83,6 +97,9 @@ const LINK_ACCOUNT_PATH = '/auth/link-account';
 const COMPLETE_PROFILE_PATH = '/onboarding/complete-profile';
 
 const ONBOARDING_PATH = '/onboarding/pending';
+// First-run wizard entrypoint. An `active` user with incomplete onboarding is
+// funneled here from every gated/auth surface (see `decideWithProfile`).
+const WELCOME_PATH = '/onboarding/welcome';
 const DASHBOARD_PATH = '/dashboard';
 const LOGIN_PATH = '/login';
 
@@ -105,6 +122,7 @@ type PathClass =
   | 'complete-profile'
   | 'callback'
   | 'onboarding'
+  | 'onboarding-wizard'
   | 'app'
   | 'public';
 
@@ -133,6 +151,24 @@ function classifyPath(pathname: string): PathClass {
   if (pathname === ONBOARDING_PATH || pathname.startsWith(`${ONBOARDING_PATH}/`)) {
     return 'onboarding';
   }
+  // `/onboarding/welcome` and `/onboarding/setup*` are the onboarding WIZARD
+  // (first-run) routes. They get their OWN path class (`'onboarding-wizard'`)
+  // rather than folding into `'app'`, because an `active` user with INCOMPLETE
+  // onboarding is redirected TO the wizard and must then `pass` ON the wizard
+  // (otherwise we loop). The dedicated class lets `decideWithProfile()` split
+  // the active branch cleanly: incomplete -> pass on wizard, complete -> bounce
+  // wizard to /dashboard. For anon/pending/suspended/cancelled the class is
+  // handled identically to `'app'` at the decision sites (anon ->
+  // /login?redirectTo=, pending -> /onboarding/pending, suspended/cancelled ->
+  // clear+redirect). The strict prefix+separator check (exact OR prefix + `/`)
+  // rejects near-miss paths like `/onboarding/welcomex` -- see
+  // onboarding-wizard-gating.int.test.ts.
+  const ONBOARDING_WIZARD_PREFIXES = ['/onboarding/welcome', '/onboarding/setup'] as const;
+  for (const prefix of ONBOARDING_WIZARD_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return 'onboarding-wizard';
+    }
+  }
   // `(app)` shell: all authenticated route prefixes. The strict prefix check
   // (exact match OR prefix + `/` separator) prevents false matches like
   // `/pacientes-info` or `/dashboardnews` -- see the matcher-boundary tests.
@@ -142,15 +178,6 @@ function classifyPath(pathname: string): PathClass {
   // `/dashboard/transcricoes` and `/dashboard/transcricoes/<id>/revisar`
   // resolve to the `'app'` (gated) class. A dedicated entry would be dead
   // code -- see transcricoes-gating.int.test.ts for the negative-auth proof.
-  // `/onboarding/welcome` and `/onboarding/setup*` are the onboarding WIZARD
-  // routes. They are gated like the rest of the `(app)` shell -- NOT like
-  // `/onboarding/pending`. The distinction matters: a `pending_*` user PASSES
-  // on `/onboarding/pending` (the onboarding class) but must be BOUNCED to
-  // `/onboarding/pending` when hitting the wizard, because the wizard is only
-  // reachable once the account is `active`. Mapping them to the `'app'` class
-  // gives exactly that (anon -> /login?redirectTo=, pending -> /onboarding/pending,
-  // active -> pass). The strict prefix+separator check below rejects near-miss
-  // paths like `/onboarding/welcomex` -- see onboarding-wizard-gating.int.test.ts.
   const APP_PREFIXES = [
     '/pacientes',
     '/agenda',
@@ -158,8 +185,6 @@ function classifyPath(pathname: string): PathClass {
     '/configuracoes',
     '/dashboard',
     '/sessao',
-    '/onboarding/welcome',
-    '/onboarding/setup',
   ] as const;
   for (const prefix of APP_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
@@ -257,8 +282,14 @@ function decide(pathClass: PathClass, ctx: SessionContext, requestPath: string):
   //   a) No session at all (authUser is null) -- "anonymous" column.
   //   b) Authenticated but no profile row -- depends on provider.
   if (!ctx.authUser) {
-    // Truly anonymous -- no session cookie or expired session.
-    if (pathClass === 'app' || pathClass === 'onboarding' || pathClass === 'complete-profile') {
+    // Truly anonymous -- no session cookie or expired session. The wizard
+    // (`'onboarding-wizard'`) is gated like the `'app'` shell for anon users.
+    if (
+      pathClass === 'app' ||
+      pathClass === 'onboarding-wizard' ||
+      pathClass === 'onboarding' ||
+      pathClass === 'complete-profile'
+    ) {
       const target = `${LOGIN_PATH}?redirectTo=${encodeURIComponent(requestPath)}`;
       return { kind: 'redirect', to: target, reason: 'anon-on-gated' };
     }
@@ -285,7 +316,12 @@ function decide(pathClass: PathClass, ctx: SessionContext, requestPath: string):
       };
     }
     // Email signup race window -- treat exactly like "no session".
-    if (pathClass === 'app' || pathClass === 'onboarding' || pathClass === 'complete-profile') {
+    if (
+      pathClass === 'app' ||
+      pathClass === 'onboarding-wizard' ||
+      pathClass === 'onboarding' ||
+      pathClass === 'complete-profile'
+    ) {
       const target = `${LOGIN_PATH}?redirectTo=${encodeURIComponent(requestPath)}`;
       return { kind: 'redirect', to: target, reason: 'anon-on-gated' };
     }
@@ -331,20 +367,59 @@ function decideWithProfile(pathClass: PathClass, profile: Profile): Decision {
           reason: 'requires-password-reset',
         };
       }
-      // Active users (no password reset needed) see the app. Auth +
-      // onboarding bounce to dashboard. /reset-password passes through
-      // (user may want to change password voluntarily).
-      if (pathClass === 'app' || pathClass === 'reset-password') return { kind: 'pass' };
-      if (
-        pathClass === 'auth' ||
-        pathClass === 'onboarding' ||
-        pathClass === 'forgot-password' ||
-        pathClass === 'link-account' ||
-        pathClass === 'complete-profile'
-      ) {
-        return { kind: 'redirect', to: DASHBOARD_PATH, reason: 'active-already-in' };
+      // Active users (no password reset needed) split by onboarding state.
+      // `onboardingComplete` is true once the user finishes OR explicitly skips
+      // the first-run wizard (step advances to 'done') OR the completion
+      // timestamp is stamped. Either signal alone marks the soft gate as
+      // satisfied.
+      {
+        const onboardingComplete =
+          profile.onboardingStep === 'done' || profile.onboardingCompletedAt !== null;
+
+        if (!onboardingComplete) {
+          // Incomplete onboarding: keep the user inside the first-run wizard.
+          // The wizard itself and the voluntary password-change flow pass; every
+          // other authenticated/auth surface funnels into /onboarding/welcome.
+          // `'onboarding-wizard'` MUST pass here -- otherwise the redirect below
+          // would target a path that itself redirects, looping forever.
+          if (pathClass === 'onboarding-wizard' || pathClass === 'reset-password') {
+            return { kind: 'pass' };
+          }
+          if (
+            pathClass === 'app' ||
+            pathClass === 'onboarding' ||
+            pathClass === 'auth' ||
+            pathClass === 'complete-profile' ||
+            pathClass === 'link-account'
+          ) {
+            return {
+              kind: 'redirect',
+              to: WELCOME_PATH,
+              reason: 'active-onboarding-incomplete',
+            };
+          }
+          // `forgot-password` + `public` (and any future class) pass: the user
+          // may change their password voluntarily, and marketing/legal pages
+          // stay reachable from inside the wizard.
+          return { kind: 'pass' };
+        }
+
+        // Onboarding complete -- historical behavior. The app shell and
+        // /reset-password pass; auth + onboarding (incl. the now-finished
+        // wizard) bounce to the dashboard.
+        if (pathClass === 'app' || pathClass === 'reset-password') return { kind: 'pass' };
+        if (
+          pathClass === 'onboarding-wizard' ||
+          pathClass === 'auth' ||
+          pathClass === 'onboarding' ||
+          pathClass === 'forgot-password' ||
+          pathClass === 'link-account' ||
+          pathClass === 'complete-profile'
+        ) {
+          return { kind: 'redirect', to: DASHBOARD_PATH, reason: 'active-already-in' };
+        }
+        return { kind: 'pass' };
       }
-      return { kind: 'pass' };
 
     case ProfileStatus.Suspended:
     case ProfileStatus.Cancelled:

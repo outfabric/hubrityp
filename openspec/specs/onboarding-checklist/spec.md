@@ -27,7 +27,7 @@ The system SHALL render a first-steps checklist as an expandable card at the top
 - **THEN** "configurar perfil e local" and "cadastrar primeiro paciente" show completed, and "agendar primeira sessão" shows pending with its action
 
 ### Requirement: Checklist completion is recomputed from authoritative data
-The system SHALL derive each checklist item's completion from authoritative sources, not from a stale cached flag: cadastro completo = email verified + CRP validated; perfil/local = >=1 row in `locations`; primeiro paciente = >=1 patient with status `active`; primeira sessão = >=1 session with status != `cancelled`; primeira evolução = >=1 evolution saved; primeiro termo = >=1 patient with `consent_signed_at`; transcrição IA (bonus) = AI transcription enabled AND >=1 transcription started. A `recomputeChecklist` operation SHALL run with `getUser()` auth, compute these from the owner's data, and persist the booleans to the owner's `onboarding_checklist` row.
+The system SHALL derive each checklist item's completion from authoritative sources, not from a stale cached flag: cadastro completo = email verified + CRP validated; perfil/local = >=1 row in `locations`; primeiro paciente = >=1 patient with status `active`; primeira sessão = >=1 session with status != `cancelled`; primeira evolução = >=1 evolution saved; primeiro termo = >=1 patient with `consent_signed_at`; transcrição IA (bonus) = AI transcription enabled AND >=1 transcription started. A `recomputeChecklist` operation SHALL run with `getUser()` auth, compute these from the owner's data, and persist the booleans to the owner's `onboarding_checklist` row. This recompute SHALL be the **single shared source of truth** for first-steps completion across BOTH the dashboard checklist and the onboarding wizard's step-4 summary; neither surface SHALL base completion on a potentially-stale stored flag, so data created in one surface is reflected in the other without re-entry.
 
 #### Scenario: Recompute reflects newly created data
 - **GIVEN** a psychologist whose `first_session_scheduled` flag is FALSE
@@ -41,6 +41,11 @@ The system SHALL derive each checklist item's completion from authoritative sour
 #### Scenario: Recompute ignores a client-supplied user id
 - **WHEN** the recompute payload includes a `userId` for another account
 - **THEN** the operation ignores it and writes only the `auth.uid()` row
+
+#### Scenario: Wizard summary and dashboard checklist agree
+- **GIVEN** a psychologist who created a location via `/configuracoes/locais` and added a patient in the wizard
+- **WHEN** both the wizard step-4 summary and the dashboard checklist render
+- **THEN** the "local" and "primeiro paciente" items show as complete on both surfaces, because both derive from the same authoritative recompute
 
 ### Requirement: Bonus item does not block completion
 The system SHALL treat "experimentar transcrição com IA" as optional: it carries a "Bônus" badge (distinct from mandatory items) and is excluded from the 100%-complete calculation (RF-11.10). Completion is reached when all six mandatory items are done, regardless of the bonus item's state.

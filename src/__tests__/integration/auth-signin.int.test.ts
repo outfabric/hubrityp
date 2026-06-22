@@ -84,10 +84,15 @@ beforeEach(() => {
   getCurrentProfileMock.mockReset();
 
   // Default for tests that don't care about the profile branch — most
-  // success-path assertions assume an `active` user.
+  // success-path assertions assume an `active` user with onboarding already
+  // finished, so the redirect resolves to /dashboard (or `redirectTo`) rather
+  // than the first-run wizard. Onboarding-incomplete coverage lives in
+  // `registration/sign-in-status-aware.int.test.ts`.
   getCurrentProfileMock.mockResolvedValue({
     userId: '00000000-0000-0000-0000-000000000000',
     status: 'active',
+    onboardingStep: 'done',
+    onboardingCompletedAt: null,
   });
   signOutMock.mockResolvedValue({ error: null });
 });

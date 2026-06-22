@@ -101,6 +101,13 @@ function buildQueryBuilder(): FakeQueryBuilder {
           lockout_until: row.lockoutUntil,
           consecutive_lockouts: row.consecutiveLockouts,
           requires_password_reset: row.requiresPasswordReset,
+          // Onboarding columns drive the active-user soft gate in the
+          // middleware: an active profile with incomplete onboarding is
+          // funneled to /onboarding/welcome. The mock must surface them so the
+          // status-gating tests exercise the same branch the real Edge adapter
+          // would.
+          onboarding_step: row.onboardingStep,
+          onboarding_completed_at: row.onboardingCompletedAt,
           created_at: row.createdAt,
           updated_at: row.updatedAt,
         },
@@ -179,6 +186,20 @@ async function seedProfile(): Promise<{ userId: string; email: string }> {
 async function setStatus(userId: string, status: string): Promise<void> {
   await runAsService(async (db) => {
     await db.update(profiles).set({ status }).where(eq(profiles.userId, userId));
+  });
+}
+
+// Mark the first-run onboarding wizard as finished. Active users are funneled
+// into `/onboarding/welcome` by the middleware until onboarding is complete
+// (step advances to 'done' on finish/skip); these status-gating tests assert
+// the historical "active reaches the app" behavior, so they need a completed
+// onboarding to bypass the soft gate.
+async function markOnboardingDone(userId: string): Promise<void> {
+  await runAsService(async (db) => {
+    await db
+      .update(profiles)
+      .set({ onboardingStep: 'done', onboardingCompletedAt: new Date() })
+      .where(eq(profiles.userId, userId));
   });
 }
 
@@ -267,6 +288,7 @@ describe('middleware status gating (real DB)', () => {
     it('redirects /login → /dashboard', async () => {
       const seeded = await seedProfile();
       await markCrpValidated(seeded.userId);
+      await markOnboardingDone(seeded.userId);
       sessionRef.current = seeded;
 
       const { middleware } = await import('@/middleware');
@@ -279,6 +301,7 @@ describe('middleware status gating (real DB)', () => {
     it('passes through /dashboard', async () => {
       const seeded = await seedProfile();
       await markCrpValidated(seeded.userId);
+      await markOnboardingDone(seeded.userId);
       sessionRef.current = seeded;
 
       const { middleware } = await import('@/middleware');
