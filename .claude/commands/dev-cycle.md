@@ -79,7 +79,7 @@ Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt
 - **Scope marker**: "You are operating on worktree `<absolute-path>`. All file edits and bash commands must run inside it (`cd <path> && ...`). Do not touch the main repo working tree."
 - **`section`** field: the literal section text from `tasks.md` — header `## N. <title>` plus every subtask line (`- [ ] N.M ...`) and any prose paragraphs between them. Plus relevant excerpts from `proposal.md`, `design.md`, and the `specs/` files referenced by the section's subtasks.
 - **Section-as-unit instruction**: "Implement every subtask in this section as a single unit of work. Do not pause between subtasks. Run scoped re-validation ONCE at the end of the section, not after each subtask. The orchestrator will atomically flip every `- [ ]` in this section to `- [x]` only on `VERDICT: PASS` — partial completion produces nothing."
-- **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (defined in `.claude/agents/fullstack-developer.md`). It decides which layers to run based on the nature of the files changed — from skip-total (non-code sections) through lint+typecheck+unit+integration+e2e (UI flows). Integration and e2e are **always scoped, never full** — full suites run exclusively in the regression sweep (step 3c).
+- **Re-validation**: the agent follows its built-in "Re-validação escopada" contract (defined in `.claude/agents/fullstack-developer.md`). It decides which layers to run based on the nature of the files changed — from skip-total (non-code sections) through lint+typecheck+unit+integration+e2e (UI flows). **Per-section, every layer is scoped**: lint runs on the changed files (`eslint <files>`), unit runs `--changed` (Vitest derives affected tests from git), typecheck runs whole-program but incremental (`tsc` can't be safely file-scoped), and integration (`--changed`) / e2e (`--grep`) are scoped as before. **No layer runs full in section mode.** The regression sweep (step 3c) runs integration + e2e full; full lint/typecheck/unit are backstopped by CI (step 9), never by the sweep.
 - **E2E seeded tests are self-contained**: `npm run test:e2e:seeded` boots its own Postgres via Testcontainers and uses mock GoTrue — it does NOT need `supabase start`, `docker compose up`, or any external infrastructure. When a section creates or modifies files under `src/__tests__/e2e/seeded/`, the agent MUST run those specs as part of scoped re-validation. NEVER instruct the agent to "just create test files without running them" — that instruction caused 3 broken specs to ship to CI unexecuted.
 - **Reporting contract**: end the response with one of:
   - `VERDICT: PASS — implementation complete, tests pass, npm run check green.`
@@ -112,11 +112,11 @@ Then invoke `fullstack-developer` (Agent tool) in **section mode** with a prompt
   5. Move to the next section. Next section's agent invocation will see `git diff HEAD --name-only` reflecting only its own work.
 - If `FAIL`: stop the loop. Print a summary (which section + which subtask broke, the FAIL reason line, the log path) and wait for the user. Do not attempt the next section. The working tree is left dirty with the agent's partial work; the user can amend, revert, or instruct continuation. **Do not commit on FAIL** and **do not flip any subtask to `[x]`** — atomicity is per-section: a section is either fully done + committed or fully pending.
 
-#### 3c. End-of-sections regression sweep
+#### 3c. End-of-sections regression sweep (self-healing)
 
-After every section is fully complete (all subtasks `[x]`) and committed, run a full-suite regression sweep before invoking the reviewer. This catches cross-section drift that scoped per-section re-validation can miss (section 5 broke an integration test from section 2 whose import graph the scoped run doesn't touch).
+After every section is fully complete (all subtasks `[x]`) and committed, run the regression sweep before invoking the reviewer. It runs **integration + e2e full** to catch cross-section drift that scoped per-section re-validation can miss (section 5 broke an integration test from section 2 whose import graph the scoped run doesn't touch), and **fixes any regression it finds in the same invocation** — no orchestrator round-trip.
 
-**Test execution is delegated to `fullstack-developer` in sweep mode.** The orchestrator does not run `npm run test:*` directly — its job here is to (a) decide whether e2e is needed, (b) compute the log path, (c) invoke the agent, and (d) on failure, write the synthetic feedback file and re-route to fix mode.
+**The sweep is delegated to `fullstack-developer` in sweep mode, and the agent self-heals.** The orchestrator does not run `npm run test:*` directly. Its job here is only: (a) compute the log path, (b) invoke the agent once, (c) on PASS commit any fixes the agent applied, (d) on FAIL escalate.
 
 ```bash
 cd "$WORKTREE"
@@ -131,34 +131,32 @@ Then invoke `fullstack-developer` (Agent tool) in **sweep mode** with:
 - **Scope marker**: `worktree_path = <absolute-path>`.
 - **Mode**: `sweep`.
 - **Flags**: `sweep_log_path = <absolute path to $SWEEP_LOG>`.
-- **Instruction**: "Run `npm run test:integration` (full) and `npm run test:e2e:seeded` (full). Append all stdout+stderr to `sweep_log_path`. Do NOT modify code, run lint/typecheck/unit, or scope via `--related`/`--grep`/file paths — sweep is full-only and read-only."
+- **Instruction**: "Run `npm run test:integration` (full) and `npm run test:e2e:seeded` (full), appending output to `sweep_log_path`. If either fails, fix the regression in-place and re-run integration + e2e to confirm (internal cap 3). Only after a fix, run a **scoped** lint + unit re-check (`eslint <changed>`, `npm run test:unit -- --changed`) plus whole-program incremental `typecheck`. Do NOT run full lint/typecheck/unit, and do NOT touch `tasks.md` or commit — leave fixes in the working tree."
 - **Reporting contract**:
   - `VERDICT: PASS — sweep clean (integration: X tests, e2e: Y tests)`
+  - `VERDICT: PASS — sweep self-healed: <summary of fixes>`
   - `VERDICT: FAIL — <one-line cause>. Logs: <sweep_log_path>`
 
-Note: lint/typecheck/unit are NOT in the sweep — they ran full on every per-section invocation already (step 3a contract), so re-running here is redundant. Sweep is exclusively for the layers that were scoped per-section.
+Note: full lint/typecheck/unit are **never** run in the sweep — they ran scoped per-section, and CI (step 9) runs them full as the backstop. Their only appearance here is the scoped re-check the agent runs after applying a fix.
 
-**CRITICAL — both suites are self-contained**: `test:integration` and `test:e2e:seeded` both use Testcontainers (Postgres in Docker) and mock GoTrue. They do NOT require `supabase start`, `docker compose up`, or any external infrastructure. The orchestrator MUST run both — NEVER skip either suite. Any justification to skip (e.g., "requires Supabase", "infrastructure not available") is incorrect and has historically caused broken tests to ship to CI.
+**CRITICAL — both suites are self-contained**: `test:integration` and `test:e2e:seeded` both use Testcontainers (Postgres in Docker) and mock GoTrue. They do NOT require `supabase start`, `docker compose up`, or any external infrastructure. The agent MUST run both — NEVER skip either suite. Any justification to skip (e.g., "requires Supabase", "infrastructure not available") is incorrect and has historically caused broken tests to ship to CI.
 
 **Branch on the agent's verdict:**
 
-- `VERDICT: PASS` → "Regression sweep clean — proceeding to reviewer." Go to step 4.
-- `VERDICT: FAIL` → persist a synthetic feedback file at `<worktree>/.dev-cycle/sweep-fail-<N>.md` containing:
+- `VERDICT: PASS — sweep clean` (no fix applied; working tree clean) → "Regression sweep clean — proceeding to reviewer." Go to step 4.
+- `VERDICT: PASS — sweep self-healed` (fixes in the working tree) → commit them as a **single** Conventional Commit, then go to step 4:
+  ```bash
+  git -C "$WORKTREE" add -A
+  git -C "$WORKTREE" commit -m "$(cat <<EOF
+  fix: regression sweep
+
+  OpenSpec change: <name>
+  <one-line summary of what the sweep self-healed>
+  EOF
+  )"
   ```
-  # Regression sweep failure (iteration N)
-
-  **Forced full re-validation**: this is a cross-section regression caught by the end-of-sections sweep. Apply the agent's "Modo fix: full" contract at the end of your fix — lint + typecheck + `test:unit` + `test:integration` + `test:e2e:seeded`, all full, never scoped via `--changed`/`--grep`/path filters. The regression by definition isn't covered by your changed-files graph.
-
-  ## Failing tests
-  <parsed list of failing tests from $SWEEP_LOG>
-
-  ## Raw output
-  <tail of $SWEEP_LOG>
-  ```
-
-  Then invoke `fullstack-developer` in **fix mode** with `feedback_file=.dev-cycle/sweep-fail-<N>.md`. Cap 3 iterations (separate budget from steps 4 and 5).
-
-  Each fix iteration: agent does its fix, runs full re-validation per the synthetic feedback's instruction, returns `VERDICT: PASS`. Orchestrator commits the fix as `fix: <short summary of regression>` (Conventional Commits) and re-invokes `fullstack-developer` in **sweep mode** (back to top of 3c). At cap 3, escalate without invoking the reviewer — broken regressions never reach review.
+  Hooks run normally; a hook failure routes back to the agent as a fix-iteration (its cap-3 budget). If the agent reported `self-healed` but the working tree is clean, treat it as an inconsistency and escalate.
+- `VERDICT: FAIL` (agent could not converge within its internal cap 3) → escalate: print the persistent failures, point to `<worktree>/.dev-cycle/sweep-<N>.log`, and **do not** invoke the reviewer. Broken regressions never reach review.
 
 ### 4. End-of-sections: code-reviewer loop (cap 3)
 
@@ -578,11 +576,15 @@ echo "$CHECKS_JSON" \
   | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | "\(.name)|\(.bucket)"' \
   | sort > "$SIGNATURE"
 
-# Build feedback file: failed checks + last 200 lines of each failed run's logs.
+# Build feedback file: which checks failed + their run IDs. NO logs — the agent
+# investigates the failing logs itself via `gh run view <run-id> --log-failed`
+# (step 9d). The orchestrator identifies WHICH checks failed; the agent diagnoses WHY.
 {
   echo "# CI failure (iteration $CI_ITER)"
   echo ""
   echo "**PR**: $PR_URL"
+  echo ""
+  echo "**Investigate yourself**: this file lists only which checks failed and their run IDs. Read each failing run's logs with \`gh run view <run-id> --log-failed\` (from inside the worktree) to find the root cause — they are NOT embedded here."
   echo ""
   echo "**Forced full re-validation**: at the end of your fix, run lint + typecheck + test:unit + test:integration + test:e2e:seeded (all full, never scoped). This is the standard fix-mode contract — the regression escaped per-section scoped validation, so we re-validate everything before pushing."
   echo ""
@@ -592,17 +594,11 @@ echo "$CHECKS_JSON" \
   echo "$CHECKS_JSON" \
     | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | "- **\(.name)** (workflow: \(.workflow), bucket: \(.bucket)) — \(.link)"'
   echo ""
-  echo "## Failed step logs"
+  echo "## Failed run IDs (investigate each with: gh run view <id> --log-failed)"
   echo "$CHECKS_JSON" \
     | jq -r '.[] | select(.bucket == "fail" or .bucket == "cancel") | .link' \
     | grep -oE 'runs/[0-9]+' | cut -d/ -f2 | sort -u \
-    | while read -r RUN_ID; do
-        echo "### Run $RUN_ID"
-        echo '```'
-        gh run view "$RUN_ID" --log-failed 2>&1 | tail -200
-        echo '```'
-        echo ""
-      done
+    | while read -r RUN_ID; do echo "- $RUN_ID"; done
 } > "$FEEDBACK"
 ```
 
@@ -611,7 +607,7 @@ echo "$CHECKS_JSON" \
 Use the fix-mode prompt template from step 6, with these CI-specific extras:
 
 - `feedback_file = $FEEDBACK` (the `ci-fail-${CI_ITER}.md` from 9c).
-- Extra instruction (verbatim): "This feedback file is a CI failure (`ci-fail-N.md`), not a review or QA report. Diagnose the failed checks listed inside, then either fix the root cause (and follow your fix-mode full re-validation contract: lint + typecheck + test:unit + test:integration + test:e2e:seeded, all full) OR, if the failures are genuinely transient and unrelated to code on this branch, return `VERDICT: PASS — flaky, no code change required` without modifying code."
+- Extra instruction (verbatim): "This feedback file is a CI failure (`ci-fail-N.md`), not a review or QA report. It lists only WHICH checks failed and their run IDs — no logs are embedded. **Investigate the cause yourself**: for each failed run ID listed under 'Failed run IDs', run `gh run view <run-id> --log-failed` (inside the worktree) to read the failing job logs and diagnose the root cause. Then either fix it (and follow your fix-mode full re-validation contract: lint + typecheck + test:unit + test:integration + test:e2e:seeded, all full) OR, if the failures are genuinely transient and unrelated to code on this branch, return `VERDICT: PASS — flaky, no code change required` without modifying code."
 
 Three possible verdicts back from the agent:
 
@@ -691,7 +687,7 @@ CI: <green on first watch | green after Z/3 iterations | skipped — no checks c
 Infra: <torn down (orchestrator-owned: supabase=<bool>, app=<bool>) | reused user-owned, no teardown | left up — QA escalated, manual teardown noted above>
 Archive: openspec/changes/archive/YYYY-MM-DD-<name>/
   - Specs synced: <list or "none">
-Commits created: <count> per-section + 1 archive commit + <Z> fix(ci) commits
+Commits created: <count> per-section + <0|1> sweep-fix commit + 1 archive commit + <Z> fix(ci) commits
 Reports: .dev-cycle/{review-1.md, ..., qa-1.md, ..., sync-summary.md, ci-fail-1.md, ..., pr-url.txt, infra-owned.json (if QA escalated)}
 PR: <url> (CI ✅ green)
 ```
@@ -703,6 +699,7 @@ PR: <url> (CI ✅ green)
 | Loop | Cap | On cap-hit |
 |---|---|---|
 | Dev internal retries per section | 3 | Pause, show logs, wait for user |
+| Regression sweep self-heal (internal to agent, step 3c) | 3 | Agent returns `VERDICT: FAIL`; orchestrator escalates, does not invoke reviewer |
 | dev ↔ code-reviewer (post-sections) | 3 | Pause, list persistent BLOCKER/HIGH |
 | dev ↔ qa-tester | 3 | Pause, list persistent CRÍTICO/ALTO/MÉDIO |
 | dev ↔ CI (post-PR) | 3 | Pause, link PR + persistent failed checks from `ci-fail-N.md` |
