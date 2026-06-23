@@ -10,7 +10,7 @@
 
 ## 2. Shared confirm-email copy
 
-- [ ] 2.1 Add `src/modules/registration/lib/confirm-email-copy.ts` exporting the shared pt-BR title/body ("Confirme seu cadastro, através de um link que enviamos para seu email. Se não encontrar, busque na caixa de Spam ou Lixeira.") and the generic resend acknowledgement ("Se houver um cadastro com este email, reenviamos o link de confirmação."). Export from the module barrel if consumed outside `registration`.
+- [x] 2.1 Add `src/modules/registration/lib/confirm-email-copy.ts` exporting the shared pt-BR title/body ("Confirme seu cadastro, através de um link que enviamos para seu email. Se não encontrar, busque na caixa de Spam ou Lixeira.") and the generic resend acknowledgement ("Se houver um cadastro com este email, reenviamos o link de confirmação."). Export from the module barrel if consumed outside `registration`.
 
 ## 3. Backend — signUp redirect + cookie
 

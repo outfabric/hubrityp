@@ -39,6 +39,11 @@ export { getCurrentProfile } from './server/get-profile';
 // ---- Pure validators / policies ---------------------------------------------
 export { signupInputSchema, type SignupInput } from './lib/signup-input-schema';
 export { passwordPolicy, PASSWORD_MIN_LENGTH, type PasswordRule } from './lib/password-validators';
+export {
+  CONFIRM_EMAIL_TITLE,
+  CONFIRM_EMAIL_BODY,
+  RESEND_CONFIRMATION_ACK,
+} from './lib/confirm-email-copy';
 
 // ---- Components --------------------------------------------------------------
 export { SignupForm, type SignupFormProps } from './components/signup-form';
