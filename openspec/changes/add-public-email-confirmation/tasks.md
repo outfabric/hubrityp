@@ -14,8 +14,8 @@
 
 ## 3. Backend — signUp redirect + cookie
 
-- [ ] 3.1 In `sign-up.ts`, on the success path set the `pending-email` cookie from the submitted email (before `redirect`) and change the redirect target to `/verifique-email` (drop `PENDING_REDIRECT`/`/onboarding/pending`). Failure branches must NOT set the cookie.
-- [ ] 3.2 Integration test (registration suite): a valid signup sets a hardened, signature-valid `pending-email` cookie and returns a redirect to `/verifique-email`; `duplicate_email`/`duplicate_crp`/`unknown` set no cookie and do not redirect there. (Maps to `account-registration` → "`signUp` … redirects to the public confirmation page".)
+- [x] 3.1 In `sign-up.ts`, on the success path set the `pending-email` cookie from the submitted email (before `redirect`) and change the redirect target to `/verifique-email` (drop `PENDING_REDIRECT`/`/onboarding/pending`). Failure branches must NOT set the cookie.
+- [x] 3.2 Integration test (registration suite): a valid signup sets a hardened, signature-valid `pending-email` cookie and returns a redirect to `/verifique-email`; `duplicate_email`/`duplicate_crp`/`unknown` set no cookie and do not redirect there. (Maps to `account-registration` → "`signUp` … redirects to the public confirmation page".)
 
 ## 4. Backend — login `email_not_confirmed` (no lockout)
 
