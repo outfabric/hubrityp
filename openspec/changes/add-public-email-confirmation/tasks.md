@@ -19,10 +19,10 @@
 
 ## 4. Backend — login `email_not_confirmed` (no lockout)
 
-- [ ] 4.1 Add `'email_not_confirmed'` to the `SignInResult` union in `src/modules/auth/lib/sign-in-result.ts`.
-- [ ] 4.2 In `login.ts`, inside the `if (supabaseError)` block branch FIRST on `supabaseError.code === 'email_not_confirmed' || supabaseError.status === 422`: do NOT call `applyFailedLoginAttempt` / touch lockout counters; set the `pending-email` cookie from the submitted email; log `login_failure` with `metadata.reason='email_not_confirmed'`; return `{ ok: false, error: 'email_not_confirmed' }`. All other errors keep the existing failed-credentials/lockout path.
-- [ ] 4.3 Unit test `src/__tests__/unit/modules/auth/server/login.test.ts` (or extend existing): when Supabase returns `email_not_confirmed` (422), `applyFailedLoginAttempt` is NOT invoked, no counter mutation occurs, the cookie is set, and the result is `email_not_confirmed`.
-- [ ] 4.4 Integration test (auth-hardening/data-layer suite, real Postgres): repeated `email_not_confirmed` outcomes leave `failed_login_count`, `consecutive_lockouts`, `lockout_until`, `requires_password_reset` unchanged (proves the lockout bug is fixed). (Maps to `authentication` → "Unconfirmed email returns `email_not_confirmed` without touching lockout".)
+- [x] 4.1 Add `'email_not_confirmed'` to the `SignInResult` union in `src/modules/auth/lib/sign-in-result.ts`.
+- [x] 4.2 In `login.ts`, inside the `if (supabaseError)` block branch FIRST on `supabaseError.code === 'email_not_confirmed' || supabaseError.status === 422`: do NOT call `applyFailedLoginAttempt` / touch lockout counters; set the `pending-email` cookie from the submitted email; log `login_failure` with `metadata.reason='email_not_confirmed'`; return `{ ok: false, error: 'email_not_confirmed' }`. All other errors keep the existing failed-credentials/lockout path.
+- [x] 4.3 Unit test `src/__tests__/unit/modules/auth/server/login.test.ts` (or extend existing): when Supabase returns `email_not_confirmed` (422), `applyFailedLoginAttempt` is NOT invoked, no counter mutation occurs, the cookie is set, and the result is `email_not_confirmed`.
+- [x] 4.4 Integration test (auth-hardening/data-layer suite, real Postgres): repeated `email_not_confirmed` outcomes leave `failed_login_count`, `consecutive_lockouts`, `lockout_until`, `requires_password_reset` unchanged (proves the lockout bug is fixed). (Maps to `authentication` → "Unconfirmed email returns `email_not_confirmed` without touching lockout".)
 
 ## 5. Backend — public resend action
 

@@ -251,6 +251,69 @@ describe('signIn status-aware — lockout and password reset (real DB)', () => {
     expect(updatedProfile?.failedLoginCount).toBe(1);
   });
 
+  it('email_not_confirmed leaves all lockout state untouched across repeated attempts', async () => {
+    const seeded = await seedProfile();
+    // Seed a deterministic non-zero starting state so an accidental reset OR an
+    // accidental increment would both be visible.
+    await runAsService(async (db) => {
+      await db
+        .update(profiles)
+        .set({
+          status: 'active',
+          failedLoginCount: 2,
+          consecutiveLockouts: 1,
+          lockoutUntil: null,
+          requiresPasswordReset: false,
+        })
+        .where(eq(profiles.userId, seeded.userId));
+    });
+
+    // GoTrue returns `email_not_confirmed` (HTTP 422) only AFTER validating the
+    // password — i.e. the credentials were correct, the account is merely
+    // unconfirmed. This must NOT be treated as a failed-credentials attempt.
+    signInWithPasswordMock.mockResolvedValue({
+      data: { user: null, session: null },
+      error: {
+        name: 'AuthApiError',
+        message: 'Email not confirmed',
+        code: 'email_not_confirmed',
+        status: 422,
+      },
+    });
+
+    const { signIn } = await import('@/app/(auth)/login/actions');
+
+    // Hammer the action well past the 5-failure lockout threshold. If
+    // `applyFailedLoginAttempt` were (wrongly) invoked here, the 6 attempts
+    // would push failed_login_count to lockout and flip lockout_until.
+    for (let i = 0; i < 6; i++) {
+      const result = await signIn(
+        buildFormData({ email: seeded.email, password: 'correct-horse' }),
+      );
+      expect(result).toEqual({ ok: false, error: 'email_not_confirmed' });
+    }
+
+    // Every lockout-related column is exactly as seeded — proving the lockout
+    // bug is fixed (no increment, no reset, no password-reset escalation).
+    const after = await runAsService(async (db) => {
+      const rows = await db
+        .select({
+          failedLoginCount: profiles.failedLoginCount,
+          consecutiveLockouts: profiles.consecutiveLockouts,
+          lockoutUntil: profiles.lockoutUntil,
+          requiresPasswordReset: profiles.requiresPasswordReset,
+        })
+        .from(profiles)
+        .where(eq(profiles.userId, seeded.userId));
+      return rows[0];
+    });
+
+    expect(after!.failedLoginCount).toBe(2);
+    expect(after!.consecutiveLockouts).toBe(1);
+    expect(after!.lockoutUntil).toBeNull();
+    expect(after!.requiresPasswordReset).toBe(false);
+  });
+
   it('returns locked_out when the 5th failed attempt triggers lockout', async () => {
     const seeded = await seedProfile();
     // Pre-set 4 failed attempts

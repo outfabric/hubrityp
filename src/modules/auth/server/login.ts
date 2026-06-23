@@ -10,6 +10,7 @@ import { logAuthEvent } from '@/modules/registration/server/log-auth-event';
 import { db } from '@/shared/db/client';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { setKeepLoggedInCookie } from '@/shared/lib/cookies/keep-logged-in';
+import { setPendingEmailCookie } from '@/shared/lib/cookies/pending-email';
 import { logger } from '@/shared/lib/logger';
 import { sendAccountLockedEmail } from '@/shared/lib/mail/send-account-locked';
 import { createServerClient } from '@/shared/supabase/server';
@@ -108,7 +109,12 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
   // ONLY the Supabase-touching calls live inside the try block. `redirect()`
   // below throws a `NEXT_REDIRECT` marker that MUST propagate to Next.js;
   // catching it here would silently break navigation.
-  let supabaseError: { name?: string; message?: string } | null = null;
+  let supabaseError: {
+    name?: string;
+    message?: string;
+    code?: string;
+    status?: number;
+  } | null = null;
   let redirectTarget: string | null = null;
 
   try {
@@ -226,6 +232,29 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
 
   // ---- Handle Supabase auth failure ----
   if (supabaseError) {
+    // ---- email_not_confirmed (no lockout) ----
+    // GoTrue returns `email_not_confirmed` (HTTP 422) ONLY after the password
+    // has been validated — so reaching this branch proves the credentials were
+    // correct and the account is merely blocked on email confirmation. This is
+    // a legitimate login attempt, NOT a failed-credentials event: we MUST NOT
+    // call `applyFailedLoginAttempt` and MUST NOT touch any lockout counter,
+    // otherwise a user stuck on confirmation could lock themselves out. Set the
+    // signed pending-email cookie so the public `/verifique-email` page can
+    // resend the confirmation, then return the typed error. Branch FIRST so it
+    // never falls through to the failed-credentials/lockout path below.
+    const unconfirmed =
+      supabaseError.code === 'email_not_confirmed' || supabaseError.status === 422;
+    if (unconfirmed) {
+      const cookieStore = await cookies();
+      setPendingEmailCookie(cookieStore, email);
+      void logAuthEvent({
+        userId: existingProfile?.userId ?? null,
+        event: 'login_failure',
+        metadata: { reason: 'email_not_confirmed' },
+      });
+      return { ok: false, error: 'email_not_confirmed' };
+    }
+
     if (existingProfile) {
       // Profile exists — apply failed login attempt (lockout counter)
       try {
