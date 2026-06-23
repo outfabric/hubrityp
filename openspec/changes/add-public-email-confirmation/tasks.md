@@ -31,8 +31,8 @@
 
 ## 6. Middleware — classify `/verifique-email` as public
 
-- [ ] 6.1 In `src/middleware.ts:classifyPath()`, add `'/verifique-email'` as an exact-match `public` route using the existing strict exact/prefix+separator check.
-- [ ] 6.2 Integration test in `src/__tests__/integration/middleware/`: anonymous GET `/verifique-email` → `pass` (no redirect to `/login`); `pending_*`, `active`, `active`+rpr → `pass`; `/verifique-emailx` does not match the public classification. (Maps to `middleware-gating` → "Middleware classifies `/verifique-email` as public".)
+- [x] 6.1 In `src/middleware.ts:classifyPath()`, add `'/verifique-email'` as an exact-match `public` route using the existing strict exact/prefix+separator check.
+- [x] 6.2 Integration test in `src/__tests__/integration/middleware/`: anonymous GET `/verifique-email` → `pass` (no redirect to `/login`); `pending_*`, `active`, `active`+rpr → `pass`; `/verifique-emailx` does not match the public classification. (Maps to `middleware-gating` → "Middleware classifies `/verifique-email` as public".)
 
 ## 7. Frontend — `/verifique-email` page + resend leaf
 
