@@ -43,8 +43,8 @@
 
 ## 8. Frontend — login confirm-email state
 
-- [ ] 8.1 In `LoginForm`, render for `error === 'email_not_confirmed'` the shared copy in an informational (non-`danger`) region `data-testid="login-confirm-email"` with a `link`/`secondary` control to `/verifique-email`; leave the `invalid_credentials` → `login-form-error` path unchanged; no other result reveals the unconfirmed state.
-- [ ] 8.2 Unit test (RTL): `email_not_confirmed` renders `login-confirm-email` (non-danger) + link to `/verifique-email`; `invalid_credentials` renders `login-form-error` and NOT `login-confirm-email`. (Maps to `authentication` → "Login page renders the confirm-email state…".)
+- [x] 8.1 In `LoginForm`, render for `error === 'email_not_confirmed'` the shared copy in an informational (non-`danger`) region `data-testid="login-confirm-email"` with a `link`/`secondary` control to `/verifique-email`; leave the `invalid_credentials` → `login-form-error` path unchanged; no other result reveals the unconfirmed state.
+- [x] 8.2 Unit test (RTL): `email_not_confirmed` renders `login-confirm-email` (non-danger) + link to `/verifique-email`; `invalid_credentials` renders `login-form-error` and NOT `login-confirm-email`. (Maps to `authentication` → "Login page renders the confirm-email state…".)
 
 ## 9. Pruning — remove dead `pending_verification`-with-session code
 
