@@ -27,6 +27,10 @@ export {
   resendVerificationEmailImpl as resendVerificationEmail,
   type ResendVerificationResult,
 } from './server/resend-verification';
+export {
+  resendPublicConfirmationImpl as resendPublicConfirmation,
+  type ResendPublicResult,
+} from './server/resend-public';
 export { getCurrentProfile } from './server/get-profile';
 // `getCurrentProfileEdge` is intentionally NOT re-exported from this
 // barrel — it lives in `@/modules/registration/edge`. Bundling Drizzle +

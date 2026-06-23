@@ -26,8 +26,8 @@
 
 ## 5. Backend — public resend action
 
-- [ ] 5.1 Create `src/modules/registration/server/resend-public.ts` + `'use server'` shell: read email via `readPendingEmail` (verified cookie, NEVER client input); if absent/invalid → return generic `{ ok: true }` WITHOUT calling Supabase; else call `supabase.auth.resend({ type: 'signup', email })` (anon server client) and return the SAME generic result for 200/422/429; never throw; no `profiles` lookup; no custom throttle.
-- [ ] 5.2 Integration test (registration suite, MSW or stubbed Supabase): identical result + identical copy for Supabase 200 vs 422 vs 429; no-cookie path performs no Supabase call; tampered cookie behaves as no-cookie. (Maps to `public-email-confirmation` → "Anonymous resend is enumeration-safe…".)
+- [x] 5.1 Create `src/modules/registration/server/resend-public.ts` + `'use server'` shell: read email via `readPendingEmail` (verified cookie, NEVER client input); if absent/invalid → return generic `{ ok: true }` WITHOUT calling Supabase; else call `supabase.auth.resend({ type: 'signup', email })` (anon server client) and return the SAME generic result for 200/422/429; never throw; no `profiles` lookup; no custom throttle.
+- [x] 5.2 Integration test (registration suite, MSW or stubbed Supabase): identical result + identical copy for Supabase 200 vs 422 vs 429; no-cookie path performs no Supabase call; tampered cookie behaves as no-cookie. (Maps to `public-email-confirmation` → "Anonymous resend is enumeration-safe…".)
 
 ## 6. Middleware — classify `/verifique-email` as public
 
