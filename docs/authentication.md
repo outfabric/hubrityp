@@ -23,12 +23,31 @@ Define a superfície pública de auth do HubrityP: a página `/login`, as Server
   - `src/middleware.ts` — gating de `/dashboard*` (anônimo → 307 `/login?redirectTo=...`) e `/login` (autenticado → 307 `/dashboard`). Refresh de cookie via `@/shared/supabase/middleware`.
 - **Supabase clients**: `src/shared/supabase/{server,client,middleware}.ts` (consumidos pelas implementações server e pelo middleware).
 
+## Confirmação de email (`/verifique-email`)
+
+Com `enable_confirmations = true` (`supabase/config.toml`), `supabase.auth.signUp()` não retorna sessão e `signInWithPassword()` é rejeitado com `email_not_confirmed` (HTTP 422) até o email ser confirmado. A superfície pública `/verifique-email` orienta o usuário recém-cadastrado (ou que tenta logar sem confirmar) e oferece um reenviar enumeration-safe.
+
+- **Rota** `src/app/(auth)/verifique-email/page.tsx` — Server Component (grupo `(auth)`, apenas organizacional). Gating por URL: `'/verifique-email'` é entrada **exact-match** no set `public` de `middleware.ts:classifyPath()` (o check estrito prefix+separador impede `/verifique-emailx` de casar).
+- **Leaf cliente** `src/app/(auth)/verifique-email/resend-button.tsx` — botão de reenvio + feedback `aria-live="polite"`.
+- **Cookie `hp_pending_email`** (`src/shared/lib/cookies/pending-email.ts`) — carrega o email server-side (nunca na URL). `HttpOnly`, `SameSite=Lax`, `Secure` (prod), `Path=/`, `Max-Age=1800`. Valor assinado: `base64url(email).base64url(HMAC_SHA256(email, secret))`; a leitura recomputa o HMAC e rejeita em mismatch (compare timing-safe) → tratado como ausente. Secret: env server `PENDING_EMAIL_COOKIE_SECRET` (min 32), lido via `serverEnv`. **Por que assinado**: o alvo do reenvio vem deste cookie; sem assinatura um atacante poderia forçar `hp_pending_email=victim@x.com` e disparar emails de confirmação para inboxes arbitrárias (email-bombing/enumeração).
+- **`signUp`** define o cookie `hp_pending_email` com o email submetido e redireciona para `/verifique-email` (no sucesso). Branches de falha não setam o cookie.
+- **`signIn`** ramifica primeiro em `email_not_confirmed` (`code === 'email_not_confirmed' || status === 422`): NÃO chama `applyFailedLoginAttempt` (sem penalizar o lockout), seta o cookie, loga `login_failure` com `metadata.reason='email_not_confirmed'`, e retorna `{ ok: false, error: 'email_not_confirmed' }`. Como o GoTrue valida a senha antes de retornar 422, senha errada vira `invalid_credentials` (401) e nunca revela existência da conta.
+- **Reenvio público** (`src/modules/registration/server/resend-public.ts`): lê o email via `readPendingEmail` (cookie verificado), nunca de input do cliente; se ausente/inválido retorna sucesso genérico sem chamar o Supabase; senão chama `supabase.auth.resend({ type: 'signup', email })` e retorna o MESMO resultado genérico independentemente de 200/422/429. Sem lookup em `profiles` e sem throttle custom — o controle é o do GoTrue.
+- **Copy compartilhada** (`src/modules/registration/lib/confirm-email-copy.ts`) reusada por `/verifique-email` e pelo estado `email_not_confirmed` do login.
+
+### Limitação de MVP: SMTP built-in (throttle de envio de email)
+
+Em produção o HubrityP usa o **SMTP built-in do Supabase**, que aplica um limite de envio de emails **por hora no nível do projeto** (`auth.rate_limits.email.inbuilt_smtp_per_hour`). Esse limite vale para **todos os emails transacionais de auth** — confirmação de cadastro, reenvio de confirmação, reset de senha, etc. — e é compartilhado entre todos os usuários. Sob uso intenso (ex.: muitos reenvios de confirmação), envios podem ser silenciosamente throttled: o GoTrue retorna 429 e o email não sai, sem que o usuário veja um estado distinto (a copy de reenvio é genérica por design — ver [`../openspec/changes/archive/`](../openspec/changes/) `add-public-email-confirmation`).
+
+**Plano pós-MVP:** migrar para **SMTP custom** (provedor dedicado, ex. Resend) para remover esse teto compartilhado e ganhar limites/observabilidade próprios. Enquanto isso, esta é uma limitação **documentada e aceita** do MVP.
+
 ## Superfície pública
 
 - **Rotas HTTP**:
   - `GET /login` — renderiza o form (anônimo) ou redireciona para `/dashboard` (autenticado).
   - `POST /login` (Server Action `signIn`) — autentica e redireciona; nunca lança através da fronteira.
   - `POST /` (Server Action `signOut`) — limpa cookies e redireciona para `/login`.
+  - `GET /verifique-email` — superfície pública de confirmação de email (anônimo); reenvio via Server Action `resendPublic`.
 - **Imports server-side** (outros shells, testes server, futuras capabilities):
   ```ts
   import { signIn, signOut, LoginForm, loginInputSchema, mapSupabaseUser } from '@/modules/auth';
@@ -73,5 +92,6 @@ Define a superfície pública de auth do HubrityP: a página `/login`, as Server
 
 ## Histórico de changes
 
+- 2026-06-23 add-public-email-confirmation — adiciona superfície pública `/verifique-email` (`src/app/(auth)/verifique-email/`), cookie assinado `hp_pending_email` (`src/shared/lib/cookies/pending-email.ts`, env `PENDING_EMAIL_COOKIE_SECRET`), reenvio enumeration-safe (`src/modules/registration/server/resend-public.ts`) e copy compartilhada (`src/modules/registration/lib/confirm-email-copy.ts`). `signUp` redireciona para `/verifique-email`; `signIn` trata `email_not_confirmed` sem penalizar o lockout (novo arm em `SignInResult`). Podados os branches `pending_verification`-com-sessão e o `resend-verification` autenticado. Documentada a limitação de MVP do SMTP built-in (`auth.rate_limits.email.inbuilt_smtp_per_hour`) e o plano de SMTP custom pós-MVP. Veja [`../openspec/changes/add-public-email-confirmation/`](../openspec/changes/add-public-email-confirmation/).
 - 2026-05-03 reorganize-folder-structure — split shell↔module: `signIn`/`signOut` extraídos de `app/(auth)/login/actions.ts` e `app/(app)/actions.ts` para `src/modules/auth/server/{login,logout}.ts` como `signInImpl`/`signOutImpl`. Helpers (`login-input-schema`, `map-supabase-user`, `safe-redirect`) movidos para `src/modules/auth/lib/`. `LoginForm` movido para `src/modules/auth/components/`. Barrel público em `src/modules/auth/index.ts`. Supabase clients consumidos de `@/shared/supabase/server`. Veja [`../openspec/changes/archive/2026-05-03-reorganize-folder-structure/`](../openspec/changes/archive/2026-05-03-reorganize-folder-structure/).
 - 2026-05-02 smoke-health-feature — capability criada: `/login` page, `signIn`/`signOut` Server Actions, `loginInputSchema`, `mapSupabaseUser`, middleware auth gating, suite `@auth-real` em paralelo.

@@ -61,7 +61,7 @@
 
 ## 11. Docs
 
-- [ ] 11.1 Note the built-in-SMTP per-hour email-send limitation (`auth.rate_limits.email.inbuilt_smtp_per_hour`) and the post-MVP custom-SMTP plan in the relevant runbook/auth doc. Update the project structure/docs if a new module file or route group entry warrants it.
+- [x] 11.1 Note the built-in-SMTP per-hour email-send limitation (`auth.rate_limits.email.inbuilt_smtp_per_hour`) and the post-MVP custom-SMTP plan in the relevant runbook/auth doc. Update the project structure/docs if a new module file or route group entry warrants it.
 
 ## 12. Final verification
 
