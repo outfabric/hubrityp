@@ -65,4 +65,4 @@
 
 ## 12. Final verification
 
-- [ ] 12.1 `npm run lint`, `npm run type-check`, and the unit + integration + `@auth-real` E2E suites pass. Run `openspec validate add-public-email-confirmation --strict`. Confirm no remaining references to `resend-verification` or a `pending_verification` session path.
+- [x] 12.1 `npm run lint`, `npm run type-check`, and the unit + integration + `@auth-real` E2E suites pass. Run `openspec validate add-public-email-confirmation --strict`. Confirm no remaining references to `resend-verification` or a `pending_verification` session path.
