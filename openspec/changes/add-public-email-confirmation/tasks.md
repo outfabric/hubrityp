@@ -36,10 +36,10 @@
 
 ## 7. Frontend — `/verifique-email` page + resend leaf
 
-- [ ] 7.1 Create `src/app/(auth)/verifique-email/page.tsx` (RSC): read `pending-email` via `readPendingEmail`, render the DS `Card` with `Mail` icon, shared title/body, masked email when present (omit line when absent — no crash), and the resend client leaf. Test ids: `verifique-email-card`, `verifique-email-address`, `verifique-email-resend`, `verifique-email-feedback` (`aria-live="polite"`). DS tokens only; dark mode; 375px + 200% zoom; `prefers-reduced-motion`.
-- [ ] 7.2 Create the `'use client'` resend leaf calling the public resend action; `Button` `primary` with mandatory loading state; render the generic acknowledgement in the `aria-live` feedback region (info/neutral, never `danger`).
-- [ ] 7.3 Unit test (RTL) `src/__tests__/unit/app/verifique-email/`: renders card + masked email from a valid cookie; renders generic guidance with NO masked line when cookie absent; resend click shows loading then the generic acknowledgement; correct test ids present.
-- [ ] 7.4 Document the new `data-testid` values in `docs/design-system/testid.md`.
+- [x] 7.1 Create `src/app/(auth)/verifique-email/page.tsx` (RSC): read `pending-email` via `readPendingEmail`, render the DS `Card` with `Mail` icon, shared title/body, masked email when present (omit line when absent — no crash), and the resend client leaf. Test ids: `verifique-email-card`, `verifique-email-address`, `verifique-email-resend`, `verifique-email-feedback` (`aria-live="polite"`). DS tokens only; dark mode; 375px + 200% zoom; `prefers-reduced-motion`.
+- [x] 7.2 Create the `'use client'` resend leaf calling the public resend action; `Button` `primary` with mandatory loading state; render the generic acknowledgement in the `aria-live` feedback region (info/neutral, never `danger`).
+- [x] 7.3 Unit test (RTL) `src/__tests__/unit/app/verifique-email/`: renders card + masked email from a valid cookie; renders generic guidance with NO masked line when cookie absent; resend click shows loading then the generic acknowledgement; correct test ids present.
+- [x] 7.4 Document the new `data-testid` values in `docs/design-system/testid.md`.
 
 ## 8. Frontend — login confirm-email state
 
