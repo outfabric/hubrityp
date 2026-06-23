@@ -55,6 +55,8 @@ process.env.INNGEST_ENCRYPTION_KEY ??= 'unit-test-inngest-encryption-key-32ch';
 process.env.INNGEST_SIGNING_KEY ??= 'unit-test-inngest-signing-key';
 // Signature hash salt — used for hashing IP/user-agent in consent signing.
 process.env.SIGNATURE_HASH_SALT ??= 'unit-test-signature-hash-salt-minimum-32-chars';
+// Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
+process.env.PENDING_EMAIL_COOKIE_SECRET ??= 'unit-test-pending-email-cookie-secret-min-32-chars';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino
 // pipeline (Edge runtime can't load pino's transport), so silencing pino

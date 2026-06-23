@@ -29,6 +29,9 @@ export default async function globalSetup() {
   process.env.INNGEST_SIGNING_KEY ??= 'integration-inngest-signing-key';
   // Signature hash salt — used for hashing IP/user-agent in consent signing.
   process.env.SIGNATURE_HASH_SALT ??= 'integration-test-signature-hash-salt-minimum-32-chars';
+  // Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
+  process.env.PENDING_EMAIL_COOKIE_SECRET ??=
+    'integration-test-pending-email-cookie-secret-min-32-chars';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.

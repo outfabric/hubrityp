@@ -103,6 +103,13 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // The hash provides a legally defensible audit trail without storing PII.
   // REQUIRED in production; min 32 chars for adequate entropy.
   SIGNATURE_HASH_SALT: z.string().min(32),
+  // Secret used to HMAC-sign the `hp_pending_email` cookie that carries the
+  // pending email server-side between signup/login and the public
+  // `/verifique-email` page. Signing prevents an attacker from forging the
+  // cookie to trigger arbitrary confirmation-email sends (email bombing).
+  // Node runtime only (uses `node:crypto`); never read on the Edge.
+  // REQUIRED; min 32 chars for adequate HMAC entropy.
+  PENDING_EMAIL_COOKIE_SECRET: z.string().min(32),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

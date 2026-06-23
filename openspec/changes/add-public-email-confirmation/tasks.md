@@ -4,9 +4,9 @@
 
 ## 1. Foundations — env + signed cookie helper
 
-- [ ] 1.1 Add `PENDING_EMAIL_COOKIE_SECRET: z.string().min(32)` to `serverEnvSchema` in `src/shared/env/schemas.ts`; export via `@/shared/env`. Add it to the env example/docs and to all CI/test env setups so signing never fails silently.
-- [ ] 1.2 Create `src/shared/lib/cookies/pending-email.ts` mirroring `keep-logged-in.ts`: `setPendingEmailCookie(store, email)`, `readPendingEmail(store): string | null` (HMAC-SHA256 verify via `node:crypto`, timing-safe compare; invalid → `null`), `clearPendingEmailCookie(store)`, `maskEmail(email): string` (first local char + `@domain`). Cookie attrs: `HttpOnly`, `SameSite=Lax`, `Secure` (prod), `Path=/`, `Max-Age=1800`. Value `base64url(email).base64url(hmac)`.
-- [ ] 1.3 Unit test `src/__tests__/unit/shared/lib/cookies/pending-email.test.ts`: round-trip set→read; tampered value → `null`; wrong-secret signature → `null`; `maskEmail` preserves first char + full domain and never the rest of the local part; cookie options are hardened (HttpOnly/Lax/Secure/Path/Max-Age).
+- [x] 1.1 Add `PENDING_EMAIL_COOKIE_SECRET: z.string().min(32)` to `serverEnvSchema` in `src/shared/env/schemas.ts`; export via `@/shared/env`. Add it to the env example/docs and to all CI/test env setups so signing never fails silently.
+- [x] 1.2 Create `src/shared/lib/cookies/pending-email.ts` mirroring `keep-logged-in.ts`: `setPendingEmailCookie(store, email)`, `readPendingEmail(store): string | null` (HMAC-SHA256 verify via `node:crypto`, timing-safe compare; invalid → `null`), `clearPendingEmailCookie(store)`, `maskEmail(email): string` (first local char + `@domain`). Cookie attrs: `HttpOnly`, `SameSite=Lax`, `Secure` (prod), `Path=/`, `Max-Age=1800`. Value `base64url(email).base64url(hmac)`.
+- [x] 1.3 Unit test `src/__tests__/unit/shared/lib/cookies/pending-email.test.ts`: round-trip set→read; tampered value → `null`; wrong-secret signature → `null`; `maskEmail` preserves first char + full domain and never the rest of the local part; cookie options are hardened (HttpOnly/Lax/Secure/Path/Max-Age).
 
 ## 2. Shared confirm-email copy
 
