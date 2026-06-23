@@ -228,6 +228,19 @@ Notes:
   targeting them should assert via `getByTestId` on the full page, not on the form component
   in isolation.
 
+### Verify-email page
+
+Surface: `/verifique-email` (public route rendered by
+`src/app/(auth)/verifique-email/page.tsx`; the resend control lives in the
+client leaf `resend-button.tsx` in the same folder).
+
+| `data-testid`              | Surface                                        | Element                                                                                              |
+| -------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `verifique-email-card`     | `app/(auth)/verifique-email/page.tsx`          | The `<Card>` wrapper for the confirm-email surface.                                                  |
+| `verifique-email-address`  | `app/(auth)/verifique-email/page.tsx`          | Masked-email line; rendered only when the signed `hp_pending_email` cookie is present.               |
+| `verifique-email-resend`   | `app/(auth)/verifique-email/resend-button.tsx` | Resend `<Button>` ("Reenviar link de confirmação" / "Reenviando..." while pending).                  |
+| `verifique-email-feedback` | `app/(auth)/verifique-email/resend-button.tsx` | Neutral `aria-live="polite"` feedback region showing the generic resend acknowledgement (no danger). |
+
 ## Adding new IDs
 
 A pull request introducing one or more new `data-testid` values must update this document in

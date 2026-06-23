@@ -22,7 +22,7 @@ The system SHALL provide a `/signup` route under the `(auth)` route group that r
 
 #### Scenario: Authenticated pending user is redirected to onboarding
 
-- **WHEN** a user whose `profile.status` is `pending_verification` or `pending_crp_validation` visits `/signup`
+- **WHEN** a user whose `profile.status` is `pending_crp_validation` visits `/signup`
 - **THEN** the middleware redirects them to `/onboarding/pending`
 
 #### Scenario: Form fields use stable test ids
@@ -95,12 +95,12 @@ The system SHALL enforce, on signup only, a password policy of at least 10 chara
 
 ### Requirement: `signUp` Server Action creates account and dispatches verification email
 
-The system SHALL implement a Server Action `signUp(formData)` exposed at `app/(auth)/signup/actions.ts` (`'use server'` shell delegating to `@/modules/registration`). The action MUST validate input via `signupInputSchema`, call `supabase.auth.signUp` with the verified payload, and rely on the database trigger (Requirement: "Database trigger creates `profiles` row on `auth.users` insert" in `data-layer`) to materialize `profiles`. On success, the action MUST log a `signup_success` event and redirect to `/onboarding/pending`. On failure, the action MUST return a typed result and NEVER throw across the boundary.
+The system SHALL implement a Server Action `signUp(formData)` exposed at `app/(auth)/signup/actions.ts` (`'use server'` shell delegating to `@/modules/registration`). The action MUST validate input via `signupInputSchema`, call `supabase.auth.signUp` with the verified payload, and rely on the database trigger (Requirement: "Database trigger creates `profiles` row on `auth.users` insert" in `data-layer`) to materialize `profiles` with `status = 'pending_verification'`. Because Supabase email confirmation is enabled, `supabase.auth.signUp` returns NO session; the just-registered client is therefore anonymous. On success, the action MUST log a `signup_success` event, set the signed `pending-email` cookie (see `public-email-confirmation` spec), and redirect to the public `/verifique-email` page (NOT the session-gated `/onboarding/pending`, which an anonymous request cannot reach). On failure, the action MUST return a typed result and NEVER throw across the boundary.
 
-#### Scenario: Valid payload succeeds and redirects to pending screen
+#### Scenario: Valid payload succeeds and redirects to the public confirmation page
 
 - **WHEN** the form is submitted with input that passes `signupInputSchema` and Supabase accepts the signup
-- **THEN** the action calls `supabase.auth.signUp({ email, password, options: { data: { fullName, crpNumber, crpUf, acceptedTerms, acceptedPrivacy, acceptedSensitiveData }, emailRedirectTo: '<origin>/auth/callback' } })`, logs `signup_success` in `auth_logs` with `metadata: { crpNumber, crpUf }`, and redirects the browser to `/onboarding/pending`
+- **THEN** the action calls `supabase.auth.signUp({ email, password, options: { data: { fullName, crpNumber, crpUf, acceptedTerms, acceptedPrivacy, acceptedSensitiveData }, emailRedirectTo: '<origin>/auth/callback' } })`, logs `signup_success` in `auth_logs` with `metadata: { crpNumber, crpUf }`, sets the signed `pending-email` cookie, and redirects the browser to `/verifique-email`
 
 #### Scenario: Invalid payload is rejected before calling Supabase
 
@@ -110,7 +110,7 @@ The system SHALL implement a Server Action `signUp(formData)` exposed at `app/(a
 #### Scenario: Duplicate email returns typed error and logs the failure
 
 - **WHEN** Supabase responds with "User already registered"
-- **THEN** the action returns `{ ok: false, error: 'duplicate_email' }`, logs `signup_failure_duplicate_email` in `auth_logs` with `user_id: null` and `metadata.emailHash`, and does not redirect
+- **THEN** the action returns `{ ok: false, error: 'duplicate_email' }`, logs `signup_failure_duplicate_email` in `auth_logs` with `user_id: null` and `metadata.emailHash`, does not set the `pending-email` cookie, and does not redirect
 
 #### Scenario: Duplicate CRP/UF rolls back the auth.user and returns typed error
 
@@ -143,51 +143,27 @@ The system SHALL provide a Route Handler at `src/app/(auth)/auth/callback/route.
 
 ### Requirement: Onboarding pending screen blocks `(app)` until profile is active
 
-The system SHALL provide an `/onboarding/pending` page under the `(app)` route group that renders a centered card explaining the current account status. The page MUST be the only `(app)` route reachable to users in `pending_verification` or `pending_crp_validation`; any attempt to access another `(app)` route in those statuses MUST be redirected to `/onboarding/pending` by the middleware. The screen MUST expose a "Reenviar email de verificação" action when status is `pending_verification` and a read-only message when status is `pending_crp_validation`. An `active` user reaching `/onboarding/pending` MUST be redirected to `/dashboard`.
-
-#### Scenario: `pending_verification` user sees resend action
-
-- **WHEN** a user with `profile.status = 'pending_verification'` visits `/onboarding/pending`
-- **THEN** the page renders a card with `data-testid="onboarding-pending-status"` containing copy "Confirme seu email para continuar", a `data-testid="onboarding-pending-resend-email"` button, and the logout control inherited from the `(app)` layout
+The system SHALL provide an `/onboarding/pending` page under the `(app)` route group that renders a centered card explaining the current account status. The page serves exclusively users in `pending_crp_validation` — the post-confirmation state in which a valid session exists. Users in `pending_verification` never hold a session (signup returns none and login is blocked), so they are routed to the public `/verifique-email` page instead and never reach this screen. Any attempt to access another `(app)` route while in `pending_crp_validation` MUST be redirected to `/onboarding/pending` by the middleware. The screen MUST render a read-only message about the CRP validation queue and MUST NOT render a verification-email resend control (email confirmation is already complete in this state). An `active` user reaching `/onboarding/pending` MUST be redirected to `/dashboard`.
 
 #### Scenario: `pending_crp_validation` user sees waiting message
 
 - **WHEN** a user with `profile.status = 'pending_crp_validation'` visits `/onboarding/pending`
-- **THEN** the page renders the card with copy explaining the CRP validation queue and the expected SLA (24h), without the resend button
+- **THEN** the page renders the card with copy explaining the CRP validation queue and the expected SLA (24h), without any resend button
 
 #### Scenario: Active user is redirected to dashboard
 
 - **WHEN** a user with `profile.status = 'active'` visits `/onboarding/pending`
 - **THEN** the middleware redirects them to `/dashboard` (HTTP 307)
 
-#### Scenario: Pending user attempting `/dashboard` is redirected to onboarding
+#### Scenario: No session resolves to login (defense-in-depth)
 
-- **WHEN** a user with `profile.status` in (`pending_verification`, `pending_crp_validation`) visits `/dashboard` or any other `(app)` route except `/onboarding/pending`
+- **WHEN** a request reaches `/onboarding/pending` with no session or no `profiles` row
+- **THEN** the page redirects to `/login` (the middleware is the authoritative gate; this re-check guards against bypass)
+
+#### Scenario: Pending-CRP user attempting `/dashboard` is redirected to onboarding
+
+- **WHEN** a user with `profile.status = 'pending_crp_validation'` visits `/dashboard` or any other `(app)` route except `/onboarding/pending`
 - **THEN** the middleware redirects them to `/onboarding/pending` (HTTP 307)
-
-### Requirement: `resendVerificationEmail` Server Action is rate-aware and idempotent
-
-The system SHALL implement a Server Action `resendVerificationEmail()` callable only by an authenticated user in `pending_verification`. The action MUST call `supabase.auth.resend({ type: 'signup' })`, surface the rate-limit error from Supabase as a typed result, and never throw.
-
-#### Scenario: First call within rate window succeeds
-
-- **WHEN** an authenticated `pending_verification` user submits the resend form for the first time in the current rate window
-- **THEN** the action calls `supabase.auth.resend({ type: 'signup', email: <user.email> })` and returns `{ ok: true }`
-
-#### Scenario: Subsequent call within rate window returns typed error
-
-- **WHEN** Supabase responds with a rate-limit error (HTTP 429 or "Email rate limit exceeded")
-- **THEN** the action returns `{ ok: false, error: 'rate_limited' }` and the UI renders pt-BR copy explaining the cool-down (e.g., "Espere 1 minuto para reenviar")
-
-#### Scenario: Action rejects calls from non-pending status
-
-- **WHEN** an authenticated user whose `profile.status` is not `pending_verification` invokes the action
-- **THEN** the action returns `{ ok: false, error: 'invalid_status' }` and does not call Supabase
-
-#### Scenario: Action rejects anonymous callers
-
-- **WHEN** an unauthenticated request invokes the action
-- **THEN** the action returns `{ ok: false, error: 'invalid_status' }` and does not call Supabase
 
 ### Requirement: `getCurrentProfile` is the canonical profile loader for server contexts
 

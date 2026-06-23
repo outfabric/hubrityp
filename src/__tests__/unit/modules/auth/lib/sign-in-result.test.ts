@@ -13,6 +13,7 @@ import {
 
 const ALL_ERRORS: SignInError[] = [
   'invalid_credentials',
+  'email_not_confirmed',
   'locked_out',
   'requires_password_reset',
   'account_unavailable',
@@ -30,6 +31,10 @@ describe('SIGN_IN_ERROR_MESSAGES', () => {
 
   it('invalid_credentials maps to the correct pt-BR copy', () => {
     expect(SIGN_IN_ERROR_MESSAGES.invalid_credentials).toBe('E-mail ou senha incorretos.');
+  });
+
+  it('email_not_confirmed maps to the correct pt-BR copy', () => {
+    expect(SIGN_IN_ERROR_MESSAGES.email_not_confirmed).toContain('Confirme seu e-mail');
   });
 
   it('locked_out maps to the correct pt-BR copy', () => {

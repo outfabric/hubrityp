@@ -4,6 +4,7 @@ import { eq, sql as dsql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authLogs, profiles } from '@/shared/db/schema/auth/tables';
+import { PENDING_EMAIL_COOKIE_NAME, readPendingEmail } from '@/shared/lib/cookies/pending-email';
 
 import { runAsService } from '../setup/run-as-service';
 
@@ -50,6 +51,33 @@ const supabaseAuthSignOutMock = vi.fn();
 const supabaseAuthAdminDeleteUserMock = vi.fn();
 const adminCreateClientMock = vi.fn();
 
+// In-memory cookie store backing the mocked `next/headers` `cookies()`.
+// The success path calls `setPendingEmailCookie(await cookies(), email)`,
+// so the real (HMAC-signing) helper runs against this store and we can read
+// back the persisted value to assert the cookie is present, hardened, and
+// signature-valid via `readPendingEmail`. Failure branches never call
+// `cookies().set`, so an absent entry proves "no cookie".
+const cookieStore = new Map<string, { value: string; options?: Record<string, unknown> }>();
+
+const cookiesMock = {
+  set: (name: string, value: string, options?: Record<string, unknown>): void => {
+    cookieStore.set(name, { value, options });
+  },
+  get: (name: string): { value: string } | undefined => {
+    const entry = cookieStore.get(name);
+    return entry ? { value: entry.value } : undefined;
+  },
+};
+
+// `cookies` is mocked so the success-path `setPendingEmailCookie` writes to
+// our capturable store; `headers` stays a real empty Headers so the
+// origin/IP fall-throughs in `signUpImpl` / `logAuthEvent` behave as in the
+// no-request-context case.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue(cookiesMock),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
+
 // `signOut` is invoked defensively by every failure branch of `signUpImpl`
 // to guard against the Supabase email-obfuscation edge case where a
 // session cookie is attached to the response despite the signup being
@@ -74,6 +102,7 @@ beforeEach(() => {
   supabaseAuthAdminDeleteUserMock.mockReset();
   adminCreateClientMock.mockReset();
   supabaseAuthSignOutMock.mockResolvedValue({ error: null });
+  cookieStore.clear();
 
   // Default admin-client shim: `auth.admin.deleteUser` performs a real
   // DELETE on `auth.users`. The cascade FK on `profiles.user_id` will
@@ -191,12 +220,29 @@ describe('signUpImpl Server Action (integration)', () => {
         caught = err;
       }
 
-      // Successful signups end with `redirect('/onboarding/pending')`,
-      // which throws a NEXT_REDIRECT marker. Asserting the digest pins
-      // both the success branch AND the redirect target.
+      // Successful signups end with `redirect('/verifique-email')`, which
+      // throws a NEXT_REDIRECT marker. Asserting the digest pins both the
+      // success branch AND the public redirect target (NOT the
+      // session-gated `/onboarding/pending`, which an anonymous post-signup
+      // request cannot reach).
       const digest = (caught as { digest?: string } | null)?.digest ?? '';
       expect(digest.startsWith('NEXT_REDIRECT')).toBe(true);
-      expect(digest).toContain('/onboarding/pending');
+      expect(digest).toContain('/verifique-email');
+      expect(digest).not.toContain('/onboarding/pending');
+
+      // The success path set a signed, hardened `pending-email` cookie
+      // BEFORE redirecting. We assert it is present, security-hardened, and
+      // signature-valid (its value round-trips through `readPendingEmail`
+      // to exactly the submitted email — proving the HMAC is correct).
+      const cookieEntry = cookieStore.get(PENDING_EMAIL_COOKIE_NAME);
+      expect(cookieEntry).toBeDefined();
+      expect(cookieEntry!.options).toMatchObject({
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 1_800,
+      });
+      expect(readPendingEmail(cookiesMock)).toBe(payload.email);
 
       // The `auth.users` row exists with the metadata our action stamped.
       const inserted = await runAsService(async (db) => {
@@ -257,6 +303,12 @@ describe('signUpImpl Server Action (integration)', () => {
       });
       expect(supabaseAuthSignUpMock).not.toHaveBeenCalled();
 
+      // Failure branches MUST NOT set the pending-email cookie — only the
+      // success path may. A forged/stray cookie on a failed signup would
+      // let the public confirmation page send mail for an address the user
+      // never actually registered.
+      expect(cookieStore.get(PENDING_EMAIL_COOKIE_NAME)).toBeUndefined();
+
       // No row landed for this email in either table.
       const rows = await runAsService(async (db) =>
         db.execute<AuthUserRow>(
@@ -288,6 +340,9 @@ describe('signUpImpl Server Action (integration)', () => {
       const result = await signUpImpl(formData);
 
       expect(result).toEqual({ ok: false, error: 'duplicate_email' });
+
+      // The duplicate-email branch MUST NOT set the pending-email cookie.
+      expect(cookieStore.get(PENDING_EMAIL_COOKIE_NAME)).toBeUndefined();
 
       // Defensive cleanup: the duplicate-email branch MUST call
       // `auth.signOut` so a session cookie attached by Supabase under
@@ -332,6 +387,11 @@ describe('signUpImpl Server Action (integration)', () => {
       );
       expect(usersBefore).toHaveLength(1);
 
+      // Reset the captured cookie so we isolate the SECOND signup's
+      // behavior: the first (successful) signup legitimately set the
+      // pending-email cookie; we now prove the failing branch leaves none.
+      cookieStore.clear();
+
       // Second signup with the SAME CRP should be rejected by the
       // unique-violation on `(crp_number, crp_uf)` raised inside the
       // trigger transaction. `signUpImpl` MUST map this to
@@ -342,6 +402,9 @@ describe('signUpImpl Server Action (integration)', () => {
 
       const result = await signUpImpl(secondFormData);
       expect(result).toEqual({ ok: false, error: 'duplicate_crp' });
+
+      // The duplicate-CRP branch MUST NOT set the pending-email cookie.
+      expect(cookieStore.get(PENDING_EMAIL_COOKIE_NAME)).toBeUndefined();
 
       // No orphan: auth.users still holds exactly the row from the
       // first (successful) signup. The trigger-raised exception rolls
@@ -362,6 +425,33 @@ describe('signUpImpl Server Action (integration)', () => {
       const meta = auditRows[0]!.metadata as Record<string, unknown>;
       expect(meta.crpNumber).toBe(sharedCrp);
       expect(meta.crpUf).toBe('SP');
+    });
+  });
+
+  describe('unknown supabase error', () => {
+    it('returns unknown and sets no pending-email cookie', async () => {
+      // Stage an unrecognized Supabase Auth error (neither duplicate-email
+      // nor duplicate-CRP) so `signUpImpl` falls through to the `unknown`
+      // branch without inserting a row.
+      supabaseAuthSignUpMock.mockResolvedValueOnce({
+        data: { user: null },
+        error: {
+          code: 'unexpected_failure',
+          message: 'Internal Server Error',
+          name: 'AuthApiError',
+        },
+      });
+
+      const payload = signupInputFactory.build();
+      const formData = signupInputFactory.toFormData(payload);
+
+      const { signUpImpl } = await import('@/modules/registration/server/sign-up');
+      const result = await signUpImpl(formData);
+
+      expect(result).toEqual({ ok: false, error: 'unknown' });
+
+      // The unknown branch MUST NOT set the pending-email cookie.
+      expect(cookieStore.get(PENDING_EMAIL_COOKIE_NAME)).toBeUndefined();
     });
   });
 

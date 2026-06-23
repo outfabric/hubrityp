@@ -10,6 +10,7 @@
  */
 export type SignInError =
   | 'invalid_credentials'
+  | 'email_not_confirmed'
   | 'locked_out'
   | 'requires_password_reset'
   | 'account_unavailable'
@@ -29,6 +30,8 @@ export type SignInResult =
  */
 export const SIGN_IN_ERROR_MESSAGES: Record<SignInError, string> = {
   invalid_credentials: 'E-mail ou senha incorretos.',
+  email_not_confirmed:
+    'Confirme seu e-mail para continuar. Enviamos um link de confirmação para a sua caixa de entrada.',
   locked_out:
     'Conta temporariamente bloqueada por excesso de tentativas. Tente novamente mais tarde ou redefina sua senha.',
   requires_password_reset: 'Por segurança, redefina sua senha antes de entrar.',

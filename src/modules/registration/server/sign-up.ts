@@ -3,11 +3,12 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { signupInputSchema } from '@/modules/registration/lib/signup-input-schema';
 import { serverEnv } from '@/shared/env';
+import { setPendingEmailCookie } from '@/shared/lib/cookies/pending-email';
 import { logger } from '@/shared/lib/logger';
 import { createServerClient } from '@/shared/supabase/server';
 
@@ -22,7 +23,10 @@ export type SignUpResult =
   | { ok: false; error: 'invalid_input'; fieldErrors: Record<string, string[]> }
   | { ok: false; error: 'duplicate_email' | 'duplicate_crp' | 'unknown' };
 
-const PENDING_REDIRECT = '/onboarding/pending';
+// Public, session-independent confirmation page. An anonymous request CAN
+// reach this (unlike the session-gated `/onboarding/pending`), which is why
+// the post-signup redirect lands here while the user is still unverified.
+const VERIFY_EMAIL_REDIRECT = '/verifique-email';
 const FALLBACK_ORIGIN = 'http://localhost:3000';
 
 /**
@@ -156,7 +160,10 @@ async function safeSignOut(supabase: { auth: { signOut: () => Promise<unknown> }
  *          return `duplicate_crp`.
  *        - any other → return `unknown`.
  *   6. On success → log `signup_success` with crpNumber/crpUf metadata,
- *      then `redirect('/onboarding/pending')`.
+ *      set the signed `pending-email` cookie from the submitted email, then
+ *      `redirect('/verifique-email')` (the public confirmation page — an
+ *      anonymous request cannot reach the session-gated
+ *      `/onboarding/pending`).
  *
  * Note on `redirect()`: the call throws a `NEXT_REDIRECT` marker that
  * Next.js intercepts. That throw is the *expected* termination path on
@@ -323,5 +330,14 @@ export async function signUpImpl(formData: FormData): Promise<SignUpResult> {
     metadata: { crpNumber, crpUf },
   });
 
-  redirect(PENDING_REDIRECT);
+  // Carry the pending email server-side so the public `/verifique-email`
+  // page can mask it for display and gate a "resend" without trusting a
+  // client-supplied address. The cookie is HMAC-signed (see
+  // `setPendingEmailCookie`) so it cannot be forged for email-bombing.
+  // MUST be set BEFORE `redirect()` — that call throws NEXT_REDIRECT, so
+  // anything after it never runs. Only the success path sets the cookie;
+  // every failure branch above returns without touching it.
+  setPendingEmailCookie(await cookies(), email);
+
+  redirect(VERIFY_EMAIL_REDIRECT);
 }

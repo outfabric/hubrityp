@@ -129,7 +129,14 @@ type PathClass =
 // Pure path classifier. Each distinct row in the decision table gets its own
 // path class so `decide()` can apply fine-grained redirect rules. Public
 // paths fall through to the default `pass` branch.
-function classifyPath(pathname: string): PathClass {
+//
+// Exported so integration tests can assert the precise `PathClass` for a path
+// independently of the `decide()` outcome — important for routes like
+// `/verifique-email` whose default-fallthrough and explicit classification both
+// resolve to `'public'`, where the only observable difference is the class
+// itself (e.g. proving a near-miss like `/verifique-email-x` is NOT the
+// exact-match public route).
+export function classifyPath(pathname: string): PathClass {
   if (pathname === CALLBACK_PATH || pathname.startsWith(`${CALLBACK_PATH}/`)) {
     return 'callback';
   }
@@ -190,6 +197,16 @@ function classifyPath(pathname: string): PathClass {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
       return 'app';
     }
+  }
+  // Public post-signup landing page. A just-signed-up email user reaches
+  // `/verifique-email` while still anonymous (the trigger may not have
+  // materialized the profile, and the session is not yet active). Without an
+  // explicit `public` classification this would be... already public via the
+  // default fallthrough, but we classify it explicitly so the page survives a
+  // future refactor to default-deny. The strict exact-match (no prefix branch)
+  // rejects near-miss paths like `/verifique-email-x`.
+  if (pathname === '/verifique-email') {
+    return 'public';
   }
   // Public patient-facing routes: explicit classification prevents accidental
   // gating if the classifier is ever refactored to default-deny instead of

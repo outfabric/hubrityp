@@ -17,6 +17,7 @@ hubrityp/
 │   │   ├── (public)/                    # public marketing site — shared layout (header/main/footer),
 │   │   │                               #   homepage, 404 (not-found.tsx)
 │   │   ├── (auth)/                     # public auth flows — login, signup, forgot/reset-password,
+│   │   │                               #   verifique-email (email-confirmation surface),
 │   │   │                               #   auth/callback (OAuth + email verify), auth/link-account
 │   │   ├── (app)/                      # authenticated app — dashboard, agenda, pacientes,
 │   │   │                               #   caixa-de-entrada, configuracoes/*, onboarding/*

@@ -11,11 +11,10 @@
 // be transformed into an RPC stub by the Next.js compiler and the schema /
 // type / Client Component re-exports would break.
 //
-// The `'use server'` directives live on the route shells (`app/(auth)/signup/
-// actions.ts`, `app/(app)/onboarding/pending/actions.ts`) which import the
-// implementations from this barrel and re-export them as bona fide Server
-// Actions for the Next.js compiler. This mirrors the contract enforced by
-// `src/modules/auth/index.ts`.
+// The `'use server'` directives live on the route shells (e.g.
+// `app/(auth)/signup/actions.ts`) which import the implementations from this
+// barrel and re-export them as bona fide Server Actions for the Next.js
+// compiler. This mirrors the contract enforced by `src/modules/auth/index.ts`.
 //
 // Internal helpers NOT re-exported (intentional):
 //   - `server/log-auth-event.ts` — only consumed inside `server/**`; no caller
@@ -24,9 +23,9 @@
 // ---- Server Actions (delegated to by the route shells) -----------------------
 export { signUpImpl as signUp, type SignUpResult } from './server/sign-up';
 export {
-  resendVerificationEmailImpl as resendVerificationEmail,
-  type ResendVerificationResult,
-} from './server/resend-verification';
+  resendPublicConfirmationImpl as resendPublicConfirmation,
+  type ResendPublicResult,
+} from './server/resend-public';
 export { getCurrentProfile } from './server/get-profile';
 // `getCurrentProfileEdge` is intentionally NOT re-exported from this
 // barrel — it lives in `@/modules/registration/edge`. Bundling Drizzle +
@@ -39,6 +38,11 @@ export { getCurrentProfile } from './server/get-profile';
 // ---- Pure validators / policies ---------------------------------------------
 export { signupInputSchema, type SignupInput } from './lib/signup-input-schema';
 export { passwordPolicy, PASSWORD_MIN_LENGTH, type PasswordRule } from './lib/password-validators';
+export {
+  CONFIRM_EMAIL_TITLE,
+  CONFIRM_EMAIL_BODY,
+  RESEND_CONFIRMATION_ACK,
+} from './lib/confirm-email-copy';
 
 // ---- Components --------------------------------------------------------------
 export { SignupForm, type SignupFormProps } from './components/signup-form';

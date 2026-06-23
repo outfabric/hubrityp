@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation';
 import { getCurrentProfile, OnboardingPendingCard, ProfileStatus } from '@/modules/registration';
 import { createServerClient } from '@/shared/supabase/server';
 
-import { resendVerificationEmail } from './actions';
-
 // Server Component for `/onboarding/pending`. The middleware (section 8)
 // is the authoritative gate for this surface — it routes pending users
 // here and bounces active/anonymous users elsewhere — but we still
@@ -21,11 +19,13 @@ import { resendVerificationEmail } from './actions';
 //   - `suspended` / `cancelled` → redirect to `/login`. These users have
 //     no active session by contract; defense-in-depth in case middleware
 //     hasn't run yet.
-//   - `pending_verification` / `pending_crp_validation` → render the card.
-//     The `resendVerificationEmail` Server Action is wired in via the
-//     local `./actions.ts` shell so the embedded
-//     `<ResendVerificationButton/>` Client leaf can call it across the
-//     `'use server'` boundary.
+//   - `pending_crp_validation` → render the card.
+//   - `pending_verification` is intentionally NOT served here anymore. With
+//     Supabase email confirmation enabled, an unconfirmed user can never hold
+//     a session, so this authenticated page is unreachable for them. The
+//     resend-confirmation experience now lives on the public, session-less
+//     `/verifique-email` page. A `pending_verification` profile reaching this
+//     branch (only via a middleware bypass) falls through to `/login`.
 export default async function OnboardingPendingPage() {
   const supabase = await createServerClient();
   const profile = await getCurrentProfile(supabase);
@@ -37,17 +37,11 @@ export default async function OnboardingPendingPage() {
   switch (profile.status) {
     case ProfileStatus.Active:
       redirect('/dashboard');
+    case ProfileStatus.PendingCrpValidation:
+      return <OnboardingPendingCard status={profile.status} />;
+    case ProfileStatus.PendingVerification:
     case ProfileStatus.Suspended:
     case ProfileStatus.Cancelled:
       redirect('/login');
-    case ProfileStatus.PendingVerification:
-    case ProfileStatus.PendingCrpValidation:
-      return (
-        <OnboardingPendingCard
-          status={profile.status}
-          email={profile.email}
-          resendAction={resendVerificationEmail}
-        />
-      );
   }
 }

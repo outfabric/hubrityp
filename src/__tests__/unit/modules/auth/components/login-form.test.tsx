@@ -268,6 +268,48 @@ describe('LoginForm', () => {
     });
   });
 
+  // ---- 8.1: Confirm-email state (email_not_confirmed) ----
+
+  it('renders the confirm-email region (non-danger) with a link to /verifique-email for email_not_confirmed', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'email_not_confirmed' }} />);
+
+    const region = screen.getByTestId('login-confirm-email');
+    expect(region).toBeInTheDocument();
+
+    // Informational, not a danger error: it must NOT carry the destructive
+    // styling reserved for `login-form-error`, and the generic error region
+    // must not appear.
+    expect(region).not.toHaveClass('text-destructive');
+    expect(screen.queryByTestId('login-form-error')).not.toBeInTheDocument();
+
+    const link = region.querySelector('a');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/verifique-email');
+  });
+
+  it('renders the shared confirm-email copy for email_not_confirmed', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'email_not_confirmed' }} />);
+
+    const region = screen.getByTestId('login-confirm-email');
+    expect(region).toHaveTextContent('Confirme seu cadastro');
+    expect(region).toHaveTextContent(/busque na caixa de Spam ou Lixeira/);
+  });
+
+  it('does NOT reveal the confirm-email state for invalid_credentials', () => {
+    render(<LoginForm initialState={{ ok: false, error: 'invalid_credentials' }} />);
+
+    expect(screen.getByTestId('login-form-error')).toBeInTheDocument();
+    expect(screen.queryByTestId('login-confirm-email')).not.toBeInTheDocument();
+  });
+
+  it('does NOT reveal the confirm-email state for any other error result', () => {
+    for (const error of ['unknown', 'account_unavailable', 'locked_out'] as const) {
+      const { unmount } = render(<LoginForm initialState={{ ok: false, error }} />);
+      expect(screen.queryByTestId('login-confirm-email')).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it('renders requires_password_reset error with link even when email is empty', () => {
     render(<LoginForm initialState={{ ok: false, error: 'requires_password_reset' }} />);
 

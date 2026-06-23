@@ -218,6 +218,8 @@ export default defineConfig({
       INNGEST_SIGNING_KEY: 'e2e-real-inngest-signing-key',
       // Signature hash salt — used for hashing IP/user-agent in consent signing.
       SIGNATURE_HASH_SALT: 'e2e-real-signature-hash-salt-minimum-32-chars',
+      // Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
+      PENDING_EMAIL_COOKIE_SECRET: 'e2e-real-pending-email-cookie-secret-min-32-chars',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

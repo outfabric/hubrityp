@@ -24,6 +24,16 @@ import type { SignInResult } from '@/modules/auth/lib/sign-in-result';
 // bundle and break the build.  This follows the same discipline documented in
 // `@/modules/auth/index.ts` for `signIn`.
 import { GoogleButton } from '@/modules/oauth/components/google-button';
+// Import the confirm-email copy directly from its leaf module rather than from
+// the `@/modules/registration` barrel. The barrel re-exports Server Actions and
+// Server Components (which carry `import 'server-only'` / `next/headers`);
+// pulling it into this `'use client'` file would drag the server-only chain
+// into the browser bundle and break the build. The leaf is a pure strings-only
+// module, safe in both Server and Client Components.
+import {
+  CONFIRM_EMAIL_BODY,
+  CONFIRM_EMAIL_TITLE,
+} from '@/modules/registration/lib/confirm-email-copy';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Input } from '@/shared/ui/input';
@@ -57,13 +67,45 @@ function computeRemainingMinutes(lockoutUntil: string | undefined): number {
 }
 
 /**
+ * Renders the informational confirm-email region for the
+ * `email_not_confirmed` result.
+ *
+ * This state is deliberately NOT an error: the credentials were valid, the
+ * account merely needs its email confirmed. It therefore uses neutral/info
+ * Design System styling (`text-muted-foreground` inside a subtle bordered
+ * panel) — never the `danger`/`destructive` treatment reserved for
+ * `login-form-error`. It exposes a distinct `data-testid="login-confirm-email"`
+ * and a secondary control to reach `/verifique-email`. No other result reveals
+ * the unconfirmed state.
+ */
+function ConfirmEmailRegion() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      data-testid="login-confirm-email"
+      className="border-border bg-muted/40 text-muted-foreground space-y-2 rounded-md border p-3 text-sm"
+    >
+      <p className="text-foreground font-medium">{CONFIRM_EMAIL_TITLE}</p>
+      <p>{CONFIRM_EMAIL_BODY}</p>
+      <Link href="/verifique-email" className="text-primary inline-block font-medium underline">
+        Ir para confirmação de email
+      </Link>
+    </div>
+  );
+}
+
+/**
  * Renders the appropriate error region for the current `SignInResult`.
  *
  * `locked_out` and `requires_password_reset` get rich copy with links;
- * the remaining three errors use the static map from `sign-in-result.ts`.
+ * the remaining error variants use static copy. The `email_not_confirmed`
+ * variant is handled separately by `ConfirmEmailRegion` (it is informational,
+ * not a danger error) and therefore returns `null` here.
  */
 function ErrorRegion({ state, email }: { state: SignInResult; email: string }) {
   if (state.ok) return null;
+  if (state.error === 'email_not_confirmed') return null;
 
   switch (state.error) {
     case 'locked_out': {
@@ -243,7 +285,11 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
       </div>
 
       {state && !state.ok && !hasFieldError ? (
-        <ErrorRegion state={state} email={currentEmail} />
+        state.error === 'email_not_confirmed' ? (
+          <ConfirmEmailRegion />
+        ) : (
+          <ErrorRegion state={state} email={currentEmail} />
+        )
       ) : null}
 
       <Button type="submit" disabled={isPending} data-testid="login-form-submit" className="w-full">

@@ -30,9 +30,12 @@ The system SHALL provide a `/login` route under the `(auth)` route group that re
 
 The system SHALL implement a Server Action `signIn(formData)` that validates input via Zod, enforces lockout state, calls `supabase.auth.signInWithPassword`, loads the active user's `profiles` row via `getCurrentProfile`, and redirects based on `profile.status`, `requires_password_reset`, and the `keepLoggedIn` flag. The action MUST keep the response shape uniform across the email-exists / email-does-not-exist axes (anti-enumeration) by performing constant-time work on the negative path.
 
+When Supabase email confirmation is enabled and the account's email is not yet confirmed, `supabase.auth.signInWithPassword` returns the `email_not_confirmed` error (HTTP 422) — and GoTrue returns it ONLY after the password is validated, so a WRONG password on an unconfirmed account still returns `invalid_credentials` (and is handled by the failed-credentials path). On the `email_not_confirmed` outcome the action MUST treat the attempt as a legitimate (correct-password) login that is merely blocked on confirmation: it MUST NOT call `applyFailedLoginAttempt`, MUST NOT increment `failed_login_count`/`consecutive_lockouts`, MUST NOT set `requires_password_reset`, MUST set the signed `pending-email` cookie (see `public-email-confirmation` spec) so the confirmation page and resend work, and MUST return `{ ok: false, error: 'email_not_confirmed' }`.
+
 The action MUST emit one of the following typed results when not redirecting:
 
 - `{ ok: false, error: 'invalid_credentials' }`
+- `{ ok: false, error: 'email_not_confirmed' }`
 - `{ ok: false, error: 'locked_out', lockoutUntil: string }`
 - `{ ok: false, error: 'requires_password_reset' }`
 - `{ ok: false, error: 'account_unavailable' }`
@@ -45,10 +48,20 @@ The action MUST log `login_success` (with `metadata.keepLoggedIn`) or `login_fai
 - **WHEN** the form is submitted with valid credentials, Supabase succeeds, `profile.status = 'active'`, `requires_password_reset = false`, and `lockout_until IS NULL OR lockout_until <= NOW()`
 - **THEN** the action sets the session cookies via `@supabase/ssr`, applies the keep-logged-in cookie strategy (Requirement: "`signIn` honours the `keepLoggedIn` flag via cookie sidecar"), resets `failed_login_count` and `consecutive_lockouts` to 0 on `profiles`, logs `login_success`, and redirects the browser to `/dashboard` (or to a same-origin `redirectTo` query param if provided)
 
-#### Scenario: Valid credentials and pending profile redirect to onboarding
+#### Scenario: Valid credentials and pending-CRP profile redirect to onboarding
 
-- **WHEN** the form is submitted with valid credentials, Supabase succeeds, and `profile.status` is `pending_verification` or `pending_crp_validation`
+- **WHEN** the form is submitted with valid credentials, Supabase succeeds, and `profile.status` is `pending_crp_validation`
 - **THEN** the action sets the session cookies, resets the lockout counters as above, logs `login_success`, and redirects the browser to `/onboarding/pending`, ignoring any `redirectTo` query param
+
+#### Scenario: Unconfirmed email returns `email_not_confirmed` without touching lockout
+
+- **WHEN** the form is submitted with a CORRECT password for an account whose email is not yet confirmed, and Supabase returns `email_not_confirmed` (HTTP 422)
+- **THEN** the action does NOT call `applyFailedLoginAttempt` and does NOT modify `failed_login_count`, `consecutive_lockouts`, `lockout_until`, or `requires_password_reset`; it sets the signed `pending-email` cookie; logs `login_failure` with `metadata.reason='email_not_confirmed'`; and returns `{ ok: false, error: 'email_not_confirmed' }`
+
+#### Scenario: Wrong password on an unconfirmed account is still invalid_credentials
+
+- **WHEN** the form is submitted with an INCORRECT password for an account whose email is not yet confirmed
+- **THEN** Supabase returns `invalid_credentials` (not `email_not_confirmed`), the action follows the failed-credentials path (increments the lockout counter), and the response does not reveal that the account exists or is unconfirmed
 
 #### Scenario: Valid credentials but suspended or cancelled profile clears the session
 
@@ -67,7 +80,7 @@ The action MUST log `login_success` (with `metadata.keepLoggedIn`) or `login_fai
 
 #### Scenario: Failed credentials increment counter atomically
 
-- **WHEN** the form is submitted with valid input but Supabase rejects the credentials and `profile` exists for that email
+- **WHEN** the form is submitted with valid input but Supabase rejects the credentials with `invalid_credentials` and `profile` exists for that email
 - **THEN** the action runs the atomic UPDATE on `profiles` that resets `failed_login_count` to 1 if the previous attempt was older than 15 minutes (otherwise increments by 1), updates `last_failed_login_at = NOW()`, and applies the lockout side-effects when the count reaches 5 (sets `lockout_until = NOW() + 30 minutes`, increments `consecutive_lockouts`, sets `requires_password_reset = true` if the post-increment `consecutive_lockouts >= 3`); the action returns `{ ok: false, error: 'invalid_credentials' }` (or `'locked_out'` if the same UPDATE just transitioned into lockout), and logs `login_failure` followed by `lockout_started` if applicable
 
 #### Scenario: Failed credentials for non-existing email are anti-enumeration
@@ -93,7 +106,7 @@ The action MUST log `login_success` (with `metadata.keepLoggedIn`) or `login_fai
 #### Scenario: `redirectTo` is validated before use
 
 - **WHEN** the form is submitted with `redirectTo=https://evil.example.com` (or any non-same-origin value)
-- **THEN** the action ignores the parameter and applies the status-based redirect (`/dashboard` for active, `/onboarding/pending` for pending)
+- **THEN** the action ignores the parameter and applies the status-based redirect (`/dashboard` for active, `/onboarding/pending` for pending-CRP)
 
 ### Requirement: `signOut` Server Action clears the session and redirects
 
@@ -307,4 +320,18 @@ The system SHALL render a "Manter conectado" checkbox and an "Entrar com Google"
 
 - **WHEN** the form receives `{ ok: false, error: 'requires_password_reset' }`
 - **THEN** the inline error region renders pt-BR copy "Por segurança, redefina sua senha antes de entrar." with a link to `/forgot-password?email=<encoded>` so the next page is prefilled
+
+### Requirement: Login page renders the confirm-email state with a path to resend
+
+The system SHALL render, when `signIn` returns `{ ok: false, error: 'email_not_confirmed' }`, the shared confirm-email message (see `public-email-confirmation` spec: "Confirm-email copy is shared between the public page and the login page") together with a clear control to reach `/verifique-email` (where the user can resend the confirmation link). This state MUST be visually distinct from the generic `invalid_credentials` error (it is informational, not an error), MUST follow the Design System (info/neutral feedback styling, not `danger`), and MUST expose `data-testid="login-confirm-email"`. The login page MUST NOT reveal the unconfirmed state for any other result.
+
+#### Scenario: Unconfirmed login shows the confirm-email guidance
+
+- **WHEN** `signIn` returns `email_not_confirmed`
+- **THEN** the login page renders the shared confirm-email copy in a non-danger feedback region (`data-testid="login-confirm-email"`) with a control linking to `/verifique-email`
+
+#### Scenario: Invalid credentials still shows the generic error
+
+- **WHEN** `signIn` returns `invalid_credentials`
+- **THEN** the login page renders the existing generic error in `data-testid="login-form-error"` and does NOT render the `login-confirm-email` region (no account-existence disclosure)
 

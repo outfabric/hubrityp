@@ -51,6 +51,7 @@ services:
       # when testing AI transcription features end-to-end.
       GEMINI_API_KEY: fake-gemini-key-for-local-dev
       SIGNATURE_HASH_SALT: local-dev-signature-hash-salt-minimum-32-chars
+      PENDING_EMAIL_COOKIE_SECRET: local-dev-pending-email-cookie-secret-min-32-chars
       # Encryption key for @inngest/middleware-encryption (z.string().min(32)).
       # Required by serverEnv at boot — without it every SSR page 500s. This is
       # a dummy local-dev value; production/preview get a real key from the

@@ -129,24 +129,12 @@ function extractRedirectTarget(error: unknown): string {
 }
 
 describe('signIn status-aware (real DB profiles)', () => {
-  it('pending_verification → redirects to /onboarding/pending', async () => {
-    const seeded = await seedProfile();
-    sessionRef.current = { id: seeded.userId, email: seeded.email };
-
-    const { signIn } = await import('@/app/(auth)/login/actions');
-
-    let caught: unknown = null;
-    try {
-      await signIn(buildFormData({ email: seeded.email, password: 'correct-horse' }));
-    } catch (err) {
-      caught = err;
-    }
-
-    expect(extractRedirectTarget(caught)).toBe('/onboarding/pending');
-    // Pending users keep their session — signOut MUST NOT have run.
-    expect(signOutMock).not.toHaveBeenCalled();
-  });
-
+  // NOTE: there is intentionally no `pending_verification → /onboarding/pending`
+  // case here. With Supabase email confirmation enabled, an unconfirmed user
+  // can never hold a session (GoTrue blocks the password grant with
+  // `email_not_confirmed`), so the login success-path switch no longer handles
+  // `pending_verification`. That state is exercised by the public, session-less
+  // `/verifique-email` flow instead.
   it('pending_crp_validation → redirects to /onboarding/pending', async () => {
     const seeded = await seedProfile();
     // Drive the email-confirmed trigger so the row transitions to
