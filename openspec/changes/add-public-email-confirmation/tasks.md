@@ -55,9 +55,9 @@
 
 ## 10. E2E — real GoTrue (`@auth-real`)
 
-- [ ] 10.1 In `src/__tests__/e2e/real/`, add a spec (tag `@auth-real`): sign up a fresh email → lands on `/verifique-email` (not `/login`), card visible, URL carries no email param.
-- [ ] 10.2 Same suite: logging in on that unconfirmed account with the CORRECT password shows the confirm-email state (`login-confirm-email`) and does NOT lock the account after repeated attempts; with a WRONG password returns the generic `invalid_credentials` (proves GoTrue validates password before `email_not_confirmed`, so no enumeration leak).
-- [ ] 10.3 Same suite: clicking resend on `/verifique-email` (anonymous) succeeds with generic copy.
+- [x] 10.1 In `src/__tests__/e2e/real/`, add a spec (tag `@auth-real`): sign up a fresh email → lands on `/verifique-email` (not `/login`), card visible, URL carries no email param.
+- [x] 10.2 Same suite: logging in on that unconfirmed account with the CORRECT password shows the confirm-email state (`login-confirm-email`) and does NOT lock the account after repeated attempts; with a WRONG password returns the generic `invalid_credentials` (proves GoTrue validates password before `email_not_confirmed`, so no enumeration leak).
+- [x] 10.3 Same suite: clicking resend on `/verifique-email` (anonymous) succeeds with generic copy.
 
 ## 11. Docs
 
