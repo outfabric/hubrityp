@@ -134,7 +134,8 @@ type PathClass =
 // independently of the `decide()` outcome — important for routes like
 // `/verifique-email` whose default-fallthrough and explicit classification both
 // resolve to `'public'`, where the only observable difference is the class
-// itself (e.g. proving `/verifique-emailx` is NOT the exact-match public route).
+// itself (e.g. proving a near-miss like `/verifique-email-x` is NOT the
+// exact-match public route).
 export function classifyPath(pathname: string): PathClass {
   if (pathname === CALLBACK_PATH || pathname.startsWith(`${CALLBACK_PATH}/`)) {
     return 'callback';
@@ -203,7 +204,7 @@ export function classifyPath(pathname: string): PathClass {
   // explicit `public` classification this would be... already public via the
   // default fallthrough, but we classify it explicitly so the page survives a
   // future refactor to default-deny. The strict exact-match (no prefix branch)
-  // rejects near-miss paths like `/verifique-emailx`.
+  // rejects near-miss paths like `/verifique-email-x`.
   if (pathname === '/verifique-email') {
     return 'public';
   }
