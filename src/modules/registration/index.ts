@@ -11,11 +11,10 @@
 // be transformed into an RPC stub by the Next.js compiler and the schema /
 // type / Client Component re-exports would break.
 //
-// The `'use server'` directives live on the route shells (`app/(auth)/signup/
-// actions.ts`, `app/(app)/onboarding/pending/actions.ts`) which import the
-// implementations from this barrel and re-export them as bona fide Server
-// Actions for the Next.js compiler. This mirrors the contract enforced by
-// `src/modules/auth/index.ts`.
+// The `'use server'` directives live on the route shells (e.g.
+// `app/(auth)/signup/actions.ts`) which import the implementations from this
+// barrel and re-export them as bona fide Server Actions for the Next.js
+// compiler. This mirrors the contract enforced by `src/modules/auth/index.ts`.
 //
 // Internal helpers NOT re-exported (intentional):
 //   - `server/log-auth-event.ts` — only consumed inside `server/**`; no caller
@@ -23,10 +22,6 @@
 
 // ---- Server Actions (delegated to by the route shells) -----------------------
 export { signUpImpl as signUp, type SignUpResult } from './server/sign-up';
-export {
-  resendVerificationEmailImpl as resendVerificationEmail,
-  type ResendVerificationResult,
-} from './server/resend-verification';
 export {
   resendPublicConfirmationImpl as resendPublicConfirmation,
   type ResendPublicResult,

@@ -190,9 +190,14 @@ export async function signInImpl(formData: FormData): Promise<SignInResult> {
           );
           break;
         }
-        case ProfileStatus.PendingVerification:
         case ProfileStatus.PendingCrpValidation: {
-          // Set keepLoggedIn cookie even for pending users
+          // With Supabase email confirmation enabled, a `pending_verification`
+          // user can never hold a session — GoTrue returns `email_not_confirmed`
+          // before the password check yields a session, so that status is
+          // handled by the Supabase-error path below (and the public
+          // `/verifique-email` page), never here. The only pending status that
+          // reaches this success arm is `pending_crp_validation`.
+          // Set keepLoggedIn cookie for the pending-CRP user
           const cookieStore = await cookies();
           setKeepLoggedInCookie(cookieStore, keepLoggedIn);
 

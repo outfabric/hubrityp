@@ -236,44 +236,39 @@ describe('signIn Server Action (integration)', () => {
   });
 
   describe('pending profile statuses', () => {
-    // Both pending statuses MUST route to `/onboarding/pending` regardless
-    // of any `redirectTo` the form forwarded. Letting `redirectTo` win for
-    // pending users would bypass the onboarding gate and surface a
-    // half-functional shell deeper in the app.
-    const pendingStatuses = [
-      { label: 'pending_verification', value: 'pending_verification' as const },
-      { label: 'pending_crp_validation', value: 'pending_crp_validation' as const },
-    ];
-
-    it.each(pendingStatuses)(
-      'redirects to /onboarding/pending when profile.status is $label',
-      async ({ value }) => {
-        signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
-        getCurrentProfileMock.mockResolvedValue({
-          userId: '00000000-0000-0000-0000-000000000001',
-          status: value,
-        });
-
-        const { signIn } = await import('@/app/(auth)/login/actions');
-
-        let caught: unknown = null;
-        try {
-          await signIn(buildFormData({ email: 'doctor@example.com', password: 'correct-horse' }));
-        } catch (err) {
-          caught = err;
-        }
-
-        expect(extractRedirectTarget(caught)).toBe('/onboarding/pending');
-        // Pending users keep their session — no signOut.
-        expect(signOutMock).not.toHaveBeenCalled();
-      },
-    );
-
-    it('ignores a same-origin redirectTo for pending_verification', async () => {
+    // `pending_crp_validation` is the only pending status that can reach the
+    // success-path switch. With Supabase email confirmation enabled a
+    // `pending_verification` user can never hold a session — GoTrue returns
+    // `email_not_confirmed` before a session exists — so that arm was removed.
+    // A confirmed-but-CRP-pending user MUST route to `/onboarding/pending`
+    // regardless of any `redirectTo`; letting `redirectTo` win would bypass
+    // the onboarding gate and surface a half-functional shell deeper in the app.
+    it('redirects to /onboarding/pending when profile.status is pending_crp_validation', async () => {
       signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
       getCurrentProfileMock.mockResolvedValue({
         userId: '00000000-0000-0000-0000-000000000001',
-        status: 'pending_verification',
+        status: 'pending_crp_validation',
+      });
+
+      const { signIn } = await import('@/app/(auth)/login/actions');
+
+      let caught: unknown = null;
+      try {
+        await signIn(buildFormData({ email: 'doctor@example.com', password: 'correct-horse' }));
+      } catch (err) {
+        caught = err;
+      }
+
+      expect(extractRedirectTarget(caught)).toBe('/onboarding/pending');
+      // Pending users keep their session — no signOut.
+      expect(signOutMock).not.toHaveBeenCalled();
+    });
+
+    it('ignores a same-origin redirectTo for pending_crp_validation', async () => {
+      signInWithPasswordMock.mockResolvedValue({ data: {}, error: null });
+      getCurrentProfileMock.mockResolvedValue({
+        userId: '00000000-0000-0000-0000-000000000001',
+        status: 'pending_crp_validation',
       });
 
       const { signIn } = await import('@/app/(auth)/login/actions');

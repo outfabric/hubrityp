@@ -1,28 +1,24 @@
 'use server';
 
-// Thin route shell for the `resendVerificationEmail` Server Action — used
-// from the `/auth/callback/error` page so the embedded
-// `<ResendVerificationButton/>` Client leaf can call it across the
-// `'use server'` boundary. Best-effort on this surface: a user arriving
-// here from an expired link may not have a session, in which case the
-// action returns `{ ok: false, error: 'invalid_status' }` and the button
-// renders a generic pt-BR fallback. Mirrors the wrapper pattern in
-// `src/app/(auth)/login/actions.ts`.
+// Thin route shell for the resend Server Action used from the
+// `/auth/callback/error` page so the embedded `<ResendVerificationButton/>`
+// Client leaf can call it across the `'use server'` boundary.
+//
+// This surface is session-less by nature: a user reaching the error page from
+// an expired/invalid confirmation link does not hold a session. With Supabase
+// email confirmation enabled, the old authenticated `resendVerificationEmail`
+// (which required a `pending_verification` session that can never exist) has
+// been removed. Resend is now handled exclusively by the public, enumeration-
+// safe `resendPublicConfirmation` action, which takes the target email only
+// from the verified `hp_pending_email` cookie and always returns the same
+// generic `{ ok: true }`. Mirrors the wrapper pattern in
+// `src/app/(auth)/verifique-email/actions.ts`.
 
 import {
-  resendVerificationEmail as resendVerificationEmailImpl,
-  type ResendVerificationResult,
+  resendPublicConfirmation as resendPublicConfirmationImpl,
+  type ResendPublicResult,
 } from '@/modules/registration';
 
-// Note: a `'use server'` file is treated by Next.js / Turbopack as a Server
-// Actions entry point. Every export — including type-only ones — is wired
-// up to the RPC stub layer, so a `export type { X }` re-export here breaks
-// the build with "export X doesn't exist in target module". Consumers that
-// need `ResendVerificationResult` must import it directly from
-// `@/modules/registration`. The function signature preserves the type
-// information through `Promise<ResendVerificationResult>`, which IS
-// allowed because TypeScript erases it before the Server Actions transform
-// runs.
-export async function resendVerificationEmail(): Promise<ResendVerificationResult> {
-  return resendVerificationEmailImpl();
+export async function resendVerificationEmail(): Promise<ResendPublicResult> {
+  return resendPublicConfirmationImpl();
 }

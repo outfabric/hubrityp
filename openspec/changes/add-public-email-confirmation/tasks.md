@@ -48,10 +48,10 @@
 
 ## 9. Pruning — remove dead `pending_verification`-with-session code
 
-- [ ] 9.1 Delete `src/modules/registration/server/resend-verification.ts` and its `'use server'` shell; remove its barrel export and the action wiring in `onboarding/pending/page.tsx`.
-- [ ] 9.2 Remove the `pending_verification` case from `src/app/(app)/onboarding/pending/page.tsx` and from `OnboardingPendingCard` (serve only `pending_crp_validation`); keep the `!profile → /login` and `active → /dashboard` guards. Add a brief comment noting unconfirmed users now live on the public `/verifique-email` page.
-- [ ] 9.3 Remove the `pending_verification` arm of the success-path switch in `login.ts` (remaining arm handles `pending_crp_validation` only).
-- [ ] 9.4 Delete unit/integration tests that assert the removed behavior (authenticated resend, `pending_verification` rendering, `pending_verification` login redirect). Update any signup/pending tests that referenced the old `/onboarding/pending` redirect to expect `/verifique-email`.
+- [x] 9.1 Delete `src/modules/registration/server/resend-verification.ts` and its `'use server'` shell; remove its barrel export and the action wiring in `onboarding/pending/page.tsx`.
+- [x] 9.2 Remove the `pending_verification` case from `src/app/(app)/onboarding/pending/page.tsx` and from `OnboardingPendingCard` (serve only `pending_crp_validation`); keep the `!profile → /login` and `active → /dashboard` guards. Add a brief comment noting unconfirmed users now live on the public `/verifique-email` page.
+- [x] 9.3 Remove the `pending_verification` arm of the success-path switch in `login.ts` (remaining arm handles `pending_crp_validation` only).
+- [x] 9.4 Delete unit/integration tests that assert the removed behavior (authenticated resend, `pending_verification` rendering, `pending_verification` login redirect). Update any signup/pending tests that referenced the old `/onboarding/pending` redirect to expect `/verifique-email`.
 
 ## 10. E2E — real GoTrue (`@auth-real`)
 
