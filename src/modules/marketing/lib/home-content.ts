@@ -17,10 +17,12 @@
 // so it is safe to import from server components and (where copy is needed) from
 // client leaves.
 
-// Type-only import: `PlanSlug` keys the curated `PRICING_SUMMARY.cards` map so a
-// card can never reference a slug that does not exist in the central `PLANS`
-// config. `plans.ts` does not import this module, so there is no import cycle.
-import type { PlanSlug } from '@/modules/marketing/lib/plans';
+// `PlanSlug` keys the curated `PRICING_SUMMARY.cards` map so a card can never
+// reference a slug that does not exist in the central `PLANS` config; the
+// runtime `planSlugSchema` brands the bare object keys back into `PlanSlug`
+// when building the card lookup `Map`. `plans.ts` does not import this module,
+// so there is no import cycle.
+import { planSlugSchema, type PlanSlug } from '@/modules/marketing/lib/plans';
 
 //
 // ---------------------------------------------------------------------------
@@ -517,8 +519,17 @@ export const TRUST = {
  * Taglines and the longer bullets carry an optional `mobile` override
  * ([[ResponsiveCopy]]); on the mobile breakpoint Figma condenses them.
  */
+export interface PricingSummaryCard {
+  readonly tagline: ResponsiveCopy;
+  readonly bullets: readonly ResponsiveCopy[];
+}
+
 export const PRICING_SUMMARY = {
+  /** Uppercase eyebrow rendered above the title (Label/caption-upper, brand-700). */
+  eyebrow: 'PLANOS',
   title: 'Simples. Sem surpresa.',
+  /** Primary CTA label rendered on every plan card. Points at `/signup`. */
+  ctaLabel: 'Começar grátis',
   microcopy: {
     desktop: '14 dias grátis para testar tudo. Sem cartão de crédito. Cancele quando quiser.',
     mobile: '14 dias grátis. Sem cartão. Cancele quando quiser.',
@@ -558,12 +569,39 @@ export const PRICING_SUMMARY = {
     },
   },
 } as const satisfies {
+  eyebrow: string;
   title: string;
+  ctaLabel: string;
   microcopy: ResponsiveCopy;
   fullPlansLinkLabel: string;
   fullPlansHref: string;
-  cards: Record<PlanSlug, { tagline: ResponsiveCopy; bullets: readonly ResponsiveCopy[] }>;
+  cards: Record<PlanSlug, PricingSummaryCard>;
 };
+
+/**
+ * `PRICING_SUMMARY.cards` indexed by the branded `PlanSlug`. A `Map` is used
+ * (rather than object indexing) because a plain object index signature does not
+ * play well with branded string keys — the same reason `plans.ts` keys its
+ * comparison matrix by a `Map<PlanSlug, …>`.
+ */
+const PRICING_SUMMARY_CARDS: ReadonlyMap<PlanSlug, PricingSummaryCard> = new Map(
+  Object.entries(PRICING_SUMMARY.cards).map(([slug, card]) => [planSlugSchema.parse(slug), card]),
+);
+
+/**
+ * Returns the curated `PRICING_SUMMARY` card for a plan slug. The lookup is
+ * total — every configured plan has a curated card, asserted by the unit test
+ * (`Object.keys(cards) === PLAN_SLUGS`) — so the entry is always present.
+ */
+export function pricingSummaryCardFor(slug: PlanSlug): PricingSummaryCard {
+  const card = PRICING_SUMMARY_CARDS.get(slug);
+  if (card === undefined) {
+    // Unreachable given the content/config invariant; throw rather than render a
+    // broken card if the two ever drift.
+    throw new Error(`No pricing-summary card configured for plan slug "${slug}"`);
+  }
+  return card;
+}
 
 // ---------------------------------------------------------------------------
 // 9. FAQ — 5 required MVP entries

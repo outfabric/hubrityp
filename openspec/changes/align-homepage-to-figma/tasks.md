@@ -57,10 +57,10 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 7. Preços resumo (desktop 124:2 / mobile 137:47)
 
-- [ ] 7.1 Align `precos-resumo.tsx`: "PLANOS" eyebrow + title `Display/lg`; 2 cards (`surface`, `radius-2xl`, `border`) with name (`Heading/h3`), price + "/mês" from `plans.ts`, tagline, curated bullet list (`brand-600` checks), per-card "Começar grátis" CTA; "Mais popular" badge on Avançado; side-by-side desktop / stacked mobile.
-- [ ] 7.2 Render the "Ver planos completos → /precos" link on BOTH breakpoints (confirmed — conversion path kept on mobile despite the frame omission).
-- [ ] 7.3 Update unit coverage: 2 cards reflect central config (R$60/R$90, badge), curated bullets render, per-card CTA present, no annual toggle.
-- [ ] 7.4 Acceptance: runtime screenshot + token diff at 1440 (vs `124:2`) and 375 (vs `137:47`).
+- [x] 7.1 Align `precos-resumo.tsx`: "PLANOS" eyebrow + title `Display/lg`; 2 cards (`surface`, `radius-2xl`, `border`) with name (`Heading/h3`), price + "/mês" from `plans.ts`, tagline, curated bullet list (`brand-600` checks), per-card "Começar grátis" CTA; "Mais popular" badge on Avançado; side-by-side desktop / stacked mobile.
+- [x] 7.2 Render the "Ver planos completos → /precos" link on BOTH breakpoints (confirmed — conversion path kept on mobile despite the frame omission).
+- [x] 7.3 Update unit coverage: 2 cards reflect central config (R$60/R$90, badge), curated bullets render, per-card CTA present, no annual toggle.
+- [x] 7.4 Acceptance: runtime screenshot + token diff at 1440 (vs `124:2`) and 375 (vs `137:47`).
 
 ## 8. FAQ (desktop 125:2 / mobile 138:2)
 
