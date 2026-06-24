@@ -156,9 +156,16 @@ export interface TrustItem {
   readonly text: string;
 }
 
-/** A regulatory guarantee in the confiança checklist. */
+/**
+ * A regulatory guarantee in the confiança checklist. The `text` is
+ * [[ResponsiveCopy]]: most guarantees render the same string at every width, but
+ * Figma condenses the AES-256/TLS-1.3 (item 6) and CRP-ativo (item 8) lines on
+ * the mobile breakpoint (`137:2`) relative to desktop (`123:2`). The rendering
+ * component shows `desktop` from `md` up and the condensed `mobile` below it,
+ * marking the hidden variant `aria-hidden` so assistive tech reads it once.
+ */
 export interface RegulatoryGuarantee {
-  readonly text: string;
+  readonly text: ResponsiveCopy;
 }
 
 /**
@@ -457,20 +464,38 @@ export const AI_HIGHLIGHT = {
 // ---------------------------------------------------------------------------
 
 export const TRUST = {
+  /** Uppercase eyebrow (Figma `123:2`/`137:2`, `Label/caption-upper`, `brand-700`). */
+  eyebrow: 'CONFORMIDADE & SEGURANÇA',
   title: 'Construído para o jeito que psicólogos brasileiros precisam trabalhar.',
-  /** Exactly 8 guarantees using the EXACT resolution numbers/years from the spec. */
+  /**
+   * Exactly 8 guarantees using the EXACT resolution numbers/years from the spec.
+   * Items 6 (AES-256/TLS 1.3) and 8 (CRP ativo) carry a condensed `mobile`
+   * variant that Figma uses below the `md` breakpoint; the literal regulatory
+   * codes/standards are preserved in both variants.
+   */
   guarantees: [
-    { text: 'Em conformidade com a Resolução CFP nº 001/2009.' },
-    { text: 'Em conformidade com a Resolução CFP nº 06/2019.' },
-    { text: 'Em conformidade com a Resolução CFP nº 09/2024.' },
-    { text: 'Em conformidade com a Res. CFP nº 13/2022.' },
-    { text: 'Dados em servidores no Brasil — São Paulo (LGPD).' },
-    { text: 'Criptografia AES-256 em repouso, TLS 1.3 em trânsito.' },
-    { text: 'Guarda de prontuário por 20 anos (Lei 13.787/2018).' },
-    { text: 'Somente psicólogos com CRP ativo podem criar conta.' },
+    { text: { desktop: 'Prontuário conforme a Resolução CFP nº 001/2009' } },
+    { text: { desktop: 'Documentos no padrão da Resolução CFP nº 06/2019' } },
+    { text: { desktop: 'Telepsicologia conforme a Resolução CFP nº 09/2024' } },
+    { text: { desktop: 'Gravação somente com consentimento (Res. CFP nº 13/2022)' } },
+    { text: { desktop: 'Dados em servidores no Brasil — São Paulo (LGPD)' } },
+    {
+      text: {
+        desktop: 'Criptografia AES-256 em repouso e TLS 1.3 em trânsito',
+        mobile: 'Criptografia AES-256 e TLS 1.3',
+      },
+    },
+    { text: { desktop: 'Guarda de prontuário por 20 anos (Lei 13.787/2018)' } },
+    {
+      text: {
+        desktop: 'Somente psicólogos com CRP ativo podem criar conta',
+        mobile: 'Somente psicólogos com CRP ativo criam conta',
+      },
+    },
   ],
   closer: 'Você foca no paciente. A burocracia regulatória é problema nosso.',
 } as const satisfies {
+  eyebrow: string;
   title: string;
   guarantees: readonly RegulatoryGuarantee[];
   closer: string;

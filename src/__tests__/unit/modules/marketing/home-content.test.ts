@@ -16,6 +16,7 @@ import {
   FINAL_CTA,
   SCREENSHOTS,
   HERO_CAROUSEL_SLIDES,
+  type RegulatoryGuarantee,
   type ScreenshotKey,
 } from '@/modules/marketing/lib/home-content';
 import { PLAN_SLUGS } from '@/modules/marketing/lib/plans';
@@ -78,8 +79,9 @@ function allHomeCopy(): string {
     AI_HIGHLIGHT.afterLabel,
     ...AI_HIGHLIGHT.trustItems,
     AI_HIGHLIGHT.cta.label,
+    TRUST.eyebrow,
     TRUST.title,
-    ...TRUST.guarantees.map((g) => g.text),
+    ...TRUST.guarantees.flatMap((g: RegulatoryGuarantee) => [g.text.desktop, g.text.mobile ?? '']),
     TRUST.closer,
     PRICING_SUMMARY.title,
     PRICING_SUMMARY.microcopy.desktop,
@@ -156,10 +158,26 @@ describe('home-content — feature cards', () => {
 
 describe('home-content — regulatory guarantees (exact codes)', () => {
   it('contains every required literal regulatory code/year', () => {
-    const trustText = TRUST.guarantees.map((g) => g.text).join(' ');
+    const trustText = TRUST.guarantees
+      .flatMap((g: RegulatoryGuarantee) => [g.text.desktop, g.text.mobile ?? ''])
+      .join(' ');
     for (const code of REQUIRED_REGULATORY_CODES) {
       expect(trustText).toContain(code);
     }
+  });
+
+  it('exposes the CONFORMIDADE & SEGURANÇA eyebrow above the trust title', () => {
+    expect(TRUST.eyebrow).toBe('CONFORMIDADE & SEGURANÇA');
+  });
+
+  it('condenses only the AES-256/TLS-1.3 and CRP-ativo guarantees on mobile', () => {
+    const mobileVariants = TRUST.guarantees
+      .map((g: RegulatoryGuarantee) => g.text.mobile)
+      .filter((m): m is string => m !== undefined);
+    expect(mobileVariants).toEqual([
+      'Criptografia AES-256 e TLS 1.3',
+      'Somente psicólogos com CRP ativo criam conta',
+    ]);
   });
 });
 

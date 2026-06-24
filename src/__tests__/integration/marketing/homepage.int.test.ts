@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { PLANS, TRUST } from '@/modules/marketing';
+import { PLANS, TRUST, type RegulatoryGuarantee } from '@/modules/marketing';
 
 /*
  * Integration coverage (11.2) for the public homepage (`/`) assembly.
@@ -117,8 +117,13 @@ describe('homepage sources content from the central configs', () => {
   it('renders all eight regulatory guarantee codes verbatim', async () => {
     const html = await renderHomepage();
     expect(TRUST.guarantees).toHaveLength(8);
-    for (const { text } of TRUST.guarantees) {
-      expect(html, `regulatory guarantee missing: ${text}`).toContain(text);
+    // Each guarantee renders both its desktop and (where present) condensed
+    // mobile variant; the server-rendered HTML carries both, so assert both.
+    for (const { text } of TRUST.guarantees as readonly RegulatoryGuarantee[]) {
+      expect(html, `regulatory guarantee missing: ${text.desktop}`).toContain(text.desktop);
+      if (text.mobile) {
+        expect(html, `condensed guarantee missing: ${text.mobile}`).toContain(text.mobile);
+      }
     }
   });
 
@@ -128,7 +133,7 @@ describe('homepage sources content from the central configs', () => {
     'Resolução CFP nº 09/2024',
     'Res. CFP nº 13/2022',
     'São Paulo (LGPD)',
-    'AES-256 em repouso, TLS 1.3 em trânsito',
+    'AES-256 em repouso e TLS 1.3 em trânsito',
     'Lei 13.787/2018',
     'CRP ativo',
   ])('contains the regulatory literal "%s"', async (literal) => {

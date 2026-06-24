@@ -50,10 +50,10 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 6. Confiança (desktop 123:2 / mobile 137:2)
 
-- [ ] 6.1 Update `TRUST` to the Figma guarantee strings (exact codes preserved) + (Q1) mobile-condensed items 6 & 8; add the "CONFORMIDADE & SEGURANÇA" eyebrow. (design D1/D2)
-- [ ] 6.2 Align `confianca.tsx`: eyebrow `Label/caption-upper` `brand-700`; title `Display/md`; 8-guarantee panel (`surface`, `radius-2xl`, `border`, `Shadow/Light/xs`) 2-col desktop / 1-col mobile; checks `brand-700`; closer line.
-- [ ] 6.3 Update `home-content.test.ts` keeping the regulatory-code assertions (001/2009, 06/2019, 09/2024, 13/2022, AES-256, TLS 1.3, 13.787/2018, CRP ativo) and MVP denylist green.
-- [ ] 6.4 Acceptance: runtime screenshot + token diff at 1440 (vs `123:2`) and 375 (vs `137:2`); assert all 8 literal codes present.
+- [x] 6.1 Update `TRUST` to the Figma guarantee strings (exact codes preserved) + (Q1) mobile-condensed items 6 & 8; add the "CONFORMIDADE & SEGURANÇA" eyebrow. (design D1/D2)
+- [x] 6.2 Align `confianca.tsx`: eyebrow `Label/caption-upper` `brand-700`; title `Display/md`; 8-guarantee panel (`surface`, `radius-2xl`, `border`, `Shadow/Light/xs`) 2-col desktop / 1-col mobile; checks `brand-700`; closer line.
+- [x] 6.3 Update `home-content.test.ts` keeping the regulatory-code assertions (001/2009, 06/2019, 09/2024, 13/2022, AES-256, TLS 1.3, 13.787/2018, CRP ativo) and MVP denylist green.
+- [x] 6.4 Acceptance: runtime screenshot + token diff at 1440 (vs `123:2`) and 375 (vs `137:2`); assert all 8 literal codes present.
 
 ## 7. Preços resumo (desktop 124:2 / mobile 137:47)
 
