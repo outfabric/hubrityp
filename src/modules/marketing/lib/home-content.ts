@@ -117,16 +117,22 @@ export interface SocialProofStat {
  *  the rendering component maps the name to the actual icon component. */
 export type LucideIconName = string;
 
-/** One step in the solução value-cycle timeline. */
+/**
+ * One step in the solução value-cycle timeline. Both `title` and `description`
+ * are [[ResponsiveCopy]]: Figma condenses each on the mobile breakpoint
+ * (`135:42`) relative to desktop (`116:2`). The rendering component shows the
+ * desktop "PASSO 0N" marker only from `md` up and inline-numbers the step
+ * (`N.`) below it.
+ */
 export interface SolutionStep {
-  /** 1-based position used for the ordered timeline. */
+  /** 1-based position used for the ordered timeline and the inline mobile number. */
   readonly order: number;
   /** Lucide icon name rendered inside the `brand/50` chip. */
   readonly icon: LucideIconName;
-  /** Short step title. */
-  readonly title: string;
-  /** One-line explanation. */
-  readonly description: string;
+  /** Step title, with a condensed mobile variant. */
+  readonly title: ResponsiveCopy;
+  /** One-line explanation, with a condensed mobile variant. */
+  readonly description: ResponsiveCopy;
 }
 
 /** A funcionalidades feature card (MVP-only). */
@@ -280,42 +286,75 @@ export const PROBLEM = {
 // 4. Solução timeline — 6 connected steps
 // ---------------------------------------------------------------------------
 
+// Section title + subtitle carry a `mobile` override ([[ResponsiveCopy]]): the
+// desktop heading (Figma `116:2`, `Display/lg`) is condensed on mobile (`135:42`)
+// and the `Lead` subtitle is desktop-only (Figma drops it on mobile, so it stays
+// `hidden md:block` at the component layer).
+export const SOLUTION_TITLE = {
+  desktop: 'Tudo que o consultório precisa, num só lugar que conversa consigo mesmo.',
+  mobile: 'Tudo num só lugar que conversa consigo mesmo.',
+} as const satisfies ResponsiveCopy;
+
+export const SOLUTION_SUBTITLE =
+  'Cada módulo entrega para o próximo. Você faz uma vez; o sistema cuida do resto.';
+
 export const SOLUTION_STEPS: ReadonlyArray<SolutionStep> = [
   {
     order: 1,
     icon: 'UserPlus',
-    title: 'Paciente cadastrado',
-    description: 'Cadastre o paciente uma vez e tenha tudo num só lugar.',
+    title: { desktop: 'Paciente cadastrado' },
+    description: {
+      desktop: 'Cadastro completo, com termo de consentimento digital.',
+      mobile: 'com termo de consentimento digital.',
+    },
   },
   {
     order: 2,
     icon: 'CalendarPlus',
-    title: 'Sessão agendada',
-    description: 'Agende presencial, online ou híbrido em poucos cliques.',
+    title: { desktop: 'Sessão agendada' },
+    description: {
+      desktop: 'Marque na agenda — recorrência em 1 clique.',
+      mobile: 'recorrência em 1 clique.',
+    },
   },
   {
     order: 3,
     icon: 'MessageCircle',
-    title: 'Lembrete WhatsApp + confirmação 1-clique',
-    description: 'O sistema lembra o paciente e ele confirma com um toque.',
+    title: { desktop: 'Lembrete no WhatsApp' },
+    description: {
+      desktop: 'Enviado sozinho. O paciente confirma com um toque.',
+      mobile: 'o paciente confirma num toque.',
+    },
   },
   {
     order: 4,
     icon: 'Video',
-    title: 'Videochamada integrada',
-    description: 'Atenda online sem links que expiram nem app extra.',
+    title: { desktop: 'Videochamada integrada' },
+    description: {
+      desktop: 'Sala criada na hora. Ninguém instala nada.',
+      mobile: 'ninguém instala nada.',
+    },
   },
   {
     order: 5,
     icon: 'Sparkles',
-    title: 'Sessão finalizada → IA transcreve e gera evolução',
-    description: 'A IA transcreve o áudio e redige a evolução para você revisar.',
+    title: {
+      desktop: 'IA transcreve e escreve',
+      mobile: 'IA escreve a evolução',
+    },
+    description: {
+      desktop: 'A sessão termina e a evolução chega pronta.',
+      mobile: 'você só revisa.',
+    },
   },
   {
     order: 6,
     icon: 'ShieldCheck',
-    title: 'Prontuário salvo, CFP cumprido',
-    description: 'O registro fica guardado com segurança e dentro das normas.',
+    title: { desktop: 'Prontuário salvo' },
+    description: {
+      desktop: 'Você revisa, salva e o CFP está cumprido.',
+      mobile: 'CFP cumprido.',
+    },
   },
 ] as const;
 

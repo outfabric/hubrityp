@@ -42,11 +42,11 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 5. Solução (desktop 116:2 / mobile 135:42)
 
-- [ ] 5.1 Update `SOLUTION_STEPS` titles/descriptions to the Figma copy; add desktop "PASSO 0N" markers and (Q1) the condensed mobile step copy + inline "N." numbering. (design D1/D2)
-- [ ] 5.2 Align `solucao-timeline.tsx`: horizontal 6-column flow desktop (markers `Label/caption-upper` ls6, icon chip `brand-700`/`brand-50` `radius-lg`, title, one-line) + title `Display/lg` & `Lead` subtitle; vertical stacked mobile with inline numbering; preserve scroll fade-in.
-- [ ] 5.3 Hide the "De ponta a ponta — sem sair do sistema." closer on mobile (`hidden md:block`); keep on desktop. (confirmed)
-- [ ] 5.4 Update unit coverage for 6 steps, markers/numbering per breakpoint, and the closer-visibility rule.
-- [ ] 5.5 Acceptance: runtime screenshot + token diff at 1440 (vs `116:2`) and 375 (vs `135:42`).
+- [x] 5.1 Update `SOLUTION_STEPS` titles/descriptions to the Figma copy; add desktop "PASSO 0N" markers and (Q1) the condensed mobile step copy + inline "N." numbering. (design D1/D2)
+- [x] 5.2 Align `solucao-timeline.tsx`: horizontal 6-column flow desktop (markers `Label/caption-upper` ls6, icon chip `brand-700`/`brand-50` `radius-lg`, title, one-line) + title `Display/lg` & `Lead` subtitle; vertical stacked mobile with inline numbering; preserve scroll fade-in.
+- [x] 5.3 Hide the "De ponta a ponta — sem sair do sistema." closer on mobile (`hidden md:block`); keep on desktop. (confirmed)
+- [x] 5.4 Update unit coverage for 6 steps, markers/numbering per breakpoint, and the closer-visibility rule.
+- [x] 5.5 Acceptance: runtime screenshot + token diff at 1440 (vs `116:2`) and 375 (vs `135:42`).
 
 ## 6. Confiança (desktop 123:2 / mobile 137:2)
 

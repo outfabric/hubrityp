@@ -4,13 +4,21 @@
 // --------------------------------------------------------------------------
 // Presents the six connected steps that take a patient from "cadastrado" to
 // "prontuário salvo, CFP cumprido", followed by the closer line. The data is
-// owned by `SOLUTION_STEPS` / `SOLUTION_CLOSER` in `home-content.ts`; the unit
-// test asserts the count, order and closer wording.
+// owned by `SOLUTION_STEPS` / `SOLUTION_CLOSER` (plus `SOLUTION_TITLE` /
+// `SOLUTION_SUBTITLE`) in `home-content.ts`; the unit test asserts the count,
+// order, per-breakpoint markers/numbering and the closer-visibility rule.
 //
-// Layout: a horizontal timeline on desktop (steps in a row, connected by a
-// horizontal line) and a vertical timeline on mobile (steps stacked, connected
-// by a vertical line). Each step renders its Lucide icon (`brand/700`) inside a
-// `brand/50` chip and a one-line explanation.
+// Layout (Figma desktop `116:2` / mobile `135:42`):
+//   - Desktop (`md` and up): a horizontal 6-column flow. Each step carries an
+//     uppercase "PASSO 0N" marker (`Label/caption-upper`, 12/16, ls 6), the icon
+//     chip (`brand/700` glyph in a `brand/50` chip, `radius-lg`), the step title
+//     (`desktop` copy) and a one-line explanation. The section heading renders in
+//     `Display/lg` with the `Lead` subtitle below it, and the closer line shows.
+//   - Mobile (below `md`): a vertical stack. Each step is inline-numbered ("N.")
+//     instead of the "PASSO" marker, uses the condensed `mobile` title/copy, the
+//     condensed section heading, NO subtitle and NO closer line.
+//
+// Each step renders its Lucide icon (`brand/700`) inside a `brand/50` chip.
 //
 // Design decision D5 — scroll fade-in, reduced-motion-guarded:
 //   The fade-in is a progressive enhancement, never a gate on visibility. The
@@ -39,6 +47,8 @@ import { Container } from '@/modules/marketing/components/container';
 import {
   SOLUTION_CLOSER,
   SOLUTION_STEPS,
+  SOLUTION_SUBTITLE,
+  SOLUTION_TITLE,
   type LucideIconName,
 } from '@/modules/marketing/lib/home-content';
 import { cn } from '@/shared/lib/utils';
@@ -125,20 +135,38 @@ export function SolucaoTimeline(): React.JSX.Element {
   return (
     <section aria-labelledby="solucao-title" className="py-16 md:py-24">
       <Container className="flex flex-col items-center gap-10 text-center">
-        <h2 id="solucao-title" className="text-display-md text-text-primary text-balance">
-          Um fluxo, do começo ao fim
-        </h2>
+        <div className="flex flex-col items-center gap-4">
+          {/* Section heading: condensed `mobile` string below `md`, full
+              `desktop` string from `md` up. The hidden variant is `aria-hidden`
+              so assistive tech reads the title exactly once. */}
+          <h2
+            id="solucao-title"
+            className="text-display-lg text-text-primary max-w-3xl text-balance"
+          >
+            <span className="md:hidden" aria-hidden="true">
+              {SOLUTION_TITLE.mobile}
+            </span>
+            <span className="hidden md:inline">{SOLUTION_TITLE.desktop}</span>
+          </h2>
 
-        {/* Horizontal on md+ (row, horizontal connector), vertical on mobile
-            (column, vertical connector). The connector is a pseudo-style border
-            on each item except the last. */}
+          {/* Lead subtitle — desktop only (Figma drops it on mobile). */}
+          <p className="text-lead text-text-secondary hidden max-w-2xl text-pretty md:block">
+            {SOLUTION_SUBTITLE}
+          </p>
+        </div>
+
+        {/* Horizontal 6-column flow on md+; vertical stack on mobile. The
+            connector is an absolutely-positioned line on each item except the
+            last. */}
         <ol
           ref={listRef}
-          className="flex w-full max-w-5xl flex-col gap-8 md:flex-row md:items-start md:gap-0"
+          className="flex w-full max-w-6xl flex-col gap-8 md:grid md:grid-cols-6 md:gap-0"
         >
           {SOLUTION_STEPS.map((step, index) => {
             const Icon = resolveIcon(step.icon);
             const isLast = index === SOLUTION_STEPS.length - 1;
+            // Desktop marker "PASSO 01" … "PASSO 06" (zero-padded for orders 1–9).
+            const marker = `Passo ${String(step.order).padStart(2, '0')}`;
 
             return (
               <li
@@ -146,7 +174,7 @@ export function SolucaoTimeline(): React.JSX.Element {
                 data-fade-item
                 data-fade-visible={fadeInActive ? 'false' : undefined}
                 className={cn(
-                  'relative flex flex-1 items-start gap-4 md:flex-col md:items-center md:gap-3 md:text-center',
+                  'relative flex items-start gap-4 md:flex-col md:items-center md:gap-3 md:px-2 md:text-center',
                   // Fade-in is purely additive. Default = full opacity. When the
                   // enhancement is active each item starts hidden+offset and the
                   // observer flips data-fade-visible to slide it in. The
@@ -175,18 +203,34 @@ export function SolucaoTimeline(): React.JSX.Element {
                   />
                 ) : null}
 
-                {/* Step chip: brand/50 background, brand/700 icon. Stays above
-                    the connector lines. */}
-                <span className="bg-brand-50 text-brand-700 relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full">
+                {/* Step chip: brand/50 background, brand/700 icon, radius-lg.
+                    Stays above the connector lines. */}
+                <span className="bg-brand-50 text-brand-700 relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-lg">
                   <Icon aria-hidden="true" className="size-5" />
                 </span>
 
                 <div className="flex flex-col gap-1 md:items-center">
+                  {/* Desktop-only "PASSO 0N" marker (Label/caption-upper). */}
+                  <span className="text-text-tertiary hidden text-xs font-medium tracking-[0.06em] uppercase md:block">
+                    {marker}
+                  </span>
+
+                  {/* Step title: inline-numbered "N." on mobile, condensed copy
+                      below `md` and the full `desktop` copy from `md` up. The
+                      hidden variant is `aria-hidden` to avoid double reading. */}
                   <h3 className="text-text-primary text-base font-semibold text-balance">
-                    {step.title}
+                    <span className="md:hidden" aria-hidden="true">
+                      {step.order}. {step.title.mobile ?? step.title.desktop}
+                    </span>
+                    <span className="hidden md:inline">{step.title.desktop}</span>
                   </h3>
+
+                  {/* One-line explanation: condensed below `md`, full from `md` up. */}
                   <p className="text-text-secondary max-w-[16rem] text-sm text-pretty">
-                    {step.description}
+                    <span className="md:hidden" aria-hidden="true">
+                      {step.description.mobile ?? step.description.desktop}
+                    </span>
+                    <span className="hidden md:inline">{step.description.desktop}</span>
                   </p>
                 </div>
               </li>
@@ -194,7 +238,8 @@ export function SolucaoTimeline(): React.JSX.Element {
           })}
         </ol>
 
-        <p className="text-lead text-text-primary max-w-2xl font-medium text-pretty">
+        {/* Closing line — desktop only (Figma drops it on mobile). */}
+        <p className="text-lead text-text-primary hidden max-w-2xl font-medium text-pretty md:block">
           {SOLUTION_CLOSER}
         </p>
       </Container>
