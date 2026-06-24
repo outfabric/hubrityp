@@ -2,6 +2,7 @@
 
 - [Figma sources of truth](reference_figma_sources.md) — DS "Sálvia" file HoLOEqq9PXlo6IwLkz3FQ9 (public pages/chrome/tokens) + Brand file 4O3POARuvEYI1BCrxbOFg2 (tricolor logomark variants)
 - [Public pages: Figma is the only truth](feedback_public_pages_figma_source.md) — public-site built from obsolete handoff doc, drifted from live Figma; user declared handoff obsolete 2026-06-19, match live frames + flag AA/placeholder/LGPD-copy items
+- [Capture runtime screenshots myself via playwright-cli](feedback_runtime_screenshots_self_playwright_cli.md) — for Figma-vs-app visual verification I bring up the app + screenshot via playwright-cli skill myself, not via qa-tester agent
 
 - [E2E shared-seed session slot collision](feedback_e2e_shared_seed_session_slot_collision.md) — two seeded specs scheduling SAME seed patient at SAME tomorrow slot race detectConflicts under fullyParallel; loser → conflict_warning, modal stays open, toBeHidden fails
 - [E2E patient phone unique collision](feedback_e2e_patient_phone_unique_collision.md) — seeded specs creating a patients row must use a phone unused by every spec + the CSV import fixture; patients.phone UNIQUE + fullyParallel → "Já existe um paciente com este telefone" + waitForURL timeout that survives retries (looks deterministic, is a number collision)
