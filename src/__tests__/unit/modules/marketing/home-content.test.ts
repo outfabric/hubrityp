@@ -47,11 +47,14 @@ const POST_MVP_FORBIDDEN = [
 function allHomeCopy(): string {
   const parts: string[] = [
     HERO.badge,
-    HERO.headline,
-    HERO.subheadline,
+    HERO.headline.desktop,
+    HERO.headline.mobile ?? '',
+    HERO.subheadline.desktop,
+    HERO.subheadline.mobile ?? '',
     HERO.primaryCta.label,
     HERO.secondaryCta.label,
-    HERO.microcopy,
+    HERO.microcopy.desktop,
+    HERO.microcopy.mobile ?? '',
     ...SOCIAL_PROOF_STATS.map((s) => s.text),
     PROBLEM.title,
     ...PROBLEM.items,
@@ -163,6 +166,30 @@ describe('home-content — CTA targets', () => {
 
   it('pricing summary links to /precos', () => {
     expect(PRICING_SUMMARY.fullPlansHref).toBe('/precos');
+  });
+});
+
+describe('home-content — hero copy (Figma 108:2 / 133:14)', () => {
+  it('carries the desktop headline/subheadline/microcopy strings', () => {
+    expect(HERO.headline.desktop).toBe('De 10 ferramentas espalhadas a um só sistema clínico.');
+    expect(HERO.subheadline.desktop).toBe(
+      'Agenda, prontuário, videochamada, lembretes automáticos no WhatsApp e uma IA que transcreve a sessão e escreve a evolução — tudo em conformidade com o CFP e a LGPD.',
+    );
+    expect(HERO.microcopy.desktop).toBe('Sem cartão de crédito. Cancele quando quiser.');
+  });
+
+  it('condenses the headline/subheadline/microcopy on mobile', () => {
+    expect(HERO.headline.mobile).toBe('De 10 ferramentas a um só sistema clínico.');
+    expect(HERO.subheadline.mobile).toBe(
+      'Agenda, prontuário, vídeo, WhatsApp automático e uma IA que escreve a evolução — em conformidade com o CFP e a LGPD.',
+    );
+    expect(HERO.microcopy.mobile).toBe('Sem cartão. Cancele quando quiser.');
+  });
+
+  it('keeps the badge and CTA labels constant across breakpoints', () => {
+    expect(HERO.badge).toBe('Feito para psicólogos autônomos');
+    expect(HERO.primaryCta.label).toBe('Começar grátis — 14 dias');
+    expect(HERO.secondaryCta.label).toBe('Ver funcionalidades');
   });
 });
 

@@ -68,12 +68,14 @@ test.describe('public homepage — navigation flows', () => {
     expect(response?.status()).toBe(200);
     expect(new URL(page.url()).pathname).toBe('/');
 
-    // Hero renders: the badge and the single <h1> headline are visible.
+    // Hero renders: the badge and the single <h1> headline are visible. At the
+    // desktop viewport the condensed mobile headline variant is `display:none`,
+    // so the accessible name is the desktop string only.
     await expect(hero(page).getByText('Feito para psicólogos autônomos')).toBeVisible();
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: 'Muitas ferramentas viram um único sistema clínico.',
+        name: 'De 10 ferramentas espalhadas a um só sistema clínico.',
       }),
     ).toBeVisible();
 

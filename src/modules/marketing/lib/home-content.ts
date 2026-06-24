@@ -158,21 +158,37 @@ export interface FaqEntry {
 // 1. Hero
 // ---------------------------------------------------------------------------
 
+// Headline, subheadline and microcopy carry a `mobile` override ([[ResponsiveCopy]]):
+// Figma frame `108:2` (desktop) and `133:14` (mobile) condense them. The Hero
+// renders both variants and toggles with Tailwind (`hidden md:block` /
+// `md:hidden`), marking the inactive one `aria-hidden` so assistive tech reads
+// each string once. The badge and CTAs are identical across breakpoints, so they
+// stay plain strings / `HomeCta`.
 export const HERO = {
   badge: 'Feito para psicólogos autônomos',
-  headline: 'Muitas ferramentas viram um único sistema clínico.',
-  subheadline:
-    'Agenda, prontuário, videochamada, WhatsApp automatizado e uma IA que transcreve e escreve a evolução para você — em conformidade com o CFP e a LGPD.',
+  headline: {
+    desktop: 'De 10 ferramentas espalhadas a um só sistema clínico.',
+    mobile: 'De 10 ferramentas a um só sistema clínico.',
+  },
+  subheadline: {
+    desktop:
+      'Agenda, prontuário, videochamada, lembretes automáticos no WhatsApp e uma IA que transcreve a sessão e escreve a evolução — tudo em conformidade com o CFP e a LGPD.',
+    mobile:
+      'Agenda, prontuário, vídeo, WhatsApp automático e uma IA que escreve a evolução — em conformidade com o CFP e a LGPD.',
+  },
   primaryCta: { label: 'Começar grátis — 14 dias', href: '/signup' },
   secondaryCta: { label: 'Ver funcionalidades', href: '#funcionalidades' },
-  microcopy: 'Sem cartão de crédito. Cancele quando quiser.',
+  microcopy: {
+    desktop: 'Sem cartão de crédito. Cancele quando quiser.',
+    mobile: 'Sem cartão. Cancele quando quiser.',
+  },
 } as const satisfies {
   badge: string;
-  headline: string;
-  subheadline: string;
+  headline: ResponsiveCopy;
+  subheadline: ResponsiveCopy;
   primaryCta: HomeCta;
   secondaryCta: HomeCta;
-  microcopy: string;
+  microcopy: ResponsiveCopy;
 };
 
 // ---------------------------------------------------------------------------

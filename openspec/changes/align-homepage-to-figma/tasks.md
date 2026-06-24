@@ -20,11 +20,11 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 2. Hero (desktop 108:2 / mobile 133:14)
 
-- [ ] 2.1 Update `HERO` copy to the Figma strings (desktop headline/subheadline/microcopy) and, if Q1 approved, the condensed mobile variants. (design D1/D2)
-- [ ] 2.2 Restructure `hero.tsx` to a SINGLE CENTERED COLUMN (remove the current `lg:flex-row` two-column / `lg:text-left` layout): copy block centered at top, carousel BELOW it. Reposition `ScreenshotCarousel` from the right-hand visual column to a full-content-width centered block under the copy (desktop ≈1160px, mobile 343px), preserving the first-slide LCP `priority`. Slide content/order unchanged.
-- [ ] 2.3 Align the copy block tokens: badge pill (`Label/caption`, brand accent, `radius-full`); headline `Display/xl` desktop / `Display/md` mobile; subheadline `Lead` / `Body/lg`; CTAs side-by-side centered desktop (244×48 / 200×48) vs full-width stacked mobile (343×48); microcopy.
-- [ ] 2.4 Update unit coverage (`home-content.test.ts` + any hero render test) for the new copy, the desktop/mobile variant rendering (`aria-hidden` on the inactive variant), and the carousel-below-copy single-column layout (no two-column arrangement).
-- [ ] 2.5 Acceptance: runtime screenshot + token diff at 1440 (vs `108:2`) and 375 (vs `133:14`), explicitly confirming the carousel sits BELOW a centered copy block (not beside it); CTAs preserve UTMs → `/signup`; "Ver funcionalidades" → `#funcionalidades`.
+- [x] 2.1 Update `HERO` copy to the Figma strings (desktop headline/subheadline/microcopy) and, if Q1 approved, the condensed mobile variants. (design D1/D2)
+- [x] 2.2 Restructure `hero.tsx` to a SINGLE CENTERED COLUMN (remove the current `lg:flex-row` two-column / `lg:text-left` layout): copy block centered at top, carousel BELOW it. Reposition `ScreenshotCarousel` from the right-hand visual column to a full-content-width centered block under the copy (desktop ≈1160px, mobile 343px), preserving the first-slide LCP `priority`. Slide content/order unchanged.
+- [x] 2.3 Align the copy block tokens: badge pill (`Label/caption`, brand accent, `radius-full`); headline `Display/xl` desktop / `Display/md` mobile; subheadline `Lead` / `Body/lg`; CTAs side-by-side centered desktop (244×48 / 200×48) vs full-width stacked mobile (343×48); microcopy.
+- [x] 2.4 Update unit coverage (`home-content.test.ts` + any hero render test) for the new copy, the desktop/mobile variant rendering (`aria-hidden` on the inactive variant), and the carousel-below-copy single-column layout (no two-column arrangement).
+- [x] 2.5 Acceptance: runtime screenshot + token diff at 1440 (vs `108:2`) and 375 (vs `133:14`), explicitly confirming the carousel sits BELOW a centered copy block (not beside it); CTAs preserve UTMs → `/signup`; "Ver funcionalidades" → `#funcionalidades`.
 
 ## 3. Prova social (desktop 113:2 / mobile 135:2)
 
