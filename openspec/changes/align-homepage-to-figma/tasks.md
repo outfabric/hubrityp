@@ -28,10 +28,10 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 3. Prova social (desktop 113:2 / mobile 135:2)
 
-- [ ] 3.1 Rework `SOCIAL_PROOF_STATS` into two figure+caption stat blocks ("até 5h/semana" / "40–60%" + captions); no fabricated testimonials. (design D1)
-- [ ] 3.2 Align `prova-social.tsx`: figures `Display/md` (`text-primary`), captions `Body/base` (`text-secondary`); side-by-side with 1px `border-strong` divider on `surface-muted` desktop, stacked no-divider mobile.
-- [ ] 3.3 Update unit coverage for the two stat blocks (figure + caption) and the no-testimonial invariant.
-- [ ] 3.4 Acceptance: runtime screenshot + token diff at 1440 (vs `113:2`) and 375 (vs `135:2`).
+- [x] 3.1 Rework `SOCIAL_PROOF_STATS` into two figure+caption stat blocks ("até 5h/semana" / "40–60%" + captions); no fabricated testimonials. (design D1)
+- [x] 3.2 Align `prova-social.tsx`: figures `Display/md` (`text-primary`), captions `Body/base` (`text-secondary`); side-by-side with 1px `border-strong` divider on `surface-muted` desktop, stacked no-divider mobile.
+- [x] 3.3 Update unit coverage for the two stat blocks (figure + caption) and the no-testimonial invariant.
+- [x] 3.4 Acceptance: runtime screenshot + token diff at 1440 (vs `113:2`) and 375 (vs `135:2`).
 
 ## 4. Problema (desktop 114:2 / mobile 135:9)
 

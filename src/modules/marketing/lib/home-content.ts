@@ -101,9 +101,16 @@ export interface HomeCta {
   readonly href: string;
 }
 
-/** A single market-data statistic shown in the prova-social bar. */
+/**
+ * A single market-data statistic shown in the prova-social bar, modeled as a
+ * large `figure` over a supporting `caption` (Figma `113:2` / `135:2`). These are
+ * reviewed market data points — NOT fabricated testimonials or invented metrics.
+ */
 export interface SocialProofStat {
-  readonly text: string;
+  /** Large headline figure rendered in `Display/md` (e.g. "até 5h/semana"). */
+  readonly figure: string;
+  /** Supporting caption rendered in `Body/base` below the figure. */
+  readonly caption: string;
 }
 
 /** A Lucide icon name. Kept as a string so this data module stays dependency-free;
@@ -197,9 +204,13 @@ export const HERO = {
 
 export const SOCIAL_PROOF_STATS: ReadonlyArray<SocialProofStat> = [
   {
-    text: 'Psicólogos gastam até 5 horas por semana com burocracia que o sistema resolve em minutos.',
+    figure: 'até 5h/semana',
+    caption: 'gastas com burocracia que o sistema resolve em minutos',
   },
-  { text: '40–60% das sessões hoje são online ou híbridas.' },
+  {
+    figure: '40–60%',
+    caption: 'das sessões hoje já são online ou híbridas no Brasil',
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------

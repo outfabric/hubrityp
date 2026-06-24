@@ -55,7 +55,7 @@ function allHomeCopy(): string {
     HERO.secondaryCta.label,
     HERO.microcopy.desktop,
     HERO.microcopy.mobile ?? '',
-    ...SOCIAL_PROOF_STATS.map((s) => s.text),
+    ...SOCIAL_PROOF_STATS.flatMap((s) => [s.figure, s.caption]),
     PROBLEM.title,
     ...PROBLEM.items,
     PROBLEM.closer,
