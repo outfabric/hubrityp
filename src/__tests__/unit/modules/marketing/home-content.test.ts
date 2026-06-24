@@ -16,6 +16,7 @@ import {
   HERO_CAROUSEL_SLIDES,
   type ScreenshotKey,
 } from '@/modules/marketing/lib/home-content';
+import { PLAN_SLUGS } from '@/modules/marketing/lib/plans';
 
 // The literal regulatory codes/years/standards the confiança section MUST contain
 // verbatim. A typo here is a compliance bug, so they are asserted as exact strings.
@@ -68,8 +69,14 @@ function allHomeCopy(): string {
     ...TRUST.guarantees.map((g) => g.text),
     TRUST.closer,
     PRICING_SUMMARY.title,
-    PRICING_SUMMARY.microcopy,
+    PRICING_SUMMARY.microcopy.desktop,
+    PRICING_SUMMARY.microcopy.mobile ?? '',
     PRICING_SUMMARY.fullPlansLinkLabel,
+    ...[PRICING_SUMMARY.cards.essencial, PRICING_SUMMARY.cards.avancado].flatMap((card) => [
+      card.tagline.desktop,
+      'mobile' in card.tagline ? card.tagline.mobile : '',
+      ...card.bullets.flatMap((b) => [b.desktop, 'mobile' in b ? b.mobile : '']),
+    ]),
     ...FAQ_ENTRIES.flatMap((f) => [f.question, f.answer]),
     FINAL_CTA.title,
     FINAL_CTA.cta.label,
@@ -156,6 +163,51 @@ describe('home-content — CTA targets', () => {
 
   it('pricing summary links to /precos', () => {
     expect(PRICING_SUMMARY.fullPlansHref).toBe('/precos');
+  });
+});
+
+describe('home-content — pricing summary cards (design D4)', () => {
+  it('has a curated card for every plan slug and no extra ones', () => {
+    expect(Object.keys(PRICING_SUMMARY.cards).sort()).toEqual([...PLAN_SLUGS].sort());
+  });
+
+  it('carries the spec taglines (desktop + condensed mobile where Figma differs)', () => {
+    expect(PRICING_SUMMARY.cards.essencial.tagline.desktop).toBe(
+      'Para começar com o essencial do consultório.',
+    );
+    expect(PRICING_SUMMARY.cards.essencial.tagline.mobile).toBe('O núcleo clínico do consultório.');
+    // Avançado tagline is short enough that Figma does not condense it: the
+    // `mobile` override is absent (the desktop string renders at every width).
+    expect(PRICING_SUMMARY.cards.avancado.tagline.desktop).toBe(
+      'Tudo do Essencial + automação e IA.',
+    );
+    expect('mobile' in PRICING_SUMMARY.cards.avancado.tagline).toBe(false);
+  });
+
+  it('lists the spec summary bullets in order with the condensed mobile overrides', () => {
+    expect(PRICING_SUMMARY.cards.essencial.bullets.map((b) => b.desktop)).toEqual([
+      'Agenda, pacientes e prontuário',
+      'Telepsicologia integrada',
+      'Documentos CFP e escalas clínicas',
+      'Dashboard operacional',
+    ]);
+    expect(PRICING_SUMMARY.cards.essencial.bullets[2]?.mobile).toBe('Documentos CFP e escalas');
+
+    expect(PRICING_SUMMARY.cards.avancado.bullets.map((b) => b.desktop)).toEqual([
+      'Tudo do Essencial',
+      'Lembretes automáticos no WhatsApp',
+      'Transcrição e nota com IA',
+    ]);
+    expect(PRICING_SUMMARY.cards.avancado.bullets[1]?.mobile).toBe('Lembretes no WhatsApp');
+  });
+
+  it('condenses the reassurance microcopy on mobile', () => {
+    expect(PRICING_SUMMARY.microcopy.desktop).toBe(
+      '14 dias grátis para testar tudo. Sem cartão de crédito. Cancele quando quiser.',
+    );
+    expect(PRICING_SUMMARY.microcopy.mobile).toBe(
+      '14 dias grátis. Sem cartão. Cancele quando quiser.',
+    );
   });
 });
 

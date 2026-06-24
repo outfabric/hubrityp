@@ -14,9 +14,9 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 1. Prep (content model + token audit)
 
-- [ ] 1.1 Audit every `var(--ds-*)` and type token read from the 17 frames against `src/app/globals.css` / Tailwind theme; produce a token-map note. Any frame token with no matching DS token is FLAGGED (not hardcoded). (design D3)
-- [ ] 1.2 Extend `home-content.ts` types to carry optional `mobile` copy overrides only on fields Figma condenses (helper or `{ desktop; mobile? }` shape), keeping the module pure/typed. (design D2 — confirmed)
-- [ ] 1.3 Add curated Preços per-card summary bullets + taglines to `PRICING_SUMMARY` in `home-content.ts` (price/name/badge stay sourced from `plans.ts`). (design D4)
+- [x] 1.1 Audit every `var(--ds-*)` and type token read from the 17 frames against `src/app/globals.css` / Tailwind theme; produce a token-map note. Any frame token with no matching DS token is FLAGGED (not hardcoded). (design D3)
+- [x] 1.2 Extend `home-content.ts` types to carry optional `mobile` copy overrides only on fields Figma condenses (helper or `{ desktop; mobile? }` shape), keeping the module pure/typed. (design D2 — confirmed)
+- [x] 1.3 Add curated Preços per-card summary bullets + taglines to `PRICING_SUMMARY` in `home-content.ts` (price/name/badge stay sourced from `plans.ts`). (design D4)
 
 ## 2. Hero (desktop 108:2 / mobile 133:14)
 

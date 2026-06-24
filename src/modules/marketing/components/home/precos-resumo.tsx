@@ -71,7 +71,11 @@ export function PrecosResumo(): React.JSX.Element {
           ))}
         </ul>
 
-        <p className="text-text-secondary max-w-2xl text-pretty">{PRICING_SUMMARY.microcopy}</p>
+        {/* Responsive desktop/mobile toggle is wired in the later UI section;
+            for now render the canonical desktop copy to keep the teaser intact. */}
+        <p className="text-text-secondary max-w-2xl text-pretty">
+          {PRICING_SUMMARY.microcopy.desktop}
+        </p>
 
         <Link
           href={PRICING_SUMMARY.fullPlansHref}

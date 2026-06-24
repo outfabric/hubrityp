@@ -17,6 +17,82 @@
 // so it is safe to import from server components and (where copy is needed) from
 // client leaves.
 
+// Type-only import: `PlanSlug` keys the curated `PRICING_SUMMARY.cards` map so a
+// card can never reference a slug that does not exist in the central `PLANS`
+// config. `plans.ts` does not import this module, so there is no import cycle.
+import type { PlanSlug } from '@/modules/marketing/lib/plans';
+
+//
+// ---------------------------------------------------------------------------
+// Token map (design decision D3 — audited 1:1 against `src/app/globals.css`)
+// ---------------------------------------------------------------------------
+// Every Figma `var(--ds-X)` referenced by the 17 homepage frames maps to an
+// EXISTING DS token (no value was invented). This note is the audit record; the
+// rendering components read these via Tailwind utilities.
+//
+//   Color (Figma → DS `--ds-*` → Tailwind utility):
+//     brand-50  #f2f5f1 → --ds-brand-50  → bg/text/border-brand-50
+//     brand-100 #e1e8de → --ds-brand-100 → -brand-100
+//     brand-200 #c2d1bc → --ds-brand-200 → -brand-200
+//     brand-400 #7e9e78 → --ds-brand-400 → -brand-400
+//     brand-600 #587355 → --ds-brand-600 → -brand-600
+//     brand-700 #475d45 → --ds-brand-700 → -brand-700
+//     text-primary   #1c1917 → --ds-text-primary   → text-text-primary
+//     text-secondary #57534e → --ds-text-secondary → text-text-secondary
+//     text-tertiary  #78716c → --ds-text-tertiary  → text-text-tertiary
+//     text-inverse   #fafaf9 → --ds-text-inverse   → text-text-inverse
+//     background     #fafaf9 → --ds-background      → bg-background
+//     surface        #ffffff → --ds-surface         → bg-surface
+//     surface-muted  #f5f5f4 → --ds-surface-muted   → bg-surface-muted
+//     surface-sunken #f0efec → --ds-surface-sunken  → bg-surface-sunken
+//     border         #e7e5e4 → --ds-border          → border-border
+//     border-subtle  #efedeb → --ds-border-subtle   → border-border-subtle
+//     border-strong  #d6d3d1 → --ds-border-strong   → border-border-strong
+//
+//   Type (Figma → DS):
+//     Display/xl 52/56 (-0.5) → text-display-xl (DS utility)
+//     Display/lg 40/46 (-0.4) → text-display-lg (DS utility)
+//     Display/md 32/40 (-0.2) → text-display-md (DS utility)
+//     Lead       20/30        → text-lead       (DS utility)
+//     Heading/h2 22/28, Heading/h3 18/24, Heading/h4 16/22, Body/lg 17/28,
+//     Body/base 15/22, Body/sm 13/20, Label/caption 12/16 (ls 0),
+//     Label/caption-upper 12/16 (ls 6) → no dedicated DS utility; composed at
+//     the component layer from base Tailwind size/leading/tracking utilities
+//     (e.g. h2 = text-[22px]/[28px], caption-upper adds tracking-[0.06em]).
+//     All Inter, weight <= 600 (DS weight rule). No type token is FLAGGED — each
+//     has an exact size/line-height/tracking from the spec legend.
+//
+//   Spacing (px → DS, base 4): 4→space-1, 8→space-2, 12→space-3, 16→space-4,
+//     20→space-5, 24→space-6, 32→space-8, 40→space-10, 48→space-12, 64→space-16,
+//     96→space-24 (all present in `--ds-space-*`).
+//
+//   Radius (Figma → DS): lg 10 → --ds-radius-lg (rounded-lg), xl 12 →
+//     --ds-radius-xl (rounded-xl), 2xl 16 → --ds-radius-2xl (rounded-2xl),
+//     full 9999 → --ds-radius-full (rounded-full).
+//
+//   FLAGGED (no matching DS token): none. Every audited frame token resolves to
+//   an existing DS color/space/radius token or a spec-exact type composition.
+//   If a later frame introduces a value with no DS match, STOP and flag it here
+//   rather than hardcoding the raw value.
+
+/**
+ * Copy that Figma condenses on the mobile breakpoint. When `mobile` is present,
+ * the rendering component shows `desktop` from the `md` breakpoint up
+ * (`hidden md:block`) and `mobile` below it (`md:hidden`), marking the hidden
+ * variant `aria-hidden` so assistive tech reads the string once. When `mobile`
+ * is absent the single `desktop` string is rendered at every breakpoint.
+ *
+ * Design decision D2: only the fields Figma actually condenses carry an override;
+ * every other field stays a plain `string`, so the content module remains pure
+ * and fully typed with no speculative branching.
+ */
+export interface ResponsiveCopy {
+  /** Default copy, shown from the `md` breakpoint up (and below it when no `mobile`). */
+  readonly desktop: string;
+  /** Condensed copy shown below the `md` breakpoint. Omit when it equals `desktop`. */
+  readonly mobile?: string;
+}
+
 /** A call-to-action link used across hero / destaque-IA / CTA-final sections. */
 export interface HomeCta {
   /** Visible button label (pt-BR). */
@@ -292,16 +368,64 @@ export const TRUST = {
 // 8. Preços resumo (strings only — prices come from `plans.ts` central config)
 // ---------------------------------------------------------------------------
 
+/**
+ * Per-card curated marketing copy for the homepage Preços teaser (design
+ * decision D4). The price, plan name and the "Mais popular" badge stay sourced
+ * from the central `PLANS` config in `plans.ts` — this map only carries the
+ * curated tagline + summary bullets, which are marketing summaries (not the
+ * verbatim RF-14.27 feature labels). Keyed by `PlanSlug` so the rendering
+ * component looks each card up by `plan.slug` and the two sources can never
+ * drift apart.
+ *
+ * Taglines and the longer bullets carry an optional `mobile` override
+ * ([[ResponsiveCopy]]); on the mobile breakpoint Figma condenses them.
+ */
 export const PRICING_SUMMARY = {
   title: 'Simples. Sem surpresa.',
-  microcopy: '14 dias grátis para testar tudo. Sem cartão de crédito. Cancele quando quiser.',
+  microcopy: {
+    desktop: '14 dias grátis para testar tudo. Sem cartão de crédito. Cancele quando quiser.',
+    mobile: '14 dias grátis. Sem cartão. Cancele quando quiser.',
+  },
   fullPlansLinkLabel: 'Ver planos completos →',
   fullPlansHref: '/precos',
+  /**
+   * Curated summary per plan slug. `bullets` are short marketing summaries (the
+   * 1-clique feature highlights), NOT the verbatim RF-14.27 comparison labels.
+   */
+  cards: {
+    essencial: {
+      tagline: {
+        desktop: 'Para começar com o essencial do consultório.',
+        mobile: 'O núcleo clínico do consultório.',
+      },
+      bullets: [
+        { desktop: 'Agenda, pacientes e prontuário' },
+        { desktop: 'Telepsicologia integrada' },
+        {
+          desktop: 'Documentos CFP e escalas clínicas',
+          mobile: 'Documentos CFP e escalas',
+        },
+        { desktop: 'Dashboard operacional' },
+      ],
+    },
+    avancado: {
+      tagline: { desktop: 'Tudo do Essencial + automação e IA.' },
+      bullets: [
+        { desktop: 'Tudo do Essencial' },
+        {
+          desktop: 'Lembretes automáticos no WhatsApp',
+          mobile: 'Lembretes no WhatsApp',
+        },
+        { desktop: 'Transcrição e nota com IA' },
+      ],
+    },
+  },
 } as const satisfies {
   title: string;
-  microcopy: string;
+  microcopy: ResponsiveCopy;
   fullPlansLinkLabel: string;
   fullPlansHref: string;
+  cards: Record<PlanSlug, { tagline: ResponsiveCopy; bullets: readonly ResponsiveCopy[] }>;
 };
 
 // ---------------------------------------------------------------------------
