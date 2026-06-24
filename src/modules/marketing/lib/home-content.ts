@@ -155,6 +155,19 @@ export interface RegulatoryGuarantee {
   readonly text: string;
 }
 
+/**
+ * One mirror item in the Problema section — an icon chip plus a one-line label.
+ * The label is [[ResponsiveCopy]]: Figma condenses each line on mobile
+ * (`135:9`), so the rendering component shows the `desktop` string from the `md`
+ * breakpoint up and the condensed `mobile` string below it.
+ */
+export interface ProblemItem {
+  /** Lucide icon name rendered inside the `surface-sunken` / `brand` chip. */
+  readonly icon: LucideIconName;
+  /** One-line label, with a condensed mobile variant. */
+  readonly label: ResponsiveCopy;
+}
+
 /** A FAQ entry rendered as a native `<details>/<summary>` item. */
 export interface FaqEntry {
   readonly question: string;
@@ -219,16 +232,49 @@ export const SOCIAL_PROOF_STATS: ReadonlyArray<SocialProofStat> = [
 
 export const PROBLEM = {
   title: 'Você ainda faz isso?',
-  /** Exactly 5 short mirror items. */
+  /**
+   * Exactly 5 mirror items (Figma desktop `114:2` / mobile `135:9`). Each is an
+   * icon chip + a one-line label; the label condenses on mobile.
+   */
   items: [
-    'Manda lembrete de sessão no WhatsApp, um por um, na mão.',
-    'Escreve a evolução no Word ou em um caderno.',
-    'Controla a agenda no Google Agenda.',
-    'Atende no Google Meet com link que expira.',
-    'Guarda os pacientes em uma planilha de Excel.',
+    {
+      icon: 'MessageCircle',
+      label: {
+        desktop: 'Manda lembrete de sessão pelo WhatsApp na mão, uma a uma',
+        mobile: 'Lembrete pelo WhatsApp, na mão',
+      },
+    },
+    {
+      icon: 'FileText',
+      label: {
+        desktop: 'Registra a evolução no Word — ou no caderno',
+        mobile: 'Evolução no Word ou no caderno',
+      },
+    },
+    {
+      icon: 'Calendar',
+      label: {
+        desktop: 'Gerencia a agenda no Google Agenda',
+        mobile: 'Agenda no Google Agenda',
+      },
+    },
+    {
+      icon: 'Video',
+      label: {
+        desktop: 'Abre o Google Meet com um link que sempre expira',
+        mobile: 'Google Meet com link que expira',
+      },
+    },
+    {
+      icon: 'Table',
+      label: {
+        desktop: 'Controla os pacientes numa planilha de Excel',
+        mobile: 'Pacientes numa planilha de Excel',
+      },
+    },
   ],
   closer: 'Não é falta de organização. É excesso de ferramentas que nunca foram feitas para você.',
-} as const satisfies { title: string; items: readonly string[]; closer: string };
+} as const satisfies { title: string; items: readonly ProblemItem[]; closer: string };
 
 // ---------------------------------------------------------------------------
 // 4. Solução timeline — 6 connected steps

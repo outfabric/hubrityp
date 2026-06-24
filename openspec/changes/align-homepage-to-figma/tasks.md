@@ -35,10 +35,10 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 4. Problema (desktop 114:2 / mobile 135:9)
 
-- [ ] 4.1 Update `PROBLEM` items to the Figma desktop strings + (Q1) condensed mobile strings; keep exactly 5 items + recognition closer. (design D1/D2)
-- [ ] 4.2 Align `problema.tsx`: title `Display/lg`; 5 rows each an icon chip (40×40 desktop / 36×36 mobile) + one-line label; closer line.
-- [ ] 4.3 Update unit coverage for the 5 items (desktop + mobile variants) and the closer.
-- [ ] 4.4 Acceptance: runtime screenshot + token diff at 1440 (vs `114:2`) and 375 (vs `135:9`).
+- [x] 4.1 Update `PROBLEM` items to the Figma desktop strings + (Q1) condensed mobile strings; keep exactly 5 items + recognition closer. (design D1/D2)
+- [x] 4.2 Align `problema.tsx`: title `Display/lg`; 5 rows each an icon chip (40×40 desktop / 36×36 mobile) + one-line label; closer line.
+- [x] 4.3 Update unit coverage for the 5 items (desktop + mobile variants) and the closer.
+- [x] 4.4 Acceptance: runtime screenshot + token diff at 1440 (vs `114:2`) and 375 (vs `135:9`).
 
 ## 5. Solução (desktop 116:2 / mobile 135:42)
 

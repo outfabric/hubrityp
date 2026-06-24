@@ -13,7 +13,8 @@ import { PROBLEM, SOCIAL_PROOF_STATS } from '@/modules/marketing/lib/home-conten
  *   - ProvaSocial renders the two reviewed market-data stat blocks (each a
  *     figure + a supporting caption) and contains NO fabricated testimonials
  *     (no quoted endorsements, no named people, no star/rating language);
- *   - Problema renders the title, exactly 5 mirror items, and the recognition
+ *   - Problema renders the title, exactly 5 mirror items (each with its desktop
+ *     and condensed mobile label variant rendered), and the recognition
  *     (not judgment) closer.
  */
 
@@ -58,9 +59,18 @@ describe('Problema — mirror section', () => {
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(5);
     expect(items).toHaveLength(PROBLEM.items.length);
+  });
+
+  it('renders both the desktop and condensed mobile label for every item', () => {
+    render(<Problema />);
 
     for (const item of PROBLEM.items) {
-      expect(screen.getByText(item)).toBeInTheDocument();
+      // Desktop label (visible from `md` up).
+      expect(screen.getByText(item.label.desktop)).toBeInTheDocument();
+      // Condensed mobile label (the `aria-hidden` variant shown below `md`).
+      // Each mobile string differs from its desktop counterpart, so a plain
+      // `getByText` uniquely resolves it.
+      expect(screen.getByText(item.label.mobile as string)).toBeInTheDocument();
     }
   });
 
