@@ -152,9 +152,9 @@ describe('billing FAQ', () => {
   });
 
   it('covers cobrança, cancelamento, fim do teste/downgrade and nota fiscal', () => {
-    const haystack = BILLING_FAQ_ENTRIES.map((e) => `${e.question} ${e.answer}`.toLowerCase()).join(
-      '\n',
-    );
+    const haystack = BILLING_FAQ_ENTRIES.map((e) =>
+      `${e.question.desktop} ${e.answer.desktop}`.toLowerCase(),
+    ).join('\n');
     expect(haystack).toContain('mensal'); // cobrança
     expect(haystack).toContain('cancel'); // cancelamento
     expect(haystack).toContain('downgrade'); // fim do teste / downgrade
@@ -164,16 +164,16 @@ describe('billing FAQ', () => {
 
   it('mentions Asaas as the payment provider for the nota fiscal answer (D5 framing)', () => {
     const notaFiscalEntry = BILLING_FAQ_ENTRIES.find((e) =>
-      e.answer.toLowerCase().includes('nota fiscal'),
+      e.answer.desktop.toLowerCase().includes('nota fiscal'),
     );
     expect(notaFiscalEntry).toBeDefined();
-    expect(notaFiscalEntry?.answer.toLowerCase()).toContain('asaas');
+    expect(notaFiscalEntry?.answer.desktop.toLowerCase()).toContain('asaas');
   });
 
   it('every entry has a non-empty question and answer', () => {
     for (const entry of BILLING_FAQ_ENTRIES) {
-      expect(entry.question.trim().length).toBeGreaterThan(0);
-      expect(entry.answer.trim().length).toBeGreaterThan(0);
+      expect(entry.question.desktop.trim().length).toBeGreaterThan(0);
+      expect(entry.answer.desktop.trim().length).toBeGreaterThan(0);
     }
   });
 });

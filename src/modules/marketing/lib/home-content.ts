@@ -183,10 +183,19 @@ export interface ProblemItem {
   readonly label: ResponsiveCopy;
 }
 
-/** A FAQ entry rendered as a native `<details>/<summary>` item. */
+/**
+ * A FAQ entry rendered as a native `<details>/<summary>` item. Both `question`
+ * and `answer` are [[ResponsiveCopy]]: the homepage FAQ condenses several
+ * questions and the AES-256/TLS-1.3 answer on the mobile breakpoint (Figma
+ * `138:2`) relative to desktop (`125:2`). Surfaces that do not condense (the
+ * pricing-page billing FAQ) simply omit `mobile`, so the single `desktop` string
+ * renders at every breakpoint. The rendering `FaqAccordion` shows `desktop` from
+ * the `md` breakpoint up and the condensed `mobile` below it, marking the hidden
+ * variant `aria-hidden` so assistive tech reads each string once.
+ */
 export interface FaqEntry {
-  readonly question: string;
-  readonly answer: string;
+  readonly question: ResponsiveCopy;
+  readonly answer: ResponsiveCopy;
 }
 
 // ---------------------------------------------------------------------------
@@ -607,31 +616,67 @@ export function pricingSummaryCardFor(slug: PlanSlug): PricingSummaryCard {
 // 9. FAQ — 5 required MVP entries
 // ---------------------------------------------------------------------------
 
+/**
+ * Uppercase eyebrow above the FAQ title — DESKTOP ONLY (Figma `125:2`,
+ * `Label/caption-upper` 12/16 ls 6, `brand-700`). The mobile frame (`138:2`)
+ * shows the title with NO eyebrow, so the rendering `Faq` passes this only as the
+ * desktop-gated `hidden md:block` eyebrow.
+ */
+export const FAQ_EYEBROW = 'PERGUNTAS FREQUENTES';
+
+/** FAQ section title (Figma `125:2`/`138:2`, `Display/md` 32/40). */
+export const FAQ_TITLE = 'Ainda em dúvida? Comece por aqui.';
+
+// The 5 required MVP questions. Several condense on the mobile breakpoint
+// ([[ResponsiveCopy]]): Figma `138:2` shortens questions 2/4/5 and replaces the
+// long AES-256/TLS-1.3 answer of Q1 with a condensed line. Questions 1 and 3 and
+// every other answer are identical across breakpoints, so they omit `mobile`.
 export const FAQ_ENTRIES: ReadonlyArray<FaqEntry> = [
   {
-    question: 'Meus dados de paciente ficam seguros?',
-    answer:
-      'Sim. Seus dados ficam em servidores no Brasil (São Paulo), com criptografia AES-256, e seguem a LGPD. Você, psicóloga, é a controladora dos dados; nós somos apenas operadores que processam por sua conta.',
+    question: { desktop: 'Meus dados de paciente ficam seguros?' },
+    answer: {
+      desktop:
+        'Sim. Os dados ficam em servidores no Brasil (São Paulo), com criptografia AES-256 em repouso e TLS 1.3 em trânsito. Você é a controladora dos dados; nós atuamos apenas como operadores, conforme a LGPD.',
+      mobile:
+        'Servidores no Brasil (São Paulo), AES-256 e TLS 1.3. Você é a controladora; nós, operadores, conforme a LGPD.',
+    },
   },
   {
-    question: 'Funciona para atendimento presencial também?',
-    answer:
-      'Sim. O sistema atende presencial, online e híbrido. Para a evolução com IA no presencial, basta fazer o upload do áudio da sessão.',
+    question: {
+      desktop: 'Funciona para atendimento presencial também?',
+      mobile: 'Funciona para presencial também?',
+    },
+    answer: {
+      desktop:
+        'Sim. O sistema atende presencial, online e híbrido. Para a evolução com IA no presencial, basta fazer o upload do áudio da sessão.',
+    },
   },
   {
-    question: 'Preciso cancelar o Google Agenda?',
-    answer:
-      'Não. Você importa seus pacientes por CSV e migra no seu próprio ritmo, sem precisar abandonar suas ferramentas de uma vez.',
+    question: { desktop: 'Preciso cancelar o Google Agenda?' },
+    answer: {
+      desktop:
+        'Não. Você importa seus pacientes por CSV e migra no seu próprio ritmo, sem precisar abandonar suas ferramentas de uma vez.',
+    },
   },
   {
-    question: 'A IA vai errar e inventar conteúdo?',
-    answer:
-      'A IA gera uma sugestão sempre editável. Nada é salvo no prontuário sem a sua revisão — você tem a palavra final em cada evolução.',
+    question: {
+      desktop: 'A IA vai errar e inventar conteúdo?',
+      mobile: 'A IA inventa conteúdo?',
+    },
+    answer: {
+      desktop:
+        'A IA gera uma sugestão sempre editável. Nada é salvo no prontuário sem a sua revisão — você tem a palavra final em cada evolução.',
+    },
   },
   {
-    question: 'Quanto custa depois do período grátis?',
-    answer:
-      'O plano Essencial sai por R$ 60/mês e o Avançado por R$ 90/mês, cobrados mensalmente. Veja todos os detalhes em /precos.',
+    question: {
+      desktop: 'Quanto custa depois do período grátis?',
+      mobile: 'Quanto custa depois do teste?',
+    },
+    answer: {
+      desktop:
+        'O plano Essencial sai por R$ 60/mês e o Avançado por R$ 90/mês, cobrados mensalmente. Veja todos os detalhes em /precos.',
+    },
   },
 ] as const;
 

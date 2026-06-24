@@ -180,7 +180,9 @@ describe('pricing page sources content from the central configs', () => {
     const { BILLING_FAQ_ENTRIES } = await import('@/modules/marketing');
     expect(BILLING_FAQ_ENTRIES.length).toBeGreaterThanOrEqual(3);
     for (const { question } of BILLING_FAQ_ENTRIES) {
-      expect(html, `billing FAQ question missing: ${question}`).toContain(question);
+      // `question` is ResponsiveCopy; the billing FAQ has no mobile override so
+      // the desktop string is what renders in the SSR markup.
+      expect(html, `billing FAQ question missing: ${question.desktop}`).toContain(question.desktop);
     }
   });
 });

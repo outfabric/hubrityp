@@ -12,6 +12,8 @@ import {
   AI_HIGHLIGHT,
   TRUST,
   PRICING_SUMMARY,
+  FAQ_EYEBROW,
+  FAQ_TITLE,
   FAQ_ENTRIES,
   FINAL_CTA,
   SCREENSHOTS,
@@ -92,7 +94,12 @@ function allHomeCopy(): string {
       'mobile' in card.tagline ? card.tagline.mobile : '',
       ...card.bullets.flatMap((b) => [b.desktop, 'mobile' in b ? b.mobile : '']),
     ]),
-    ...FAQ_ENTRIES.flatMap((f) => [f.question, f.answer]),
+    ...FAQ_ENTRIES.flatMap((f) => [
+      f.question.desktop,
+      f.question.mobile ?? '',
+      f.answer.desktop,
+      f.answer.mobile ?? '',
+    ]),
     FINAL_CTA.title,
     FINAL_CTA.cta.label,
     FINAL_CTA.microcopy,
@@ -125,6 +132,49 @@ describe('home-content — list cardinalities', () => {
   it('exposes 2 prova-social stats and 4 AI trust items', () => {
     expect(SOCIAL_PROOF_STATS).toHaveLength(2);
     expect(AI_HIGHLIGHT.trustItems).toHaveLength(4);
+  });
+});
+
+describe('home-content — FAQ copy (Figma 125:2 desktop / 138:2 mobile)', () => {
+  it('uses the aligned title and desktop-only eyebrow', () => {
+    expect(FAQ_TITLE).toBe('Ainda em dúvida? Comece por aqui.');
+    expect(FAQ_EYEBROW).toBe('PERGUNTAS FREQUENTES');
+  });
+
+  it('keeps the 5 required questions with their condensed mobile variants', () => {
+    expect(FAQ_ENTRIES.map((f) => f.question.desktop)).toEqual([
+      'Meus dados de paciente ficam seguros?',
+      'Funciona para atendimento presencial também?',
+      'Preciso cancelar o Google Agenda?',
+      'A IA vai errar e inventar conteúdo?',
+      'Quanto custa depois do período grátis?',
+    ]);
+    // Questions 2/4/5 condense on mobile; 1 and 3 stay identical (no override).
+    expect(FAQ_ENTRIES.map((f) => f.question.mobile)).toEqual([
+      undefined,
+      'Funciona para presencial também?',
+      undefined,
+      'A IA inventa conteúdo?',
+      'Quanto custa depois do teste?',
+    ]);
+  });
+
+  it('aligns the Q1 answer to the verbatim 125:2 desktop string + condensed 138:2 mobile', () => {
+    expect(FAQ_ENTRIES[0]?.answer.desktop).toBe(
+      'Sim. Os dados ficam em servidores no Brasil (São Paulo), com criptografia AES-256 em repouso e TLS 1.3 em trânsito. Você é a controladora dos dados; nós atuamos apenas como operadores, conforme a LGPD.',
+    );
+    expect(FAQ_ENTRIES[0]?.answer.mobile).toBe(
+      'Servidores no Brasil (São Paulo), AES-256 e TLS 1.3. Você é a controladora; nós, operadores, conforme a LGPD.',
+    );
+  });
+
+  it('keeps the answer angles for questions 2–5 (both breakpoints)', () => {
+    // (2) presencial: sim + upload do áudio; (3) não + CSV/ritmo; (4) sugestão
+    // editável, nada salvo sem revisão; (5) valores + link para /precos.
+    expect(FAQ_ENTRIES[1]?.answer.desktop).toContain('upload do áudio');
+    expect(FAQ_ENTRIES[2]?.answer.desktop).toContain('CSV');
+    expect(FAQ_ENTRIES[3]?.answer.desktop).toContain('editável');
+    expect(FAQ_ENTRIES[4]?.answer.desktop).toContain('/precos');
   });
 });
 

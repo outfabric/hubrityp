@@ -64,10 +64,10 @@ both breakpoints; Solução closer hidden on mobile; FAQ mobile frame is `138:2`
 
 ## 8. FAQ (desktop 125:2 / mobile 138:2)
 
-- [ ] 8.1 Add the desktop-only "PERGUNTAS FREQUENTES" eyebrow + title "Ainda em dúvida? Comece por aqui."; align the desktop Q1 answer to the verbatim `125:2` string and add the condensed mobile question/answer variants from `138:2` (Q1 answer "Servidores no Brasil (São Paulo), AES-256 e TLS 1.3. Você é a controladora; nós, operadores, conforme a LGPD."; "Funciona para presencial também?"; "A IA inventa conteúdo?"; "Quanto custa depois do teste?"); keep the 5 required questions. (design D1/D2)
-- [ ] 8.2 Align `faq.tsx`/`faq-accordion.tsx`: eyebrow `Label/caption-upper` (desktop only, `hidden md:block`); title `Display/md`; items `surface`/`radius-xl`/`border`, question `Body/lg` desktop / `Body/base`–`Heading-h4` mobile, open item `brand-200` border; preserve exclusive accordion + no-JS open fallback.
-- [ ] 8.3 Update unit coverage for the title, desktop-only eyebrow, the 5 questions (desktop + condensed mobile variants), exclusive accordion, and the token states per breakpoint.
-- [ ] 8.4 Acceptance: runtime screenshot + token diff at 1440 (vs `125:2`) and 375 (vs `138:2`).
+- [x] 8.1 Add the desktop-only "PERGUNTAS FREQUENTES" eyebrow + title "Ainda em dúvida? Comece por aqui."; align the desktop Q1 answer to the verbatim `125:2` string and add the condensed mobile question/answer variants from `138:2` (Q1 answer "Servidores no Brasil (São Paulo), AES-256 e TLS 1.3. Você é a controladora; nós, operadores, conforme a LGPD."; "Funciona para presencial também?"; "A IA inventa conteúdo?"; "Quanto custa depois do teste?"); keep the 5 required questions. (design D1/D2)
+- [x] 8.2 Align `faq.tsx`/`faq-accordion.tsx`: eyebrow `Label/caption-upper` (desktop only, `hidden md:block`); title `Display/md`; items `surface`/`radius-xl`/`border`, question `Body/lg` desktop / `Body/base`–`Heading-h4` mobile, open item `brand-200` border; preserve exclusive accordion + no-JS open fallback.
+- [x] 8.3 Update unit coverage for the title, desktop-only eyebrow, the 5 questions (desktop + condensed mobile variants), exclusive accordion, and the token states per breakpoint.
+- [x] 8.4 Acceptance: runtime screenshot + token diff at 1440 (vs `125:2`) and 375 (vs `138:2`).
 
 ## 9. Footer (desktop 126:7 / mobile 138:36)
 
