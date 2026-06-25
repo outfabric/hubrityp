@@ -208,6 +208,7 @@ pseudonymize
 pseudonymized
 pseudonymizes
 anonymization
+upscaling
 upsert
 upserts
 upserted
