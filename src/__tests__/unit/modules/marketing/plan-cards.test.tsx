@@ -155,8 +155,8 @@ describe('PlanCards — empty-plans fallback', () => {
 
     // The contact fallback message + support email (a mailto link).
     expect(screen.getByText('Entre em contato para saber mais')).toBeInTheDocument();
-    const supportLink = screen.getByRole('link', { name: 'hubrity.platform@gmail.com' });
-    expect(supportLink).toHaveAttribute('href', 'mailto:hubrity.platform@gmail.com');
+    const supportLink = screen.getByRole('link', { name: 'suporte@hubrity.com' });
+    expect(supportLink).toHaveAttribute('href', 'mailto:suporte@hubrity.com');
 
     vi.doUnmock('@/modules/marketing/lib/plans');
     vi.resetModules();

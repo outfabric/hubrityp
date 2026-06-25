@@ -28,12 +28,12 @@ The system SHALL render a sticky header at the top of every public page containi
 
 ### Requirement: Public footer
 
-The system SHALL render a footer on every public page (rendered in the dark surface), containing: the Hubrity brand lockup (the tricolor symbol with a light "hubrity" wordmark on the dark surface) and the tagline "O sistema único para o consultório de psicólogos autônomos no Brasil."; a "Produto" column (Funcionalidades anchor, Preços); a "Legal" column (Política de Privacidade, Termos de Uso); a "Contato" column (support email `hubrity.platform@gmail.com`); and a copyright line "© 2026 Hubrity. Feito para psicólogos autônomos brasileiros." The footer layout SHALL place the brand block on the left with the three link columns clustered to the right, and the column headings SHALL use the uppercase tertiary caption style. The footer component MUST be reusable by the authenticated app.
+The system SHALL render a footer on every public page (rendered in the dark surface), containing: the Hubrity brand lockup (the tricolor symbol with a light "hubrity" wordmark on the dark surface) and the tagline "O sistema único para o consultório de psicólogos autônomos no Brasil."; a "Produto" column (Funcionalidades anchor, Preços); a "Legal" column (Política de Privacidade, Termos de Uso); a "Contato" column (support email `suporte@hubrity.com`); and a copyright line "© 2026 Hubrity. Feito para psicólogos autônomos brasileiros." The footer layout SHALL place the brand block on the left with the three link columns clustered to the right, and the column headings SHALL use the uppercase tertiary caption style. The footer component MUST be reusable by the authenticated app.
 
 #### Scenario: Footer legal links resolve to functional pages
 
 - **WHEN** the footer renders
-- **THEN** "Política de Privacidade" links to `/politica-de-privacidade`, "Termos de Uso" links to `/termos-de-uso`, and the support email `hubrity.platform@gmail.com` is rendered as a `mailto:` link
+- **THEN** "Política de Privacidade" links to `/politica-de-privacidade`, "Termos de Uso" links to `/termos-de-uso`, and the support email `suporte@hubrity.com` is rendered as a `mailto:` link
 
 #### Scenario: Footer Legal column omits the standalone LGPD link
 

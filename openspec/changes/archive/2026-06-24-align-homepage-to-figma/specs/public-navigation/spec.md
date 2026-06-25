@@ -16,7 +16,7 @@ with a light "hubrity" wordmark) and the tagline "O sistema único para o
 consultório de psicólogos autônomos no Brasil." (`Body/sm` 13/20,
 `text-secondary #d6d3d1`); a "Produto" column (Funcionalidades anchor, Preços); a
 "Legal" column (Política de Privacidade, Termos de Uso); a "Contato" column
-(support email `hubrity.platform@gmail.com`); and a copyright line "© 2026
+(support email `suporte@hubrity.com`); and a copyright line "© 2026
 Hubrity. Feito para psicólogos autônomos brasileiros." Column headings use the
 uppercase `Label/caption-upper` (12/16, ls 6) in `text-tertiary #a8a29e`; links and
 the tagline use `text-secondary #d6d3d1`; rule/divider uses `border #3a3633`. The
@@ -38,7 +38,7 @@ The footer component MUST be reusable by the authenticated app.
 #### Scenario: Footer legal links resolve to functional pages
 
 - **WHEN** the footer renders
-- **THEN** "Política de Privacidade" links to `/politica-de-privacidade`, "Termos de Uso" links to `/termos-de-uso`, and the support email `hubrity.platform@gmail.com` is rendered as a `mailto:` link
+- **THEN** "Política de Privacidade" links to `/politica-de-privacidade`, "Termos de Uso" links to `/termos-de-uso`, and the support email `suporte@hubrity.com` is rendered as a `mailto:` link
 
 #### Scenario: Footer Legal column omits the standalone LGPD link
 

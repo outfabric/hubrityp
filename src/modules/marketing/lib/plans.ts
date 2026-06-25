@@ -187,7 +187,7 @@ export function isKnownPlanSlug(value: string): value is PlanSlug {
  * Support contact shown by the empty-plans fallback (and elsewhere on the
  * pricing surface). Kept here so pricing code has a single import.
  */
-export const PRICING_SUPPORT_EMAIL = 'hubrity.platform@gmail.com';
+export const PRICING_SUPPORT_EMAIL = 'suporte@hubrity.com';
 
 /**
  * Fallback content for pricing surfaces when the plan list resolves to zero

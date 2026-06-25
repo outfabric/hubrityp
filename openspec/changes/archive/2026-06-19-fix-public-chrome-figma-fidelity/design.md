@@ -28,7 +28,7 @@ via the Figma MCP — no external references are provided.
 | F3 | Footer logo | tricolor symbol + light wordmark | all-white lockup (`tone="white"`) | color |
 | F4 | Footer Legal | only Privacidade + Termos | adds "LGPD" link | extra element |
 | F5 | Footer tagline | "O sistema único para o consultório de psicólogos autônomos no Brasil." | "Plataforma para psicólogos autônomos brasileiros" | copy |
-| F6 | Footer contact | `hubrity.platform@gmail.com` | `suporte@hubrity.com.br` | copy/data |
+| F6 | Footer contact | `suporte@hubrity.com` | `suporte@hubrity.com.br` | copy/data |
 | F7 | Footer copyright | "© 2026 Hubrity. Feito para psicólogos autônomos brasileiros." | adds "Dados armazenados no Brasil." | copy |
 | C1 | Cookie `132:2` | title "Cookies por aqui" | no title | missing element |
 | C2 | Cookie `132:2` | body ends "...do site. Você escolhe." + "Saiba mais na Política de Privacidade" | body without "Você escolhe."; link "Saiba mais" | copy |
@@ -96,7 +96,7 @@ numeral uses `brand/600` in both.
   marketing claim, not a legal disclosure — the data-residency commitment remains
   stated in the privacy policy (sa-east-1). No compliance text is lost.
 
-- **D5 — Contact email follows Figma: `hubrity.platform@gmail.com` (F6).**
+- **D5 — Contact email follows Figma: `suporte@hubrity.com` (F6).**
   _Resolved with the user 2026-06-19._ Replace `suporte@hubrity.com.br` with the
   Figma address in every occurrence: `SUPPORT_EMAIL` (`public-footer.tsx`),
   `PRICING_SUPPORT_EMAIL` (`plans.ts`), and the privacy/terms DPO-contact section
@@ -170,6 +170,6 @@ handoff → update tests. No feature flag needed (visual-only, public surfaces).
 
 ## Open Questions
 
-None — F6 (email → follow Figma `hubrity.platform@gmail.com`) and L1 (remove the
+None — F6 (email → follow Figma `suporte@hubrity.com`) and L1 (remove the
 legal-review notice now) were resolved with the user on 2026-06-19; see decisions
 D5 and D8.

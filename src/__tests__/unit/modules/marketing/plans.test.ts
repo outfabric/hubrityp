@@ -122,6 +122,6 @@ describe('emptyPlansFallback', () => {
     const fallback = emptyPlansFallback();
     expect(fallback.message).toBe('Entre em contato para saber mais');
     expect(fallback.supportEmail).toBe(PRICING_SUPPORT_EMAIL);
-    expect(fallback.supportEmail).toBe('hubrity.platform@gmail.com');
+    expect(fallback.supportEmail).toBe('suporte@hubrity.com');
   });
 });

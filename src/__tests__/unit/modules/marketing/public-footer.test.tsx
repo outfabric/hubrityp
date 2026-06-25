@@ -20,7 +20,7 @@ import { PublicFooter } from '@/modules/marketing/components/public-footer';
  *     (`w-fit`) and is NOT stretched to the brand block's column width.
  */
 
-const SUPPORT_EMAIL = 'hubrity.platform@gmail.com';
+const SUPPORT_EMAIL = 'suporte@hubrity.com';
 
 function hrefOf(name: RegExp | string): string | null {
   const link = screen.getByRole('link', { name });

@@ -56,7 +56,7 @@ import { Container } from './container';
 const COPYRIGHT_YEAR = 2026;
 
 /** Support contact — surfaced as a `mailto:` link in the "Contato" column. */
-const SUPPORT_EMAIL = 'hubrity.platform@gmail.com';
+const SUPPORT_EMAIL = 'suporte@hubrity.com';
 
 /**
  * Uppercase tertiary caption style for the column headings — `Label/caption-upper`
