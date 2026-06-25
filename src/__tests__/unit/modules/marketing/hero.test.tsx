@@ -9,16 +9,24 @@ import { HERO } from '@/modules/marketing/lib/home-content';
  *
  * Covers the spec contracts exercisable in jsdom:
  *   - the `brand/50`-on-`brand/700` badge text;
- *   - the `Display/xl` headline rendered as the section's <h1>;
- *   - the `Lead` subheadline naming every MVP feature + CFP + LGPD;
+ *   - the headline rendered as the section's <h1>, in both the desktop
+ *     (`Display/xl`) and condensed mobile (`Display/md`) variants, with the
+ *     mobile variant marked `aria-hidden`;
+ *   - the subheadline naming every MVP feature + CFP + LGPD (desktop + mobile);
  *   - the primary CTA → `/signup`, with UTM params preserved from the URL;
  *   - the secondary CTA → `#funcionalidades`;
- *   - the reassurance microcopy.
+ *   - the reassurance microcopy (desktop + condensed mobile);
+ *   - the single-centered-column layout: the carousel sits BELOW the copy block,
+ *     not beside it (no two-column / `lg:flex-row` arrangement).
  *
  * The primary CTA is the `SignupCta` client leaf: it renders a stable `/signup`
  * href on first paint and folds in allowlisted `utm_*` params (read from
  * `window.location.search`) after hydration. We assert both the SSR target and
  * the post-hydration UTM-preserved href.
+ *
+ * Note: jsdom does not evaluate Tailwind breakpoints, so BOTH the desktop and
+ * mobile copy variants are present in the DOM. We therefore assert against the
+ * specific variant string (`.desktop` / `.mobile`) rather than a shared value.
  */
 
 function hrefOf(name: RegExp | string): string | null {
@@ -36,34 +44,58 @@ describe('Hero — badge, headline, subheadline', () => {
     expect(screen.getByText(HERO.badge)).toBeInTheDocument();
   });
 
-  it('renders the headline as the section heading (level 1)', () => {
+  it('renders both headline variants inside the section heading (level 1)', () => {
     render(<Hero />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(HERO.headline);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent(HERO.headline.desktop);
+    expect(heading).toHaveTextContent(HERO.headline.mobile ?? '');
   });
 
-  it('names every MVP feature in the subheadline', () => {
+  it('marks the condensed mobile headline variant aria-hidden', () => {
+    render(<Hero />);
+    // The desktop variant is the canonical string for assistive tech; the
+    // condensed mobile one is the hidden variant and must be aria-hidden.
+    const mobileHeadline = screen.getByText(HERO.headline.mobile ?? '');
+    expect(mobileHeadline).toHaveAttribute('aria-hidden', 'true');
+
+    const desktopHeadline = screen.getByText(HERO.headline.desktop);
+    expect(desktopHeadline).not.toHaveAttribute('aria-hidden');
+  });
+
+  it('names every MVP feature in the desktop subheadline', () => {
     render(<Hero />);
 
-    const subhead = screen.getByText(HERO.subheadline);
+    const subhead = screen.getByText(HERO.subheadline.desktop);
     expect(subhead).toBeInTheDocument();
 
     for (const feature of [
       /agenda/i,
       /prontu[áa]rio/i,
       /videochamada/i,
-      /whatsapp automatizado/i,
-      /transcreve e escreve a evolu/i,
+      /lembretes autom[áa]ticos no whatsapp/i,
+      /transcreve a sess[ãa]o e escreve a evolu/i,
     ]) {
       expect(subhead).toHaveTextContent(feature);
     }
   });
 
-  it('states CFP and LGPD compliance in the subheadline', () => {
+  it('renders the condensed mobile subheadline marked aria-hidden', () => {
+    render(<Hero />);
+    const mobileSubhead = screen.getByText(HERO.subheadline.mobile ?? '');
+    expect(mobileSubhead).toBeInTheDocument();
+    expect(mobileSubhead).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('states CFP and LGPD compliance in both subheadline variants', () => {
     render(<Hero />);
 
-    const subhead = screen.getByText(HERO.subheadline);
-    expect(subhead).toHaveTextContent(/CFP/);
-    expect(subhead).toHaveTextContent(/LGPD/);
+    for (const subhead of [
+      screen.getByText(HERO.subheadline.desktop),
+      screen.getByText(HERO.subheadline.mobile ?? ''),
+    ]) {
+      expect(subhead).toHaveTextContent(/CFP/);
+      expect(subhead).toHaveTextContent(/LGPD/);
+    }
   });
 });
 
@@ -91,9 +123,12 @@ describe('Hero — CTAs', () => {
 });
 
 describe('Hero — microcopy & carousel', () => {
-  it('renders the reassurance microcopy', () => {
+  it('renders both reassurance microcopy variants, mobile marked aria-hidden', () => {
     render(<Hero />);
-    expect(screen.getByText(HERO.microcopy)).toBeInTheDocument();
+    expect(screen.getByText(HERO.microcopy.desktop)).toBeInTheDocument();
+    const mobileMicrocopy = screen.getByText(HERO.microcopy.mobile ?? '');
+    expect(mobileMicrocopy).toBeInTheDocument();
+    expect(mobileMicrocopy).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('embeds the screenshot carousel region', () => {
@@ -103,5 +138,23 @@ describe('Hero — microcopy & carousel', () => {
     expect(carousel).toBeInTheDocument();
     // The first hero slide is the LCP candidate and is visible at first paint.
     expect(within(carousel).getAllByRole('img').length).toBeGreaterThan(0);
+  });
+});
+
+describe('Hero — single centered column layout', () => {
+  it('places the carousel BELOW the copy block, not beside it', () => {
+    const { container } = render(<Hero />);
+
+    const heading = screen.getByRole('heading', { level: 1 });
+    const carousel = screen.getByRole('region', { name: /telas do sistema/i });
+
+    // The copy block (ancestor of the headline) precedes the carousel block in
+    // DOM order — the carousel sits below the copy, not beside it.
+    const position = heading.compareDocumentPosition(carousel);
+    expect(Boolean(position & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+
+    // No two-column arrangement: nothing in the hero uses the old `lg:flex-row`
+    // two-column layout class.
+    expect(container.querySelector('.lg\\:flex-row')).toBeNull();
   });
 });

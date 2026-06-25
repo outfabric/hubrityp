@@ -10,28 +10,31 @@ import { PROBLEM, SOCIAL_PROOF_STATS } from '@/modules/marketing/lib/home-conten
  * bar and the "mirror" section of the public homepage (`/`).
  *
  * These cover the spec contracts exercisable in jsdom:
- *   - ProvaSocial renders exactly the two reviewed market statistics and
- *     contains NO fabricated testimonials (no quoted endorsements, no named
- *     people, no star/rating language);
- *   - Problema renders the title, exactly 5 mirror items, and the recognition
+ *   - ProvaSocial renders the two reviewed market-data stat blocks (each a
+ *     figure + a supporting caption) and contains NO fabricated testimonials
+ *     (no quoted endorsements, no named people, no star/rating language);
+ *   - Problema renders the title, exactly 5 mirror items (each with its desktop
+ *     and condensed mobile label variant rendered), and the recognition
  *     (not judgment) closer.
  */
 
 describe('ProvaSocial — market stats', () => {
-  it('renders both market-data statistics', () => {
+  it('renders both stat blocks (figure + caption each)', () => {
     render(<ProvaSocial />);
 
     for (const stat of SOCIAL_PROOF_STATS) {
-      expect(screen.getByText(stat.text)).toBeInTheDocument();
+      expect(screen.getByText(stat.figure)).toBeInTheDocument();
+      expect(screen.getByText(stat.caption)).toBeInTheDocument();
     }
   });
 
-  it('renders exactly two statements (no extra fabricated content)', () => {
+  it('renders exactly two stat blocks (no extra fabricated content)', () => {
     const { container } = render(<ProvaSocial />);
-    // Only the statistic paragraphs carry text; assert the count matches the
-    // content layer so no extra (fabricated) statement can be added silently.
+    // Each stat block carries exactly two paragraphs (figure + caption); assert
+    // the total matches the content layer so no extra (fabricated) statement can
+    // be added silently.
     const paragraphs = container.querySelectorAll('p');
-    expect(paragraphs).toHaveLength(SOCIAL_PROOF_STATS.length);
+    expect(paragraphs).toHaveLength(SOCIAL_PROOF_STATS.length * 2);
   });
 
   it('contains no fabricated testimonial language', () => {
@@ -56,9 +59,18 @@ describe('Problema — mirror section', () => {
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(5);
     expect(items).toHaveLength(PROBLEM.items.length);
+  });
+
+  it('renders both the desktop and condensed mobile label for every item', () => {
+    render(<Problema />);
 
     for (const item of PROBLEM.items) {
-      expect(screen.getByText(item)).toBeInTheDocument();
+      // Desktop label (visible from `md` up).
+      expect(screen.getByText(item.label.desktop)).toBeInTheDocument();
+      // Condensed mobile label (the `aria-hidden` variant shown below `md`).
+      // Each mobile string differs from its desktop counterpart, so a plain
+      // `getByText` uniquely resolves it.
+      expect(screen.getByText(item.label.mobile as string)).toBeInTheDocument();
     }
   });
 

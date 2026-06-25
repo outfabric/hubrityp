@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -31,6 +31,15 @@ function getDetails(container: HTMLElement): HTMLDetailsElement[] {
   return Array.from(container.querySelectorAll('details'));
 }
 
+/** The <summary> toggle of a <details> (where click/focus must land). */
+function summaryOf(details: HTMLDetailsElement): HTMLElement {
+  const summary = details.querySelector('summary');
+  if (!summary) {
+    throw new Error('details has no summary');
+  }
+  return summary;
+}
+
 /** Indices of the currently-open <details> elements. */
 function openIndices(container: HTMLElement): number[] {
   return getDetails(container).flatMap((d, i) => (d.open ? [i] : []));
@@ -59,25 +68,37 @@ describe('BillingFaq — items + required topics', () => {
 
   it('renders every billing question and answer from the content layer', () => {
     render(<BillingFaq />);
+    // The shared accordion renders each string in a desktop + a mobile span; the
+    // billing FAQ has no mobile overrides, so we scope to the desktop span to
+    // avoid duplicate matches.
     for (const entry of BILLING_FAQ_ENTRIES) {
-      expect(screen.getByText(entry.question)).toBeInTheDocument();
-      expect(screen.getByText(entry.answer)).toBeInTheDocument();
+      expect(
+        screen.getByText(entry.question.desktop, { selector: 'summary span.md\\:inline' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(entry.answer.desktop, { selector: 'p span.md\\:inline' }),
+      ).toBeInTheDocument();
     }
   });
 
   it('shows the required billing topics: cobrança, cancelamento, downgrade, nota fiscal', () => {
     render(<BillingFaq />);
     // Aggregate the visible copy and assert each required topic surfaces.
-    const haystack = BILLING_FAQ_ENTRIES.map((e) => `${e.question} ${e.answer}`.toLowerCase()).join(
-      '\n',
-    );
+    const haystack = BILLING_FAQ_ENTRIES.map((e) =>
+      `${e.question.desktop} ${e.answer.desktop}`.toLowerCase(),
+    ).join('\n');
     expect(haystack).toContain('mensal'); // cobrança (monthly)
     expect(haystack).toContain('cancel'); // cancelamento
     expect(haystack).toContain('downgrade'); // fim do teste / downgrade
     expect(haystack).toContain('nota fiscal'); // nota fiscal
-    // Each topic is also actually rendered to the DOM, not just present in data.
-    expect(screen.getByText(/mensal/i)).toBeInTheDocument();
-    expect(screen.getByText(/downgrade/i)).toBeInTheDocument();
+    // Each topic is also actually rendered to the DOM, not just present in data
+    // (scoped to the desktop span to avoid the duplicate mobile-span match).
+    expect(screen.getAllByText(/mensal/i, { selector: 'span.md\\:inline' }).length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      screen.getAllByText(/downgrade/i, { selector: 'span.md\\:inline' }).length,
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -89,7 +110,9 @@ describe('BillingFaq — no-JS fallback', () => {
     const details = getDetails(container);
     expect(details.every((d) => d.open)).toBe(true);
     for (const entry of BILLING_FAQ_ENTRIES) {
-      expect(screen.getByText(entry.answer)).toBeInTheDocument();
+      expect(
+        screen.getByText(entry.answer.desktop, { selector: 'p span.md\\:inline' }),
+      ).toBeInTheDocument();
     }
   });
 });
@@ -107,11 +130,8 @@ describe('BillingFaq — exclusive accordion (after hydration)', () => {
     await waitForExclusive(container);
 
     const details = getDetails(container);
-    // Open the second item via its summary; the first must then close.
-    const secondSummary = within(details[1]!).getByText(BILLING_FAQ_ENTRIES[1]!.question, {
-      selector: 'summary',
-    });
-    await user.click(secondSummary);
+    // Open the second item via its summary toggle; the first must then close.
+    await user.click(summaryOf(details[1]!));
 
     await waitFor(() => {
       expect(openIndices(container)).toEqual([1]);
@@ -134,14 +154,16 @@ describe('BillingFaq — nota fiscal framing (D5)', () => {
     render(<BillingFaq />);
 
     const notaFiscalEntry = BILLING_FAQ_ENTRIES.find((e) =>
-      e.answer.toLowerCase().includes('nota fiscal'),
+      e.answer.desktop.toLowerCase().includes('nota fiscal'),
     );
     expect(notaFiscalEntry).toBeDefined();
 
     // The rendered answer must name the payment-provider dependency (Asaas),
     // which is what marks it as forward-looking/provider-dependent rather than
     // an available feature.
-    const answer = screen.getByText(notaFiscalEntry!.answer);
+    const answer = screen.getByText(notaFiscalEntry!.answer.desktop, {
+      selector: 'p span.md\\:inline',
+    });
     expect(answer.textContent?.toLowerCase()).toContain('asaas');
   });
 

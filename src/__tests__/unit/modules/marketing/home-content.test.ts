@@ -4,18 +4,24 @@ import {
   HERO,
   SOCIAL_PROOF_STATS,
   PROBLEM,
+  SOLUTION_TITLE,
+  SOLUTION_SUBTITLE,
   SOLUTION_STEPS,
   SOLUTION_CLOSER,
   FEATURE_CARDS,
   AI_HIGHLIGHT,
   TRUST,
   PRICING_SUMMARY,
+  FAQ_EYEBROW,
+  FAQ_TITLE,
   FAQ_ENTRIES,
   FINAL_CTA,
   SCREENSHOTS,
   HERO_CAROUSEL_SLIDES,
+  type RegulatoryGuarantee,
   type ScreenshotKey,
 } from '@/modules/marketing/lib/home-content';
+import { PLAN_SLUGS } from '@/modules/marketing/lib/plans';
 
 // The literal regulatory codes/years/standards the confiança section MUST contain
 // verbatim. A typo here is a compliance bug, so they are asserted as exact strings.
@@ -46,16 +52,27 @@ const POST_MVP_FORBIDDEN = [
 function allHomeCopy(): string {
   const parts: string[] = [
     HERO.badge,
-    HERO.headline,
-    HERO.subheadline,
+    HERO.headline.desktop,
+    HERO.headline.mobile ?? '',
+    HERO.subheadline.desktop,
+    HERO.subheadline.mobile ?? '',
     HERO.primaryCta.label,
     HERO.secondaryCta.label,
-    HERO.microcopy,
-    ...SOCIAL_PROOF_STATS.map((s) => s.text),
+    HERO.microcopy.desktop,
+    HERO.microcopy.mobile ?? '',
+    ...SOCIAL_PROOF_STATS.flatMap((s) => [s.figure, s.caption]),
     PROBLEM.title,
-    ...PROBLEM.items,
+    ...PROBLEM.items.flatMap((item) => [item.label.desktop, item.label.mobile ?? '']),
     PROBLEM.closer,
-    ...SOLUTION_STEPS.flatMap((s) => [s.title, s.description]),
+    SOLUTION_TITLE.desktop,
+    SOLUTION_TITLE.mobile ?? '',
+    SOLUTION_SUBTITLE,
+    ...SOLUTION_STEPS.flatMap((s) => [
+      s.title.desktop,
+      s.title.mobile ?? '',
+      s.description.desktop,
+      s.description.mobile ?? '',
+    ]),
     SOLUTION_CLOSER,
     ...FEATURE_CARDS.flatMap((c) => [c.title, c.description]),
     AI_HIGHLIGHT.title,
@@ -64,13 +81,25 @@ function allHomeCopy(): string {
     AI_HIGHLIGHT.afterLabel,
     ...AI_HIGHLIGHT.trustItems,
     AI_HIGHLIGHT.cta.label,
+    TRUST.eyebrow,
     TRUST.title,
-    ...TRUST.guarantees.map((g) => g.text),
+    ...TRUST.guarantees.flatMap((g: RegulatoryGuarantee) => [g.text.desktop, g.text.mobile ?? '']),
     TRUST.closer,
     PRICING_SUMMARY.title,
-    PRICING_SUMMARY.microcopy,
+    PRICING_SUMMARY.microcopy.desktop,
+    PRICING_SUMMARY.microcopy.mobile ?? '',
     PRICING_SUMMARY.fullPlansLinkLabel,
-    ...FAQ_ENTRIES.flatMap((f) => [f.question, f.answer]),
+    ...[PRICING_SUMMARY.cards.essencial, PRICING_SUMMARY.cards.avancado].flatMap((card) => [
+      card.tagline.desktop,
+      'mobile' in card.tagline ? card.tagline.mobile : '',
+      ...card.bullets.flatMap((b) => [b.desktop, 'mobile' in b ? b.mobile : '']),
+    ]),
+    ...FAQ_ENTRIES.flatMap((f) => [
+      f.question.desktop,
+      f.question.mobile ?? '',
+      f.answer.desktop,
+      f.answer.mobile ?? '',
+    ]),
     FINAL_CTA.title,
     FINAL_CTA.cta.label,
     FINAL_CTA.microcopy,
@@ -106,6 +135,49 @@ describe('home-content — list cardinalities', () => {
   });
 });
 
+describe('home-content — FAQ copy (Figma 125:2 desktop / 138:2 mobile)', () => {
+  it('uses the aligned title and desktop-only eyebrow', () => {
+    expect(FAQ_TITLE).toBe('Ainda em dúvida? Comece por aqui.');
+    expect(FAQ_EYEBROW).toBe('PERGUNTAS FREQUENTES');
+  });
+
+  it('keeps the 5 required questions with their condensed mobile variants', () => {
+    expect(FAQ_ENTRIES.map((f) => f.question.desktop)).toEqual([
+      'Meus dados de paciente ficam seguros?',
+      'Funciona para atendimento presencial também?',
+      'Preciso cancelar o Google Agenda?',
+      'A IA vai errar e inventar conteúdo?',
+      'Quanto custa depois do período grátis?',
+    ]);
+    // Questions 2/4/5 condense on mobile; 1 and 3 stay identical (no override).
+    expect(FAQ_ENTRIES.map((f) => f.question.mobile)).toEqual([
+      undefined,
+      'Funciona para presencial também?',
+      undefined,
+      'A IA inventa conteúdo?',
+      'Quanto custa depois do teste?',
+    ]);
+  });
+
+  it('aligns the Q1 answer to the verbatim 125:2 desktop string + condensed 138:2 mobile', () => {
+    expect(FAQ_ENTRIES[0]?.answer.desktop).toBe(
+      'Sim. Os dados ficam em servidores no Brasil (São Paulo), com criptografia AES-256 em repouso e TLS 1.3 em trânsito. Você é a controladora dos dados; nós atuamos apenas como operadores, conforme a LGPD.',
+    );
+    expect(FAQ_ENTRIES[0]?.answer.mobile).toBe(
+      'Servidores no Brasil (São Paulo), AES-256 e TLS 1.3. Você é a controladora; nós, operadores, conforme a LGPD.',
+    );
+  });
+
+  it('keeps the answer angles for questions 2–5 (both breakpoints)', () => {
+    // (2) presencial: sim + upload do áudio; (3) não + CSV/ritmo; (4) sugestão
+    // editável, nada salvo sem revisão; (5) valores + link para /precos.
+    expect(FAQ_ENTRIES[1]?.answer.desktop).toContain('upload do áudio');
+    expect(FAQ_ENTRIES[2]?.answer.desktop).toContain('CSV');
+    expect(FAQ_ENTRIES[3]?.answer.desktop).toContain('editável');
+    expect(FAQ_ENTRIES[4]?.answer.desktop).toContain('/precos');
+  });
+});
+
 describe('home-content — feature cards', () => {
   it('lists the 7 MVP feature titles in order', () => {
     expect(FEATURE_CARDS.map((c) => c.title)).toEqual([
@@ -136,10 +208,26 @@ describe('home-content — feature cards', () => {
 
 describe('home-content — regulatory guarantees (exact codes)', () => {
   it('contains every required literal regulatory code/year', () => {
-    const trustText = TRUST.guarantees.map((g) => g.text).join(' ');
+    const trustText = TRUST.guarantees
+      .flatMap((g: RegulatoryGuarantee) => [g.text.desktop, g.text.mobile ?? ''])
+      .join(' ');
     for (const code of REQUIRED_REGULATORY_CODES) {
       expect(trustText).toContain(code);
     }
+  });
+
+  it('exposes the CONFORMIDADE & SEGURANÇA eyebrow above the trust title', () => {
+    expect(TRUST.eyebrow).toBe('CONFORMIDADE & SEGURANÇA');
+  });
+
+  it('condenses only the AES-256/TLS-1.3 and CRP-ativo guarantees on mobile', () => {
+    const mobileVariants = TRUST.guarantees
+      .map((g: RegulatoryGuarantee) => g.text.mobile)
+      .filter((m): m is string => m !== undefined);
+    expect(mobileVariants).toEqual([
+      'Criptografia AES-256 e TLS 1.3',
+      'Somente psicólogos com CRP ativo criam conta',
+    ]);
   });
 });
 
@@ -156,6 +244,75 @@ describe('home-content — CTA targets', () => {
 
   it('pricing summary links to /precos', () => {
     expect(PRICING_SUMMARY.fullPlansHref).toBe('/precos');
+  });
+});
+
+describe('home-content — hero copy (Figma 108:2 / 133:14)', () => {
+  it('carries the desktop headline/subheadline/microcopy strings', () => {
+    expect(HERO.headline.desktop).toBe('De 10 ferramentas espalhadas a um só sistema clínico.');
+    expect(HERO.subheadline.desktop).toBe(
+      'Agenda, prontuário, videochamada, lembretes automáticos no WhatsApp e uma IA que transcreve a sessão e escreve a evolução — tudo em conformidade com o CFP e a LGPD.',
+    );
+    expect(HERO.microcopy.desktop).toBe('Sem cartão de crédito. Cancele quando quiser.');
+  });
+
+  it('condenses the headline/subheadline/microcopy on mobile', () => {
+    expect(HERO.headline.mobile).toBe('De 10 ferramentas a um só sistema clínico.');
+    expect(HERO.subheadline.mobile).toBe(
+      'Agenda, prontuário, vídeo, WhatsApp automático e uma IA que escreve a evolução — em conformidade com o CFP e a LGPD.',
+    );
+    expect(HERO.microcopy.mobile).toBe('Sem cartão. Cancele quando quiser.');
+  });
+
+  it('keeps the badge and CTA labels constant across breakpoints', () => {
+    expect(HERO.badge).toBe('Feito para psicólogos autônomos');
+    expect(HERO.primaryCta.label).toBe('Começar grátis — 14 dias');
+    expect(HERO.secondaryCta.label).toBe('Ver funcionalidades');
+  });
+});
+
+describe('home-content — pricing summary cards (design D4)', () => {
+  it('has a curated card for every plan slug and no extra ones', () => {
+    expect(Object.keys(PRICING_SUMMARY.cards).sort()).toEqual([...PLAN_SLUGS].sort());
+  });
+
+  it('carries the spec taglines (desktop + condensed mobile where Figma differs)', () => {
+    expect(PRICING_SUMMARY.cards.essencial.tagline.desktop).toBe(
+      'Para começar com o essencial do consultório.',
+    );
+    expect(PRICING_SUMMARY.cards.essencial.tagline.mobile).toBe('O núcleo clínico do consultório.');
+    // Avançado tagline is short enough that Figma does not condense it: the
+    // `mobile` override is absent (the desktop string renders at every width).
+    expect(PRICING_SUMMARY.cards.avancado.tagline.desktop).toBe(
+      'Tudo do Essencial + automação e IA.',
+    );
+    expect('mobile' in PRICING_SUMMARY.cards.avancado.tagline).toBe(false);
+  });
+
+  it('lists the spec summary bullets in order with the condensed mobile overrides', () => {
+    expect(PRICING_SUMMARY.cards.essencial.bullets.map((b) => b.desktop)).toEqual([
+      'Agenda, pacientes e prontuário',
+      'Telepsicologia integrada',
+      'Documentos CFP e escalas clínicas',
+      'Dashboard operacional',
+    ]);
+    expect(PRICING_SUMMARY.cards.essencial.bullets[2]?.mobile).toBe('Documentos CFP e escalas');
+
+    expect(PRICING_SUMMARY.cards.avancado.bullets.map((b) => b.desktop)).toEqual([
+      'Tudo do Essencial',
+      'Lembretes automáticos no WhatsApp',
+      'Transcrição e nota com IA',
+    ]);
+    expect(PRICING_SUMMARY.cards.avancado.bullets[1]?.mobile).toBe('Lembretes no WhatsApp');
+  });
+
+  it('condenses the reassurance microcopy on mobile', () => {
+    expect(PRICING_SUMMARY.microcopy.desktop).toBe(
+      '14 dias grátis para testar tudo. Sem cartão de crédito. Cancele quando quiser.',
+    );
+    expect(PRICING_SUMMARY.microcopy.mobile).toBe(
+      '14 dias grátis. Sem cartão. Cancele quando quiser.',
+    );
   });
 });
 

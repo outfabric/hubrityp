@@ -28,12 +28,28 @@ const BRL = new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 0,
 });
 
+describe('PrecosResumo — header', () => {
+  it('renders the "PLANOS" eyebrow and the "Simples. Sem surpresa." title', () => {
+    render(<PrecosResumo />);
+
+    expect(screen.getByText(PRICING_SUMMARY.eyebrow)).toHaveTextContent('PLANOS');
+    expect(
+      screen.getByRole('heading', { level: 2, name: PRICING_SUMMARY.title }),
+    ).toBeInTheDocument();
+    expect(PRICING_SUMMARY.title).toBe('Simples. Sem surpresa.');
+  });
+});
+
 describe('PrecosResumo — prices come from the central config', () => {
   it('renders one card per plan in the central PLANS config', () => {
     render(<PrecosResumo />);
 
-    const cards = screen.getAllByRole('listitem');
-    expect(cards).toHaveLength(PLANS.length);
+    // The plan cards are the list items carrying the surface treatment; the
+    // bullet list items also exist, so scope to the card shells (radius-2xl).
+    const planCards = screen
+      .getAllByRole('listitem')
+      .filter((li) => li.className.includes('rounded-2xl'));
+    expect(planCards).toHaveLength(PLANS.length);
   });
 
   it('renders each plan name and price derived from the config (not hardcoded)', () => {
@@ -71,6 +87,54 @@ describe('PrecosResumo — prices come from the central config', () => {
       expect(card).not.toBeNull();
       expect(within(card!).queryByText('Mais popular')).not.toBeInTheDocument();
     }
+  });
+
+  it('renders each plan tagline (desktop copy) and every curated bullet', () => {
+    render(<PrecosResumo />);
+
+    // The responsive copy renders both the desktop and the (when different)
+    // mobile string in the DOM, toggled by CSS; assert the desktop variant is
+    // present (there may be a duplicate mobile variant alongside it).
+    for (const card of [PRICING_SUMMARY.cards.essencial, PRICING_SUMMARY.cards.avancado]) {
+      expect(screen.getAllByText(card.tagline.desktop).length).toBeGreaterThan(0);
+      for (const bullet of card.bullets) {
+        expect(screen.getAllByText(bullet.desktop).length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('marks each curated bullet with a brand-600 check icon', () => {
+    const { container } = render(<PrecosResumo />);
+
+    const checks = container.querySelectorAll('svg.text-brand-600');
+    const totalBullets =
+      PRICING_SUMMARY.cards.essencial.bullets.length +
+      PRICING_SUMMARY.cards.avancado.bullets.length;
+    expect(checks).toHaveLength(totalBullets);
+  });
+
+  it('renders a per-card "Começar grátis" CTA, each pointing at /signup', () => {
+    render(<PrecosResumo />);
+
+    const ctas = screen.getAllByRole('link', { name: PRICING_SUMMARY.ctaLabel });
+    expect(ctas).toHaveLength(PLANS.length);
+    for (const cta of ctas) {
+      // SSR / first render: SignupCta emits a stable `/signup` href before
+      // hydration folds in any UTM params.
+      expect(cta).toHaveAttribute('href', '/signup');
+    }
+    expect(PRICING_SUMMARY.ctaLabel).toBe('Começar grátis');
+  });
+
+  it('is monthly only — no annual/monthly toggle control', () => {
+    render(<PrecosResumo />);
+
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByText(/anual/i)).not.toBeInTheDocument();
+    // Each card states the monthly cadence via "/mês".
+    expect(screen.getAllByText('/mês')).toHaveLength(PLANS.length);
   });
 
   it('links to the full /precos page from the content layer', () => {

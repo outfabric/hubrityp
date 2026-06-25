@@ -44,25 +44,36 @@ export const PRICING_PAGE = {
  * (monthly), cancelamento, fim do teste/downgrade, and nota fiscal. Reuses the
  * homepage `FaqEntry` shape and the same accessible `<details>` accordion.
  */
+// The billing FAQ does not condense on mobile (the pricing frame keeps the full
+// copy at every width), so each entry carries only the `desktop` variant of the
+// shared [[FaqEntry]] `ResponsiveCopy` shape.
 export const BILLING_FAQ_ENTRIES: ReadonlyArray<FaqEntry> = [
   {
-    question: 'Como funciona a cobrança?',
-    answer:
-      'A cobrança é exclusivamente mensal: R$ 60/mês no plano Essencial e R$ 90/mês no plano Avançado. Não há plano anual no momento e nenhum valor é cobrado durante os 14 dias de teste.',
+    question: { desktop: 'Como funciona a cobrança?' },
+    answer: {
+      desktop:
+        'A cobrança é exclusivamente mensal: R$ 60/mês no plano Essencial e R$ 90/mês no plano Avançado. Não há plano anual no momento e nenhum valor é cobrado durante os 14 dias de teste.',
+    },
   },
   {
-    question: 'Posso cancelar quando quiser?',
-    answer:
-      'Sim. Não há fidelidade nem multa: você cancela quando quiser e mantém o acesso até o fim do período já pago. Seus dados continuam disponíveis para exportação conforme a LGPD.',
+    question: { desktop: 'Posso cancelar quando quiser?' },
+    answer: {
+      desktop:
+        'Sim. Não há fidelidade nem multa: você cancela quando quiser e mantém o acesso até o fim do período já pago. Seus dados continuam disponíveis para exportação conforme a LGPD.',
+    },
   },
   {
-    question: 'O que acontece quando o período de teste termina?',
-    answer:
-      'Ao final dos 14 dias você escolhe um plano. Se não escolher o Avançado, a conta faz downgrade automático para o Essencial, sem perda de dados — você apenas deixa de usar os lembretes via WhatsApp e a transcrição com IA, que são exclusivos do Avançado.',
+    question: { desktop: 'O que acontece quando o período de teste termina?' },
+    answer: {
+      desktop:
+        'Ao final dos 14 dias você escolhe um plano. Se não escolher o Avançado, a conta faz downgrade automático para o Essencial, sem perda de dados — você apenas deixa de usar os lembretes via WhatsApp e a transcrição com IA, que são exclusivos do Avançado.',
+    },
   },
   {
-    question: 'Vou receber nota fiscal?',
-    answer:
-      'Todas as cobranças geram nota fiscal automaticamente. A emissão depende do nosso provedor de pagamento (Asaas) e fica disponível assim que a cobrança recorrente é ativada.',
+    question: { desktop: 'Vou receber nota fiscal?' },
+    answer: {
+      desktop:
+        'Todas as cobranças geram nota fiscal automaticamente. A emissão depende do nosso provedor de pagamento (Asaas) e fica disponível assim que a cobrança recorrente é ativada.',
+    },
   },
 ] as const;

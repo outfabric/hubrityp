@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { Confianca } from '@/modules/marketing/components/home/confianca';
-import { TRUST } from '@/modules/marketing/lib/home-content';
+import { TRUST, type RegulatoryGuarantee } from '@/modules/marketing/lib/home-content';
 
 /*
  * Confiança (presentational section) — the regulatory-trust band of the homepage.
@@ -29,9 +29,10 @@ const REQUIRED_LITERALS = [
 ] as const;
 
 describe('Confianca — copy', () => {
-  it('renders the title and the closing line from the content layer', () => {
+  it('renders the eyebrow, title and the closing line from the content layer', () => {
     render(<Confianca />);
 
+    expect(screen.getByText(TRUST.eyebrow)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: TRUST.title })).toBeInTheDocument();
     expect(screen.getByText(TRUST.closer)).toBeInTheDocument();
   });
@@ -47,15 +48,21 @@ describe('Confianca — guarantees', () => {
     const items = container.querySelectorAll('ul li');
     expect(items).toHaveLength(8);
 
+    // Each guarantee's desktop string is in the DOM (RTL ignores the responsive
+    // CSS, so both the `md:inline` and `md:hidden` spans render; for guarantees
+    // without a `mobile` override both spans carry the same text, hence the
+    // `getAllByText` to allow the duplicate).
     for (const guarantee of TRUST.guarantees) {
-      expect(screen.getByText(guarantee.text)).toBeInTheDocument();
+      expect(screen.getAllByText(guarantee.text.desktop).length).toBeGreaterThan(0);
     }
   });
 
   it('contains every required regulatory literal verbatim', () => {
     render(<Confianca />);
 
-    const allText = TRUST.guarantees.map((g) => g.text).join(' ');
+    const allText = TRUST.guarantees
+      .flatMap((g: RegulatoryGuarantee) => [g.text.desktop, g.text.mobile ?? ''])
+      .join(' ');
     for (const literal of REQUIRED_LITERALS) {
       // Assert against the rendered DOM, not just the content constant.
       expect(allText).toContain(literal);

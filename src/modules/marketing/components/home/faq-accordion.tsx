@@ -35,9 +35,59 @@ export interface FaqAccordionProps {
   readonly title: string;
   /** DOM id for the `<h2>`; the `<section>` is `aria-labelledby` this id. */
   readonly titleId: string;
+  /**
+   * Optional uppercase eyebrow shown ABOVE the title on DESKTOP ONLY
+   * (`Label/caption-upper` 12/16 ls 6, `brand-700`, `hidden md:block`). The
+   * homepage FAQ (Figma `125:2`) renders "PERGUNTAS FREQUENTES"; the mobile frame
+   * (`138:2`) and the pricing-page billing FAQ omit it.
+   */
+  readonly eyebrow?: string;
 }
 
-export function FaqAccordion({ entries, title, titleId }: FaqAccordionProps): React.JSX.Element {
+/** A breakpoint-aware copy variant (the shared [[ResponsiveCopy]] shape). */
+interface ResponsiveCopyLike {
+  readonly desktop: string;
+  readonly mobile?: string;
+}
+
+/**
+ * Renders a [[ResponsiveCopy]] string: the `desktop` variant from the `md`
+ * breakpoint up and the condensed `mobile` variant below it. When `mobile` is
+ * absent the single `desktop` string renders at every width. The hidden variant
+ * is `aria-hidden` so assistive tech reads each string exactly once.
+ *
+ * `desktopClassName` / `mobileClassName` carry the per-breakpoint typography
+ * tokens (e.g. the homepage question label is `Body/lg` on desktop and
+ * `Body/base`–`Heading/h4` on mobile).
+ */
+function ResponsiveText({
+  copy,
+  desktopClassName,
+  mobileClassName,
+}: {
+  readonly copy: ResponsiveCopyLike;
+  readonly desktopClassName?: string;
+  readonly mobileClassName?: string;
+}): React.JSX.Element {
+  return (
+    <>
+      <span className={cn('hidden md:inline', desktopClassName)}>{copy.desktop}</span>
+      <span
+        className={cn('md:hidden', mobileClassName)}
+        aria-hidden={copy.mobile ? 'true' : undefined}
+      >
+        {copy.mobile ?? copy.desktop}
+      </span>
+    </>
+  );
+}
+
+export function FaqAccordion({
+  entries,
+  title,
+  titleId,
+  eyebrow,
+}: FaqAccordionProps): React.JSX.Element {
   // `hydrated` gates the JS-only behavior. During SSR / before hydration every
   // item stays `open` (the no-JS fallback). After hydration we switch to the
   // exclusive accordion: only the active item is open.
@@ -81,9 +131,19 @@ export function FaqAccordion({ entries, title, titleId }: FaqAccordionProps): Re
   return (
     <section aria-labelledby={titleId} className="py-16 md:py-24">
       <Container className="flex flex-col items-center gap-10">
-        <h2 id={titleId} className="text-display-md text-text-primary max-w-2xl text-center">
-          {title}
-        </h2>
+        <div className="flex flex-col items-center gap-3 text-center">
+          {/* Eyebrow: Label/caption-upper (12/16, ls 6) in brand-700, DESKTOP
+              ONLY — the mobile FAQ frame shows the title with no eyebrow. */}
+          {eyebrow ? (
+            <p className="text-brand-700 hidden text-xs font-medium tracking-[0.06em] uppercase md:block">
+              {eyebrow}
+            </p>
+          ) : null}
+
+          <h2 id={titleId} className="text-display-md text-text-primary max-w-2xl">
+            {title}
+          </h2>
+        </div>
 
         <ul className="flex w-full max-w-3xl flex-col gap-4">
           {entries.map((entry, index) => {
@@ -91,7 +151,7 @@ export function FaqAccordion({ entries, title, titleId }: FaqAccordionProps): Re
             // the single active item is open (exclusive accordion).
             const isOpen = hydrated ? openIndex === index : true;
             return (
-              <li key={entry.question}>
+              <li key={entry.question.desktop}>
                 <details
                   open={isOpen}
                   onToggle={handleToggle(index)}
@@ -109,7 +169,13 @@ export function FaqAccordion({ entries, title, titleId }: FaqAccordionProps): Re
                       'hover:bg-surface-muted transition-colors',
                     )}
                   >
-                    {entry.question}
+                    {/* Question label: Body/lg (17/28) on desktop, Body/base
+                        (15/22) ~ Heading/h4 below the md breakpoint. */}
+                    <ResponsiveText
+                      copy={entry.question}
+                      desktopClassName="text-[17px]/[28px]"
+                      mobileClassName="text-[15px]/[22px]"
+                    />
                     {/* Decorative chevron: rotates when the item is open. The
                         open/closed state is already conveyed natively by
                         `<details>` to assistive tech, so this is aria-hidden. */}
@@ -129,7 +195,9 @@ export function FaqAccordion({ entries, title, titleId }: FaqAccordionProps): Re
                       <path d="m6 9 6 6 6-6" />
                     </svg>
                   </summary>
-                  <p className="text-text-secondary px-5 pb-5 text-pretty">{entry.answer}</p>
+                  <p className="text-text-secondary px-5 pb-5 text-pretty">
+                    <ResponsiveText copy={entry.answer} />
+                  </p>
                 </details>
               </li>
             );
