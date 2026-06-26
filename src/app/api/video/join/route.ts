@@ -21,7 +21,7 @@
  *
  * Runtime: Node.js (Drizzle/postgres-js requires Node).
  */
-import { eq, or } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -30,7 +30,7 @@ import { db } from '@/shared/db/client';
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
-import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
+import { videoRooms, videoSessionLogs } from '@/shared/db/schema/telepsicologia/tables';
 import { clientEnv } from '@/shared/env/client';
 import { logger } from '@/shared/lib/logger';
 import { createRateLimiter, extractClientIp } from '@/shared/lib/rate-limit';
@@ -247,7 +247,46 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // 4. Waiting — within time window, room is pending (psychologist hasn't admitted yet)
+    // 4. Waiting — within time window, room is pending (psychologist hasn't
+    //    admitted yet). This is the only branch that records presence: the
+    //    too_early/active/ended paths above all return before this point, so
+    //    they never touch either timestamp.
+    //
+    // A single UPDATE advances the liveness heartbeat on EVERY poll and stamps
+    // the first-arrival anchor exactly once, using one server `now()` for a
+    // consistent clock:
+    //  - patient_last_seen_at = now()            → always advances (heartbeat)
+    //  - patient_waiting_at = COALESCE(it, now())→ set once, immutable after
+    //
+    // The RETURNING comparison `(patient_waiting_at = patient_last_seen_at)` is
+    // true ONLY on the first poll, when both columns were just set to the same
+    // now(). On every later poll patient_waiting_at keeps its older value while
+    // patient_last_seen_at moves forward, so the comparison is false — even on a
+    // re-arrival after a departure (heartbeat reset to NULL, waiting_at still
+    // set), which re-stamps liveness without re-logging arrival.
+    const [arrival] = await db.execute<{ is_first_arrival: boolean }>(
+      sql`
+        UPDATE ${videoRooms}
+        SET patient_last_seen_at = now(),
+            patient_waiting_at = COALESCE(${videoRooms.patientWaitingAt}, now())
+        WHERE ${videoRooms.patientToken} = ${token}
+           OR ${videoRooms.partnerToken} = ${token}
+        RETURNING (${videoRooms.patientWaitingAt} = ${videoRooms.patientLastSeenAt})
+          AS is_first_arrival
+      `,
+    );
+
+    if (arrival?.is_first_arrival) {
+      // First arrival only: append exactly one append-only audit row,
+      // attributed to the role of the token that matched.
+      await db.insert(videoSessionLogs).values({
+        sessionId: room.sessionId,
+        userId: room.userId,
+        eventType: 'patient_arrived',
+        participantRole: isPatient ? 'patient' : 'partner',
+      });
+    }
+
     return NextResponse.json(
       {
         status: 'waiting',
