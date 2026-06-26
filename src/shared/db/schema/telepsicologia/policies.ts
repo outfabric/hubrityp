@@ -58,3 +58,48 @@ export const videoRecordingsPolicies = [
   // NO DELETE policy — recordings are discarded (status = 'discarded'),
   // not hard-deleted.
 ] as const;
+
+// realtime.messages: the waiting-room presence broadcast channel.
+//
+// why: this is the FIRST private Realtime channel in the repo. The
+// psychologist subscribes to the private topic `video-room:<roomId>` and a
+// SECURITY DEFINER trigger on `video_rooms` emits a minimal
+// `{ room_id, last_seen_at }` payload via `realtime.send` whenever the
+// patient heartbeat (`patient_last_seen_at`) changes — including a clear back
+// to NULL (departure). Authorization of *who may receive* that broadcast is
+// enforced here, by an RLS SELECT policy on the Supabase-internal
+// `realtime.messages` table: only the owner of the room may read messages on
+// its topic. Even if this predicate were too broad, the payload is
+// non-sensitive (a room UUID + a liveness timestamp — no JWT, token, patient
+// name, CPF, or clinical content), so the blast radius of a policy mistake is
+// minimal by design.
+//
+// This array is NOT enabled/ALTERed like the public-table arrays above:
+// `realtime.messages` is owned and RLS-enabled by Supabase itself, so we only
+// add the SELECT (receive) policy. The DDL lives in migration `0042`,
+// wrapped in a `DO $$ … IF EXISTS (realtime
+// schema / realtime.send) … $$` guard so a plain-Postgres stack
+// (Testcontainers/CI) applies the migration as a no-op for these objects.
+//
+// Policy-coverage contract: the lint test
+// (`__tests__/integration/policy-coverage.int.test.ts`) requires a matching
+// `CREATE POLICY ... ON <table>` in the migrations for every `pgTable(...)`
+// declared under `schema/**/tables.ts`. `realtime.messages` is a
+// Supabase-internal table, NOT a `pgTable` in this repo, so it is outside the
+// contract's scanned set — it neither needs nor receives an entry there. The
+// policy is still declared here (source of truth) and present in the
+// migration; the RLS integration test asserts its owner-vs-non-owner
+// predicate directly.
+export const realtimeMessagesPresencePolicies = [
+  `CREATE POLICY "owner can receive video-room presence broadcasts"
+     ON realtime.messages
+     FOR SELECT TO authenticated
+     USING (
+       realtime.messages.extension = 'broadcast'
+       AND EXISTS (
+         SELECT 1 FROM public.video_rooms vr
+         WHERE vr.user_id = auth.uid()
+           AND realtime.topic() = 'video-room:' || vr.id::text
+       )
+     );`,
+] as const;
