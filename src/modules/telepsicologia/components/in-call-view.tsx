@@ -1,6 +1,6 @@
 'use client';
 
-import { SpeakerLayout, useCall, useCallStateHooks } from '@stream-io/video-react-sdk';
+import { SpeakerLayout, useCall } from '@stream-io/video-react-sdk';
 import { UserCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -10,6 +10,7 @@ import type { VideoRoom } from '@/shared/db/schema/telepsicologia/tables';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 
+import { useVideoRoomPresence } from '../hooks/use-video-room-presence';
 import type { ChatCustomEventPayload } from '../lib/chat-types';
 
 import { CallControlBar } from './call-control-bar';
@@ -59,11 +60,13 @@ export function InCallView({
   onCreateEvolution,
   onUpdateEvolution,
 }: InCallViewProps) {
-  const { useParticipantCount } = useCallStateHooks();
-  const participantCount = useParticipantCount();
   const call = useCall();
 
   const [isAdmitting, setIsAdmitting] = useState(false);
+  // Local post-admit latch — flips the badge off immediately on a successful
+  // admit, independent of the static `room.status` prop (which is server-render
+  // stale until the page reloads).
+  const [admitted, setAdmitted] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [isProntuarioOpen, setIsProntuarioOpen] = useState(false);
@@ -91,10 +94,23 @@ export function InCallView({
     return unsubscribe;
   }, [call, currentUser.id]);
 
-  // If there are participants in the call beyond the psychologist (participantCount includes self),
-  // and the room is still pending, show the waiting room badge suggesting someone is in the lobby.
-  // participantCount = 1 means only the psychologist is in the call.
-  const showWaitingBadge = room.status === 'pending' && participantCount <= 1;
+  // Presence-driven waiting badge. A patient counts as "waiting" only while a
+  // recent heartbeat is fresh (within the TTL): the hook seeds from the
+  // server-rendered `patient_last_seen_at`, refreshes on each heartbeat
+  // broadcast, clears immediately on a departure broadcast, and auto-clears once
+  // the TTL elapses with no further heartbeats. `roomId`/`userId` come from the
+  // server (room row + authenticated psychologist), never client input.
+  const isPatientPresent = useVideoRoomPresence({
+    roomId: room.id,
+    userId: currentUser.id,
+    initialLastSeenAt: room.patientLastSeenAt,
+  });
+
+  // Show the badge only while the room is still pending AND the patient is
+  // present AND we have not just admitted them locally (the `admitted` latch
+  // hides the badge instantly without waiting for the stale `room.status` prop
+  // to refresh on the next page load).
+  const showWaitingBadge = room.status === 'pending' && isPatientPresent && !admitted;
 
   const handleAdmitPatient = useCallback(() => {
     setIsAdmitting(true);
@@ -103,7 +119,10 @@ export function InCallView({
         if (!result.ok) {
           // Generic error only — no internal details leaked to the client
           console.error('Erro ao admitir paciente');
+          return;
         }
+        // Latch the badge off immediately on success.
+        setAdmitted(true);
       })
       .catch(() => {
         console.error('Erro ao admitir paciente');

@@ -116,3 +116,11 @@ export { recordingCleanupCron } from './inngest/recording-cleanup';
 
 // ---- Pure helpers ------------------------------------------------------------
 export { generatePatientVideoUrl } from './lib/video-url';
+
+// ---- Waiting-room presence ---------------------------------------------------
+export { WAITING_PRESENCE_TTL_MS } from './lib/presence-constants';
+export {
+  useVideoRoomPresence,
+  parsePresencePayload,
+  type PresenceSignal,
+} from './hooks/use-video-room-presence';
