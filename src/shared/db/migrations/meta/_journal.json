@@ -295,6 +295,13 @@
       "when": 1782039155550,
       "tag": "0041_parallel_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1782437428071,
+      "tag": "0042_premium_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }
