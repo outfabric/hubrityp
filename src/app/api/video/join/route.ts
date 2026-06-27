@@ -264,28 +264,45 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // patient_last_seen_at moves forward, so the comparison is false — even on a
     // re-arrival after a departure (heartbeat reset to NULL, waiting_at still
     // set), which re-stamps liveness without re-logging arrival.
-    const [arrival] = await db.execute<{ is_first_arrival: boolean }>(
-      sql`
-        UPDATE ${videoRooms}
-        SET patient_last_seen_at = now(),
-            patient_waiting_at = COALESCE(${videoRooms.patientWaitingAt}, now())
-        WHERE ${videoRooms.patientToken} = ${token}
-           OR ${videoRooms.partnerToken} = ${token}
-        RETURNING (${videoRooms.patientWaitingAt} = ${videoRooms.patientLastSeenAt})
-          AS is_first_arrival
-      `,
-    );
+    //
+    // The `status = 'pending'` guard mirrors the depart route: in a TOCTOU race
+    // where the psychologist admits the patient (pending → active) between the
+    // status check above and this UPDATE, the guard prevents advancing liveness
+    // on an already-active room and emitting a spurious presence broadcast.
+    //
+    // The UPDATE and the first-arrival audit INSERT run in a single transaction:
+    // if the INSERT fails (transient DB error, connection drop), the UPDATE is
+    // rolled back so `patient_waiting_at` stays NULL, and the next heartbeat poll
+    // correctly re-detects first arrival and retries the full pair. Without the
+    // transaction a committed UPDATE + failed INSERT would permanently lose the
+    // `patient_arrived` audit row (COALESCE makes `patient_waiting_at` immutable).
+    await db.transaction(async (tx) => {
+      // postgres-js coerces the Postgres boolean OID → JS boolean; safe for
+      // this driver.
+      const [arrival] = await tx.execute<{ is_first_arrival: boolean }>(
+        sql`
+          UPDATE ${videoRooms}
+          SET patient_last_seen_at = now(),
+              patient_waiting_at = COALESCE(${videoRooms.patientWaitingAt}, now())
+          WHERE (${videoRooms.patientToken} = ${token}
+              OR ${videoRooms.partnerToken} = ${token})
+            AND ${videoRooms.status} = 'pending'
+          RETURNING (${videoRooms.patientWaitingAt} = ${videoRooms.patientLastSeenAt})
+            AS is_first_arrival
+        `,
+      );
 
-    if (arrival?.is_first_arrival) {
-      // First arrival only: append exactly one append-only audit row,
-      // attributed to the role of the token that matched.
-      await db.insert(videoSessionLogs).values({
-        sessionId: room.sessionId,
-        userId: room.userId,
-        eventType: 'patient_arrived',
-        participantRole: isPatient ? 'patient' : 'partner',
-      });
-    }
+      if (arrival?.is_first_arrival) {
+        // First arrival only: append exactly one append-only audit row,
+        // attributed to the role of the token that matched.
+        await tx.insert(videoSessionLogs).values({
+          sessionId: room.sessionId,
+          userId: room.userId,
+          eventType: 'patient_arrived',
+          participantRole: isPatient ? 'patient' : 'partner',
+        });
+      }
+    });
 
     return NextResponse.json(
       {
