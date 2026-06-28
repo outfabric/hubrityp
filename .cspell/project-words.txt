@@ -190,6 +190,7 @@ hubrity
 hubrityp
 
 # --- English code identifiers / log verbs (bilingual codebase) ---
+bfcache
 serverEnv
 clientEnv
 searchParams
@@ -304,3 +305,4 @@ Fwelcome
 welcomex
 DDNNNNNNNNN
 Gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TOCTOU

@@ -100,6 +100,35 @@ export function WaitingRoomView({
     };
   }, [poll]);
 
+  // Departure beacon: tell the server the patient stepped away so the
+  // psychologist's waiting list can reflect it promptly (clears the liveness
+  // heartbeat server-side; the first-arrival audit marker is preserved).
+  //
+  // `pagehide` (NOT `beforeunload`/`unload`) is the current best-practice
+  // unload signal: `beforeunload`/`unload` are unreliable on mobile browsers
+  // and disable the back/forward cache (bfcache), whereas `pagehide` fires in
+  // those cases. `navigator.sendBeacon` is used because it survives the page
+  // teardown and cannot be aborted by navigation; it also cannot set custom
+  // headers, which is why the token travels in the body (matching the route's
+  // `{ token }` contract). The `/api/video/depart` endpoint is idempotent, so
+  // firing more than once (e.g. also on `visibilitychange`) is harmless.
+  useEffect(() => {
+    const sendDepartureBeacon = (): void => {
+      // `sendBeacon` is unavailable in some non-browser environments; guard it.
+      if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') {
+        return;
+      }
+      const payload = new Blob([JSON.stringify({ token })], { type: 'application/json' });
+      navigator.sendBeacon('/api/video/depart', payload);
+    };
+
+    window.addEventListener('pagehide', sendDepartureBeacon);
+
+    return () => {
+      window.removeEventListener('pagehide', sendDepartureBeacon);
+    };
+  }, [token]);
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <Card className="w-full max-w-[480px]">

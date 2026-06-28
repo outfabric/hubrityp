@@ -60,6 +60,20 @@ export const videoRooms = pgTable(
     // Room lifecycle status. CHECK constraint enforces valid values.
     status: text('status').notNull().default('pending'),
 
+    // First-arrival marker for the patient in the waiting room. IMMUTABLE:
+    // set exactly once, on the first waiting poll, and never advanced after.
+    // Why: it is the audit/wait-time anchor ("patient was waiting since X"),
+    // a fact that must not move when the liveness heartbeat below refreshes.
+    patientWaitingAt: timestamp('patient_waiting_at', { withTimezone: true, mode: 'date' }),
+
+    // Liveness heartbeat for the patient in the waiting room. MUTABLE:
+    // advanced on every waiting poll, and reset to NULL on departure.
+    // Why: it answers "is the patient still here right now?" — it is watched
+    // by the broadcast trigger and seeds the psychologist's presence badge.
+    // Distinct from `patientWaitingAt` because "first arrived" (audit) and
+    // "still here" (liveness) are different facts with different mutability.
+    patientLastSeenAt: timestamp('patient_last_seen_at', { withTimezone: true, mode: 'date' }),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
@@ -99,6 +113,10 @@ export type NewVideoRoom = typeof videoRooms.$inferInsert;
 // with optional metadata. NO clinical content is stored — only structural
 // event data (who joined, when, connection drops, recording start/stop).
 //
+// `patient_arrived` marks the patient reaching the WAITING room (used for
+// wait-time measurement and audit). It is distinct from `patient_joined`,
+// which marks ADMISSION into the call once the therapist lets them in.
+//
 // RLS policies: SELECT + INSERT only (append-only — no update or delete).
 export const videoSessionLogs = pgTable(
   'video_session_logs',
@@ -132,11 +150,12 @@ export const videoSessionLogs = pgTable(
     // RLS performance: SELECT policy filters by auth.uid() = user_id.
     index('video_session_logs_user_id_idx').on(table.userId),
 
-    // Event type CHECK — enforces the 16 valid event types at DB level.
+    // Event type CHECK — enforces the 17 valid event types at DB level.
     check(
       'video_session_logs_event_type_check',
       sql`${table.eventType} IN (
         'therapist_joined', 'patient_joined', 'partner_joined',
+        'patient_arrived',
         'therapist_left', 'patient_left', 'partner_left',
         'screen_share_started', 'screen_share_ended',
         'connection_drop', 'reconnected',
