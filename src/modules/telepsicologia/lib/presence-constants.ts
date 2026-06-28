@@ -12,4 +12,4 @@
  * considered present in the waiting room. Past the TTL with no further
  * heartbeats the badge auto-clears (covers the no-beacon-on-exit case).
  */
-export const WAITING_PRESENCE_TTL_MS = 30_000;
+export const WAITING_PRESENCE_TTL_MS = 20_000;
