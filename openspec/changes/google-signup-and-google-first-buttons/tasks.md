@@ -17,9 +17,9 @@
 
 ## 4. Signup page — Google-first
 
-- [ ] 4.1 In `src/modules/registration/components/signup-form.tsx`, import `GoogleButton` directly from `@/modules/oauth/components/google-button` (NOT the `@/modules/oauth` barrel).
-- [ ] 4.2 Render `<GoogleButton label="Cadastrar com Google" testid="signup-form-google-button" />` at the top of the form, followed by an "ou" divider (matching the login divider markup), then the existing fields. Ensure it is `type="button"` and does not submit the form.
-- [ ] 4.3 Add unit coverage for `SignupForm` asserting a button with `data-testid="signup-form-google-button"` is rendered above the fields and is `type="button"`.
-- [ ] 4.4 Add/extend a seeded E2E scenario under `src/__tests__/e2e/seeded/oauth/` asserting the Google button is visible on `/signup` (`signup-form-google-button`) and initiates the OAuth flow, mirroring the existing `/login` scenario.
+- [x] 4.1 In `src/modules/registration/components/signup-form.tsx`, import `GoogleButton` directly from `@/modules/oauth/components/google-button` (NOT the `@/modules/oauth` barrel).
+- [x] 4.2 Render `<GoogleButton label="Cadastrar com Google" testid="signup-form-google-button" />` at the top of the form, followed by an "ou" divider (matching the login divider markup), then the existing fields. Ensure it is `type="button"` and does not submit the form.
+- [x] 4.3 Add unit coverage for `SignupForm` asserting a button with `data-testid="signup-form-google-button"` is rendered above the fields and is `type="button"`.
+- [x] 4.4 Add/extend a seeded E2E scenario under `src/__tests__/e2e/seeded/oauth/` asserting the Google button is visible on `/signup` (`signup-form-google-button`) and initiates the OAuth flow, mirroring the existing `/login` scenario.
 
 
