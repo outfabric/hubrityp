@@ -230,6 +230,23 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
       {/* Hidden input to submit keepLoggedIn with FormData */}
       <input type="hidden" name="keepLoggedIn" value={keepLoggedIn ? 'true' : 'false'} />
 
+      {/*
+        Google-first: the OAuth control sits above the credential fields, with
+        the "ou" divider separating it from the email/password block below.
+        `GoogleButton` is `type="button"` (its own default) so it never submits
+        this surrounding <form>.
+      */}
+      <GoogleButton />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card text-muted-foreground px-2">ou</span>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="login-email">E-mail</Label>
         <Input
@@ -295,17 +312,6 @@ export function LoginForm({ redirectTo, initialState = null }: LoginFormProps) {
       <Button type="submit" disabled={isPending} data-testid="login-form-submit" className="w-full">
         {isPending ? 'Entrando...' : 'Entrar'}
       </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card text-muted-foreground px-2">ou</span>
-        </div>
-      </div>
-
-      <GoogleButton />
     </form>
   );
 }

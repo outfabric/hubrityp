@@ -11,9 +11,9 @@
 
 ## 3. Login page — Google-first
 
-- [ ] 3.1 In `src/modules/auth/components/login-form.tsx`, move `<GoogleButton />` (defaults preserved) to the top of the form, above the email/password fields, with the existing "ou" divider relocated to sit between the Google button and the credential fields.
-- [ ] 3.2 Confirm `LoginForm` still imports `GoogleButton` from `@/modules/oauth/components/google-button` (leaf, not barrel).
-- [ ] 3.3 Update `src/__tests__/unit/modules/auth/components/login-form.test.tsx` — change the assertion `renders the GoogleButton below the submit button` to assert the button renders above the credential fields (Google-first).
+- [x] 3.1 In `src/modules/auth/components/login-form.tsx`, move `<GoogleButton />` (defaults preserved) to the top of the form, above the email/password fields, with the existing "ou" divider relocated to sit between the Google button and the credential fields.
+- [x] 3.2 Confirm `LoginForm` still imports `GoogleButton` from `@/modules/oauth/components/google-button` (leaf, not barrel).
+- [x] 3.3 Update `src/__tests__/unit/modules/auth/components/login-form.test.tsx` — change the assertion `renders the GoogleButton below the submit button` to assert the button renders above the credential fields (Google-first).
 
 ## 4. Signup page — Google-first
 
