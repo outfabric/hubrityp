@@ -1,7 +1,7 @@
 ## 1. Google glyph primitive
 
-- [ ] 1.1 Create `src/shared/ui/google-icon.tsx` — inline-SVG `GoogleIcon` primitive rendering the official 4-color Google "G" (blue `#4285F4`, green `#34A853`, yellow `#FBBC05`, red `#EA4335`), mirroring the `Logo` primitive shape (`React.SVGProps<SVGSVGElement>`, `viewBox`, `className` via `cn`). Colors are fixed brand hex — no `tone`/`currentColor`. Mark the glyph `aria-hidden="true"` (decorative beside the button text).
-- [ ] 1.2 Add a unit test `src/__tests__/unit/shared/ui/google-icon.test.tsx` asserting it renders an `<svg>` and is `aria-hidden`.
+- [x] 1.1 Create `src/shared/ui/google-icon.tsx` — inline-SVG `GoogleIcon` primitive rendering the official 4-color Google "G" (blue `#4285F4`, green `#34A853`, yellow `#FBBC05`, red `#EA4335`), mirroring the `Logo` primitive shape (`React.SVGProps<SVGSVGElement>`, `viewBox`, `className` via `cn`). Colors are fixed brand hex — no `tone`/`currentColor`. Mark the glyph `aria-hidden="true"` (decorative beside the button text).
+- [x] 1.2 Add a unit test `src/__tests__/unit/shared/ui/google-icon.test.tsx` asserting it renders an `<svg>` and is `aria-hidden`.
 
 ## 2. Parameterize the shared GoogleButton
 
