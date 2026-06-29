@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { createBrowserClient } from '@/shared/supabase/client';
 import { Button } from '@/shared/ui/button';
+import { GoogleIcon } from '@/shared/ui/google-icon';
 
 // GoogleButton initiates the Google OAuth sign-in flow on the client side.
 // It calls `supabase.auth.signInWithOAuth` which redirects the browser to
@@ -15,7 +16,17 @@ import { Button } from '@/shared/ui/button';
 // no server round-trip from the button click; the browser navigates directly
 // to Google via the Supabase SDK.
 
-export function GoogleButton() {
+export interface GoogleButtonProps {
+  /** Visible button label in the idle state. Defaults to the login copy. */
+  label?: string;
+  /** `data-testid` so each page's button is addressable independently in QA/E2E. */
+  testid?: string;
+}
+
+export function GoogleButton({
+  label = 'Entrar com Google',
+  testid = 'login-form-google-button',
+}: GoogleButtonProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {
@@ -49,12 +60,13 @@ export function GoogleButton() {
       variant="outline"
       className="w-full"
       disabled={isLoading}
-      data-testid="login-form-google-button"
+      data-testid={testid}
       onClick={() => {
         void handleClick();
       }}
     >
-      {isLoading ? 'Redirecionando...' : 'Entrar com Google'}
+      <GoogleIcon className="size-4" />
+      {isLoading ? 'Redirecionando...' : label}
     </Button>
   );
 }

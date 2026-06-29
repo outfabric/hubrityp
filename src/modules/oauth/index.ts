@@ -21,7 +21,7 @@ export {
 } from './server/resolve-oauth-callback';
 
 // ---- Components ------------------------------------------------------------
-export { GoogleButton } from './components/google-button';
+export { GoogleButton, type GoogleButtonProps } from './components/google-button';
 export {
   CompleteProfileForm,
   type CompleteProfileFormProps,

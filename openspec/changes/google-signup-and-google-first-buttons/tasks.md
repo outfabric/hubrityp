@@ -5,9 +5,9 @@
 
 ## 2. Parameterize the shared GoogleButton
 
-- [ ] 2.1 In `src/modules/oauth/components/google-button.tsx`, add props `label?: string` (default `'Entrar com Google'`) and `testid?: string` (default `'login-form-google-button'`); keep the loading label `'Redirecionando...'` and the `signInWithOAuth(...)` call unchanged.
-- [ ] 2.2 Render `<GoogleIcon />` before the label inside the button; keep `variant="outline"`, `type="button"`, full width.
-- [ ] 2.3 Verify the `@/modules/oauth` barrel still exports `GoogleButton` and that the new props are part of its public type.
+- [x] 2.1 In `src/modules/oauth/components/google-button.tsx`, add props `label?: string` (default `'Entrar com Google'`) and `testid?: string` (default `'login-form-google-button'`); keep the loading label `'Redirecionando...'` and the `signInWithOAuth(...)` call unchanged.
+- [x] 2.2 Render `<GoogleIcon />` before the label inside the button; keep `variant="outline"`, `type="button"`, full width.
+- [x] 2.3 Verify the `@/modules/oauth` barrel still exports `GoogleButton` and that the new props are part of its public type.
 
 ## 3. Login page — Google-first
 
