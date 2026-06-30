@@ -76,4 +76,42 @@ test.describe('@auth Google OAuth first-time sign-in', () => {
       await stub.teardown();
     }
   });
+
+  test('signup page shows Google button with correct test ID', async ({ page }) => {
+    await page.goto('/signup');
+    await expect(page.getByTestId('signup-form-name')).toBeVisible();
+
+    const googleButton = page.getByTestId('signup-form-google-button');
+    await expect(googleButton).toBeVisible();
+    await expect(googleButton).toHaveText('Cadastrar com Google');
+  });
+
+  test('signup Google button initiates the OAuth flow for a new user', async ({ page }) => {
+    const oauthUserId = randomUUID();
+    const oauthEmail = `oauth-signup-${oauthUserId.slice(0, 8)}@example.com`;
+    const oauthName = 'João Pereira';
+
+    const stub = await setupGoogleOAuthStub(page, {
+      email: oauthEmail,
+      name: oauthName,
+      providerUserId: `google-${oauthUserId}`,
+      userId: oauthUserId,
+      profile: null,
+    });
+
+    try {
+      await page.goto('/signup');
+      await page.getByTestId('signup-form-google-button').click();
+
+      // The stub intercepts Google navigation → callback exchanges code →
+      // resolveOAuthCallback finds no profile → redirect to complete-profile.
+      // This is the exact same flow the login Google button drives.
+      await page.waitForURL('**/onboarding/complete-profile', { timeout: 15_000 });
+
+      await expect(page.getByTestId('complete-profile-form-name')).toBeVisible();
+      await expect(page.getByTestId('complete-profile-form-name')).toHaveValue(oauthName);
+    } finally {
+      await stub.teardown();
+    }
+  });
 });

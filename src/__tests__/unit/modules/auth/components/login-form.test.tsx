@@ -217,10 +217,16 @@ describe('LoginForm', () => {
 
   // ---- 9.2: GoogleButton ----
 
-  it('renders the GoogleButton below the submit button', () => {
+  it('renders the GoogleButton above the credential fields (Google-first)', () => {
     render(<LoginForm />);
     const googleBtn = screen.getByTestId('login-form-google-button');
+    const email = screen.getByTestId('login-form-email');
     expect(googleBtn).toBeInTheDocument();
+
+    // Google-first layout: the OAuth button must precede the email/password
+    // block in document order. `Node.compareDocumentPosition` returns the
+    // `DOCUMENT_POSITION_FOLLOWING` bit when `email` comes after `googleBtn`.
+    expect(googleBtn.compareDocumentPosition(email)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   // ---- 9.3: Error copies with links ----

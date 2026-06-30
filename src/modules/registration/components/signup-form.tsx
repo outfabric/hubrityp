@@ -5,6 +5,12 @@ import { useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { type z } from 'zod';
 
+// Import `GoogleButton` directly from its component file rather than from the
+// `@/modules/oauth` barrel. The barrel co-exports Server Action implementations
+// that import `'server-only'` / `next/headers`; pulling the barrel into this
+// `'use client'` file would drag those server-only modules into the browser
+// bundle and break the build. This mirrors the discipline `LoginForm` follows.
+import { GoogleButton } from '@/modules/oauth/components/google-button';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Input } from '@/shared/ui/input';
@@ -259,6 +265,22 @@ export function SignupForm({ action }: SignupFormProps) {
       className="space-y-5"
       noValidate
     >
+      {/*
+        Google-first: the OAuth control sits above the fields, with the "ou"
+        divider separating it from the credential block below. `GoogleButton`
+        is `type="button"` (its own default) so it never submits this form.
+      */}
+      <GoogleButton label="Cadastrar com Google" testid="signup-form-google-button" />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card text-muted-foreground px-2">ou</span>
+        </div>
+      </div>
+
       {/* Nome completo */}
       <div className="space-y-2">
         <Label htmlFor={ids.fullName}>Nome completo</Label>
