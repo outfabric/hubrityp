@@ -505,7 +505,11 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.terms}
           testId="signup-form-terms"
           errorTestId="signup-form-error-acceptedTerms"
-          label="Aceito os Termos de Uso"
+          label={
+            <>
+              Li e aceito os <ConsentLink href="/termos-de-uso">Termos de Uso</ConsentLink>
+            </>
+          }
           register={register('acceptedTerms')}
           setValue={(checked) =>
             // The schema field is typed `true`; Zod will reject `false`
@@ -525,7 +529,12 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.privacy}
           testId="signup-form-privacy"
           errorTestId="signup-form-error-acceptedPrivacy"
-          label="Aceito a Política de Privacidade"
+          label={
+            <>
+              Li e aceito a{' '}
+              <ConsentLink href="/politica-de-privacidade">Política de Privacidade</ConsentLink>
+            </>
+          }
           register={register('acceptedPrivacy')}
           setValue={(checked) =>
             setValue('acceptedPrivacy', checked as true, {
@@ -541,7 +550,14 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.sensitive}
           testId="signup-form-sensitive-data"
           errorTestId="signup-form-error-acceptedSensitiveData"
-          label="Aceito o Tratamento de Dados Sensíveis (LGPD)"
+          label={
+            <>
+              Autorizo o tratamento dos meus{' '}
+              <ConsentLink href="/politica-de-privacidade#lgpd">
+                dados sensíveis conforme a LGPD
+              </ConsentLink>
+            </>
+          }
           register={register('acceptedSensitiveData')}
           setValue={(checked) =>
             setValue('acceptedSensitiveData', checked as true, {

@@ -5,10 +5,10 @@
 
 ## 2. Replace the three consent labels with informed-consent copy + links
 
-- [ ] 2.1 `acceptedTerms`: render "Li e aceito os **Termos de Uso**" with the bold span as a link to `/termos-de-uso`.
-- [ ] 2.2 `acceptedPrivacy`: render "Li e aceito a **Política de Privacidade**" with the bold span as a link to `/politica-de-privacidade`.
-- [ ] 2.3 `acceptedSensitiveData`: render "Autorizo o tratamento dos meus **dados sensíveis conforme a LGPD**" with the bold span as a link to `/politica-de-privacidade#lgpd`.
-- [ ] 2.4 Keep the `<Label htmlFor={inputId}>` association, testids (`signup-form-terms/privacy/sensitive-data`), hidden `<input {...register}>`, `setValue`, and `aria-describedby` error wiring byte-for-byte unchanged.
+- [x] 2.1 `acceptedTerms`: render "Li e aceito os **Termos de Uso**" with the bold span as a link to `/termos-de-uso`.
+- [x] 2.2 `acceptedPrivacy`: render "Li e aceito a **Política de Privacidade**" with the bold span as a link to `/politica-de-privacidade`.
+- [x] 2.3 `acceptedSensitiveData`: render "Autorizo o tratamento dos meus **dados sensíveis conforme a LGPD**" with the bold span as a link to `/politica-de-privacidade#lgpd`.
+- [x] 2.4 Keep the `<Label htmlFor={inputId}>` association, testids (`signup-form-terms/privacy/sensitive-data`), hidden `<input {...register}>`, `setValue`, and `aria-describedby` error wiring byte-for-byte unchanged.
 
 ## 3. Unit test: links render correctly and reading is decoupled from accepting
 
