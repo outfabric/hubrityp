@@ -12,9 +12,9 @@
 
 ## 3. Unit test: links render correctly and reading is decoupled from accepting
 
-- [ ] 3.1 In `src/__tests__/unit/modules/registration/`, add/extend the signup-form spec: assert each consent label renders an anchor with the correct `href` (`/termos-de-uso`, `/politica-de-privacidade`, `/politica-de-privacidade#lgpd`), plus `target="_blank"` and `rel` containing `noopener` and `noreferrer`.
-- [ ] 3.2 Assert **read ≠ accept**: clicking a consent-label link while its checkbox is unchecked does not toggle the checkbox (checkbox stays unchecked); clicking the checkbox control still toggles the consent flag.
-- [ ] 3.3 Regression: confirm the existing submit test still passes unchanged — all three checked → success; one unchecked → per-field consent error. Do NOT modify `signup-input-schema.test.ts` or `sign-up.int.test.ts`.
+- [x] 3.1 In `src/__tests__/unit/modules/registration/`, add/extend the signup-form spec: assert each consent label renders an anchor with the correct `href` (`/termos-de-uso`, `/politica-de-privacidade`, `/politica-de-privacidade#lgpd`), plus `target="_blank"` and `rel` containing `noopener` and `noreferrer`.
+- [x] 3.2 Assert **read ≠ accept**: clicking a consent-label link while its checkbox is unchecked does not toggle the checkbox (checkbox stays unchecked); clicking the checkbox control still toggles the consent flag.
+- [x] 3.3 Regression: confirm the existing submit test still passes unchanged — all three checked → success; one unchecked → per-field consent error. Do NOT modify `signup-input-schema.test.ts` or `sign-up.int.test.ts`.
 
 ## 4. Accessibility verification
 
