@@ -1,7 +1,7 @@
 ## 1. Widen `ConsentRow` to accept rich labels
 
-- [ ] 1.1 In `src/modules/registration/components/signup-form.tsx`, change the `ConsentRow` `label` prop type from `string` to `React.ReactNode` (import `ReactNode` from `react` or use `React.ReactNode`); no other prop changes.
-- [ ] 1.2 Add a small local link helper/element for consent anchors: `<a target="_blank" rel="noopener noreferrer">` styled `text-brand-600 hover:text-brand-700 underline underline-offset-2`, inheriting the design-system `focus-visible` ring (do not override), with `onClick={(e) => e.stopPropagation()}` so a link click never toggles the checkbox. Optionally append a 14px `ExternalLink` (lucide) with `aria-hidden` after the anchor text.
+- [x] 1.1 In `src/modules/registration/components/signup-form.tsx`, change the `ConsentRow` `label` prop type from `string` to `React.ReactNode` (import `ReactNode` from `react` or use `React.ReactNode`); no other prop changes.
+- [x] 1.2 Add a small local link helper/element for consent anchors: `<a target="_blank" rel="noopener noreferrer">` styled `text-brand-600 hover:text-brand-700 underline underline-offset-2`, inheriting the design-system `focus-visible` ring (do not override), with `onClick={(e) => e.stopPropagation()}` so a link click never toggles the checkbox. Optionally append a 14px `ExternalLink` (lucide) with `aria-hidden` after the anchor text.
 
 ## 2. Replace the three consent labels with informed-consent copy + links
 
