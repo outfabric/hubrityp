@@ -18,5 +18,5 @@
 
 ## 4. Accessibility verification
 
-- [ ] 4.1 Validate link contrast against the card background: `brand-600` must meet WCAG AA (≥ 4.5:1); if borderline, switch to `brand-700`. Confirm underline keeps the link distinguishable without color (WCAG 1.4.1).
-- [ ] 4.2 Manually verify keyboard: each link is tabbable, activates on Enter, focus ring is visible; Space on the checkbox toggles it; label text remains coherent for screen readers.
+- [x] 4.1 Validate link contrast against the card background: `brand-600` must meet WCAG AA (≥ 4.5:1); if borderline, switch to `brand-700`. Confirm underline keeps the link distinguishable without color (WCAG 1.4.1).
+- [x] 4.2 Manually verify keyboard: each link is tabbable, activates on Enter, focus ring is visible; Space on the checkbox toggles it; label text remains coherent for screen readers.
