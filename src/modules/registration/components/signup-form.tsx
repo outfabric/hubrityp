@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useId, useState, useTransition } from 'react';
+import { ExternalLink } from 'lucide-react';
+import { type ReactNode, useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { type z } from 'zod';
 
@@ -504,7 +505,11 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.terms}
           testId="signup-form-terms"
           errorTestId="signup-form-error-acceptedTerms"
-          label="Aceito os Termos de Uso"
+          label={
+            <>
+              Li e aceito os <ConsentLink href="/termos-de-uso">Termos de Uso</ConsentLink>
+            </>
+          }
           register={register('acceptedTerms')}
           setValue={(checked) =>
             // The schema field is typed `true`; Zod will reject `false`
@@ -524,7 +529,12 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.privacy}
           testId="signup-form-privacy"
           errorTestId="signup-form-error-acceptedPrivacy"
-          label="Aceito a Política de Privacidade"
+          label={
+            <>
+              Li e aceito a{' '}
+              <ConsentLink href="/politica-de-privacidade">Política de Privacidade</ConsentLink>
+            </>
+          }
           register={register('acceptedPrivacy')}
           setValue={(checked) =>
             setValue('acceptedPrivacy', checked as true, {
@@ -540,7 +550,14 @@ export function SignupForm({ action }: SignupFormProps) {
           errorId={errorIds.sensitive}
           testId="signup-form-sensitive-data"
           errorTestId="signup-form-error-acceptedSensitiveData"
-          label="Aceito o Tratamento de Dados Sensíveis (LGPD)"
+          label={
+            <>
+              Autorizo o tratamento dos meus{' '}
+              <ConsentLink href="/politica-de-privacidade#lgpd">
+                dados sensíveis conforme a LGPD
+              </ConsentLink>
+            </>
+          }
           register={register('acceptedSensitiveData')}
           setValue={(checked) =>
             setValue('acceptedSensitiveData', checked as true, {
@@ -603,7 +620,7 @@ function ConsentRow({
   errorId: string;
   testId: string;
   errorTestId: string;
-  label: string;
+  label: ReactNode;
   register: RegisterReturn;
   setValue: (checked: boolean) => void;
   errorMessage: string | undefined;
@@ -629,5 +646,34 @@ function ConsentRow({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Inline anchor for consent labels (Terms, Privacy, LGPD).
+ *
+ * Rendered inside a `<label>` next to its checkbox, so a click on the link
+ * must NOT toggle the box. The HTML label spec already exempts clicks on
+ * interactive descendants from the label's activation behavior, but we add
+ * `onClick={(e) => e.stopPropagation()}` as defense-in-depth so the toggle
+ * never fires regardless of how the surrounding label wires its handler.
+ *
+ * A plain `<a target="_blank">` (not `next/link`) avoids prefetching a
+ * static legal document; `rel="noopener noreferrer"` is mandatory with
+ * `target="_blank"` to sever the opener reference and strip the referrer.
+ * The design-system `focus-visible` ring is inherited — not overridden.
+ */
+export function ConsentLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(event) => event.stopPropagation()}
+      className="text-brand-600 hover:text-brand-700 underline underline-offset-2"
+    >
+      {children}
+      <ExternalLink className="ml-0.5 inline-block h-3.5 w-3.5 align-baseline" aria-hidden="true" />
+    </a>
   );
 }
