@@ -203,8 +203,13 @@ async function fetchPatientData(
 
 /**
  * Fetches template data for a given user and template key.
+ *
+ * Returns `null` when the template does not exist or has no platform Content
+ * SID (`metaTemplateId IS NULL`) — the dispatcher then skips the send.
+ *
+ * @internal Exported for integration testing of the seed → dispatch contract.
  */
-async function fetchTemplate(
+export async function fetchTemplate(
   db: DrizzleDb,
   userId: string,
   templateKey: string,

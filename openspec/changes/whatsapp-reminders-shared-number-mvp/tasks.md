@@ -11,9 +11,9 @@
 
 ## 2. Seed de templates com Content SIDs da plataforma
 
-- [ ] 2.1 Alterar `src/modules/whatsapp/server/seed-default-templates.ts` para mapear `templateKey → TWILIO_CONTENT_SID_*` (via `serverEnv`) e gravar `metaTemplateId = <sid>` + `metaStatus = 'approved'` nos templates de lembrete (`lembrete_24h`, `lembrete_2h`, `link_video`, `confirmacao_recebida`, `cancelamento_aviso`). Manter idempotência.
-- [ ] 2.2 **Teste (unit)**: mapeamento `templateKey → Content SID` correto e completo; templates de lembrete nascem `approved` com `metaTemplateId` não-nulo.
-- [ ] 2.3 **Teste (integration)**: após seed, `message_templates` tem `meta_template_id` não-nulo/`approved`; `fetchTemplate` do dispatcher retorna `contentSid` para cada kind; segunda chamada não duplica (idempotência) — contra Postgres real com RLS.
+- [x] 2.1 Alterar `src/modules/whatsapp/server/seed-default-templates.ts` para mapear `templateKey → TWILIO_CONTENT_SID_*` (via `serverEnv`) e gravar `metaTemplateId = <sid>` + `metaStatus = 'approved'` nos templates de lembrete (`lembrete_24h`, `lembrete_2h`, `link_video`, `confirmacao_recebida`, `cancelamento_aviso`). Manter idempotência.
+- [x] 2.2 **Teste (unit)**: mapeamento `templateKey → Content SID` correto e completo; templates de lembrete nascem `approved` com `metaTemplateId` não-nulo.
+- [x] 2.3 **Teste (integration)**: após seed, `message_templates` tem `meta_template_id` não-nulo/`approved`; `fetchTemplate` do dispatcher retorna `contentSid` para cada kind; segunda chamada não duplica (idempotência) — contra Postgres real com RLS.
 
 ## 3. Provisionamento lazy + consentimento LGPD (Server Action)
 
