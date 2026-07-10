@@ -47,4 +47,4 @@
 
 ## 7. Atualização de artefatos, se necessário
 
-- [ ] 7.1 Atualizar a árvore de pastas/notas em `CLAUDE.md` se novos arquivos de módulo/rota foram criados nesta worktree.
+- [x] 7.1 Atualizar a árvore de pastas/notas em `CLAUDE.md` se novos arquivos de módulo/rota foram criados nesta worktree.
