@@ -6,23 +6,35 @@ import { Badge } from '@/shared/ui/badge';
 import { Card } from '@/shared/ui/card';
 
 /**
- * Slugs whose cards are frozen ("Em breve") while the WhatsApp UI is disabled.
- * Both depend on the WhatsApp integration, so they share the same flag.
+ * Decides whether a settings-area card is frozen ("Em breve"), gated per
+ * surface by an independent WhatsApp UI feature flag:
+ *
+ * - `lembretes` — the reminder settings screen, governed by the REMINDERS flag
+ *   (ON in the shared-number reminders MVP, so this card is navigable).
+ * - `whatsapp` — the connection surface (connect number + template text),
+ *   governed by the CONNECTION flag (OFF in the MVP, so this card is frozen).
+ *
+ * Every other area is always navigable — the WhatsApp flags never touch it.
  */
-const WHATSAPP_DEPENDENT_SLUGS = new Set(['whatsapp', 'lembretes']);
+function isAreaFrozen(slug: string): boolean {
+  if (slug === 'lembretes') {
+    return !clientEnv.NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED;
+  }
+  if (slug === 'whatsapp') {
+    return !clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED;
+  }
+  return false;
+}
 
 /**
  * Settings index page — renders a responsive grid of cards linking to each
- * settings area. Server Component (no client JS needed). When the WhatsApp UI
- * is disabled, the WhatsApp- and reminder-dependent cards are rendered frozen:
- * non-navigable, visually muted, and tagged "Em breve".
+ * settings area. Server Component (no client JS needed). Each WhatsApp-
+ * dependent card is frozen independently by its own surface flag (see
+ * `isAreaFrozen`): a frozen card is rendered non-navigable, visually muted, and
+ * tagged "Em breve". The flags are UI-only — the underlying routes stay
+ * reachable by direct URL (auth gating is the middleware's job, not the flag's).
  */
 export default function SettingsIndexPage() {
-  // Section 6 splits this into per-surface gating (Lembretes by REMINDERS,
-  // WhatsApp/connection by CONNECTION). Until then both dependent cards share
-  // the connection flag, preserving the previous all-or-nothing freeze.
-  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED;
-
   return (
     <div data-testid="settings-index-page">
       <h1
@@ -35,7 +47,7 @@ export default function SettingsIndexPage() {
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {SETTINGS_AREAS.map((area) => {
           const Icon = area.icon;
-          const disabled = !whatsappUiEnabled && WHATSAPP_DEPENDENT_SLUGS.has(area.slug);
+          const disabled = isAreaFrozen(area.slug);
 
           // Frozen card: non-navigable (`<Card>`, no `<Link>`), `aria-disabled`.
           // `text-disabled` is intentionally below 4.5:1 AA for normal text —

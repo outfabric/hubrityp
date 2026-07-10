@@ -39,11 +39,11 @@
 
 ## 6. Frontend — congelamento granular por superfície (flags)
 
-- [ ] 6.1 Atualizar `sidebar-nav.tsx` para congelar "Caixa de entrada" por `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED` (não-navegável, `aria-disabled`, Badge "Em breve"). **Design System.**
-- [ ] 6.2 Atualizar `configuracoes/page.tsx` e `configuracoes/integracoes/page.tsx`: card "Lembretes" navegável por `WHATSAPP_REMINDERS_UI_ENABLED`; cards "WhatsApp"/conexão e edição de template congelados por `WHATSAPP_CONNECTION_UI_ENABLED`. **Design System.**
-- [ ] 6.3 **Teste (unit/RTL)**: com config do MVP (reminders on, inbox/connection off) — "Lembretes" navegável; "Caixa de entrada", "WhatsApp"/conexão e edição de template congelados (`aria-disabled`, sem `<a>`, "Em breve"); demais cards inalterados.
-- [ ] 6.4 **Teste (E2E, seeded)**: item/cards congelados são não-navegáveis (clique/teclado não navega); a tela de lembretes permanece acessível.
-- [ ] 6.5 **Teste (integration/negativo de auth)**: as rotas de WhatsApp (`/configuracoes/lembretes`, `/caixa-de-entrada`) continuam gated pelo middleware — requisição anônima é redirecionada/rejeitada, independentemente das flags.
+- [x] 6.1 Atualizar `sidebar-nav.tsx` para congelar "Caixa de entrada" por `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED` (não-navegável, `aria-disabled`, Badge "Em breve"). **Design System.**
+- [x] 6.2 Atualizar `configuracoes/page.tsx` e `configuracoes/integracoes/page.tsx`: card "Lembretes" navegável por `WHATSAPP_REMINDERS_UI_ENABLED`; cards "WhatsApp"/conexão e edição de template congelados por `WHATSAPP_CONNECTION_UI_ENABLED`. **Design System.**
+- [x] 6.3 **Teste (unit/RTL)**: com config do MVP (reminders on, inbox/connection off) — "Lembretes" navegável; "Caixa de entrada", "WhatsApp"/conexão e edição de template congelados (`aria-disabled`, sem `<a>`, "Em breve"); demais cards inalterados.
+- [x] 6.4 **Teste (E2E, seeded)**: item/cards congelados são não-navegáveis (clique/teclado não navega); a tela de lembretes permanece acessível.
+- [x] 6.5 **Teste (integration/negativo de auth)**: as rotas de WhatsApp (`/configuracoes/lembretes`, `/caixa-de-entrada`) continuam gated pelo middleware — requisição anônima é redirecionada/rejeitada, independentemente das flags.
 
 ## 7. Atualização de artefatos, se necessário
 
