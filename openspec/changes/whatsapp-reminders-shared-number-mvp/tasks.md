@@ -26,10 +26,10 @@
 
 ## 4. Webhook `inbound_text` → auto-resposta free-form + throttle
 
-- [ ] 4.1 Criar helper de auto-resposta (texto fixo não-clínico) usando `sendFreeText` do adapter; incluir checagem de throttle (≤1 auto-resposta por telefone em 24h) consultando `whatsapp_messages`. Confirmar via Context7 a semântica da janela de 24h do Twilio se necessário.
-- [ ] 4.2 **Teste (unit)**: regra de throttle (permite 1ª, suprime dentro de 24h, permite após 24h); corpo fixo sem PII.
-- [ ] 4.3 Alterar `src/app/api/webhooks/twilio/whatsapp/route.ts`: ramo `inbound_text` deixa de emitir `whatsapp/inbound.received` (inbox) e passa a acionar a auto-resposta; garantir retorno 200 imediato e log sem PII em falha de disparo. Persistir inbound em `whatsapp_messages` (audit/throttle) sem tocar `whatsapp_conversations`.
-- [ ] 4.4 **Teste (integration)**: `inbound_text` dispara auto-resposta (via `sendFreeText` mockado), NÃO cria/atualiza `whatsapp_conversations`, persiste inbound; `button_confirm`/`button_cancel`/`stop_command`/`status_update` seguem seus handlers e NÃO recebem auto-resposta; assinatura HMAC inválida → 403.
+- [x] 4.1 Criar helper de auto-resposta (texto fixo não-clínico) usando `sendFreeText` do adapter; incluir checagem de throttle (≤1 auto-resposta por telefone em 24h) consultando `whatsapp_messages`. Confirmar via Context7 a semântica da janela de 24h do Twilio se necessário.
+- [x] 4.2 **Teste (unit)**: regra de throttle (permite 1ª, suprime dentro de 24h, permite após 24h); corpo fixo sem PII.
+- [x] 4.3 Alterar `src/app/api/webhooks/twilio/whatsapp/route.ts`: ramo `inbound_text` deixa de emitir `whatsapp/inbound.received` (inbox) e passa a acionar a auto-resposta; garantir retorno 200 imediato e log sem PII em falha de disparo. Persistir inbound em `whatsapp_messages` (audit/throttle) sem tocar `whatsapp_conversations`.
+- [x] 4.4 **Teste (integration)**: `inbound_text` dispara auto-resposta (via `sendFreeText` mockado), NÃO cria/atualiza `whatsapp_conversations`, persiste inbound; `button_confirm`/`button_cancel`/`stop_command`/`status_update` seguem seus handlers e NÃO recebem auto-resposta; assinatura HMAC inválida → 403.
 
 ## 5. Frontend — consentimento na tela de lembretes
 

@@ -42,6 +42,11 @@ export default async function globalSetup() {
   // Platform shared WhatsApp number — used by lazy provisioning of
   // `whatsapp_accounts` on the first consented reminder-settings save.
   process.env.TWILIO_WHATSAPP_FROM ??= '+551140000000';
+  // Twilio webhook HMAC validation — required by the inbound webhook Route
+  // Handler to authenticate `X-Twilio-Signature`. Optional in the env schema,
+  // so this only affects tests that exercise the Route Handler directly.
+  process.env.TWILIO_AUTH_TOKEN ??= 'integration-twilio-auth-token';
+  process.env.TWILIO_WEBHOOK_URL ??= 'https://example.com/api/webhooks/twilio/whatsapp';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.
