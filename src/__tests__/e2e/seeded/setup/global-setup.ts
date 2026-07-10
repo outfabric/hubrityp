@@ -21,6 +21,7 @@ import {
   SEED_PATIENTS,
   SEED_SESSION_HISTORY_USER,
   SEED_SESSIONS,
+  SEED_WHATSAPP_CONSENT_USER,
 } from './seed-state';
 
 // Playwright runs `globalSetup` AFTER the `webServer` plugin starts (see
@@ -1685,6 +1686,58 @@ export default async function globalSetup() {
         status      = 'active',
         archived_at = NULL;
     `;
+
+    // -----------------------------------------------------------------------
+    // Dedicated WhatsApp reminders LGPD-consent user
+    // (whatsapp/reminder-consent-provisioning.spec.ts).
+    //
+    // A separate active psychologist touched by NOTHING else, so the consent
+    // flow can start from an account-free baseline and provision on its first
+    // save WITHOUT racing the sibling whatsapp specs that DELETE/INSERT
+    // `whatsapp_accounts` on the GLOBAL seed user under `fullyParallel`. See
+    // SEED_WHATSAPP_CONSENT_USER for the full rationale. `first_access_at` is
+    // left NULL so the day-7 NPS modal never auto-runs over the save/toast.
+    // -----------------------------------------------------------------------
+    const waConsentUser = SEED_WHATSAPP_CONSENT_USER;
+    const waConsentMetadata = JSON.stringify({
+      fullName: waConsentUser.fullName,
+      crpNumber: '88888-W',
+      crpUf: 'SP',
+      termsAcceptedAt: nowIso,
+      privacyAcceptedAt: nowIso,
+      sensitiveDataConsentAt: nowIso,
+    });
+    await sql`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data)
+      VALUES (
+        ${waConsentUser.id},
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        ${waConsentUser.email},
+        ${waConsentMetadata}::jsonb
+      )
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    await sql`
+      UPDATE public.profiles
+      SET status = 'active',
+          full_name = ${waConsentUser.fullName},
+          email_verified_at = COALESCE(email_verified_at, now()),
+          crp_validated_at = COALESCE(crp_validated_at, now()),
+          first_access_at = NULL,
+          nps_responded_at = NULL,
+          requires_password_reset = false,
+          onboarding_step = 'done',
+          onboarding_completed_at = COALESCE(onboarding_completed_at, now())
+      WHERE user_id = ${waConsentUser.id};
+    `;
+    // Reset to an account-free, settings-free baseline (FK order: templates ->
+    // settings -> accounts) so the spec deterministically starts BEFORE
+    // provisioning on a reused container.
+    await sql`DELETE FROM public.message_templates WHERE user_id = ${waConsentUser.id}`;
+    await sql`DELETE FROM public.reminder_settings WHERE user_id = ${waConsentUser.id}`;
+    await sql`DELETE FROM public.whatsapp_accounts WHERE user_id = ${waConsentUser.id}`;
   } finally {
     await sql.end();
   }

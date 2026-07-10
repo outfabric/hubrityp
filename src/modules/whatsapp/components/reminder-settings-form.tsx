@@ -3,17 +3,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { saveReminderSettings } from '@/app/(app)/configuracoes/lembretes/actions';
 import {
   reminderSettingsSchema,
+  reminderSettingsWithConsentSchema,
   type ReminderSettingsInput,
 } from '@/modules/whatsapp/lib/reminders/reminder-settings-schema';
 import type { ReminderSettingsData } from '@/modules/whatsapp/server/reminders/get-reminder-settings';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
+import { Checkbox } from '@/shared/ui/checkbox';
 import { Label } from '@/shared/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
@@ -74,6 +76,13 @@ function radioToFinalHours(value: string): number | null {
 
 interface ReminderSettingsFormProps {
   settings: ReminderSettingsData;
+  /**
+   * Whether the psychologist already has a provisioned shared-number WhatsApp
+   * account. When `false`, this save will lazily provision the account, so the
+   * LGPD consent checkbox is shown and required. When `true`, consent was
+   * already recorded at provisioning time and is never asked again.
+   */
+  hasWhatsappAccount: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,19 +102,30 @@ interface ReminderSettingsFormProps {
  *   - Toast success via Sonner
  *   - Mobile: padding space-4
  */
-export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
+export function ReminderSettingsForm({ settings, hasWhatsappAccount }: ReminderSettingsFormProps) {
   const [isPending, startTransition] = useTransition();
 
+  // Consent is only required on the FIRST save (before the account exists). The
+  // with-consent schema narrows `consent` to the literal `true`, which is
+  // structurally assignable to the optional-consent form type; the cast just
+  // reconciles the two zodResolver output types under one form generic.
+  const resolver = zodResolver(
+    hasWhatsappAccount ? reminderSettingsSchema : reminderSettingsWithConsentSchema,
+  ) as Resolver<ReminderSettingsInput>;
+
   const form = useForm<ReminderSettingsInput>({
-    resolver: zodResolver(reminderSettingsSchema),
+    resolver,
     mode: 'onBlur',
     defaultValues: {
       early_reminder_hours: settings.earlyReminderHours,
       final_reminder_hours: settings.finalReminderHours,
       video_link_minutes: settings.videoLinkMinutes,
       send_during_night: settings.sendDuringNight,
+      consent: undefined,
     },
   });
+
+  const consentError = form.formState.errors.consent?.message;
 
   function handleSubmit(data: ReminderSettingsInput) {
     startTransition(async () => {
@@ -136,6 +156,47 @@ export function ReminderSettingsForm({ settings }: ReminderSettingsFormProps) {
           noValidate
           data-testid="reminder-settings-form"
         >
+          {/* ---- Consent gate (first save only, before provisioning) ---- */}
+          {!hasWhatsappAccount ? (
+            <>
+              <div data-testid="reminder-consent-section">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="reminder-consent"
+                    checked={form.watch('consent') === true}
+                    onCheckedChange={(checked) => {
+                      form.setValue('consent', checked === true ? true : undefined, {
+                        shouldValidate: true,
+                      });
+                    }}
+                    aria-invalid={consentError ? true : undefined}
+                    aria-describedby={consentError ? 'reminder-consent-error' : undefined}
+                    data-testid="reminder-consent-checkbox"
+                  />
+                  <Label
+                    htmlFor="reminder-consent"
+                    className="cursor-pointer text-sm leading-snug font-normal"
+                  >
+                    Autorizo o uso do número de WhatsApp da plataforma para enviar lembretes e me
+                    comunicar com meus pacientes, e declaro ser responsável por obter o
+                    consentimento de cada paciente para esse contato.
+                  </Label>
+                </div>
+                {consentError ? (
+                  <p
+                    id="reminder-consent-error"
+                    data-testid="reminder-consent-error"
+                    className="text-danger-700 mt-1 ml-7 text-sm"
+                  >
+                    {consentError}
+                  </p>
+                ) : null}
+              </div>
+
+              <Separator />
+            </>
+          ) : null}
+
           {/* ---- Section 1: Early reminder ---- */}
           <div className="space-y-2">
             <Label className="text-[15px] font-normal">Lembrete antecipado</Label>

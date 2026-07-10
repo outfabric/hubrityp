@@ -33,9 +33,9 @@
 
 ## 5. Frontend — consentimento na tela de lembretes
 
-- [ ] 5.1 Adicionar o controle de consentimento LGPD ao `reminder-settings-form.tsx` (React Hook Form + Zod resolver), exibido/obrigatório apenas quando o psicólogo ainda não tem conta; cópia cobrindo (a) uso do WhatsApp da plataforma e (b) responsabilidade pelo consentimento do paciente. **Consultar `docs/design-system/rules.md`** para o componente, tokens e acessibilidade.
-- [ ] 5.2 **Teste (unit/RTL)**: form renderiza o consentimento no estado "sem conta"; bloqueia submit sem consentimento; oculta/dispensa o checkbox quando a conta já existe.
-- [ ] 5.3 **Teste (E2E, seeded)**: fluxo de configurar lembretes com consentimento → toast de sucesso; segundo acesso não re-exige consentimento.
+- [x] 5.1 Adicionar o controle de consentimento LGPD ao `reminder-settings-form.tsx` (React Hook Form + Zod resolver), exibido/obrigatório apenas quando o psicólogo ainda não tem conta; cópia cobrindo (a) uso do WhatsApp da plataforma e (b) responsabilidade pelo consentimento do paciente. **Consultar `docs/design-system/rules.md`** para o componente, tokens e acessibilidade.
+- [x] 5.2 **Teste (unit/RTL)**: form renderiza o consentimento no estado "sem conta"; bloqueia submit sem consentimento; oculta/dispensa o checkbox quando a conta já existe.
+- [x] 5.3 **Teste (E2E, seeded)**: fluxo de configurar lembretes com consentimento → toast de sucesso; segundo acesso não re-exige consentimento.
 
 ## 6. Frontend — congelamento granular por superfície (flags)
 

@@ -648,6 +648,32 @@ export const SEED_AI_STATS_USER = {
   },
 } as const;
 
+/**
+ * Dedicated user for the WhatsApp reminders LGPD-consent E2E spec
+ * (whatsapp/reminder-consent-provisioning.spec.ts).
+ *
+ * The consent flow provisions a shared-number `whatsapp_accounts` row on the
+ * FIRST save. Driving it on the GLOBAL seed user is unsafe: several sibling
+ * whatsapp specs (`whatsapp-connect`, `template-edit`, `whatsapp-health-banner`)
+ * DELETE/INSERT `whatsapp_accounts` for the SAME user under `fullyParallel`, so
+ * a stray insert between our "no account" assertion and our save would make the
+ * consent checkbox disappear (and race our own provisioning INSERT on the
+ * `user_id` UNIQUE constraint).
+ *
+ * This is therefore a SEPARATE active `auth.users` + `profiles` row touched by
+ * NOTHING else. `global-setup.ts` resets it to an account-free, settings-free
+ * baseline on every run, so the spec deterministically starts before
+ * provisioning. `first_access_at` is left NULL so the day-7 NPS modal never
+ * auto-runs and intercepts the save/toast. The mock GoTrue never authenticates
+ * this user by default; the spec signs in at runtime via the shared
+ * `signInAsDedicatedUser` helper.
+ */
+export const SEED_WHATSAPP_CONSENT_USER = {
+  id: '00000000-0000-4000-8000-0000000000da',
+  email: 'wa-consent-e2e@example.com',
+  fullName: 'WhatsApp Consent E2E',
+} as const;
+
 export const SEED_AI_CONSENT_TERMS = {
   /** Unsigned AI consent term — the happy-path test will sign this one. */
   unsigned: {

@@ -148,6 +148,14 @@ async function main(): Promise<void> {
       TWILIO_CONTENT_SID_LINK_VIDEO: 'HXe2evideo',
       TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXe2econfirm',
       TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXe2ecancel',
+      // Platform shared WhatsApp sender — required so the first consented save
+      // in the reminder-settings flow can lazily provision the psychologist's
+      // `whatsapp_accounts` row (otherwise `saveReminderSettingsImpl` guards on
+      // the missing number and returns `server_error` with no success toast).
+      // Bare E.164 (no `whatsapp:` prefix — the Twilio adapter adds it) and ≤ 20
+      // chars, since it is stored raw into `whatsapp_accounts.phone_number`
+      // (varchar(20)); a longer value overflows and provisioning throws.
+      TWILIO_WHATSAPP_FROM: '+5511987650000',
       // App base URL — required server-side so `createSessionImpl` /
       // `listSessionsImpl` can build the patient video link (`patientVideoUrl`)
       // for online sessions. Without it both return `null`/omit the URL and the
