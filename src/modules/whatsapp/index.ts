@@ -171,6 +171,7 @@ export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
 export { selectTemplateVariables } from './lib/reminders/select-template-variables';
 export {
   reminderSettingsSchema,
+  reminderSettingsWithConsentSchema,
   type ReminderSettingsInput,
 } from './lib/reminders/reminder-settings-schema';
 

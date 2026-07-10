@@ -39,6 +39,9 @@ export default async function globalSetup() {
   process.env.TWILIO_CONTENT_SID_LINK_VIDEO ??= 'HXintvideo';
   process.env.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA ??= 'HXintconfirm';
   process.env.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO ??= 'HXintcancel';
+  // Platform shared WhatsApp number — used by lazy provisioning of
+  // `whatsapp_accounts` on the first consented reminder-settings save.
+  process.env.TWILIO_WHATSAPP_FROM ??= '+551140000000';
 
   return async () => {
     // No teardown — `.withReuse()` keeps the container alive between runs.

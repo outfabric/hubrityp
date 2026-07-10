@@ -17,12 +17,12 @@
 
 ## 3. Provisionamento lazy + consentimento LGPD (Server Action)
 
-- [ ] 3.1 Adicionar `consent` (`z.literal(true)`) ao `reminderSettingsSchema` (`src/modules/whatsapp/lib/reminders/reminder-settings-schema.ts`), condicionado a "obrigatório apenas quando não há conta ainda".
-- [ ] 3.2 **Teste (unit)**: schema aceita input com `consent: true`; rejeita `consent` ausente/false quando exigido; mantém validação dos demais campos.
-- [ ] 3.3 Alterar `saveReminderSettingsImpl` (`server/reminders/save-reminder-settings.ts`): autenticar via `getUser()`; no 1º save consentido, `INSERT whatsapp_accounts ... ON CONFLICT (user_id) DO NOTHING` (número da plataforma via `serverEnv`, `display_name` de `profiles.full_name`, `status='active'`, `consent_given_at=NOW()`) e chamar `seedDefaultTemplates(userId)`. `user_id` sempre da sessão.
-- [ ] 3.4 Remover o `consent` do `startConnectionInputSchema` / fluxo de conexão (agora congelado) sem quebrar tipos.
-- [ ] 3.5 **Teste (integration)**: 1º save consentido cria `whatsapp_accounts` (active) + templates, scoped por `auth.uid()`, e o dispatcher passa a enxergar o psicólogo; saves subsequentes não duplicam conta nem re-exigem consentimento; `consent_given_at` preservado.
-- [ ] 3.6 **Teste (integration, negativo/segurança)**: save sem consentimento NÃO cria conta e nunca grava `consent_given_at`; RLS impede provisionar/ler conta de outro `user_id`; corrida de dois 1º-saves resulta em exatamente uma conta (sem `23505` não tratado).
+- [x] 3.1 Adicionar `consent` (`z.literal(true)`) ao `reminderSettingsSchema` (`src/modules/whatsapp/lib/reminders/reminder-settings-schema.ts`), condicionado a "obrigatório apenas quando não há conta ainda".
+- [x] 3.2 **Teste (unit)**: schema aceita input com `consent: true`; rejeita `consent` ausente/false quando exigido; mantém validação dos demais campos.
+- [x] 3.3 Alterar `saveReminderSettingsImpl` (`server/reminders/save-reminder-settings.ts`): autenticar via `getUser()`; no 1º save consentido, `INSERT whatsapp_accounts ... ON CONFLICT (user_id) DO NOTHING` (número da plataforma via `serverEnv`, `display_name` de `profiles.full_name`, `status='active'`, `consent_given_at=NOW()`) e chamar `seedDefaultTemplates(userId)`. `user_id` sempre da sessão.
+- [x] 3.4 Remover o `consent` do `startConnectionInputSchema` / fluxo de conexão (agora congelado) sem quebrar tipos.
+- [x] 3.5 **Teste (integration)**: 1º save consentido cria `whatsapp_accounts` (active) + templates, scoped por `auth.uid()`, e o dispatcher passa a enxergar o psicólogo; saves subsequentes não duplicam conta nem re-exigem consentimento; `consent_given_at` preservado.
+- [x] 3.6 **Teste (integration, negativo/segurança)**: save sem consentimento NÃO cria conta e nunca grava `consent_given_at`; RLS impede provisionar/ler conta de outro `user_id`; corrida de dois 1º-saves resulta em exatamente uma conta (sem `23505` não tratado).
 
 ## 4. Webhook `inbound_text` → auto-resposta free-form + throttle
 
