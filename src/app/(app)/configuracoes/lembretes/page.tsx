@@ -20,7 +20,9 @@ async function ReminderSettingsServer() {
     );
   }
 
-  return <ReminderSettingsForm settings={result.data} />;
+  return (
+    <ReminderSettingsForm settings={result.data} hasWhatsappAccount={result.hasWhatsappAccount} />
+  );
 }
 
 // ---------------------------------------------------------------------------

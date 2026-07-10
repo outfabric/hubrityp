@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { db } from '@/shared/db/client';
 import { messageTemplates } from '@/shared/db/schema/whatsapp/tables';
+import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -65,6 +66,41 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
 ] as const;
 
 // ---------------------------------------------------------------------------
+// Platform Content SID mapping (shared-number model)
+//
+// In the shared-number model the platform registers the reminder templates
+// once in the shared Twilio WABA. Every psychologist reuses the same approved
+// Content SIDs, so seeding stamps each reminder template with its platform SID
+// (`metaTemplateId`) and marks it `approved` — that is what lets the reminders
+// dispatcher send immediately after provisioning (`fetchTemplate` returns the
+// `contentSid` only when `metaTemplateId` is non-null).
+//
+// `termo_consentimento` is NOT a reminder template and has no platform SID; it
+// stays `pending` with a null `metaTemplateId`.
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the platform Content SID for a reminder `templateKey`, or `null` for
+ * templates that are not seeded with a platform SID (e.g. `termo_consentimento`).
+ */
+function resolvePlatformContentSid(templateKey: string): string | null {
+  switch (templateKey) {
+    case 'lembrete_24h':
+      return serverEnv.TWILIO_CONTENT_SID_LEMBRETE_24H;
+    case 'lembrete_2h':
+      return serverEnv.TWILIO_CONTENT_SID_LEMBRETE_2H;
+    case 'link_video':
+      return serverEnv.TWILIO_CONTENT_SID_LINK_VIDEO;
+    case 'confirmacao_recebida':
+      return serverEnv.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA;
+    case 'cancelamento_aviso':
+      return serverEnv.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO;
+    default:
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -97,16 +133,20 @@ export async function seedDefaultTemplates(userId: string): Promise<void> {
     return;
   }
 
-  // Insert all 6 default templates in a transaction
+  // Insert all 6 default templates in a transaction. Reminder templates are
+  // stamped with the platform Content SID + `approved`; non-reminder templates
+  // (e.g. `termo_consentimento`) stay `pending` with a null SID.
   await db.transaction(async (tx) => {
     for (const template of DEFAULT_TEMPLATES) {
+      const contentSid = resolvePlatformContentSid(template.templateKey);
+
       await tx.insert(messageTemplates).values({
         userId,
         templateKey: template.templateKey,
         body: template.body,
         variables: template.variables,
-        metaTemplateId: null,
-        metaStatus: 'pending',
+        metaTemplateId: contentSid,
+        metaStatus: contentSid ? 'approved' : 'pending',
         isDefault: true,
       });
     }

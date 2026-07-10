@@ -2,42 +2,22 @@
 
 ### Requirement: Psychologist can connect a WhatsApp Business number via Twilio
 
-The system SHALL allow the psychologist to connect their WhatsApp Business phone number through the Twilio Channels Senders API. The connection flow is: (1) psychologist enters phone number (E.164) and display name in a dialog, (2) system registers a sender via Twilio API, (3) Twilio sends a verification code via SMS, (4) psychologist enters the code, (5) system completes verification and persists the account. A LGPD consent checkbox MUST be checked before proceeding.
+In the shared-number MVP, the system SHALL NOT expose an interactive per-psychologist WhatsApp connection flow. The Twilio Channels/Senders registration and SMS verification steps are frozen behind a feature flag (see `whatsapp-ui-feature-flag`). Instead, the `whatsapp_accounts` row is provisioned automatically and lazily when the psychologist first saves reminder settings with LGPD consent (see `whatsapp-shared-number-provisioning`). The provisioned account points to the platform number; `account_id`/`phone_number` reflect platform values and are reserved for a future multi-number model. LGPD consent is captured on the reminder settings screen (see `whatsapp-reminder-settings`), not in a connection dialog.
 
-#### Scenario: Successful WhatsApp connection
+#### Scenario: Connection UI is frozen in the MVP
 
-- **WHEN** psychologist enters phone "+5511987654321", display name "Dra. Ana Silva", checks the LGPD consent checkbox, and clicks "Continuar"
-- **THEN** system calls Twilio to create a sender, shows the verification code input, and after psychologist enters the correct code, system saves a `whatsapp_accounts` row with provider="twilio", status="active", phone_number="+5511987654321", display_name="Dra. Ana Silva", connected_at=now, consent_given_at=now
+- **WHEN** a psychologist opens the WhatsApp integration area with the connection UI flag disabled
+- **THEN** the "Conectar WhatsApp" entry point is rendered frozen (non-navigable, `aria-disabled`, "Em breve") and no Twilio sender registration can be initiated from the UI
 
-#### Scenario: Connection rejected without LGPD consent
+#### Scenario: Account created lazily instead of via connection dialog
 
-- **WHEN** psychologist fills phone and display name but does not check the LGPD consent checkbox
-- **THEN** the "Continuar" button is disabled and connection cannot proceed
+- **WHEN** a psychologist saves reminder settings with consent for the first time
+- **THEN** a `whatsapp_accounts` row is provisioned with `provider="twilio"`, `status="active"`, platform-derived `phone_number`, `display_name` from `profiles.full_name`, and `consent_given_at=now` — without any SMS verification step
 
-#### Scenario: Invalid phone number rejected
+#### Scenario: No per-psychologist sender verification
 
-- **WHEN** psychologist enters phone "11987654321" (missing country code) and clicks "Continuar"
-- **THEN** system shows inline validation error "Telefone inválido. Use o formato +55 (DD) NNNNN-NNNN."
-
-#### Scenario: Twilio API failure during sender creation
-
-- **WHEN** psychologist submits valid data but Twilio API returns an error
-- **THEN** system shows toast error "Não foi possível conectar o WhatsApp. Tente novamente." and does not create a database row
-
-#### Scenario: Incorrect verification code
-
-- **WHEN** psychologist enters an incorrect verification code
-- **THEN** system shows inline error "Código incorreto. Verifique e tente novamente."
-
-#### Scenario: Default templates are seeded on first connection
-
-- **WHEN** psychologist completes WhatsApp connection for the first time (no existing templates)
-- **THEN** system creates 6 default templates (lembrete_24h, lembrete_2h, confirmacao_recebida, cancelamento_aviso, link_video, termo_consentimento) with is_default=true and meta_status="pending"
-
-#### Scenario: Reconnection does not re-seed templates
-
-- **WHEN** psychologist disconnects and reconnects WhatsApp, and templates already exist
-- **THEN** system does not create duplicate templates; existing templates are preserved
+- **WHEN** the account is provisioned
+- **THEN** the system does not call the Twilio Channels/Senders API and does not send or verify an SMS code
 
 ### Requirement: Psychologist can view WhatsApp connection status
 

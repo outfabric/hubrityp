@@ -58,7 +58,7 @@ afterEach(() => {
  * `vi.resetModules()` the dynamically imported component re-parses `clientEnv`.
  */
 async function renderSidebarNav(flag: 'true' | 'false') {
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', flag);
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED', flag);
   const { SidebarNav } = await import('@/app/(app)/sidebar-nav');
   render(<SidebarNav />);
 }

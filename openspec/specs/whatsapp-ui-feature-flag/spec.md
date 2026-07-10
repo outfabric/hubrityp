@@ -1,37 +1,39 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: WhatsApp UI feature flag
 
-O sistema SHALL expor uma feature flag de ambiente, exposta ao cliente, chamada `NEXT_PUBLIC_WHATSAPP_UI_ENABLED`, que governa a disponibilidade dos pontos de entrada de WhatsApp na UI (item "Caixa de entrada" no menu lateral e os cards "WhatsApp" e "Lembretes" em Configurações).
+O sistema SHALL substituir a flag única `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` por três feature flags de ambiente, expostas ao cliente, que governam superfícies independentes de WhatsApp na UI:
 
-A flag SHALL ser validada pelo schema de env do cliente (`clientEnvSchema`), aceitar os valores string `"true"` e `"false"`, ser coagida para boolean, e ter default `false` (desligada) quando ausente ou vazia. Por gatear UI renderizada em client component (menu lateral), a flag MUST usar o prefixo `NEXT_PUBLIC_`.
+- `NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED` — página de configuração de lembretes (`/configuracoes/lembretes`) e seu card em Configurações.
+- `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED` — item "Caixa de entrada" no menu lateral e a UI de inbox.
+- `NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` — card "WhatsApp" de conexão em Configurações/Integrações e a edição de texto de template.
 
-Quando a flag está LIGADA (`true`), todos os pontos de entrada de WhatsApp SHALL se comportar exatamente como antes desta mudança (navegáveis, sem tag "Em breve").
+Cada flag SHALL ser validada pelo schema de env do cliente (`clientEnvSchema`), aceitar os valores string `"true"` e `"false"`, ser coagida para boolean, e ter default `false` (desligada) quando ausente ou vazia. Por gatearem UI renderizada em client component, as flags MUST usar o prefixo `NEXT_PUBLIC_`. As três flags SHALL ser independentes — habilitar uma NÃO SHALL habilitar as demais. A configuração-alvo do MVP é: reminders `true`, inbox `false`, connection `false`.
 
 #### Scenario: Flag ausente assume desligada
 
-- **WHEN** a variável `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` não está definida no ambiente
-- **THEN** o sistema interpreta a flag como `false` (desligada) e congela os pontos de entrada de WhatsApp na UI
+- **WHEN** qualquer uma das variáveis de flag de WhatsApp não está definida no ambiente
+- **THEN** o sistema interpreta a flag correspondente como `false` (desligada) e congela apenas a superfície que ela governa
 
 #### Scenario: Valor inválido é rejeitado na validação de env
 
-- **WHEN** `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` recebe um valor que não seja `"true"` nem `"false"`
+- **WHEN** qualquer flag de WhatsApp recebe um valor que não seja `"true"` nem `"false"`
 - **THEN** a validação do `clientEnvSchema` falha em build/boot, sinalizando configuração inválida
 
-#### Scenario: Flag ligada restaura comportamento original
+#### Scenario: Configuração do MVP habilita lembretes sem inbox nem conexão
 
-- **WHEN** `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` é `"true"`
-- **THEN** o item "Caixa de entrada" e os cards "WhatsApp" e "Lembretes" ficam totalmente habilitados e navegáveis, sem a tag "Em breve"
+- **WHEN** `NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED="true"`, `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED="false"` e `NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED="false"`
+- **THEN** a tela de lembretes fica navegável e os pontos de entrada de inbox, conexão e edição de template permanecem congelados ("Em breve")
 
 ### Requirement: Item de menu "Caixa de entrada" congelado quando desligado
 
-Quando a feature flag está DESLIGADA, o item "Caixa de entrada" do menu lateral (`sidebar-nav`) SHALL permanecer visível, porém desabilitado e não-navegável, exibindo uma tag "Em breve" visualmente menor que o texto principal.
+Quando a flag `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED` está DESLIGADA, o item "Caixa de entrada" do menu lateral (`sidebar-nav`) SHALL permanecer visível, porém desabilitado e não-navegável, exibindo uma tag "Em breve" visualmente menor que o texto principal.
 
 O estado desabilitado SHALL seguir o Design System (`docs/design-system/rules.md`): texto no token `text-disabled`, sem uso da cor `brand` (reservada a item ativo), e sem underline. O item MUST NOT renderizar um link navegável (`<a>`/`<Link>`) quando desabilitado, e MUST expor `aria-disabled="true"` para tecnologia assistiva. A tag "Em breve" SHALL usar o componente `Badge` na variante `neutral` (12px, weight 500, radius full), naturalmente menor que o rótulo do item (texto body 15px).
 
 #### Scenario: Caixa de entrada desabilitada com tag "Em breve"
 
-- **WHEN** a flag está desligada e o menu lateral é renderizado
+- **WHEN** a flag de inbox está desligada e o menu lateral é renderizado
 - **THEN** o item "Caixa de entrada" aparece em estado desabilitado (token `text-disabled`), sem ser um link navegável, com `aria-disabled="true"` e uma tag "Em breve" (Badge `neutral`) ao lado do rótulo
 
 #### Scenario: Clique/navegação não tem efeito
@@ -41,40 +43,43 @@ O estado desabilitado SHALL seguir o Design System (`docs/design-system/rules.md
 
 #### Scenario: Badge não suprime o contador de não lidas porque o item está congelado
 
-- **WHEN** a flag está desligada
+- **WHEN** a flag de inbox está desligada
 - **THEN** o item "Caixa de entrada" não exibe o badge de mensagens não lidas; apenas a tag "Em breve" é exibida
 
 ### Requirement: Cards de Configurações "WhatsApp" e "Lembretes" congelados quando desligado
 
-Quando a feature flag está DESLIGADA, os cards "WhatsApp" e "Lembretes" na página `/configuracoes`, e o card "WhatsApp" em `/configuracoes/integracoes`, SHALL permanecer visíveis porém desabilitados e não-navegáveis, cada um exibindo a mesma tag "Em breve".
+O congelamento dos cards de Configurações relacionados a WhatsApp SHALL ser governado por superfície:
+
+- O card "Lembretes" em `/configuracoes` SHALL estar habilitado e navegável quando `NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED` está LIGADA, e congelado quando DESLIGADA.
+- O card "WhatsApp" em `/configuracoes` e o card "WhatsApp" em `/configuracoes/integracoes` (conexão) SHALL ser congelados quando `NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` está DESLIGADA.
 
 Cada card congelado MUST NOT renderizar um link navegável, MUST expor `aria-disabled="true"`, e SHALL aplicar o tratamento visual de desabilitado do Design System (token `text-disabled`, sem cor `brand`). A tag "Em breve" SHALL usar o `Badge` variante `neutral`, visualmente menor que o título do card.
 
-#### Scenario: Cards "WhatsApp" e "Lembretes" desabilitados em /configuracoes
+#### Scenario: Card "Lembretes" navegável no MVP
 
-- **WHEN** a flag está desligada e a página `/configuracoes` é renderizada
-- **THEN** os cards "WhatsApp" e "Lembretes" aparecem desabilitados, não-navegáveis, com `aria-disabled="true"` e uma tag "Em breve" cada
+- **WHEN** a flag de reminders está ligada e a página `/configuracoes` é renderizada
+- **THEN** o card "Lembretes" aparece habilitado e navegável, sem a tag "Em breve"
 
-#### Scenario: Card "WhatsApp" desabilitado em /configuracoes/integracoes
+#### Scenario: Card "WhatsApp" de conexão congelado no MVP
 
-- **WHEN** a flag está desligada e a página `/configuracoes/integracoes` é renderizada
-- **THEN** o card "WhatsApp" aparece desabilitado, não-navegável, com `aria-disabled="true"` e a tag "Em breve"
+- **WHEN** a flag de connection está desligada e as páginas `/configuracoes` e `/configuracoes/integracoes` são renderizadas
+- **THEN** os cards "WhatsApp" aparecem desabilitados, não-navegáveis, com `aria-disabled="true"` e a tag "Em breve"
 
 #### Scenario: Demais cards de configurações permanecem inalterados
 
-- **WHEN** a flag está desligada
+- **WHEN** as flags de WhatsApp estão na configuração do MVP
 - **THEN** os outros cards de `/configuracoes` (ex.: "Locais de atendimento", "Agenda", "Transcrição IA") continuam totalmente navegáveis e sem a tag "Em breve"
 
 ### Requirement: Rotas de WhatsApp permanecem acessíveis por URL direta
 
-Esta mudança é de escopo exclusivamente visual. Quando a feature flag está DESLIGADA, o sistema SHALL congelar apenas os pontos de entrada de navegação; as rotas em si (`/caixa-de-entrada`, `/configuracoes/lembretes`, `/configuracoes/integracoes/whatsapp`) MUST NOT ser bloqueadas, redirecionadas ou alteradas pelo flag. Nenhum processamento de backend, job Inngest, webhook Twilio ou Server Action SHALL ser alterado por esta flag.
+Esta mudança de flags é de escopo exclusivamente visual. Independentemente do estado das flags de UI de WhatsApp, o sistema SHALL congelar apenas os pontos de entrada de navegação; as rotas em si (`/caixa-de-entrada`, `/configuracoes/lembretes`, `/configuracoes/integracoes/whatsapp`) MUST NOT ser bloqueadas, redirecionadas ou alteradas pelas flags. Nenhum processamento de backend, job Inngest, webhook Twilio ou Server Action SHALL ser alterado por estas flags. A gating de autenticação dessas rotas permanece responsabilidade do middleware, não das flags.
 
 #### Scenario: Acesso direto à URL continua funcionando
 
-- **WHEN** o usuário navega diretamente para `/caixa-de-entrada` (ou outra rota de WhatsApp) com a flag desligada
+- **WHEN** o usuário autenticado navega diretamente para `/configuracoes/lembretes` (ou outra rota de WhatsApp) com a flag correspondente desligada
 - **THEN** a rota responde normalmente, sem redirecionamento ou bloqueio causado pela flag
 
-#### Scenario: Backend não é afetado pela flag
+#### Scenario: Backend não é afetado pelas flags
 
-- **WHEN** a flag está desligada
-- **THEN** jobs de lembrete, webhooks e Server Actions de WhatsApp mantêm o comportamento existente, pois a flag governa apenas a camada de UI
+- **WHEN** as flags de UI estão desligadas
+- **THEN** jobs de lembrete, webhooks e Server Actions de WhatsApp mantêm o comportamento existente, pois as flags governam apenas a camada de UI

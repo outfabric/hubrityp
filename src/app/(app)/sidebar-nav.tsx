@@ -34,7 +34,7 @@ interface NavItem {
  * ships. When disabled, the "Caixa de entrada" entry is shown as a
  * non-navigable, non-focusable item tagged "Em breve".
  */
-const isInboxFrozen = !clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED;
+const isInboxFrozen = !clientEnv.NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED;
 
 const navItems: readonly NavItem[] = [
   { label: 'Painel', href: '/dashboard', icon: LayoutDashboard },

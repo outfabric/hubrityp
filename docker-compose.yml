@@ -61,10 +61,21 @@ services:
       STREAM_API_KEY: dummy_stream_key_for_local_dev
       STREAM_API_SECRET: dummy_stream_secret_for_local_dev
       STREAM_WEBHOOK_SECRET: dummy_stream_webhook_secret_for_local_dev
-      # WhatsApp UI entry points stay frozen behind this flag (default off).
-      # NEXT_PUBLIC_ is inlined at build time, so flipping this requires a
+      # WhatsApp UI entry points — granular flags per surface (default off).
+      # NEXT_PUBLIC_ is inlined at build time, so flipping any flag requires a
       # rebuild of the dev container's .next, not just a restart.
-      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'false'
+      NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED: 'true'
+      NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED: 'false'
+      NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED: 'false'
+      # Platform Content SIDs — dummy local-dev values. Replace with real SIDs
+      # from the WABA when testing reminder dispatch end-to-end.
+      TWILIO_CONTENT_SID_LEMBRETE_24H: HXLOCAL_LEMBRETE_24H
+      TWILIO_CONTENT_SID_LEMBRETE_2H: HXLOCAL_LEMBRETE_2H
+      TWILIO_CONTENT_SID_LINK_VIDEO: HXLOCAL_LINK_VIDEO
+      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: HXLOCAL_CONFIRMACAO_RECEBIDA
+      TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: HXLOCAL_CANCELAMENTO_AVISO
+      # Platform WhatsApp number (E.164). Used by lazy provisioning.
+      TWILIO_WHATSAPP_FROM: '+15550001234'
       # Tell the Inngest SDK to send events to the Dev Server container.
       # So funciona quando o profile `inngest` esta ativo (o host `inngest`
       # nao existe sem ele). Sem o Dev Server, o app boota normalmente —

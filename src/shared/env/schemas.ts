@@ -38,6 +38,17 @@ export const serverEnvSchema = clientEnvSchema.extend({
   // Estimated cost per WhatsApp template message in BRL.
   // Used for cost estimation display only — not for billing.
   TWILIO_WHATSAPP_TEMPLATE_PRICE_BRL: z.coerce.number().default(0.1),
+  // Twilio Content Template SIDs for the shared-number reminders MVP. Each is a
+  // pre-approved WhatsApp template ("HX..." Content SID) owned by the platform
+  // account. Read only via `serverEnv` — these are provisioning identifiers,
+  // server-only, and MUST NEVER be exposed as `NEXT_PUBLIC_*` (they would leak
+  // the platform's template inventory into the client bundle). Required at boot
+  // so a misconfigured deploy fails fast instead of silently sending nothing.
+  TWILIO_CONTENT_SID_LEMBRETE_24H: z.string().min(1),
+  TWILIO_CONTENT_SID_LEMBRETE_2H: z.string().min(1),
+  TWILIO_CONTENT_SID_LINK_VIDEO: z.string().min(1),
+  TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: z.string().min(1),
+  TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: z.string().min(1),
   // Stream — video/chat API for telepsychology sessions.
   // `STREAM_API_KEY` is the server-side API key (same value as the public key
   // but consumed server-side to instantiate the Node SDK and mint tokens).

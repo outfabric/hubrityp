@@ -14,15 +14,16 @@ import { logger } from '@/shared/lib/logger';
 // Input schema
 // ---------------------------------------------------------------------------
 
+// LGPD consent is no longer collected here. In the shared-number MVP the
+// connection flow is frozen and consent moved to the reminder-settings save
+// (`reminderSettingsWithConsentSchema`), which is where the account is now
+// provisioned. See change `whatsapp-reminders-shared-number-mvp`.
 export const startConnectionInputSchema = z.object({
   phone: phoneNumberSchema,
   displayName: z
     .string()
     .min(1, { message: 'O nome de exibição é obrigatório.' })
     .max(120, { message: 'O nome de exibição deve ter no máximo 120 caracteres.' }),
-  consent: z.literal(true, {
-    message: 'Você precisa confirmar o consentimento LGPD para continuar.',
-  }),
 });
 
 export type StartConnectionInput = z.infer<typeof startConnectionInputSchema>;
@@ -51,7 +52,6 @@ export type StartTwilioConnectionResult =
  * Preconditions:
  *   - User must be authenticated.
  *   - User must not have an active (non-disconnected) account.
- *   - LGPD consent must be explicitly given.
  *
  * The returned `senderSid` and `verificationMethod` are needed by step 2
  * (`completeTwilioConnectionImpl`).

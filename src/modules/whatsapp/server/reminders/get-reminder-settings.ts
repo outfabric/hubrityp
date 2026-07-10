@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/shared/db/client';
-import { reminderSettings } from '@/shared/db/schema/whatsapp/tables';
+import { reminderSettings, whatsappAccounts } from '@/shared/db/schema/whatsapp/tables';
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -19,7 +19,17 @@ export interface ReminderSettingsData {
 }
 
 export type GetReminderSettingsResult =
-  | { ok: true; data: ReminderSettingsData }
+  | {
+      ok: true;
+      data: ReminderSettingsData;
+      /**
+       * Whether a shared-number WhatsApp account is already provisioned for the
+       * psychologist. Drives the consent gate in the settings form: the LGPD
+       * consent checkbox is shown/required only on the FIRST save (no account
+       * yet); once provisioned, saves must not re-ask for consent.
+       */
+      hasWhatsappAccount: boolean;
+    }
   | { ok: false; error: 'unauthenticated' };
 
 // ---------------------------------------------------------------------------
@@ -60,19 +70,26 @@ export async function getReminderSettingsImpl(
     return { ok: false, error: 'unauthenticated' };
   }
 
-  // 2. Query
-  const rows = await db
-    .select({
-      earlyReminderHours: reminderSettings.earlyReminderHours,
-      finalReminderHours: reminderSettings.finalReminderHours,
-      videoLinkMinutes: reminderSettings.videoLinkMinutes,
-      sendDuringNight: reminderSettings.sendDuringNight,
-    })
-    .from(reminderSettings)
-    .where(eq(reminderSettings.userId, user.id))
-    .limit(1);
+  // 2. Query settings + account existence in parallel (independent reads).
+  const [rows, accountRows] = await Promise.all([
+    db
+      .select({
+        earlyReminderHours: reminderSettings.earlyReminderHours,
+        finalReminderHours: reminderSettings.finalReminderHours,
+        videoLinkMinutes: reminderSettings.videoLinkMinutes,
+        sendDuringNight: reminderSettings.sendDuringNight,
+      })
+      .from(reminderSettings)
+      .where(eq(reminderSettings.userId, user.id))
+      .limit(1),
+    db
+      .select({ id: whatsappAccounts.id })
+      .from(whatsappAccounts)
+      .where(eq(whatsappAccounts.userId, user.id))
+      .limit(1),
+  ]);
 
   const data: ReminderSettingsData = rows[0] ?? DEFAULTS;
 
-  return { ok: true, data };
+  return { ok: true, data, hasWhatsappAccount: accountRows.length > 0 };
 }

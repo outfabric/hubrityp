@@ -15,12 +15,24 @@ const validClient = {
   NEXT_PUBLIC_SITE_URL: 'https://hubrity.com',
 };
 
-// The WhatsApp UI flag is parsed from a "true"/"false" string and transformed
-// into a boolean, so the parsed client env carries it even when the raw input
-// omits it (it defaults to `false`).
+// The three WhatsApp UI flags are each parsed from a "true"/"false" string and
+// transformed into a boolean, so the parsed client env carries them even when
+// the raw input omits them (they default to `false`).
 const parsedClient = {
   ...validClient,
-  NEXT_PUBLIC_WHATSAPP_UI_ENABLED: false,
+  NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED: false,
+  NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED: false,
+  NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED: false,
+};
+
+// The five platform Content SIDs are required server-only vars — the server env
+// fails to parse when any is missing.
+const validContentSids = {
+  TWILIO_CONTENT_SID_LEMBRETE_24H: 'HX24h',
+  TWILIO_CONTENT_SID_LEMBRETE_2H: 'HX2h',
+  TWILIO_CONTENT_SID_LINK_VIDEO: 'HXvideo',
+  TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXconfirm',
+  TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXcancel',
 };
 
 const validServer = {
@@ -35,7 +47,22 @@ const validServer = {
   INNGEST_ENCRYPTION_KEY: 'test-inngest-encryption-key-minimum-32ch',
   SIGNATURE_HASH_SALT: 'test-signature-hash-salt-minimum-32-chars',
   PENDING_EMAIL_COOKIE_SECRET: 'test-pending-email-cookie-secret-min-32-chars',
+  ...validContentSids,
 };
+
+const WHATSAPP_UI_FLAGS = [
+  'NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED',
+  'NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED',
+  'NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED',
+] as const;
+
+const CONTENT_SID_KEYS = [
+  'TWILIO_CONTENT_SID_LEMBRETE_24H',
+  'TWILIO_CONTENT_SID_LEMBRETE_2H',
+  'TWILIO_CONTENT_SID_LINK_VIDEO',
+  'TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA',
+  'TWILIO_CONTENT_SID_CANCELAMENTO_AVISO',
+] as const;
 
 describe('clientEnvSchema', () => {
   it('parses a valid client env', () => {
@@ -61,38 +88,61 @@ describe('clientEnvSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('defaults NEXT_PUBLIC_WHATSAPP_UI_ENABLED to false when omitted', () => {
-    const parsed = clientEnvSchema.parse(validClient);
-    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(false);
+  it.each(WHATSAPP_UI_FLAGS)('defaults %s to false when omitted', (flag) => {
+    const parsed = clientEnvSchema.parse(validClient) as Record<string, unknown>;
+    expect(parsed[flag]).toBe(false);
   });
 
-  it('parses the literal "false" string as the boolean false', () => {
-    // Guards against the z.coerce.boolean() footgun, which would coerce the
-    // non-empty string "false" to `true`.
+  it.each(WHATSAPP_UI_FLAGS)(
+    'parses the literal "false" string as boolean false for %s',
+    (flag) => {
+      // Guards against the z.coerce.boolean() footgun, which would coerce the
+      // non-empty string "false" to `true`.
+      const parsed = clientEnvSchema.parse({ ...validClient, [flag]: 'false' }) as Record<
+        string,
+        unknown
+      >;
+      expect(parsed[flag]).toBe(false);
+    },
+  );
+
+  it.each(WHATSAPP_UI_FLAGS)('parses the literal "true" string as boolean true for %s', (flag) => {
+    const parsed = clientEnvSchema.parse({ ...validClient, [flag]: 'true' }) as Record<
+      string,
+      unknown
+    >;
+    expect(parsed[flag]).toBe(true);
+  });
+
+  it.each(WHATSAPP_UI_FLAGS)('rejects a %s value outside the enum', (flag) => {
+    const result = clientEnvSchema.safeParse({ ...validClient, [flag]: '1' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors).toHaveProperty(flag);
+    }
+  });
+
+  it('keeps the three WhatsApp UI flags independent of one another', () => {
     const parsed = clientEnvSchema.parse({
       ...validClient,
-      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'false',
+      NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED: 'true',
+      NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED: 'false',
+      NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED: 'false',
     });
-    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(false);
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED).toBe(true);
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED).toBe(false);
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED).toBe(false);
   });
 
-  it('parses the literal "true" string as the boolean true', () => {
+  it('no longer accepts the removed NEXT_PUBLIC_WHATSAPP_UI_ENABLED as a known key', () => {
+    // The legacy single flag was removed with no alias; an unknown extra key is
+    // stripped (not surfaced) rather than mapped onto any of the new flags.
     const parsed = clientEnvSchema.parse({
       ...validClient,
       NEXT_PUBLIC_WHATSAPP_UI_ENABLED: 'true',
-    });
-    expect(parsed.NEXT_PUBLIC_WHATSAPP_UI_ENABLED).toBe(true);
-  });
-
-  it('rejects a NEXT_PUBLIC_WHATSAPP_UI_ENABLED value outside the enum', () => {
-    const result = clientEnvSchema.safeParse({
-      ...validClient,
-      NEXT_PUBLIC_WHATSAPP_UI_ENABLED: '1',
-    });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.flatten().fieldErrors).toHaveProperty('NEXT_PUBLIC_WHATSAPP_UI_ENABLED');
-    }
+    }) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('NEXT_PUBLIC_WHATSAPP_UI_ENABLED');
+    expect(parsed.NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED).toBe(false);
   });
 });
 
@@ -126,5 +176,30 @@ describe('serverEnvSchema', () => {
   it('rejects a malformed DATABASE_URL', () => {
     const result = serverEnvSchema.safeParse({ ...validServer, DATABASE_URL: 'not-a-url' });
     expect(result.success).toBe(false);
+  });
+
+  it('parses the five platform Content SIDs when present', () => {
+    const parsed = serverEnvSchema.parse(validServer);
+    expect(parsed.TWILIO_CONTENT_SID_LEMBRETE_24H).toBe('HX24h');
+    expect(parsed.TWILIO_CONTENT_SID_LEMBRETE_2H).toBe('HX2h');
+    expect(parsed.TWILIO_CONTENT_SID_LINK_VIDEO).toBe('HXvideo');
+    expect(parsed.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA).toBe('HXconfirm');
+    expect(parsed.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO).toBe('HXcancel');
+  });
+
+  it.each(CONTENT_SID_KEYS)('fails boot validation when %s is missing', (key) => {
+    const result = serverEnvSchema.safeParse(omit(validServer, key));
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors).toHaveProperty(key);
+    }
+  });
+
+  it.each(CONTENT_SID_KEYS)('rejects an empty %s', (key) => {
+    const result = serverEnvSchema.safeParse({ ...validServer, [key]: '' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors).toHaveProperty(key);
+    }
   });
 });

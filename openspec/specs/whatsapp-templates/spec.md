@@ -2,16 +2,21 @@
 
 ### Requirement: System seeds six default message templates on first WhatsApp connection
 
-The system SHALL create six default templates when the psychologist completes their first WhatsApp connection. Each template has: template_key (enum), body (PT-BR text with variables), variables (JSONB array of variable names used in body), is_default=true, meta_status="pending". The six template keys are: `lembrete_24h`, `lembrete_2h`, `confirmacao_recebida`, `cancelamento_aviso`, `link_video`, `termo_consentimento`.
+The system SHALL create the default templates when the psychologist first saves reminder settings with LGPD consent (lazy provisioning — see `whatsapp-shared-number-provisioning`), not via a WhatsApp connection dialog. Each template has: `template_key` (enum), `body` (PT-BR text with variables), `variables` (JSONB array of variable names used in body), `is_default=true`. For the reminder templates used by the dispatcher (`lembrete_24h`, `lembrete_2h`, `confirmacao_recebida`, `cancelamento_aviso`, `link_video`), the system SHALL populate `meta_template_id` with the corresponding platform Content SID from environment variables and set `meta_status="approved"`. Seeding MUST be idempotent.
 
-#### Scenario: First connection seeds all 6 templates
+#### Scenario: First consented reminder save seeds templates
 
-- **WHEN** psychologist completes WhatsApp connection and has zero existing templates
-- **THEN** system creates 6 rows in message_templates with correct bodies matching PRD RF-04.06, is_default=true, meta_status="pending"
+- **WHEN** a psychologist saves reminder settings with consent for the first time and has zero existing templates
+- **THEN** the system creates the default templates with bodies matching PRD RF-04.06 and `is_default=true`
+
+#### Scenario: Reminder templates seeded with platform Content SIDs and approved
+
+- **WHEN** the `lembrete_24h`, `lembrete_2h`, `link_video`, `confirmacao_recebida`, and `cancelamento_aviso` templates are seeded
+- **THEN** each has `meta_template_id` equal to the platform Content SID from the corresponding `TWILIO_CONTENT_SID_*` env var and `meta_status="approved"`
 
 #### Scenario: Templates seeded with correct variable references
 
-- **WHEN** the lembrete_24h template is seeded
+- **WHEN** the `lembrete_24h` template is seeded
 - **THEN** its body contains variables like `{nome_paciente}`, `{data}`, `{hora}`, `{endereco}` and the variables JSONB lists all variables referenced in the body
 
 #### Scenario: Seed is idempotent
@@ -58,37 +63,17 @@ The system SHALL allow fetching a single template by its template_key for the au
 
 ### Requirement: Psychologist can edit a template body
 
-The system SHALL allow the psychologist to replace the body text of an existing template. On save, the system: (1) validates the body (min 10, max 1024 chars), (2) validates that all `{variable}` references in the body are in the known variable dictionary, (3) updates the body and variables JSONB, (4) sets meta_status to "pending", (5) submits the updated template to Meta for re-approval via Twilio Content API.
+In the shared-number MVP, per-psychologist template body editing SHALL be frozen behind a feature flag (see `whatsapp-ui-feature-flag`). Because all psychologists share the same Meta-approved platform Content SIDs, editing the body per psychologist would diverge from the approved template that Twilio actually sends. The template edit entry point MUST be rendered frozen (non-navigable, `aria-disabled`, "Em breve") and the edit Server Action MUST NOT be reachable from the UI while frozen. Template text customization is deferred to a post-MVP change.
 
-#### Scenario: Successful template edit
+#### Scenario: Template edit UI is frozen
 
-- **WHEN** psychologist edits lembrete_24h body to "Oi, {nome_paciente}! Lembrando: sessão amanhã, {data}, às {hora}. Local: {endereco}. Confirma?" and clicks "Salvar e enviar para aprovação"
-- **THEN** system updates the body, extracts variables [{nome_paciente}, {data}, {hora}, {endereco}] into variables JSONB, sets meta_status="pending", and submits to Meta
+- **WHEN** a psychologist attempts to reach the template edit screen with the connection/template flag disabled
+- **THEN** the edit entry point is frozen (non-navigable, `aria-disabled`, "Em breve") and no body edit can be submitted from the UI
 
-#### Scenario: Body too short
+#### Scenario: Shared Content SID is the source of truth for sends
 
-- **WHEN** psychologist enters body "Oi" (2 chars, below min 10)
-- **THEN** system shows inline validation error "Texto muito curto. Mínimo 10 caracteres."
-
-#### Scenario: Body too long
-
-- **WHEN** psychologist enters body with 1025 characters
-- **THEN** system shows inline validation error "Texto muito longo. Máximo 1024 caracteres."
-
-#### Scenario: Unknown variable in body
-
-- **WHEN** psychologist enters body containing "{nome_pet}" which is not in the variable dictionary
-- **THEN** system shows inline validation error "Variável {nome_pet} não reconhecida."
-
-#### Scenario: Edit sets meta_status to pending
-
-- **WHEN** psychologist saves an edited template that was previously "approved"
-- **THEN** meta_status changes to "pending" (re-approval required)
-
-#### Scenario: Alert warns about re-approval delay
-
-- **WHEN** psychologist is on the template edit page
-- **THEN** an Alert warning is visible: "Após salvar, o texto será re-submetido ao WhatsApp e ficará em análise por até 24h."
+- **WHEN** a reminder is dispatched
+- **THEN** the message is sent using the platform Content SID (`meta_template_id`), so per-psychologist body text is not the sent content in the MVP
 
 ### Requirement: Psychologist can check Meta approval status
 

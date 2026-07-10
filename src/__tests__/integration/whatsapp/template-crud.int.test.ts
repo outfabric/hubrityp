@@ -132,12 +132,20 @@ describe('seedDefaultTemplates — data correctness', () => {
       'termo_consentimento',
     ]);
 
-    // All are default templates with pending meta status
+    // All are default templates owned by the seeded user. Reminder templates
+    // are stamped with the platform Content SID + `approved`; the non-reminder
+    // `termo_consentimento` stays `pending` with a null SID.
     for (const row of rows) {
       expect(row.isDefault).toBe(true);
-      expect(row.metaStatus).toBe('pending');
-      expect(row.metaTemplateId).toBeNull();
       expect(row.userId).toBe(userId);
+
+      if (row.templateKey === 'termo_consentimento') {
+        expect(row.metaStatus).toBe('pending');
+        expect(row.metaTemplateId).toBeNull();
+      } else {
+        expect(row.metaStatus).toBe('approved');
+        expect(row.metaTemplateId).not.toBeNull();
+      }
     }
   });
 

@@ -220,6 +220,13 @@ export default defineConfig({
       SIGNATURE_HASH_SALT: 'e2e-real-signature-hash-salt-minimum-32-chars',
       // Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
       PENDING_EMAIL_COOKIE_SECRET: 'e2e-real-pending-email-cookie-secret-min-32-chars',
+      // Twilio platform Content SIDs — required server-only vars so the
+      // `next start` server boots (env validation would otherwise throw).
+      TWILIO_CONTENT_SID_LEMBRETE_24H: 'HXreal24h',
+      TWILIO_CONTENT_SID_LEMBRETE_2H: 'HXreal2h',
+      TWILIO_CONTENT_SID_LINK_VIDEO: 'HXrealvideo',
+      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXrealconfirm',
+      TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXrealcancel',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',
     },

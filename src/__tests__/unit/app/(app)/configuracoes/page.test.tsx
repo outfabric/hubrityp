@@ -5,16 +5,18 @@ import type SettingsIndexPageType from '@/app/(app)/configuracoes/page';
 import { SETTINGS_AREAS } from '@/app/(app)/configuracoes/settings-areas';
 
 // This suite verifies the labels, hrefs, microcopy and structure of EVERY
-// settings card in the fully-enabled view, so it forces the WhatsApp UI flag
-// ON. The frozen (flag-OFF) behaviour for the WhatsApp/Lembretes cards lives in
-// `page-whatsapp-freeze.test.tsx`. The page reads `clientEnv` at render time, so
-// the flag is stubbed before a dynamic import (after `vi.resetModules()`)
-// re-parses the client env.
+// settings card in the fully-enabled view, so it forces every WhatsApp UI flag
+// ON (each card is now gated by its own surface flag — REMINDERS for Lembretes,
+// CONNECTION for WhatsApp). The frozen (flag-OFF) behaviour for those cards
+// lives in `page-whatsapp-freeze.test.tsx`. The page reads `clientEnv` at render
+// time, so the flags are stubbed before a dynamic import (after
+// `vi.resetModules()`) re-parses the client env.
 let SettingsIndexPage: typeof SettingsIndexPageType;
 
 beforeEach(async () => {
   vi.resetModules();
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', 'true');
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED', 'true');
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED', 'true');
   SettingsIndexPage = (await import('@/app/(app)/configuracoes/page')).default;
 });
 

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { reminderSettingsSchema } from '@/modules/whatsapp/lib/reminders/reminder-settings-schema';
+import {
+  reminderSettingsSchema,
+  reminderSettingsWithConsentSchema,
+} from '@/modules/whatsapp/lib/reminders/reminder-settings-schema';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -185,5 +188,65 @@ describe('reminderSettingsSchema — missing required fields', () => {
   it('rejects an empty object', () => {
     const result = reminderSettingsSchema.safeParse({});
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Consent — optional on the base schema, required on the consent variant
+// ---------------------------------------------------------------------------
+
+describe('reminderSettingsSchema — consent (optional variant)', () => {
+  it('accepts a valid input with consent: true', () => {
+    const result = reminderSettingsSchema.safeParse({ ...validInput(), consent: true });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a valid input when consent is absent (account already exists)', () => {
+    const result = reminderSettingsSchema.safeParse(validInput());
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects consent: false even on the optional variant', () => {
+    const result = reminderSettingsSchema.safeParse({ ...validInput(), consent: false });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('reminderSettingsWithConsentSchema — consent required', () => {
+  it('accepts a valid input with consent: true', () => {
+    const result = reminderSettingsWithConsentSchema.safeParse({ ...validInput(), consent: true });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects when consent is absent', () => {
+    const result = reminderSettingsWithConsentSchema.safeParse(validInput());
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    const issue = result.error.issues.find((i) => i.path.includes('consent'));
+    expect(issue?.message).toBe(
+      'Você precisa aceitar o termo de consentimento para ativar os lembretes no WhatsApp.',
+    );
+  });
+
+  it('rejects when consent is false', () => {
+    const result = reminderSettingsWithConsentSchema.safeParse({
+      ...validInput(),
+      consent: false,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('still validates the other fields (invalid early_reminder_hours)', () => {
+    const result = reminderSettingsWithConsentSchema.safeParse({
+      ...validInput(),
+      early_reminder_hours: 6,
+      consent: true,
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    const issue = result.error.issues.find((i) => i.path.includes('early_reminder_hours'));
+    expect(issue?.message).toBe('Valor inválido. Escolha 12, 24 ou 48 horas.');
   });
 });

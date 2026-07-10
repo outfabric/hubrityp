@@ -1,7 +1,10 @@
 import { type NextRequest } from 'next/server';
 
 import { inngest, WHATSAPP_EVENTS } from '@/modules/whatsapp/inngest/client';
+import { sendFreeText } from '@/modules/whatsapp/server/adapters/twilio-bsp';
 import { validateTwilioSignature } from '@/modules/whatsapp/server/adapters/twilio-signature';
+import { processInboundAutoReply } from '@/modules/whatsapp/server/auto-reply-inbound';
+import { db } from '@/shared/db/client';
 import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
@@ -113,16 +116,34 @@ async function emitStopReceived(params: Record<string, string>): Promise<void> {
   });
 }
 
-async function emitInboundReceived(params: Record<string, string>): Promise<void> {
-  await inngest.send({
-    name: WHATSAPP_EVENTS.INBOUND_RECEIVED,
-    data: {
-      bspMessageId: params.MessageSid ?? '',
+/**
+ * Handles an inbound free-text message: send a single throttled auto-reply
+ * (fixed, non-clinical body) and persist the inbound for the LGPD audit
+ * trail. This branch does NOT feed the inbox (`whatsapp/inbound.received`
+ * is no longer emitted) and never touches `whatsapp_conversations`.
+ *
+ * Runs inline so the auto-reply goes out inside Meta's fresh 24h window; the
+ * caller wraps it in try/catch so a failure still returns 200 to Twilio.
+ */
+async function triggerInboundAutoReply(params: Record<string, string>): Promise<void> {
+  const platformPhone = serverEnv.TWILIO_WHATSAPP_FROM;
+
+  if (!platformPhone) {
+    logger.error(
+      { event: 'twilio_webhook_auto_reply_no_platform_number' },
+      'TWILIO_WHATSAPP_FROM not configured — skipping inbound auto-reply',
+    );
+    return;
+  }
+
+  await processInboundAutoReply(
+    {
       fromPhone: params.From?.replace('whatsapp:', '') ?? '',
-      body: params.Body ?? '',
-      userId: '', // Resolved by the Inngest handler
+      bspMessageId: params.MessageSid ?? '',
+      platformPhone: platformPhone.replace('whatsapp:', ''),
     },
-  });
+    { db, sendFreeText },
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +219,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         await emitStopReceived(params);
         break;
       case 'inbound_text':
-        await emitInboundReceived(params);
+        await triggerInboundAutoReply(params);
         break;
     }
 

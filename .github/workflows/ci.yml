@@ -119,6 +119,11 @@ jobs:
           INNGEST_SIGNING_KEY: ci-build-inngest-signing-key
           SIGNATURE_HASH_SALT: ci-build-signature-hash-salt-minimum-32-chars
           PENDING_EMAIL_COOKIE_SECRET: ci-build-pending-email-cookie-secret-min-32-chars
+          TWILIO_CONTENT_SID_LEMBRETE_24H: HXci24h
+          TWILIO_CONTENT_SID_LEMBRETE_2H: HXci2h
+          TWILIO_CONTENT_SID_LINK_VIDEO: HXcivideo
+          TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: HXciconfirm
+          TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: HXcicancel
           LOG_LEVEL: silent
         run: npm run build
 
@@ -193,6 +198,11 @@ jobs:
           INNGEST_SIGNING_KEY: ci-build-inngest-signing-key
           SIGNATURE_HASH_SALT: ci-build-signature-hash-salt-minimum-32-chars
           PENDING_EMAIL_COOKIE_SECRET: ci-build-pending-email-cookie-secret-min-32-chars
+          TWILIO_CONTENT_SID_LEMBRETE_24H: HXci24h
+          TWILIO_CONTENT_SID_LEMBRETE_2H: HXci2h
+          TWILIO_CONTENT_SID_LINK_VIDEO: HXcivideo
+          TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: HXciconfirm
+          TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: HXcicancel
           LOG_LEVEL: silent
         run: npm run build
 

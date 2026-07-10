@@ -12,7 +12,7 @@ import { Card } from '@/shared/ui/card';
  * muted, and tagged "Em breve". v1 ships with WhatsApp only.
  */
 export default function IntegrationsIndexPage() {
-  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED;
+  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED;
 
   return (
     <div data-testid="integrations-index-page">

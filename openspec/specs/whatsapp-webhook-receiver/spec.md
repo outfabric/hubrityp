@@ -84,22 +84,22 @@ The system SHALL detect Quick Reply button payloads from Twilio's interactive me
 
 ### Requirement: Webhook handler dispatches Inngest event for inbound free-text messages
 
-The system SHALL dispatch an Inngest event `whatsapp.message.persisted` after persisting an inbound free-text message in `whatsapp_messages`. The event payload includes `messageId` (UUID of the persisted row), `userId` (psychologist UUID), and `patientId` (patient UUID). This event triggers the inbox message-ingest pipeline (risk detection, conversation upsert, notification) without blocking the webhook response.
+In the reminders-only MVP, the webhook handler SHALL NOT feed inbound free-text messages into the inbox ingestion pipeline. Instead, when an inbound payload is classified as free text (not a button reply, not `PARAR`, not a status callback), the handler SHALL trigger the fixed automated reply flow (see `whatsapp-auto-reply`). The inbox message-ingest pipeline (`whatsapp.message.persisted` → risk detection, conversation upsert, notification) is frozen for the MVP and MUST NOT be invoked for these messages. Triggering the auto-reply MUST NOT block returning HTTP 200 to Twilio.
 
-#### Scenario: Inbound free-text message triggers event dispatch
+#### Scenario: Inbound free-text message triggers the automated reply flow
 
-- **WHEN** a patient sends a free-text WhatsApp message and the webhook handler persists it in `whatsapp_messages` with direction='inbound'
-- **THEN** the handler dispatches an Inngest event `whatsapp.message.persisted` with `{ messageId, userId, patientId }` before returning the HTTP response
+- **WHEN** a patient sends a free-text WhatsApp message and the webhook classifies it as `inbound_text`
+- **THEN** the handler triggers the automated reply flow and does NOT emit `whatsapp.message.persisted` to the inbox ingestion pipeline
 
-#### Scenario: Button responses do not trigger the event
+#### Scenario: Button responses and PARAR do not trigger the auto-reply
 
-- **WHEN** a patient clicks a template button (e.g., "Confirmar")
-- **THEN** the webhook handler processes the button callback via the existing flow (change 2) and does NOT dispatch `whatsapp.message.persisted`
+- **WHEN** a patient clicks a template button (e.g., "Confirmar") or sends `PARAR`
+- **THEN** the webhook processes it via the existing confirmation/cancellation/stop flow and does NOT trigger the automated reply
 
-#### Scenario: Event dispatch failure does not break webhook response
+#### Scenario: Auto-reply trigger failure does not break webhook response
 
-- **WHEN** the Inngest event dispatch fails (e.g., Inngest is temporarily unavailable)
-- **THEN** the webhook handler still returns HTTP 200 to Twilio (to prevent retries), and the event dispatch failure is logged for later reconciliation
+- **WHEN** triggering the automated reply flow fails (e.g., the queue is temporarily unavailable)
+- **THEN** the webhook handler still returns HTTP 200 to Twilio and the failure is logged without PII for later reconciliation
 
 ### Requirement: Twilio adapter exposes sendFreeText method for session-window replies
 
@@ -117,7 +117,7 @@ The system SHALL extend the Twilio adapter (from change 2) with a `sendFreeText`
 
 ### Requirement: Webhook persists inbound text messages
 
-The system SHALL persist any non-button inbound text message as a `whatsapp_messages` row with `direction = 'inbound'`. The `bsp_message_id` UNIQUE constraint prevents duplicate inserts.
+The system SHALL persist any non-button inbound text message as a `whatsapp_messages` row with `direction = 'inbound'` for auditability. The `bsp_message_id` UNIQUE constraint prevents duplicate inserts. In the MVP this persistence is for the audit trail and the 24h auto-reply throttle only; it MUST NOT create or update `whatsapp_conversations` (inbox) rows.
 
 #### Scenario: Inbound text message persisted
 
@@ -129,10 +129,10 @@ The system SHALL persist any non-button inbound text message as a `whatsapp_mess
 - **WHEN** webhook receives the same inbound message twice (same bsp_message_id)
 - **THEN** the second insert is silently ignored (ON CONFLICT DO NOTHING on bsp_message_id)
 
-#### Scenario: Inbound message linked to patient
+#### Scenario: Inbound persistence does not touch the inbox
 
-- **WHEN** webhook receives a message from a phone number matching a patient's phone or reminder_phone
-- **THEN** the whatsapp_messages row has patient_id set to the matched patient
+- **WHEN** an inbound free-text message is persisted in the MVP
+- **THEN** no `whatsapp_conversations` row is created or updated
 
 ### Requirement: Webhook identifies patient from phone number
 

@@ -37,7 +37,7 @@ afterEach(() => {
 });
 
 async function renderIntegracoesPage(flag: 'true' | 'false') {
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', flag);
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED', flag);
   const { default: IntegrationsIndexPage } =
     await import('@/app/(app)/configuracoes/integracoes/page');
   render(<IntegrationsIndexPage />);
