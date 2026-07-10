@@ -27,6 +27,11 @@ const validServer = {
   INNGEST_ENCRYPTION_KEY: 'test-inngest-encryption-key-minimum-32ch',
   SIGNATURE_HASH_SALT: 'test-signature-hash-salt-minimum-32-chars',
   PENDING_EMAIL_COOKIE_SECRET: 'test-pending-email-cookie-secret-min-32-chars',
+  TWILIO_CONTENT_SID_LEMBRETE_24H: 'HX24h',
+  TWILIO_CONTENT_SID_LEMBRETE_2H: 'HX2h',
+  TWILIO_CONTENT_SID_LINK_VIDEO: 'HXvideo',
+  TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXconfirm',
+  TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXcancel',
 };
 
 describe('clientEnvSchema — Stream env vars', () => {

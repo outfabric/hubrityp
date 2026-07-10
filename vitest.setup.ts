@@ -57,6 +57,13 @@ process.env.INNGEST_SIGNING_KEY ??= 'unit-test-inngest-signing-key';
 process.env.SIGNATURE_HASH_SALT ??= 'unit-test-signature-hash-salt-minimum-32-chars';
 // Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
 process.env.PENDING_EMAIL_COOKIE_SECRET ??= 'unit-test-pending-email-cookie-secret-min-32-chars';
+// Twilio platform Content SIDs — required server-only vars so env validation
+// passes when a test transitively imports `serverEnv`.
+process.env.TWILIO_CONTENT_SID_LEMBRETE_24H ??= 'HXunit24h';
+process.env.TWILIO_CONTENT_SID_LEMBRETE_2H ??= 'HXunit2h';
+process.env.TWILIO_CONTENT_SID_LINK_VIDEO ??= 'HXunitvideo';
+process.env.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA ??= 'HXunitconfirm';
+process.env.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO ??= 'HXunitcancel';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino
 // pipeline (Edge runtime can't load pino's transport), so silencing pino

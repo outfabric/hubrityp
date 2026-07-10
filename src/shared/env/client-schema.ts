@@ -7,12 +7,28 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_STREAM_API_KEY: z.string().min(1),
-  // WhatsApp UI entry points (inbox menu item, "WhatsApp"/"Lembretes" settings
-  // cards) are frozen behind this flag while the backend is incomplete.
+  // WhatsApp UI entry points are frozen behind three surface-independent flags
+  // while each backend surface is incomplete. They are split so the shared-
+  // number reminders MVP can ship its "Lembretes" surface (reminders=true)
+  // while keeping the inbox and the connection/BYON flows frozen
+  // (inbox=false, connection=false).
+  //
   // `z.coerce.boolean()` is avoided on purpose: it treats any non-empty string
   // (including the literal "false") as `true`. The explicit enum + transform
   // maps only "true" → true and defaults to false when unset.
-  NEXT_PUBLIC_WHATSAPP_UI_ENABLED: z
+  //
+  // - REMINDERS: the "Lembretes" settings card / reminders configuration screen.
+  // - INBOX: the "Caixa de entrada" sidebar entry.
+  // - CONNECTION: the "WhatsApp" connection cards and template editing.
+  NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED: z
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),

@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 async function renderSettingsPage(flag: 'true' | 'false') {
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', flag);
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED', flag);
   const { default: SettingsIndexPage } = await import('@/app/(app)/configuracoes/page');
   render(<SettingsIndexPage />);
 }

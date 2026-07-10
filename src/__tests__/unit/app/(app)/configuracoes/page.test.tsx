@@ -14,7 +14,7 @@ let SettingsIndexPage: typeof SettingsIndexPageType;
 
 beforeEach(async () => {
   vi.resetModules();
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', 'true');
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED', 'true');
   SettingsIndexPage = (await import('@/app/(app)/configuracoes/page')).default;
 });
 

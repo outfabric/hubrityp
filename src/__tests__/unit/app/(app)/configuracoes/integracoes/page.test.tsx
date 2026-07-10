@@ -13,7 +13,7 @@ let IntegrationsIndexPage: typeof IntegrationsIndexPageType;
 
 beforeEach(async () => {
   vi.resetModules();
-  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_UI_ENABLED', 'true');
+  vi.stubEnv('NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED', 'true');
   IntegrationsIndexPage = (await import('@/app/(app)/configuracoes/integracoes/page')).default;
 });
 

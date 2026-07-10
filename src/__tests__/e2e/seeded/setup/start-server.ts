@@ -141,6 +141,13 @@ async function main(): Promise<void> {
       SIGNATURE_HASH_SALT: 'e2e-test-signature-hash-salt-minimum-32-chars',
       // Pending-email cookie secret — used to HMAC-sign the hp_pending_email cookie.
       PENDING_EMAIL_COOKIE_SECRET: 'e2e-test-pending-email-cookie-secret-min-32-chars',
+      // Twilio platform Content SIDs — required server-only vars so the seeded
+      // `next start` server boots (env validation would otherwise throw).
+      TWILIO_CONTENT_SID_LEMBRETE_24H: 'HXe2e24h',
+      TWILIO_CONTENT_SID_LEMBRETE_2H: 'HXe2e2h',
+      TWILIO_CONTENT_SID_LINK_VIDEO: 'HXe2evideo',
+      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXe2econfirm',
+      TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXe2ecancel',
       // App base URL — required server-side so `createSessionImpl` /
       // `listSessionsImpl` can build the patient video link (`patientVideoUrl`)
       // for online sessions. Without it both return `null`/omit the URL and the

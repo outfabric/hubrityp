@@ -4,10 +4,10 @@
 
 ## 1. Env & config (Content SIDs + flags granulares)
 
-- [ ] 1.1 Adicionar ao schema de env **server** (`src/shared/env/schemas.ts` + `index.ts`) as vars `TWILIO_CONTENT_SID_LEMBRETE_24H`, `TWILIO_CONTENT_SID_LEMBRETE_2H`, `TWILIO_CONTENT_SID_LINK_VIDEO`, `TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA`, `TWILIO_CONTENT_SID_CANCELAMENTO_AVISO` (Zod, obrigatórias, server-only, nunca `NEXT_PUBLIC_`).
-- [ ] 1.2 Substituir a flag `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` por três flags no client env (`src/shared/env/client-schema.ts` + `client.ts`): `NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED`, `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED`, `NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` (coerção string→boolean, default `false`). Decidir manter alias legado ou remover (ver Open Questions).
-- [ ] 1.3 **Teste (unit)**: validar coerção/default das 3 flags e a rejeição de valor inválido no `clientEnvSchema`; validar presença obrigatória das `TWILIO_CONTENT_SID_*` no server env (falha de boot quando ausente).
-- [ ] 1.4 Atualizar `.env.example` / docs de env com as novas vars e a config-alvo do MVP (reminders `true`, inbox `false`, connection `false`).
+- [x] 1.1 Adicionar ao schema de env **server** (`src/shared/env/schemas.ts` + `index.ts`) as vars `TWILIO_CONTENT_SID_LEMBRETE_24H`, `TWILIO_CONTENT_SID_LEMBRETE_2H`, `TWILIO_CONTENT_SID_LINK_VIDEO`, `TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA`, `TWILIO_CONTENT_SID_CANCELAMENTO_AVISO` (Zod, obrigatórias, server-only, nunca `NEXT_PUBLIC_`).
+- [x] 1.2 Substituir a flag `NEXT_PUBLIC_WHATSAPP_UI_ENABLED` por três flags no client env (`src/shared/env/client-schema.ts` + `client.ts`): `NEXT_PUBLIC_WHATSAPP_REMINDERS_UI_ENABLED`, `NEXT_PUBLIC_WHATSAPP_INBOX_UI_ENABLED`, `NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` (coerção string→boolean, default `false`). Decidir manter alias legado ou remover (ver Open Questions).
+- [x] 1.3 **Teste (unit)**: validar coerção/default das 3 flags e a rejeição de valor inválido no `clientEnvSchema`; validar presença obrigatória das `TWILIO_CONTENT_SID_*` no server env (falha de boot quando ausente).
+- [x] 1.4 Atualizar `.env.example` / docs de env com as novas vars e a config-alvo do MVP (reminders `true`, inbox `false`, connection `false`).
 
 ## 2. Seed de templates com Content SIDs da plataforma
 

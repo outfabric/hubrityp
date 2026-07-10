@@ -18,7 +18,10 @@ const WHATSAPP_DEPENDENT_SLUGS = new Set(['whatsapp', 'lembretes']);
  * non-navigable, visually muted, and tagged "Em breve".
  */
 export default function SettingsIndexPage() {
-  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_UI_ENABLED;
+  // Section 6 splits this into per-surface gating (Lembretes by REMINDERS,
+  // WhatsApp/connection by CONNECTION). Until then both dependent cards share
+  // the connection flag, preserving the previous all-or-nothing freeze.
+  const whatsappUiEnabled = clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED;
 
   return (
     <div data-testid="settings-index-page">
