@@ -238,18 +238,9 @@ test.describe('@configuracoes navigation shell', () => {
     await expect(configTab).toHaveClass(/border-b-2/);
     await expect(configTab).toHaveClass(/border-brand-500/);
 
-    // Click "Templates" tab
-    const templatesTab = page.getByTestId('lembretes-tab-templates');
-    await templatesTab.click();
-
-    // Assert URL changed to templates
-    await page.waitForURL('**/configuracoes/lembretes/templates', { timeout: 10_000 });
-    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes/templates');
-
-    // Assert "Templates" is now active
-    await expect(templatesTab).toHaveAttribute('aria-current', 'page');
-
-    // Click "Histórico" tab
+    // The "Templates" tab is hidden during the shared-number reminders MVP
+    // (NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED off), so only "Configuração"
+    // and "Histórico" toggle. Click "Histórico".
     const historicoTab = page.getByTestId('lembretes-tab-historico');
     await historicoTab.click();
 
@@ -259,6 +250,9 @@ test.describe('@configuracoes navigation shell', () => {
 
     // Assert "Histórico" is now active
     await expect(historicoTab).toHaveAttribute('aria-current', 'page');
+
+    // The Templates tab must not be rendered while the flag is off.
+    await expect(page.getByTestId('lembretes-tab-templates')).toHaveCount(0);
   });
 
   // -------------------------------------------------------------------------
@@ -274,11 +268,13 @@ test.describe('@configuracoes navigation shell', () => {
     await expect(historicoTab).toHaveAttribute('aria-current', 'page');
     await expect(page.getByTestId('historico-page-title')).toBeVisible();
 
-    // Navigate to Templates tab
-    const templatesTab = page.getByTestId('lembretes-tab-templates');
-    await templatesTab.click();
-    await page.waitForURL('**/configuracoes/lembretes/templates', { timeout: 10_000 });
-    await expect(templatesTab).toHaveAttribute('aria-current', 'page');
+    // The "Templates" tab is hidden during the MVP, so back/forward is
+    // exercised across "Configuração" (the other visible tab).
+    const configTab = page.getByTestId('lembretes-tab-configuracao');
+    await configTab.click();
+    await page.waitForURL('**/configuracoes/lembretes', { timeout: 10_000 });
+    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes');
+    await expect(configTab).toHaveAttribute('aria-current', 'page');
 
     // Browser back → should go back to Histórico
     await page.goBack();
@@ -288,47 +284,18 @@ test.describe('@configuracoes navigation shell', () => {
       'page',
     );
 
-    // Browser forward → should go forward to Templates
+    // Browser forward → should go forward to Configuração
     await page.goForward();
-    await page.waitForURL('**/configuracoes/lembretes/templates', { timeout: 10_000 });
-    await expect(page.getByTestId('lembretes-tab-templates')).toHaveAttribute(
+    await page.waitForURL('**/configuracoes/lembretes', { timeout: 10_000 });
+    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes');
+    await expect(page.getByTestId('lembretes-tab-configuracao')).toHaveAttribute(
       'aria-current',
       'page',
     );
   });
 
   // -------------------------------------------------------------------------
-  // 9.9 — Templates tab active on template edit route
-  // -------------------------------------------------------------------------
-  test('tab Templates ativa em rota de template edit', async ({ page }) => {
-    // Seed a whatsapp account and template so the edit page does not redirect.
-    // We use direct fetch against the DB via the global-setup seed state.
-    // Since this test only needs the template to exist, we seed it inline.
-    //
-    // Use page.route to intercept the page and provide minimal data for the
-    // template edit to render. However, the simplest approach is to navigate
-    // and check if the tab is active even if the page shows "Nenhum template".
-    // Since getTemplate redirects to /templates on failure, we need actual
-    // seed data. We use the db-fixture approach but since we already import
-    // from @playwright/test, we'll rely on direct navigation — if the template
-    // doesn't exist, the page redirects to /configuracoes/lembretes/templates
-    // which still has the Templates tab active.
-
-    // Navigate to the template edit page (prefix match)
-    await page.goto('/configuracoes/lembretes/templates/lembrete_24h');
-
-    // Whether the template exists or the page redirects to the templates
-    // listing, the URL will start with /configuracoes/lembretes/templates
-    // and the Templates tab should be active.
-    await page.waitForURL('**/configuracoes/lembretes/templates**', { timeout: 10_000 });
-
-    const templatesTab = page.getByTestId('lembretes-tab-templates');
-    await expect(templatesTab).toBeVisible({ timeout: 10_000 });
-    await expect(templatesTab).toHaveAttribute('aria-current', 'page');
-  });
-
-  // -------------------------------------------------------------------------
-  // 9.10 — No duplicate breadcrumb on template edit page
+  // 9.9 — No duplicate breadcrumb on template edit page
   // -------------------------------------------------------------------------
   test('pagina de edicao de template nao tem breadcrumb duplicado', async ({ page }) => {
     // Navigate to a template edit URL
@@ -425,8 +392,9 @@ test.describe('@configuracoes navigation shell', () => {
       });
       expect(hasOverflowClass).toBe(true);
 
-      // Assert each tab has min-height >= 44px
-      const tabSlugs = ['configuracao', 'templates', 'historico'];
+      // Assert each visible tab has min-height >= 44px. The "Templates" tab is
+      // hidden during the shared-number reminders MVP.
+      const tabSlugs = ['configuracao', 'historico'];
       for (const slug of tabSlugs) {
         const tab = page.getByTestId(`lembretes-tab-${slug}`);
         await expect(tab).toBeVisible();
@@ -503,7 +471,9 @@ test.describe('@configuracoes navigation shell', () => {
     const firstTab = page.getByTestId('lembretes-tab-configuracao');
     await firstTab.focus();
 
-    const tabSlugs = ['configuracao', 'templates', 'historico'];
+    // The "Templates" tab is hidden during the shared-number reminders MVP,
+    // so only "Configuração" and "Histórico" are in the tab order.
+    const tabSlugs = ['configuracao', 'historico'];
 
     for (let i = 0; i < tabSlugs.length; i++) {
       const slug = tabSlugs[i]!;
@@ -526,13 +496,13 @@ test.describe('@configuracoes navigation shell', () => {
       expect(hasFocusRing).toBe(true);
     }
 
-    // Focus is on "historico" (last). Shift-Tab once → "templates".
+    // Focus is on "historico" (last). Shift-Tab once → "configuracao".
     await page.keyboard.press('Shift+Tab');
 
-    // Press Enter on "Templates"
+    // Press Enter on "Configuração"
     await page.keyboard.press('Enter');
 
-    await page.waitForURL('**/configuracoes/lembretes/templates', { timeout: 10_000 });
-    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes/templates');
+    await page.waitForURL('**/configuracoes/lembretes', { timeout: 10_000 });
+    expect(new URL(page.url()).pathname).toBe('/configuracoes/lembretes');
   });
 });

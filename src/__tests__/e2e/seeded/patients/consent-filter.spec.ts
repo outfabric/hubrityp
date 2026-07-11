@@ -124,6 +124,28 @@ async function actOnRow(
   await actionResponse;
 }
 
+/**
+ * Reads the last URL captured by the `window.open` init-script shim, polling
+ * until it appears. `handleSendWhatsApp` calls `window.open` INSIDE the client
+ * `startTransition` callback, AFTER `await generateConsentAction(...)` resolves —
+ * a microtask beyond the HTTP response that `actOnRow` awaits. Reading
+ * `__openedUrls` synchronously right after the action response therefore races
+ * the client, so we poll instead.
+ */
+async function lastOpenedUrl(page: Page): Promise<string> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => (window as unknown as { __openedUrls: string[] }).__openedUrls.length),
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThan(0);
+  const opened = await page.evaluate(
+    () => (window as unknown as { __openedUrls: string[] }).__openedUrls,
+  );
+  return opened[opened.length - 1]!;
+}
+
 base.describe('@patients consent-filter flow', () => {
   // 6.2 mutates `copyTarget`'s consent terms; serial keeps the reset → assert
   // cycle deterministic without a cross-worker lock.
@@ -225,11 +247,7 @@ base.describe('@patients consent-filter flow', () => {
 
       await actOnRow(page, () => waButton.click());
 
-      const opened = await page.evaluate(
-        () => (window as unknown as { __openedUrls: string[] }).__openedUrls,
-      );
-      expect(opened.length).toBeGreaterThan(0);
-      const href = opened[opened.length - 1]!;
+      const href = await lastOpenedUrl(page);
       expect(href).toContain(`wa.me/${digits(P.adultWithPhone.phone)}`);
       // The pre-filled message carries the token-gated consent URL (encoded).
       expect(decodeURIComponent(href)).toContain('/termo/');
@@ -257,11 +275,7 @@ base.describe('@patients consent-filter flow', () => {
 
     await actOnRow(page, () => waButton.click());
 
-    const opened = await page.evaluate(
-      () => (window as unknown as { __openedUrls: string[] }).__openedUrls,
-    );
-    expect(opened.length).toBeGreaterThan(0);
-    const href = opened[opened.length - 1]!;
+    const href = await lastOpenedUrl(page);
     expect(href).toContain(`wa.me/${digits(P.minorWithGuardian.guardianPhone)}`);
     expect(decodeURIComponent(href)).toContain('/termo/');
   });
