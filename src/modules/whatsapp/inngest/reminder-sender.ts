@@ -8,11 +8,12 @@
  *
  * Steps:
  *   1. Check idempotency in DB (skip if already sent)
- *   2. Check if this is the first message to the patient (consent footer)
- *   3. Select template variables
- *   4. Render template body
- *   5. Send via Twilio adapter
- *   6. Insert whatsapp_messages record
+ *   2. Build named contentVariables via the platform template contract
+ *   3. Send the Content template via the Twilio adapter
+ *   4. Insert whatsapp_messages record (body IS NULL — template send)
+ *
+ * Template sends carry no consent footer and no rendered body — the platform
+ * Content templates are pre-approved and immutable (design D9).
  *
  * Error handling:
  *   - INVALID_PHONE / BLOCKED_BY_USER → status='unable_to_send', no retry
@@ -23,8 +24,10 @@ import { and, eq, ne } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { NonRetriableError } from 'inngest';
 
-import { selectTemplateVariables } from '@/modules/whatsapp/lib/reminders/select-template-variables';
-import { renderTemplate } from '@/modules/whatsapp/lib/render-template';
+import {
+  buildContentVariables,
+  isPlatformTemplateKey,
+} from '@/modules/whatsapp/lib/reminders/platform-template-contract';
 import type {
   SendTemplateInput,
   SendTemplateResult,
@@ -36,11 +39,6 @@ import { inngest, WHATSAPP_EVENTS, type ReminderSendEventData } from './client';
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const CONSENT_FOOTER =
-  'Voce esta recebendo essa mensagem via WhatsApp. ' +
-  'Dados tratados conforme nossa Politica de Privacidade. ' +
-  'Para parar de receber, responda PARAR.';
 
 /** Error codes that should NOT be retried — the phone is permanently unreachable. */
 const NON_RETRIABLE_ERROR_CODES = new Set(['INVALID_PHONE', 'BLOCKED_BY_USER', 'OPT_OUT']);
@@ -95,78 +93,40 @@ export async function processReminderSend(
     return { status: 'skipped' };
   }
 
-  // Step 2: Check if this is the first outbound message to the patient
-  const priorMessages = await db
-    .select({ id: whatsappMessages.id })
-    .from(whatsappMessages)
-    .where(
-      and(
-        eq(whatsappMessages.patientId, eventData.patientId),
-        eq(whatsappMessages.userId, eventData.userId),
-        eq(whatsappMessages.direction, 'outbound'),
-      ),
-    )
-    .limit(1);
+  // Step 2: Build the named contentVariables from the platform template contract.
+  // The template key must be one of the four platform reminder keys.
+  if (!isPlatformTemplateKey(eventData.templateKey)) {
+    throw new NonRetriableError(`Unknown platform template key: ${eventData.templateKey}`);
+  }
 
-  const isFirstMessage = priorMessages.length === 0;
-  const consentFooter = isFirstMessage ? CONSENT_FOOTER : undefined;
-
-  // Step 3: Select template variables
-  const variables = selectTemplateVariables(
-    {
-      startAt: new Date(eventData.sessionStartAt),
-      durationMinutes: eventData.sessionDurationMinutes,
-      modality: eventData.sessionModality,
-      videoLink: eventData.videoLink,
-      confirmationLink: eventData.confirmationLink,
-      sessionValue: eventData.sessionValue,
-    },
-    {
-      firstName: eventData.patientFirstName,
-      fullName: eventData.patientFullName,
-    },
-    {
-      displayName: eventData.psychologistDisplayName,
-    },
-    eventData.locationName
-      ? {
-          name: eventData.locationName,
-          address: eventData.locationAddress,
-          arrivalInstructions: eventData.locationArrivalInstructions,
-        }
-      : null,
-    eventData.kind,
-  );
-
-  // Step 4: Render template body
-  const bodyRendered = renderTemplate({
-    body: eventData.templateBody,
-    vars: variables,
+  const variables = buildContentVariables(eventData.templateKey, {
+    patientFullName: eventData.patientFullName,
+    professionalName: eventData.psychologistDisplayName,
+    startAt: new Date(eventData.sessionStartAt),
+    sessionLink: eventData.videoLink,
   });
 
-  // Step 5: Send via Twilio adapter
+  // Step 3: Send the Content template via the Twilio adapter
   const result = await sendTemplate({
     to: eventData.patientPhone,
-    fromAccountId: eventData.whatsappAccountId,
     templateKey: eventData.templateKey,
     contentSid: eventData.contentSid,
     variables,
-    bodyRendered,
-    consentFooter,
   });
 
   if (!result.ok) {
     const isNonRetriable = NON_RETRIABLE_ERROR_CODES.has(result.error.code);
 
     if (isNonRetriable) {
-      // Insert message record with unable_to_send status
+      // Insert message record with unable_to_send status. Template sends carry
+      // no rendered body (design D9) — persist body IS NULL.
       await db.insert(whatsappMessages).values({
         userId: eventData.userId,
         patientId: eventData.patientId,
         sessionId: eventData.sessionId,
         direction: 'outbound',
         toPhone: eventData.patientPhone,
-        body: bodyRendered,
+        body: null,
         templateKey: eventData.templateKey,
         idempotencyKey: eventData.idempotencyKey,
         status: 'unable_to_send',
@@ -184,14 +144,14 @@ export async function processReminderSend(
     throw new Error(`Twilio send failed: ${result.error.code} — ${result.error.message}`);
   }
 
-  // Step 6: Insert whatsapp_messages record
+  // Step 4: Insert whatsapp_messages record (body IS NULL — template send)
   await db.insert(whatsappMessages).values({
     userId: eventData.userId,
     patientId: eventData.patientId,
     sessionId: eventData.sessionId,
     direction: 'outbound',
     toPhone: eventData.patientPhone,
-    body: bodyRendered,
+    body: null,
     templateKey: eventData.templateKey,
     bspMessageId: result.data.bspMessageId,
     idempotencyKey: eventData.idempotencyKey,

@@ -13,13 +13,15 @@
  *
  * Steps:
  *   1. Validate guard conditions
- *   2. Fetch session + patient + psychologist + location data
- *   3. Fetch the "cancelamento_aviso" template for the psychologist
- *   4. Check if this is the first outbound message (consent footer)
- *   5. Select template variables for kind 'cancelled'
- *   6. Render template body
- *   7. Send via Twilio adapter
- *   8. Insert whatsapp_messages record
+ *   2. Fetch session + patient + psychologist data
+ *   3. Resolve the "cancelamento_aviso" Content SID from serverEnv
+ *   4. Build named contentVariables via the platform template contract
+ *   5. Send the Content template via the Twilio adapter
+ *   6. Insert whatsapp_messages record (body IS NULL — template send)
+ *
+ * The SID comes from `serverEnv` (via the contract), never from
+ * `message_templates`. Template sends carry no rendered body and no consent
+ * footer — the platform Content template is pre-approved (design D9).
  *
  * Uses a SHA-256 idempotency key derived from `sessionId:cancelled`
  * to prevent duplicate sends on retries.
@@ -31,31 +33,24 @@ import { NonRetriableError } from 'inngest';
 
 import { type SessionCancelledEvent } from '@/modules/agenda/lib/session-events';
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
-import { selectTemplateVariables } from '@/modules/whatsapp/lib/reminders/select-template-variables';
-import { renderTemplate } from '@/modules/whatsapp/lib/render-template';
+import {
+  buildContentVariables,
+  resolvePlatformContentSid,
+} from '@/modules/whatsapp/lib/reminders/platform-template-contract';
 import type {
   SendTemplateInput,
   SendTemplateResult,
 } from '@/modules/whatsapp/server/adapters/twilio-bsp';
-import { locations, sessions } from '@/shared/db/schema/agenda/tables';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
-import {
-  messageTemplates,
-  whatsappAccounts,
-  whatsappMessages,
-} from '@/shared/db/schema/whatsapp/tables';
+import { whatsappAccounts, whatsappMessages } from '@/shared/db/schema/whatsapp/tables';
 
 import { inngest } from './client';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const CONSENT_FOOTER =
-  'Voce esta recebendo essa mensagem via WhatsApp. ' +
-  'Dados tratados conforme nossa Politica de Privacidade. ' +
-  'Para parar de receber, responda PARAR.';
 
 const TEMPLATE_KEY = 'cancelamento_aviso';
 const KIND = 'cancelled';
@@ -161,10 +156,7 @@ export async function processCancellationNotice(
     return { status: 'skipped', skipReason: 'account_not_active' };
   }
 
-  // Extract first name from full name
-  const patientFirstName = patientRow.fullName.split(' ')[0] ?? patientRow.fullName;
-
-  // Fetch psychologist profile
+  // Fetch psychologist profile (maps to professional_name)
   const [profileRow] = await db
     .select({ displayName: profiles.fullName })
     .from(profiles)
@@ -175,15 +167,9 @@ export async function processCancellationNotice(
     return { status: 'skipped', skipReason: 'psychologist_not_found' };
   }
 
-  // Fetch session data
+  // Fetch session data (only the start instant is needed by the contract)
   const [sessionRow] = await db
-    .select({
-      startAt: sessions.startAt,
-      durationMinutes: sessions.durationMinutes,
-      modality: sessions.modality,
-      locationId: sessions.locationId,
-      amount: sessions.amount,
-    })
+    .select({ startAt: sessions.startAt })
     .from(sessions)
     .where(eq(sessions.id, eventData.sessionId))
     .limit(1);
@@ -192,111 +178,39 @@ export async function processCancellationNotice(
     return { status: 'skipped', skipReason: 'session_not_found' };
   }
 
-  // Fetch template
-  const [templateRow] = await db
-    .select({
-      body: messageTemplates.body,
-      contentSid: messageTemplates.metaTemplateId,
-    })
-    .from(messageTemplates)
-    .where(
-      and(
-        eq(messageTemplates.userId, eventData.userId),
-        eq(messageTemplates.templateKey, TEMPLATE_KEY),
-      ),
-    )
-    .limit(1);
-
-  if (!templateRow?.contentSid) {
+  // Resolve the platform Content SID from serverEnv (never message_templates).
+  const contentSid = resolvePlatformContentSid(TEMPLATE_KEY);
+  if (!contentSid) {
     return { status: 'skipped', skipReason: 'template_not_found' };
   }
 
-  // Fetch location (optional)
-  let locationData: {
-    name: string;
-    address: string | null;
-    arrivalInstructions: string | null;
-  } | null = null;
-  if (sessionRow.locationId) {
-    const [locRow] = await db
-      .select({
-        name: locations.name,
-        address: locations.address,
-        arrivalInstructions: locations.arrivalInstructions,
-      })
-      .from(locations)
-      .where(eq(locations.id, sessionRow.locationId))
-      .limit(1);
-
-    if (locRow) {
-      locationData = locRow;
-    }
-  }
-
-  // Check if first outbound message (consent footer)
-  const priorMessages = await db
-    .select({ id: whatsappMessages.id })
-    .from(whatsappMessages)
-    .where(
-      and(
-        eq(whatsappMessages.patientId, eventData.patientId),
-        eq(whatsappMessages.userId, eventData.userId),
-        eq(whatsappMessages.direction, 'outbound'),
-      ),
-    )
-    .limit(1);
-
-  const isFirstMessage = priorMessages.length === 0;
-  const consentFooter = isFirstMessage ? CONSENT_FOOTER : undefined;
-
-  // Select template variables
-  const sessionValue = sessionRow.amount != null ? Number(sessionRow.amount) : null;
-  const variables = selectTemplateVariables(
-    {
-      startAt: sessionRow.startAt,
-      durationMinutes: sessionRow.durationMinutes,
-      modality: sessionRow.modality ?? 'in_person',
-      sessionValue,
-    },
-    {
-      firstName: patientFirstName,
-      fullName: patientRow.fullName,
-    },
-    {
-      displayName: profileRow.displayName,
-    },
-    locationData,
-    KIND,
-  );
-
-  // Render template body
-  const bodyRendered = renderTemplate({
-    body: templateRow.body,
-    vars: variables,
+  // Build the named contentVariables from the platform template contract.
+  const variables = buildContentVariables(TEMPLATE_KEY, {
+    patientFullName: patientRow.fullName,
+    professionalName: profileRow.displayName,
+    startAt: sessionRow.startAt,
   });
 
-  // Send via Twilio adapter
+  // Send the Content template via the Twilio adapter
   const result = await sendTemplate({
     to: patientPhone,
-    fromAccountId: accountRow.id,
     templateKey: TEMPLATE_KEY,
-    contentSid: templateRow.contentSid,
+    contentSid,
     variables,
-    bodyRendered,
-    consentFooter,
   });
 
   if (!result.ok) {
     const isNonRetriable = NON_RETRIABLE_ERROR_CODES.has(result.error.code);
 
     if (isNonRetriable) {
+      // Template send — no rendered body (design D9), persist body IS NULL.
       await db.insert(whatsappMessages).values({
         userId: eventData.userId,
         patientId: eventData.patientId,
         sessionId: eventData.sessionId,
         direction: 'outbound',
         toPhone: patientPhone,
-        body: bodyRendered,
+        body: null,
         templateKey: TEMPLATE_KEY,
         idempotencyKey,
         status: 'unable_to_send',
@@ -314,14 +228,14 @@ export async function processCancellationNotice(
     throw new Error(`Twilio send failed: ${result.error.code} — ${result.error.message}`);
   }
 
-  // Insert whatsapp_messages record
+  // Insert whatsapp_messages record (body IS NULL — template send)
   await db.insert(whatsappMessages).values({
     userId: eventData.userId,
     patientId: eventData.patientId,
     sessionId: eventData.sessionId,
     direction: 'outbound',
     toPhone: patientPhone,
-    body: bodyRendered,
+    body: null,
     templateKey: TEMPLATE_KEY,
     bspMessageId: result.data.bspMessageId,
     idempotencyKey,

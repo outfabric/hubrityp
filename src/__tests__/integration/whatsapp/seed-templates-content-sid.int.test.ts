@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, sql as dsql } from 'drizzle-orm';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { fetchTemplate } from '@/modules/whatsapp/inngest/reminders-dispatcher';
+import { resolvePlatformContentSid } from '@/modules/whatsapp/lib/reminders/platform-template-contract';
 import { messageTemplates } from '@/shared/db/schema/whatsapp/tables';
 import { serverEnv } from '@/shared/env';
 
@@ -82,26 +82,18 @@ describe('seedDefaultTemplates — platform Content SIDs (real Postgres + RLS)',
     expect(byKey['termo_consentimento']!.metaTemplateId).toBeNull();
   });
 
-  it('dispatcher fetchTemplate returns a contentSid for every reminder kind after seed', async () => {
-    const userId = randomUUID();
-    await seedAuthUser(userId);
+  it('dispatch resolves the same Content SID from serverEnv that the seed persisted', () => {
+    // The dispatcher now resolves the Content SID from `serverEnv` via the
+    // platform template contract — never from `message_templates`. The seed
+    // stamps those same env SIDs onto the reminder rows, so the two must agree.
+    for (const key of REMINDER_KEYS) {
+      expect(resolvePlatformContentSid(key), `no env SID resolved for ${key}`).toBe(
+        EXPECTED_SID_BY_KEY[key],
+      );
+    }
 
-    const { seedDefaultTemplates } =
-      await import('@/modules/whatsapp/server/seed-default-templates');
-    await seedDefaultTemplates(userId);
-
-    await runAsService(async (db) => {
-      for (const key of REMINDER_KEYS) {
-        const template = await fetchTemplate(db, userId, key);
-        expect(template, `fetchTemplate returned null for ${key}`).not.toBeNull();
-        expect(template!.contentSid).toBe(EXPECTED_SID_BY_KEY[key]);
-        expect(template!.body.length).toBeGreaterThan(0);
-      }
-
-      // The non-reminder template has no SID → dispatcher skips it.
-      const termo = await fetchTemplate(db, userId, 'termo_consentimento');
-      expect(termo).toBeNull();
-    });
+    // Non-reminder keys are not platform templates → no SID (never dispatched).
+    expect(resolvePlatformContentSid('termo_consentimento')).toBeNull();
   });
 
   it('is idempotent — a second seed does not duplicate rows', async () => {

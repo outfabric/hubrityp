@@ -20,6 +20,7 @@ import {
   whatsappAccounts,
   whatsappMessages,
 } from '@/shared/db/schema/whatsapp/tables';
+import { serverEnv } from '@/shared/env';
 
 import { runAsService } from '../setup/run-as-service';
 
@@ -184,12 +185,9 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
       patientId,
       createdAt: new Date('2030-06-10T12:00:00Z'),
     });
-    await seedTemplate(
-      userId,
-      'lembrete_24h',
-      'Ola {nome_paciente}, lembrete da sessao.',
-      'HX_content_sid_001',
-    );
+    // NOTE: no message_templates row is seeded. The dispatcher resolves the
+    // Content SID from serverEnv via the platform template contract, so a
+    // missing/unseeded template row must NOT block the dispatch.
 
     // Set "now" to exactly when the early reminder should fire (24h before session)
     const now = new Date('2030-06-14T14:00:00Z');
@@ -218,8 +216,17 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     expect(ev.data.kind).toBe('early');
     expect(ev.data.templateKey).toBe('lembrete_24h');
     expect(ev.data.patientPhone).toBe('+5511988887777');
-    expect(ev.data.contentSid).toBe('HX_content_sid_001');
+    // Content SID comes from serverEnv, not from message_templates.
+    expect(ev.data.contentSid).toBe(serverEnv.TWILIO_CONTENT_SID_LEMBRETE_24H);
     expect(ev.data.idempotencyKey).toBe(generateIdempotencyKey(sessionId, 'early'));
+
+    // Slimmed payload — no template body, confirmation link, value, location,
+    // or duration (design D2).
+    expect(ev.data).not.toHaveProperty('templateBody');
+    expect(ev.data).not.toHaveProperty('confirmationLink');
+    expect(ev.data).not.toHaveProperty('sessionValue');
+    expect(ev.data).not.toHaveProperty('locationName');
+    expect(ev.data).not.toHaveProperty('sessionDurationMinutes');
   });
 
   it('does NOT re-enqueue when idempotency key already exists in DB', async () => {
@@ -474,6 +481,90 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
 
     const kinds = emittedEvents.map((e) => e.data.kind).sort();
     expect(kinds).toEqual(['early', 'final']);
+  });
+
+  it('skips the video reminder when the session link is unavailable, then dispatches once the room appears', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    const sessionId = randomUUID();
+    const appUrl = 'https://app.hubrity.com';
+    await seedAuthUser(userId);
+    await seedProfile(userId);
+    await seedWhatsappAccount(userId);
+    // Only the video reminder is enabled, so this test isolates the video kind.
+    await seedReminderSettings(userId, {
+      earlyReminderHours: null,
+      finalReminderHours: null,
+      videoLinkMinutes: 30,
+    });
+    await seedPatient(userId, patientId);
+
+    // Online session 30 min ahead of the video due time; "now" sits between the
+    // video due time (13:30) and the start (14:00) so the video reminder is due.
+    const sessionStart = new Date('2030-06-15T14:00:00Z');
+    await seedSession(userId, sessionId, sessionStart, {
+      patientId,
+      modality: 'online',
+      createdAt: new Date('2030-06-10T12:00:00Z'),
+    });
+    const now = new Date('2030-06-15T13:45:00Z');
+
+    // Tick 1: no video_rooms row exists → the session link is unresolved, so
+    // the dispatcher skips WITHOUT writing an idempotency record.
+    const firstTick: ReminderSendFanOutEvent[] = [];
+    const resultNoRoom = await dispatchReminders({
+      db: await getServiceDb(),
+      now,
+      appUrl,
+      sendEvents: (_stepId, events) => {
+        firstTick.push(...events);
+        return Promise.resolve();
+      },
+    });
+
+    expect(resultNoRoom.eventsEmitted).toBe(0);
+    expect(firstTick).toHaveLength(0);
+
+    // No whatsapp_messages idempotency row was written → the next tick retries.
+    const messagesAfterSkip = await runAsService(async (db) => {
+      return db.select().from(whatsappMessages);
+    });
+    expect(messagesAfterSkip).toHaveLength(0);
+
+    // Tick 2: the room (and its patient token) now exists → the link resolves
+    // and the video reminder dispatches with the env Content SID + link.
+    const patientToken = 'd'.repeat(64);
+    await runAsService(async (db) => {
+      await db.insert(videoRooms).values({
+        userId,
+        sessionId,
+        streamCallId: `session-${sessionId}`,
+        patientToken,
+        patientJwt: 'fake-jwt-video-skip',
+        availableFrom: new Date('2030-06-15T13:00:00Z'),
+        expiresAt: new Date('2030-06-15T16:00:00Z'),
+        status: 'pending',
+      });
+    });
+
+    const secondTick: ReminderSendFanOutEvent[] = [];
+    const resultWithRoom = await dispatchReminders({
+      db: await getServiceDb(),
+      now,
+      appUrl,
+      sendEvents: (_stepId, events) => {
+        secondTick.push(...events);
+        return Promise.resolve();
+      },
+    });
+
+    expect(resultWithRoom.eventsEmitted).toBe(1);
+    expect(secondTick).toHaveLength(1);
+    const ev = secondTick[0]!;
+    expect(ev.data.kind).toBe('video');
+    expect(ev.data.templateKey).toBe('link_video');
+    expect(ev.data.contentSid).toBe(serverEnv.TWILIO_CONTENT_SID_LINK_VIDEO);
+    expect(ev.data.videoLink).toBe(`${appUrl}/v/${patientToken}`);
   });
 });
 

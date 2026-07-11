@@ -168,7 +168,6 @@ export { inboxMessageIngest } from './inngest/inbox/inbox-message-ingest';
 // ---- Reminder helpers -------------------------------------------------------
 export { computeReminderWindow } from './lib/reminders/compute-reminder-window';
 export { generateIdempotencyKey } from './lib/reminders/idempotency-key';
-export { selectTemplateVariables } from './lib/reminders/select-template-variables';
 export {
   reminderSettingsSchema,
   reminderSettingsWithConsentSchema,

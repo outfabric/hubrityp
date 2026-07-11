@@ -24,13 +24,12 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { NonRetriableError } from 'inngest';
 
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
-import { selectTemplateVariables } from '@/modules/whatsapp/lib/reminders/select-template-variables';
 import { renderTemplate } from '@/modules/whatsapp/lib/render-template';
 import type {
   SendTemplateInput,
   SendTemplateResult,
 } from '@/modules/whatsapp/server/adapters/twilio-bsp';
-import { locations, sessions } from '@/shared/db/schema/agenda/tables';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import {
@@ -155,9 +154,6 @@ export async function processConfirmationAck(
     return { status: 'skipped', skipReason: 'no_phone' };
   }
 
-  // Extract first name from full name
-  const patientFirstName = patientRow.fullName.split(' ')[0] ?? patientRow.fullName;
-
   const [profileRow] = await db
     .select({ displayName: profiles.fullName })
     .from(profiles)
@@ -198,28 +194,6 @@ export async function processConfirmationAck(
     return { status: 'skipped', skipReason: 'template_not_found' };
   }
 
-  // Fetch location (optional)
-  let locationData: {
-    name: string;
-    address: string | null;
-    arrivalInstructions: string | null;
-  } | null = null;
-  if (sessionRow.locationId) {
-    const [locRow] = await db
-      .select({
-        name: locations.name,
-        address: locations.address,
-        arrivalInstructions: locations.arrivalInstructions,
-      })
-      .from(locations)
-      .where(eq(locations.id, sessionRow.locationId))
-      .limit(1);
-
-    if (locRow) {
-      locationData = locRow;
-    }
-  }
-
   // Step 3: Check if first outbound message (consent footer)
   const priorMessages = await db
     .select({ id: whatsappMessages.id })
@@ -236,41 +210,27 @@ export async function processConfirmationAck(
   const isFirstMessage = priorMessages.length === 0;
   const consentFooter = isFirstMessage ? CONSENT_FOOTER : undefined;
 
-  // Step 4: Select template variables
-  const sessionValue = sessionRow.amount != null ? Number(sessionRow.amount) : null;
-  const variables = selectTemplateVariables(
-    {
-      startAt: sessionRow.startAt,
-      durationMinutes: sessionRow.durationMinutes,
-      modality: sessionRow.modality ?? 'in_person',
-      sessionValue,
-    },
-    {
-      firstName: patientFirstName,
-      fullName: patientRow.fullName,
-    },
-    {
-      displayName: profileRow.displayName,
-    },
-    locationData,
-    KIND,
-  );
+  // NOTE (transitional): the confirmation ack is reworked into a free-form
+  // `sendFreeText` message in a follow-up section. Post-migration there is no
+  // `confirmacao_recebida` template row, so this Content-template path is inert
+  // (it always short-circuits at the `template_not_found` guard above). The
+  // named `contentVariables` are therefore empty and the rendered body is
+  // persisted locally with the consent footer preserved.
+  const variables: Record<string, string> = {};
 
   // Step 5: Render template body
   const bodyRendered = renderTemplate({
     body: templateRow.body,
     vars: variables,
   });
+  const persistedBody = consentFooter ? `${bodyRendered}\n\n${consentFooter}` : bodyRendered;
 
   // Step 6: Send via Twilio adapter
   const result = await sendTemplate({
     to: patientPhone,
-    fromAccountId: accountRow.id,
     templateKey: TEMPLATE_KEY,
     contentSid: templateRow.contentSid,
     variables,
-    bodyRendered,
-    consentFooter,
   });
 
   if (!result.ok) {
@@ -283,7 +243,7 @@ export async function processConfirmationAck(
         sessionId: eventData.sessionId,
         direction: 'outbound',
         toPhone: patientPhone,
-        body: bodyRendered,
+        body: persistedBody,
         templateKey: TEMPLATE_KEY,
         idempotencyKey,
         status: 'unable_to_send',
@@ -308,7 +268,7 @@ export async function processConfirmationAck(
     sessionId: eventData.sessionId,
     direction: 'outbound',
     toPhone: patientPhone,
-    body: bodyRendered,
+    body: persistedBody,
     templateKey: TEMPLATE_KEY,
     bspMessageId: result.data.bspMessageId,
     idempotencyKey,

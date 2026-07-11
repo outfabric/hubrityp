@@ -66,12 +66,12 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
 // In the shared-number model the platform registers the reminder templates
 // once in the shared Twilio WABA. Every psychologist reuses the same approved
 // Content SIDs, so seeding stamps each platform-owned reminder template with
-// its Content SID (`metaTemplateId`) and marks it `approved` — that is what
-// lets the reminders dispatcher send immediately after provisioning
-// (`fetchTemplate` returns the `contentSid` only when `metaTemplateId` is
-// non-null). The SID resolver lives in `platform-template-contract` (the single
-// source of truth for the four platform templates); templates without a
-// platform SID (e.g. `termo_consentimento`) stay `pending` with a null SID.
+// its Content SID (`metaTemplateId`) and marks it `approved` for display and
+// history. The send path resolves the Content SID directly from `serverEnv`
+// via the contract, so a template row is not required to dispatch. The SID
+// resolver lives in `platform-template-contract` (the single source of truth
+// for the four platform templates); templates without a platform SID (e.g.
+// `termo_consentimento`) stay `pending` with a null SID.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------

@@ -20,15 +20,15 @@
 
 ## 3. Send path — adapter, dispatcher, senders
 
-- [ ] 3.1 Rework `twilio-bsp.ts` `sendTemplate`: input becomes `{ to, templateKey, contentSid, variables }`; send `contentSid` + `contentVariables: JSON.stringify(variables)` only — drop the `body`/`bodyRendered`/`consentFooter` params entirely (Twilio ignores body with contentSid; footer applies to free-form only, design D9); keep typed error mapping.
-- [ ] 3.2 Update adapter unit tests: request carries named-key JSON string, no `body` param sent, error mapping unchanged.
-- [ ] 3.3 Rework `reminders-dispatcher.ts`: resolve `contentSid` via `resolvePlatformContentSid`; delete `fetchTemplate`; slim `ReminderSendEventData` in `inngest/client.ts` (drop `templateBody`, `confirmationLink`, `sessionValue`, location fields, `sessionDurationMinutes`); skip `video` kind with structured warning (`event: 'video_link_unavailable'`, session UUID only) when the video link is unresolved so no idempotency record blocks the next tick.
-- [ ] 3.4 Update dispatcher unit/integration tests: event payload shape (no body/link/value/location), SID from env regardless of `message_templates` contents (missing rows still dispatch), video-skip scenario (no event, retry next tick when room appears), all existing eligibility scenarios still green.
-- [ ] 3.5 Rework `reminder-sender.ts`: build variables via `buildContentVariables`, call the slimmed `sendTemplate`, persist `whatsapp_messages` with `body: null` + `template_key`; remove `renderTemplate`/consent-footer logic from this path (footer is free-form-only per D9).
-- [ ] 3.6 Delete `select-template-variables.ts` and its unit tests (superseded by the contract; `render-template.ts` stays — the ack uses it).
-- [ ] 3.7 Integration test sender persistence: successful send inserts row with `body IS NULL`, correct `template_key`, `bsp_message_id`; idempotency short-circuit; non-retriable error path records `unable_to_send` with `body IS NULL`.
-- [ ] 3.8 Rework `cancellation-notice-sender.ts`: variables via `buildContentVariables('cancelamento_aviso', ...)`, SID via `resolvePlatformContentSid`, stop reading `message_templates`, persist `body: null`.
-- [ ] 3.9 Update cancellation sender integration test: named variables sent, `body IS NULL` row, opt-out and `cancelled_by='patient'` guards unchanged.
+- [x] 3.1 Rework `twilio-bsp.ts` `sendTemplate`: input becomes `{ to, templateKey, contentSid, variables }`; send `contentSid` + `contentVariables: JSON.stringify(variables)` only — drop the `body`/`bodyRendered`/`consentFooter` params entirely (Twilio ignores body with contentSid; footer applies to free-form only, design D9); keep typed error mapping.
+- [x] 3.2 Update adapter unit tests: request carries named-key JSON string, no `body` param sent, error mapping unchanged.
+- [x] 3.3 Rework `reminders-dispatcher.ts`: resolve `contentSid` via `resolvePlatformContentSid`; delete `fetchTemplate`; slim `ReminderSendEventData` in `inngest/client.ts` (drop `templateBody`, `confirmationLink`, `sessionValue`, location fields, `sessionDurationMinutes`); skip `video` kind with structured warning (`event: 'video_link_unavailable'`, session UUID only) when the video link is unresolved so no idempotency record blocks the next tick.
+- [x] 3.4 Update dispatcher unit/integration tests: event payload shape (no body/link/value/location), SID from env regardless of `message_templates` contents (missing rows still dispatch), video-skip scenario (no event, retry next tick when room appears), all existing eligibility scenarios still green.
+- [x] 3.5 Rework `reminder-sender.ts`: build variables via `buildContentVariables`, call the slimmed `sendTemplate`, persist `whatsapp_messages` with `body: null` + `template_key`; remove `renderTemplate`/consent-footer logic from this path (footer is free-form-only per D9).
+- [x] 3.6 Delete `select-template-variables.ts` and its unit tests (superseded by the contract; `render-template.ts` stays — the ack uses it).
+- [x] 3.7 Integration test sender persistence: successful send inserts row with `body IS NULL`, correct `template_key`, `bsp_message_id`; idempotency short-circuit; non-retriable error path records `unable_to_send` with `body IS NULL`.
+- [x] 3.8 Rework `cancellation-notice-sender.ts`: variables via `buildContentVariables('cancelamento_aviso', ...)`, SID via `resolvePlatformContentSid`, stop reading `message_templates`, persist `body: null`.
+- [x] 3.9 Update cancellation sender integration test: named variables sent, `body IS NULL` row, opt-out and `cancelled_by='patient'` guards unchanged.
 
 ## 4. Confirmation ack — free-form
 
