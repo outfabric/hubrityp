@@ -4,6 +4,7 @@ import { AlertTriangle, Check, CheckCircle2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ConversationPatientInfo, TemplatePreview } from '@/modules/whatsapp';
+import { deriveMessageDisplay } from '@/modules/whatsapp/lib/message-display';
 import type { WhatsappMessage } from '@/shared/db/schema/whatsapp/tables';
 import { cn } from '@/shared/lib/utils';
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
@@ -198,8 +199,11 @@ export function ConversationThread({
                     />
                   )}
 
-                  {/* Message body */}
-                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.body}</p>
+                  {/* Message body — template sends carry body=null and render
+                      the template label instead (see deriveMessageDisplay). */}
+                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                    {deriveMessageDisplay(msg)}
+                  </p>
 
                   {/* Footer: time + status (outbound only) */}
                   <div

@@ -43,11 +43,11 @@
 
 ## 6. Frontend — hidden Templates tab + history display
 
-- [ ] 6.1 Gate the "Templates" tab in `lembretes-tabs.tsx`: filter the `TABS` array by `clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` imported from `@/shared/env/client` (leaf import — never the `@/shared/env` barrel in a client component); fully hidden when off, no "Em breve" badge.
-- [ ] 6.2 Unit (RTL) tests for `LembretesTabs`: flag off → only "Configuração" and "Histórico" rendered (no Templates element at all); flag on → three tabs; use `vi.stubEnv` + dynamic import to exercise both flag states (default-off flags freeze module-scope reads).
-- [ ] 6.3 Derive display for template sends in the message-history/inbox rendering path: rows with `body IS NULL` and non-null `template_key` render `TEMPLATE_LABELS[template_key]` + delivery status, falling back to the raw key for historical values (e.g. `confirmacao_recebida`); rows with body keep rendering text; confirm the FTS query still uses `coalesce(body,'')`.
-- [ ] 6.4 Unit tests for the display derivation: label rendering, raw-key fallback, free-form rows unchanged; integration test asserting search does not error on `body IS NULL` rows and does not match template sends by content.
-- [ ] 6.5 E2E (seeded) spec for the lembretes tabs under the MVP flag config (connection off): `/configuracoes/lembretes` shows Configuração/Histórico only, no Templates tab element, and direct URL `/configuracoes/lembretes/templates` still responds (visual-only gating).
+- [x] 6.1 Gate the "Templates" tab in `lembretes-tabs.tsx`: filter the `TABS` array by `clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED` imported from `@/shared/env/client` (leaf import — never the `@/shared/env` barrel in a client component); fully hidden when off, no "Em breve" badge.
+- [x] 6.2 Unit (RTL) tests for `LembretesTabs`: flag off → only "Configuração" and "Histórico" rendered (no Templates element at all); flag on → three tabs; use `vi.stubEnv` + dynamic import to exercise both flag states (default-off flags freeze module-scope reads).
+- [x] 6.3 Derive display for template sends in the message-history/inbox rendering path: rows with `body IS NULL` and non-null `template_key` render `TEMPLATE_LABELS[template_key]` + delivery status, falling back to the raw key for historical values (e.g. `confirmacao_recebida`); rows with body keep rendering text; confirm the FTS query still uses `coalesce(body,'')`.
+- [x] 6.4 Unit tests for the display derivation: label rendering, raw-key fallback, free-form rows unchanged; integration test asserting search does not error on `body IS NULL` rows and does not match template sends by content.
+- [x] 6.5 E2E (seeded) spec for the lembretes tabs under the MVP flag config (connection off): `/configuracoes/lembretes` shows Configuração/Histórico only, no Templates tab element, and direct URL `/configuracoes/lembretes/templates` still responds (visual-only gating).
 
 ## 7. Docs and deploy notes
 

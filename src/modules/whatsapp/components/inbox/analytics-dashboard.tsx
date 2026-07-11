@@ -13,6 +13,7 @@ import type {
   SearchMessageHistoryResult,
   SearchResultItem,
 } from '@/modules/whatsapp';
+import { templateKeyLabel } from '@/modules/whatsapp/lib/message-display';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Calendar } from '@/shared/ui/calendar';
@@ -323,7 +324,9 @@ export function AnalyticsDashboard({
                     <TableRow key={item.message.id}>
                       <TableCell className="font-medium">{item.patientName}</TableCell>
                       <TableCell className="text-text-secondary">
-                        {item.message.templateKey ?? 'Texto livre'}
+                        {item.message.templateKey
+                          ? templateKeyLabel(item.message.templateKey)
+                          : 'Texto livre'}
                       </TableCell>
                       <TableCell className="text-text-secondary">
                         {formatDateTime(item.message.createdAt)}
@@ -357,7 +360,9 @@ export function AnalyticsDashboard({
                           {item.patientName}
                         </p>
                         <p className="text-text-secondary mt-0.5 text-[13px]">
-                          {item.message.templateKey ?? 'Texto livre'}
+                          {item.message.templateKey
+                            ? templateKeyLabel(item.message.templateKey)
+                            : 'Texto livre'}
                         </p>
                         <p className="text-text-tertiary mt-0.5 text-[12px]">
                           {formatDateTime(item.message.createdAt)}
