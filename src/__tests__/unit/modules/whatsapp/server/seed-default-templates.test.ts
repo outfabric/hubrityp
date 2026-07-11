@@ -35,12 +35,14 @@ vi.mock('@/shared/db/client', () => ({
 
 import { seedDefaultTemplates } from '@/modules/whatsapp/server/seed-default-templates';
 
-// Platform Content SIDs seeded by `vitest.setup.ts` for the unit env.
+// The four platform Content SIDs seeded by `vitest.setup.ts` for the unit env.
+// `confirmacao_recebida` is intentionally absent — the confirmation ack is a
+// free-form message in the MVP, not a platform Content template, so it carries
+// no SID and its env var was removed.
 const EXPECTED_SID_BY_KEY: Record<string, string> = {
   lembrete_24h: 'HXunit24h',
   lembrete_2h: 'HXunit2h',
   link_video: 'HXunitvideo',
-  confirmacao_recebida: 'HXunitconfirm',
   cancelamento_aviso: 'HXunitcancel',
 };
 
@@ -73,15 +75,9 @@ describe('seedDefaultTemplates — platform Content SID mapping', () => {
     await seedDefaultTemplates(randomUUID());
 
     const seededSids = REMINDER_KEYS.map((key) => rowByKey(key).metaTemplateId);
-    // All five SIDs are distinct — proves no two keys share the same SID.
+    // All four SIDs are distinct — proves no two keys share the same SID.
     expect(new Set(seededSids).size).toBe(REMINDER_KEYS.length);
-    expect(seededSids).toEqual([
-      'HXunit24h',
-      'HXunit2h',
-      'HXunitvideo',
-      'HXunitconfirm',
-      'HXunitcancel',
-    ]);
+    expect(seededSids).toEqual(['HXunit24h', 'HXunit2h', 'HXunitvideo', 'HXunitcancel']);
   });
 
   it('leaves non-reminder templates (termo_consentimento) pending with a null SID', async () => {

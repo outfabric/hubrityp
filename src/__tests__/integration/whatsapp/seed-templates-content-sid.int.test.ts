@@ -30,7 +30,6 @@ const EXPECTED_SID_BY_KEY: Record<string, string> = {
   lembrete_24h: serverEnv.TWILIO_CONTENT_SID_LEMBRETE_24H,
   lembrete_2h: serverEnv.TWILIO_CONTENT_SID_LEMBRETE_2H,
   link_video: serverEnv.TWILIO_CONTENT_SID_LINK_VIDEO,
-  confirmacao_recebida: serverEnv.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA,
   cancelamento_aviso: serverEnv.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO,
 };
 

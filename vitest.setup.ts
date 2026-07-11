@@ -62,7 +62,6 @@ process.env.PENDING_EMAIL_COOKIE_SECRET ??= 'unit-test-pending-email-cookie-secr
 process.env.TWILIO_CONTENT_SID_LEMBRETE_24H ??= 'HXunit24h';
 process.env.TWILIO_CONTENT_SID_LEMBRETE_2H ??= 'HXunit2h';
 process.env.TWILIO_CONTENT_SID_LINK_VIDEO ??= 'HXunitvideo';
-process.env.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA ??= 'HXunitconfirm';
 process.env.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO ??= 'HXunitcancel';
 
 // The Edge-safe logger used by `src/middleware.ts` runs outside the pino

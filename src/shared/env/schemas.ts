@@ -47,7 +47,6 @@ export const serverEnvSchema = clientEnvSchema.extend({
   TWILIO_CONTENT_SID_LEMBRETE_24H: z.string().min(1),
   TWILIO_CONTENT_SID_LEMBRETE_2H: z.string().min(1),
   TWILIO_CONTENT_SID_LINK_VIDEO: z.string().min(1),
-  TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: z.string().min(1),
   TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: z.string().min(1),
   // Stream — video/chat API for telepsychology sessions.
   // `STREAM_API_KEY` is the server-side API key (same value as the public key
