@@ -37,9 +37,9 @@
 
 ## 5. Webhook — ButtonPayload classification
 
-- [ ] 5.1 Rework `classifyPayload` in `src/app/api/webhooks/twilio/whatsapp/route.ts`: match `params.ButtonPayload === 'confirm' | 'cancel'` (constants `BUTTON_ID_CONFIRM`/`BUTTON_ID_CANCEL`); remove the `ButtonText` constants; unrecognized `ButtonPayload` falls through to `inbound_text`.
-- [ ] 5.2 Update webhook unit tests for classification: `ButtonPayload='confirm'` → button_confirm; `ButtonPayload='cancel'` → button_cancel; `ButtonPayload` set with any `ButtonText` (including re-worded/accented labels) classifies by payload only; unknown payload → inbound_text; status/PARAR/free-text classification unchanged.
-- [ ] 5.3 Update webhook integration test (signature-valid POST → Inngest event): quick-reply with `ButtonPayload='confirm'` emits `whatsapp.confirmation.received`; `'cancel'` emits `whatsapp.cancellation.received`; unknown payload triggers the auto-reply/inbound path and returns 200.
+- [x] 5.1 Rework `classifyPayload` in `src/app/api/webhooks/twilio/whatsapp/route.ts`: match `params.ButtonPayload === 'confirm' | 'cancel'` (constants `BUTTON_ID_CONFIRM`/`BUTTON_ID_CANCEL`); remove the `ButtonText` constants; unrecognized `ButtonPayload` falls through to `inbound_text`.
+- [x] 5.2 Update webhook unit tests for classification: `ButtonPayload='confirm'` → button_confirm; `ButtonPayload='cancel'` → button_cancel; `ButtonPayload` set with any `ButtonText` (including re-worded/accented labels) classifies by payload only; unknown payload → inbound_text; status/PARAR/free-text classification unchanged.
+- [x] 5.3 Update webhook integration test (signature-valid POST → Inngest event): quick-reply with `ButtonPayload='confirm'` emits `whatsapp.confirmation.received`; `'cancel'` emits `whatsapp.cancellation.received`; unknown payload triggers the auto-reply/inbound path and returns 200.
 
 ## 6. Frontend — hidden Templates tab + history display
 
