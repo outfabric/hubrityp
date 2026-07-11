@@ -97,8 +97,15 @@ describe('seedDefaultTemplates — platform Content SID mapping', () => {
     }
   });
 
+  it('seeds exactly 5 rows and never a confirmacao_recebida row', async () => {
+    await seedDefaultTemplates(randomUUID());
+
+    expect(insertedRows).toHaveLength(5);
+    expect(insertedRows.map((r) => r.templateKey)).not.toContain('confirmacao_recebida');
+  });
+
   it('is idempotent — does not insert when templates already exist', async () => {
-    existingCount = 6;
+    existingCount = 5;
 
     await seedDefaultTemplates(randomUUID());
 

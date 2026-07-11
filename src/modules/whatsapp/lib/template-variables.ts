@@ -42,7 +42,6 @@ export const TEMPLATE_VARIABLES = [
     applicableTemplates: [
       'lembrete_24h',
       'lembrete_2h',
-      'confirmacao_recebida',
       'cancelamento_aviso',
       'link_video',
       'termo_consentimento',
@@ -61,7 +60,6 @@ export const TEMPLATE_VARIABLES = [
     applicableTemplates: [
       'lembrete_24h',
       'lembrete_2h',
-      'confirmacao_recebida',
       'cancelamento_aviso',
       'link_video',
       'termo_consentimento',
@@ -119,7 +117,7 @@ export const TEMPLATE_VARIABLES = [
     key: 'valor',
     label: 'Valor',
     example: 'R$ 200,00',
-    applicableTemplates: ['lembrete_24h', 'confirmacao_recebida'],
+    applicableTemplates: ['lembrete_24h'],
   },
 ] as const satisfies readonly TemplateVariable[];
 

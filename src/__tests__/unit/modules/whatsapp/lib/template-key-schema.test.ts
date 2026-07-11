@@ -10,7 +10,6 @@ describe('templateKeySchema — valid keys', () => {
   const validKeys = [
     'lembrete_24h',
     'lembrete_2h',
-    'confirmacao_recebida',
     'cancelamento_aviso',
     'link_video',
     'termo_consentimento',
@@ -27,10 +26,15 @@ describe('templateKeySchema — valid keys', () => {
 // ---------------------------------------------------------------------------
 
 describe('templateKeySchema — invalid keys', () => {
-  it.each([['invalido'], [''], ['lembrete_48h']])('rejects "%s"', (key) => {
-    const result = templateKeySchema.safeParse(key);
-    expect(result.success).toBe(false);
-  });
+  // `confirmacao_recebida` was removed from the enum (Option B): the confirmation
+  // ack is now a free-form message, not a template type. It must be rejected.
+  it.each([['invalido'], [''], ['lembrete_48h'], ['confirmacao_recebida']])(
+    'rejects "%s"',
+    (key) => {
+      const result = templateKeySchema.safeParse(key);
+      expect(result.success).toBe(false);
+    },
+  );
 
   it('provides a pt-BR error message for invalid key', () => {
     const result = templateKeySchema.safeParse('invalido');

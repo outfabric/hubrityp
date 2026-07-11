@@ -11,12 +11,12 @@
 
 ## 2. Template model — enum 5 keys, seed, migration
 
-- [ ] 2.1 Remove `confirmacao_recebida` from `templateKeySchema` (`template-key-schema.ts`), `TEMPLATE_LABELS` (`template-labels.ts`), and every `applicableTemplates` array in `template-variables.ts`; follow the TypeScript compile errors until `npm run typecheck` is clean (do NOT touch `select-template-variables.ts` yet — it is deleted in 3.6).
-- [ ] 2.2 Update existing unit tests for schema/labels/dictionary to the 5-key enum (no `confirmacao_recebida` anywhere; dictionary still has 12 variables as UI metadata).
-- [ ] 2.3 Rework `seed-default-templates.ts`: seed exactly 5 rows (`lembrete_24h`, `lembrete_2h`, `link_video`, `cancelamento_aviso`, `termo_consentimento`), stamp the four reminder rows with SIDs via `resolvePlatformContentSid` from the contract module, keep idempotency; remove the local SID resolver.
-- [ ] 2.4 Update/extend the seed integration test (`src/__tests__/integration/whatsapp/`): 5 rows created, no `confirmacao_recebida` row, four rows approved with env SIDs, `termo_consentimento` pending/null, idempotent re-run.
-- [ ] 2.5 Drizzle migration: `DELETE FROM message_templates WHERE template_key = 'confirmacao_recebida'` + drop/recreate the `message_templates.template_key` CHECK with the 5 keys; migration header documents the destructive delete (platform-seeded copies) and the targeted re-insert rollback path; `whatsapp_messages` untouched.
-- [ ] 2.6 Integration test for the migration state: inserting `template_key='confirmacao_recebida'` into `message_templates` is rejected by the CHECK; the 5 valid keys insert fine; a pre-existing `whatsapp_messages` row with `template_key='confirmacao_recebida'` survives and remains readable.
+- [x] 2.1 Remove `confirmacao_recebida` from `templateKeySchema` (`template-key-schema.ts`), `TEMPLATE_LABELS` (`template-labels.ts`), and every `applicableTemplates` array in `template-variables.ts`; follow the TypeScript compile errors until `npm run typecheck` is clean (do NOT touch `select-template-variables.ts` yet — it is deleted in 3.6).
+- [x] 2.2 Update existing unit tests for schema/labels/dictionary to the 5-key enum (no `confirmacao_recebida` anywhere; dictionary still has 12 variables as UI metadata).
+- [x] 2.3 Rework `seed-default-templates.ts`: seed exactly 5 rows (`lembrete_24h`, `lembrete_2h`, `link_video`, `cancelamento_aviso`, `termo_consentimento`), stamp the four reminder rows with SIDs via `resolvePlatformContentSid` from the contract module, keep idempotency; remove the local SID resolver.
+- [x] 2.4 Update/extend the seed integration test (`src/__tests__/integration/whatsapp/`): 5 rows created, no `confirmacao_recebida` row, four rows approved with env SIDs, `termo_consentimento` pending/null, idempotent re-run.
+- [x] 2.5 Drizzle migration: `DELETE FROM message_templates WHERE template_key = 'confirmacao_recebida'` + drop/recreate the `message_templates.template_key` CHECK with the 5 keys; migration header documents the destructive delete (platform-seeded copies) and the targeted re-insert rollback path; `whatsapp_messages` untouched.
+- [x] 2.6 Integration test for the migration state: inserting `template_key='confirmacao_recebida'` into `message_templates` is rejected by the CHECK; the 5 valid keys insert fine; a pre-existing `whatsapp_messages` row with `template_key='confirmacao_recebida'` survives and remains readable.
 
 ## 3. Send path — adapter, dispatcher, senders
 

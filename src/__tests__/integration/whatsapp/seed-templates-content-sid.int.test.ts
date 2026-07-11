@@ -65,6 +65,11 @@ describe('seedDefaultTemplates — platform Content SIDs (real Postgres + RLS)',
 
     const byKey = Object.fromEntries(rows.map((r) => [r.templateKey, r]));
 
+    // Exactly 5 rows — the four reminder templates + termo_consentimento. The
+    // removed `confirmacao_recebida` row must never be seeded.
+    expect(rows).toHaveLength(5);
+    expect(rows.map((r) => r.templateKey)).not.toContain('confirmacao_recebida');
+
     for (const key of REMINDER_KEYS) {
       const row = byKey[key];
       expect(row, `expected a seeded row for ${key}`).toBeDefined();
@@ -112,7 +117,7 @@ describe('seedDefaultTemplates — platform Content SIDs (real Postgres + RLS)',
       return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
 
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(5);
     // The reminder rows are still approved with their SID after the second call.
     const byKey = Object.fromEntries(rows.map((r) => [r.templateKey, r]));
     for (const key of REMINDER_KEYS) {

@@ -135,11 +135,16 @@ describe('selectTemplateVariables — kind "video"', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Kind 'confirmed_ack' — minimal variables
+// Kind 'confirmed_ack' — no applicable variables
+//
+// `confirmacao_recebida` was removed from the template model (Option B): the
+// confirmation ack is now a free-form message, so no dictionary variable lists
+// it in `applicableTemplates`. The selector therefore yields an empty map for
+// this kind. (This selector and its whole file are removed in task 3.6.)
 // ---------------------------------------------------------------------------
 
 describe('selectTemplateVariables — kind "confirmed_ack"', () => {
-  it('returns nome_paciente, nome_psicologo, and valor', () => {
+  it('returns an empty map (no variable applies to the removed confirmacao_recebida)', () => {
     const result = selectTemplateVariables(
       defaultSession(),
       defaultPatient(),
@@ -148,23 +153,7 @@ describe('selectTemplateVariables — kind "confirmed_ack"', () => {
       'confirmed_ack',
     );
 
-    expect(result).toHaveProperty('nome_paciente', 'Maria');
-    expect(result).toHaveProperty('nome_psicologo', 'Dra. Ana');
-    expect(result).toHaveProperty('valor', 'R$ 200,00');
-  });
-
-  it('does not include data/hora/dia_semana (not in confirmacao_recebida template)', () => {
-    const result = selectTemplateVariables(
-      defaultSession(),
-      defaultPatient(),
-      defaultPsychologist(),
-      defaultLocation(),
-      'confirmed_ack',
-    );
-
-    expect(result).not.toHaveProperty('data');
-    expect(result).not.toHaveProperty('hora');
-    expect(result).not.toHaveProperty('dia_semana');
+    expect(result).toEqual({});
   });
 });
 

@@ -119,7 +119,7 @@ describe('saveReminderSettingsImpl — lazy provisioning on first consented save
     const templates = await runAsService(async (db) => {
       return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
-    expect(templates).toHaveLength(6);
+    expect(templates).toHaveLength(5);
 
     const settings = await runAsService(async (db) => {
       return db.select().from(reminderSettings).where(eq(reminderSettings.userId, userId));
@@ -303,6 +303,6 @@ describe('saveReminderSettingsImpl — concurrent first-saves', () => {
     const templates = await runAsService(async (db) => {
       return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
-    expect(templates).toHaveLength(6);
+    expect(templates).toHaveLength(5);
   });
 });

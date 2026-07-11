@@ -44,11 +44,6 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
     variables: ['nome_paciente', 'nome_psicologo', 'hora', 'dia_semana', 'link_confirmacao'],
   },
   {
-    templateKey: 'confirmacao_recebida',
-    body: 'Obrigado, {nome_paciente}! Sua presença na sessão com {nome_psicologo} está confirmada. Valor: {valor}',
-    variables: ['nome_paciente', 'nome_psicologo', 'valor'],
-  },
-  {
     templateKey: 'cancelamento_aviso',
     body: 'Olá, {nome_paciente}. Informamos que sua sessão com {nome_psicologo} em {data}, às {hora}, foi cancelada.',
     variables: ['nome_paciente', 'nome_psicologo', 'data', 'hora'],
@@ -84,7 +79,7 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
 // ---------------------------------------------------------------------------
 
 /**
- * Seeds the 6 default message templates for a psychologist.
+ * Seeds the 5 default message templates for a psychologist.
  *
  * @internal Only call from completeTwilioConnectionImpl after auth.
  *
@@ -112,7 +107,7 @@ export async function seedDefaultTemplates(userId: string): Promise<void> {
     return;
   }
 
-  // Insert all 6 default templates in a transaction. Reminder templates are
+  // Insert all 5 default templates in a transaction. Reminder templates are
   // stamped with the platform Content SID + `approved`; non-reminder templates
   // (e.g. `termo_consentimento`) stay `pending` with a null SID.
   await db.transaction(async (tx) => {

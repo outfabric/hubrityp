@@ -54,8 +54,13 @@ export interface LocationForVariables {
 /**
  * Maps the semantic reminder kind to the TemplateKey used in the
  * template_variables dictionary's `applicableTemplates` field.
+ *
+ * `confirmacao_recebida` is no longer a TemplateKey (Option B — the confirmation
+ * ack is a free-form message). This map and its whole file are removed in task
+ * 3.6; the value type is widened transitionally to keep this dead literal from
+ * breaking typecheck until then. Runtime behavior is unchanged.
  */
-const KIND_TO_TEMPLATE_KEY: Record<string, TemplateKey> = {
+const KIND_TO_TEMPLATE_KEY: Record<string, TemplateKey | 'confirmacao_recebida'> = {
   early: 'lembrete_24h',
   final: 'lembrete_2h',
   video: 'link_video',
