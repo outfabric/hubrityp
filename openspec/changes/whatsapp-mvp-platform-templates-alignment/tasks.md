@@ -32,8 +32,8 @@
 
 ## 4. Confirmation ack — free-form
 
-- [ ] 4.1 Rework `confirmation-ack-sender.ts`: module-level body constant (`Obrigado, {first_name}! Sua presença na sessão com {professional_name} está confirmada.`) rendered via `renderTemplate`, sent via `sendFreeText`; stop reading `message_templates`; persist row with `body` = sent text, `template_key: null`; keep idempotency (`sessionId:confirmed_ack`) and first-message consent footer.
-- [ ] 4.2 Update ack integration test: free-form send (no contentSid), row has populated `body` and `template_key IS NULL`, works with zero `message_templates` rows, duplicate event short-circuits, footer on first outbound message only.
+- [x] 4.1 Rework `confirmation-ack-sender.ts`: module-level body constant (`Obrigado, {first_name}! Sua presença na sessão com {professional_name} está confirmada.`) rendered via `renderTemplate`, sent via `sendFreeText`; stop reading `message_templates`; persist row with `body` = sent text, `template_key: null`; keep idempotency (`sessionId:confirmed_ack`) and first-message consent footer.
+- [x] 4.2 Update ack integration test: free-form send (no contentSid), row has populated `body` and `template_key IS NULL`, works with zero `message_templates` rows, duplicate event short-circuits, footer on first outbound message only.
 
 ## 5. Webhook — ButtonPayload classification
 

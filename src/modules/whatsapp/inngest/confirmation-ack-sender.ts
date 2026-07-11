@@ -1,19 +1,26 @@
 /**
  * Confirmation acknowledgment sender — Inngest function that sends a
- * "confirmacao_recebida" WhatsApp message to a patient after they
- * confirm attendance.
+ * free-form "confirmação recebida" WhatsApp message to a patient after
+ * they confirm attendance.
  *
  * Triggered by `whatsapp/confirmation.ack` events emitted when a patient
  * confirms a session via the quick-reply button.
  *
+ * The ack is a FREE-FORM message (not a platform Content template): it is
+ * always sent inside Meta's 24-hour session window (the patient just replied
+ * to a template), so it goes through the `sendFreeText` adapter. The body is a
+ * module-level code constant rendered via `renderTemplate` — it does NOT read
+ * `message_templates` (design D4). The `whatsapp_messages` row therefore keeps
+ * `body` = the exact sent text (faithful record) and `template_key = NULL`
+ * (the NULL-body rule applies only to pre-approved template sends).
+ *
  * Steps:
- *   1. Fetch session + patient + psychologist + location data
- *   2. Fetch the "confirmacao_recebida" template for the psychologist
+ *   1. Check idempotency in DB (`sessionId:confirmed_ack`)
+ *   2. Fetch session + patient + psychologist + account data
  *   3. Check if this is the first outbound message (consent footer)
- *   4. Select template variables for kind 'confirmed_ack'
- *   5. Render template body
- *   6. Send via Twilio adapter
- *   7. Insert whatsapp_messages record
+ *   4. Render the free-form body and append the footer on the first message
+ *   5. Send via the Twilio free-text adapter
+ *   6. Insert whatsapp_messages record (body = sent text, template_key = NULL)
  *
  * Uses a SHA-256 idempotency key derived from `sessionId:confirmed_ack`
  * to prevent duplicate sends on retries.
@@ -26,17 +33,13 @@ import { NonRetriableError } from 'inngest';
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
 import { renderTemplate } from '@/modules/whatsapp/lib/render-template';
 import type {
-  SendTemplateInput,
-  SendTemplateResult,
+  SendFreeTextInput,
+  SendFreeTextResult,
 } from '@/modules/whatsapp/server/adapters/twilio-bsp';
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
-import {
-  messageTemplates,
-  whatsappAccounts,
-  whatsappMessages,
-} from '@/shared/db/schema/whatsapp/tables';
+import { whatsappAccounts, whatsappMessages } from '@/shared/db/schema/whatsapp/tables';
 
 import { inngest, WHATSAPP_EVENTS, type ConfirmationAckEventData } from './client';
 
@@ -49,7 +52,14 @@ const CONSENT_FOOTER =
   'Dados tratados conforme nossa Politica de Privacidade. ' +
   'Para parar de receber, responda PARAR.';
 
-const TEMPLATE_KEY = 'confirmacao_recebida';
+/**
+ * Free-form ack body. Rendered via `renderTemplate` with `first_name` and
+ * `professional_name`. Not stored in `message_templates` — the ack is a
+ * platform-owned free-form message (design D4).
+ */
+const ACK_BODY_TEMPLATE =
+  'Obrigado, {first_name}! Sua presença na sessão com {professional_name} está confirmada.';
+
 const KIND = 'confirmed_ack';
 
 /** Error codes that should NOT be retried. */
@@ -64,7 +74,7 @@ type DrizzleDb = PostgresJsDatabase<any>;
 
 export interface ConfirmationAckDeps {
   db: DrizzleDb;
-  sendTemplate: (input: SendTemplateInput) => Promise<SendTemplateResult>;
+  sendFreeText: (input: SendFreeTextInput) => Promise<SendFreeTextResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,6 +90,18 @@ export interface ConfirmationAckResult {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Extracts the first name (first whitespace-delimited token) from a full name.
+ * Newlines are treated as whitespace so they never leak into the sent body.
+ */
+function extractFirstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? '';
+}
+
+// ---------------------------------------------------------------------------
 // Core logic (extracted for testing)
 // ---------------------------------------------------------------------------
 
@@ -91,7 +113,7 @@ export async function processConfirmationAck(
   eventData: ConfirmationAckEventData,
   deps: ConfirmationAckDeps,
 ): Promise<ConfirmationAckResult> {
-  const { db, sendTemplate } = deps;
+  const { db, sendFreeText } = deps;
 
   const idempotencyKey = generateIdempotencyKey(eventData.sessionId, KIND);
 
@@ -111,17 +133,9 @@ export async function processConfirmationAck(
     return { status: 'skipped', skipReason: 'already_sent' };
   }
 
-  // Step 2: Fetch session + patient + psychologist + location
+  // Step 2: Fetch session (existence guard — FK integrity for the message row)
   const [sessionRow] = await db
-    .select({
-      sessionId: sessions.id,
-      startAt: sessions.startAt,
-      durationMinutes: sessions.durationMinutes,
-      modality: sessions.modality,
-      locationId: sessions.locationId,
-      amount: sessions.amount,
-      patientId: sessions.patientId,
-    })
+    .select({ sessionId: sessions.id })
     .from(sessions)
     .where(eq(sessions.id, eventData.sessionId))
     .limit(1);
@@ -175,25 +189,6 @@ export async function processConfirmationAck(
     return { status: 'skipped', skipReason: 'account_not_active' };
   }
 
-  // Fetch template
-  const [templateRow] = await db
-    .select({
-      body: messageTemplates.body,
-      contentSid: messageTemplates.metaTemplateId,
-    })
-    .from(messageTemplates)
-    .where(
-      and(
-        eq(messageTemplates.userId, eventData.userId),
-        eq(messageTemplates.templateKey, TEMPLATE_KEY),
-      ),
-    )
-    .limit(1);
-
-  if (!templateRow?.contentSid) {
-    return { status: 'skipped', skipReason: 'template_not_found' };
-  }
-
   // Step 3: Check if first outbound message (consent footer)
   const priorMessages = await db
     .select({ id: whatsappMessages.id })
@@ -210,27 +205,22 @@ export async function processConfirmationAck(
   const isFirstMessage = priorMessages.length === 0;
   const consentFooter = isFirstMessage ? CONSENT_FOOTER : undefined;
 
-  // NOTE (transitional): the confirmation ack is reworked into a free-form
-  // `sendFreeText` message in a follow-up section. Post-migration there is no
-  // `confirmacao_recebida` template row, so this Content-template path is inert
-  // (it always short-circuits at the `template_not_found` guard above). The
-  // named `contentVariables` are therefore empty and the rendered body is
-  // persisted locally with the consent footer preserved.
-  const variables: Record<string, string> = {};
-
-  // Step 5: Render template body
+  // Step 4: Render the free-form body (code constant, never message_templates)
   const bodyRendered = renderTemplate({
-    body: templateRow.body,
-    vars: variables,
+    body: ACK_BODY_TEMPLATE,
+    vars: {
+      first_name: extractFirstName(patientRow.fullName),
+      professional_name: profileRow.displayName,
+    },
   });
-  const persistedBody = consentFooter ? `${bodyRendered}\n\n${consentFooter}` : bodyRendered;
+  // Free-form send — the sent text IS the persisted text (faithful record),
+  // including the consent footer on the first outbound message.
+  const sentBody = consentFooter ? `${bodyRendered}\n\n${consentFooter}` : bodyRendered;
 
-  // Step 6: Send via Twilio adapter
-  const result = await sendTemplate({
+  // Step 5: Send via the Twilio free-text adapter (no contentSid)
+  const result = await sendFreeText({
     to: patientPhone,
-    templateKey: TEMPLATE_KEY,
-    contentSid: templateRow.contentSid,
-    variables,
+    body: sentBody,
   });
 
   if (!result.ok) {
@@ -243,8 +233,8 @@ export async function processConfirmationAck(
         sessionId: eventData.sessionId,
         direction: 'outbound',
         toPhone: patientPhone,
-        body: persistedBody,
-        templateKey: TEMPLATE_KEY,
+        body: sentBody,
+        templateKey: null,
         idempotencyKey,
         status: 'unable_to_send',
         errorReason: `${result.error.code}: ${result.error.message}`,
@@ -261,15 +251,15 @@ export async function processConfirmationAck(
     throw new Error(`Twilio send failed: ${result.error.code} — ${result.error.message}`);
   }
 
-  // Step 7: Insert whatsapp_messages record
+  // Step 6: Insert whatsapp_messages record (free-form → body = sent text)
   await db.insert(whatsappMessages).values({
     userId: eventData.userId,
     patientId: eventData.patientId,
     sessionId: eventData.sessionId,
     direction: 'outbound',
     toPhone: patientPhone,
-    body: persistedBody,
-    templateKey: TEMPLATE_KEY,
+    body: sentBody,
+    templateKey: null,
     bspMessageId: result.data.bspMessageId,
     idempotencyKey,
     status: 'sent',
@@ -303,7 +293,7 @@ export const confirmationAckSender = inngest.createFunction(
         patientId: data.patientId,
         sessionId: data.sessionId,
         direction: 'outbound',
-        templateKey: TEMPLATE_KEY,
+        templateKey: null,
         idempotencyKey,
         status: 'failed',
         errorReason: error.message,
@@ -323,12 +313,12 @@ export const confirmationAckSender = inngest.createFunction(
   },
   async ({ event, step, logger }) => {
     const { db } = await import('@/shared/db/client');
-    const { sendTemplate } = await import('@/modules/whatsapp/server/adapters/twilio-bsp');
+    const { sendFreeText } = await import('@/modules/whatsapp/server/adapters/twilio-bsp');
 
     const data = event.data as ConfirmationAckEventData;
 
     const result = await step.run('process-confirmation-ack', async () => {
-      return processConfirmationAck(data, { db, sendTemplate });
+      return processConfirmationAck(data, { db, sendFreeText });
     });
 
     if (result.status === 'unable_to_send') {
