@@ -1,5 +1,7 @@
 # Memory index
 
+- [WhatsApp MVP: sender único + templates fixos](project_whatsapp_mvp_shared_sender_fixed_templates.md) — tab Templates OCULTA atrás de CONNECTION_UI_ENABLED; confirmacao_recebida vira free-form sem key no enum (opção B); URL-gating das rotas = futuro
+
 - [Figma sources of truth](reference_figma_sources.md) — DS "Sálvia" file HoLOEqq9PXlo6IwLkz3FQ9 (public pages/chrome/tokens) + Brand file 4O3POARuvEYI1BCrxbOFg2 (tricolor logomark variants)
 - [Public pages: Figma is the only truth](feedback_public_pages_figma_source.md) — public-site built from obsolete handoff doc, drifted from live Figma; user declared handoff obsolete 2026-06-19, match live frames + flag AA/placeholder/LGPD-copy items
 - [Capture runtime screenshots myself via playwright-cli](feedback_runtime_screenshots_self_playwright_cli.md) — for Figma-vs-app visual verification I bring up the app + screenshot via playwright-cli skill myself, not via qa-tester agent
