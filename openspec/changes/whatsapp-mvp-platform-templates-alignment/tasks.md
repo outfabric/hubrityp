@@ -51,4 +51,4 @@
 
 ## 7. Docs and deploy notes
 
-- [ ] 7.1 Add a short runbook note (`docs/runbooks/`) for the platform template contract: the named variables per template MUST match the Content Template Builder definitions; pre-deploy checklist (compare contract file vs Twilio console; confirm the four SIDs; verify template copy carries the required LGPD/PARAR disclosure text since the runtime footer no longer applies to template sends — design D9).
+- [x] 7.1 Add a short runbook note (`docs/runbooks/`) for the platform template contract: the named variables per template MUST match the Content Template Builder definitions; pre-deploy checklist (compare contract file vs Twilio console; confirm the four SIDs; verify template copy carries the required LGPD/PARAR disclosure text since the runtime footer no longer applies to template sends — design D9).
