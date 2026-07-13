@@ -97,7 +97,7 @@ interface TemplateDefinition {
 const PLATFORM_TEMPLATE_CONTRACT = {
   lembrete_24h: {
     envVar: 'TWILIO_CONTENT_SID_LEMBRETE_24H',
-    variables: [firstNameVariable, professionalNameVariable, dateVariable, timeVariable],
+    variables: [firstNameVariable, dateVariable, timeVariable, professionalNameVariable],
   },
   lembrete_2h: {
     envVar: 'TWILIO_CONTENT_SID_LEMBRETE_2H',
