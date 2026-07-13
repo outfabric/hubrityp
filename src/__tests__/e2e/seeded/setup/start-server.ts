@@ -146,7 +146,6 @@ async function main(): Promise<void> {
       TWILIO_CONTENT_SID_LEMBRETE_24H: 'HXe2e24h',
       TWILIO_CONTENT_SID_LEMBRETE_2H: 'HXe2e2h',
       TWILIO_CONTENT_SID_LINK_VIDEO: 'HXe2evideo',
-      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXe2econfirm',
       TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXe2ecancel',
       // Platform shared WhatsApp sender — required so the first consented save
       // in the reminder-settings flow can lazily provision the psychologist's

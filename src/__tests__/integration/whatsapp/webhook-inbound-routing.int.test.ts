@@ -84,11 +84,13 @@ describe('Twilio webhook Route Handler — inbound routing', () => {
     expect(inngestSend).not.toHaveBeenCalled();
   });
 
-  it('button_confirm goes to its Inngest handler and gets NO auto-reply', async () => {
+  it('button_confirm (ButtonPayload=confirm) goes to its Inngest handler and gets NO auto-reply', async () => {
     const res = await postWebhook({
       MessageSid: 'SM_confirm_1',
       From: 'whatsapp:+5511988887777',
-      ButtonText: 'Confirmar',
+      ButtonPayload: 'confirm',
+      // ButtonText is display copy — classification must not depend on it.
+      ButtonText: 'Confirmar presença',
       OriginalRepliedMessageSid: 'SM_orig_1',
     });
 
@@ -100,11 +102,12 @@ describe('Twilio webhook Route Handler — inbound routing', () => {
     );
   });
 
-  it('button_cancel goes to its Inngest handler and gets NO auto-reply', async () => {
+  it('button_cancel (ButtonPayload=cancel) goes to its Inngest handler and gets NO auto-reply', async () => {
     const res = await postWebhook({
       MessageSid: 'SM_cancel_1',
       From: 'whatsapp:+5511988887777',
-      ButtonText: 'Nao posso comparecer',
+      ButtonPayload: 'cancel',
+      ButtonText: 'Não posso comparecer',
       OriginalRepliedMessageSid: 'SM_orig_2',
     });
 
@@ -113,6 +116,19 @@ describe('Twilio webhook Route Handler — inbound routing', () => {
     expect(inngestSend).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'whatsapp/cancellation.received' }),
     );
+  });
+
+  it('unrecognized ButtonPayload falls through to the auto-reply/inbound path (200, no Inngest event)', async () => {
+    const res = await postWebhook({
+      MessageSid: 'SM_unknown_btn_1',
+      From: 'whatsapp:+5511988887777',
+      ButtonPayload: 'some_other_button',
+      ButtonText: 'Outra opção',
+    });
+
+    expect(res.status).toBe(200);
+    expect(processInboundAutoReply).toHaveBeenCalledTimes(1);
+    expect(inngestSend).not.toHaveBeenCalled();
   });
 
   it('stop_command (PARAR) goes to its Inngest handler and gets NO auto-reply', async () => {

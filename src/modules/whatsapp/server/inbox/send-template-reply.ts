@@ -121,14 +121,14 @@ export async function sendTemplateReplyImpl(
     };
   }
 
-  // 6. Send via Twilio adapter
+  // 6. Send via Twilio adapter. `bodyRendered` is retained only for local
+  // persistence/preview — the Content send itself carries `contentSid` +
+  // named `variables` (no body, design D9).
   const sendResult = await deps.sendTemplate({
     to: patient.phone,
-    fromAccountId: user.id,
     templateKey,
     contentSid: template.metaTemplateId,
     variables,
-    bodyRendered,
   });
 
   if (!sendResult.ok) {

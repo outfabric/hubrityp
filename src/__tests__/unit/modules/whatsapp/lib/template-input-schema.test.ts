@@ -41,7 +41,6 @@ describe('templateInputSchema — valid payloads', () => {
     const keys = [
       'lembrete_24h',
       'lembrete_2h',
-      'confirmacao_recebida',
       'cancelamento_aviso',
       'link_video',
       'termo_consentimento',
@@ -54,6 +53,14 @@ describe('templateInputSchema — valid payloads', () => {
       });
       expect(result.success).toBe(true);
     }
+  });
+
+  it('rejects the removed confirmacao_recebida key', () => {
+    const result = templateInputSchema.safeParse({
+      body: 'Uma mensagem válida com pelo menos 10 caracteres.',
+      template_key: 'confirmacao_recebida',
+    });
+    expect(result.success).toBe(false);
   });
 });
 

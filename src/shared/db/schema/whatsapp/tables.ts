@@ -81,7 +81,9 @@ export const messageTemplates = pgTable(
     userId: uuid('user_id').notNull(),
 
     // CHECK constraint in migration: template_key IN ('lembrete_24h', 'lembrete_2h',
-    // 'confirmacao_recebida', 'cancelamento_aviso', 'link_video', 'termo_consentimento')
+    // 'cancelamento_aviso', 'link_video', 'termo_consentimento')
+    // ('confirmacao_recebida' was removed — the confirmation ack is a free-form
+    //  message, not a template type. See migration 0043.)
     templateKey: varchar('template_key', { length: 50 }).notNull(),
 
     body: text('body').notNull(),

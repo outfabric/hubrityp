@@ -19,16 +19,17 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { generatePatientVideoUrl } from '@/modules/telepsicologia/lib/video-url';
 import { computeReminderWindow } from '@/modules/whatsapp/lib/reminders/compute-reminder-window';
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
-import { locations, sessions } from '@/shared/db/schema/agenda/tables';
+import { resolvePlatformContentSid } from '@/modules/whatsapp/lib/reminders/platform-template-contract';
+import { sessions } from '@/shared/db/schema/agenda/tables';
 import { profiles } from '@/shared/db/schema/auth/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { videoRooms } from '@/shared/db/schema/telepsicologia/tables';
 import {
-  messageTemplates,
   reminderSettings,
   whatsappAccounts,
   whatsappMessages,
 } from '@/shared/db/schema/whatsapp/tables';
+import { logger } from '@/shared/lib/logger';
 
 import { inngest, type ReminderSendEventData } from './client';
 
@@ -77,13 +78,8 @@ interface SessionCandidate {
   id: string;
   patientId: string | null;
   startAt: Date;
-  endAt: Date;
-  durationMinutes: number;
   modality: string | null;
-  locationId: string | null;
-  amount: string | null;
   createdAt: Date;
-  confirmationToken: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -130,13 +126,8 @@ export async function fetchSessionCandidates(
       id: sessions.id,
       patientId: sessions.patientId,
       startAt: sessions.startAt,
-      endAt: sessions.endAt,
-      durationMinutes: sessions.durationMinutes,
       modality: sessions.modality,
-      locationId: sessions.locationId,
-      amount: sessions.amount,
       createdAt: sessions.createdAt,
-      confirmationToken: sessions.confirmationToken,
     })
     .from(sessions)
     .where(
@@ -199,59 +190,6 @@ async function fetchPatientData(
     phone,
     optedOut: patient.whatsappOptOut,
   };
-}
-
-/**
- * Fetches template data for a given user and template key.
- *
- * Returns `null` when the template does not exist or has no platform Content
- * SID (`metaTemplateId IS NULL`) — the dispatcher then skips the send.
- *
- * @internal Exported for integration testing of the seed → dispatch contract.
- */
-export async function fetchTemplate(
-  db: DrizzleDb,
-  userId: string,
-  templateKey: string,
-): Promise<{ body: string; contentSid: string } | null> {
-  const rows = await db
-    .select({
-      body: messageTemplates.body,
-      metaTemplateId: messageTemplates.metaTemplateId,
-    })
-    .from(messageTemplates)
-    .where(and(eq(messageTemplates.userId, userId), eq(messageTemplates.templateKey, templateKey)))
-    .limit(1);
-
-  if (rows.length === 0) return null;
-  const template = rows[0]!;
-  if (!template.metaTemplateId) return null;
-
-  return {
-    body: template.body,
-    contentSid: template.metaTemplateId,
-  };
-}
-
-/**
- * Fetches location data for a given location ID.
- */
-async function fetchLocation(
-  db: DrizzleDb,
-  locationId: string,
-): Promise<{ name: string; address: string | null; arrivalInstructions: string | null } | null> {
-  const rows = await db
-    .select({
-      name: locations.name,
-      address: locations.address,
-      arrivalInstructions: locations.arrivalInstructions,
-    })
-    .from(locations)
-    .where(eq(locations.id, locationId))
-    .limit(1);
-
-  if (rows.length === 0) return null;
-  return rows[0]!;
 }
 
 /**
@@ -390,42 +328,37 @@ export async function dispatchReminders(deps: DispatcherDeps): Promise<{
         // Only dispatch if the due time is in the past (i.e., it's time to send)
         if (dueAt > now) continue;
 
+        // Resolve the platform template key + Content SID for this kind.
+        // The SID comes from `serverEnv` (via the contract), never from
+        // `message_templates` — a missing/unseeded row no longer blocks a send.
+        const templateKey = KIND_TO_TEMPLATE_KEY[kind];
+        if (!templateKey) continue;
+
+        const contentSid = resolvePlatformContentSid(templateKey);
+        if (!contentSid) continue;
+
+        // Look up pre-fetched video link for online sessions.
+        const sessionModality = session.modality ?? 'in_person';
+        const videoLink =
+          sessionModality === 'online' ? (videoLinkMap.get(session.id) ?? null) : null;
+
+        // The video reminder needs a resolvable session link. When the room has
+        // not been provisioned yet, skip this tick WITHOUT recording anything —
+        // no idempotency row is written, so the next 5-minute tick retries once
+        // the room (and its link) exists.
+        if (kind === 'video' && !videoLink) {
+          logger.warn(
+            { event: 'video_link_unavailable', sessionId: session.id },
+            'Skipping video reminder — patient session link not yet available',
+          );
+          continue;
+        }
+
         const idempotencyKey = generateIdempotencyKey(session.id, kind);
 
         // Check idempotency — skip if already sent
         const alreadySent = await idempotencyKeyExists(db, idempotencyKey);
         if (alreadySent) continue;
-
-        // Fetch template for this kind
-        const templateKey = KIND_TO_TEMPLATE_KEY[kind];
-        if (!templateKey) continue;
-
-        const template = await fetchTemplate(db, psych.userId, templateKey);
-        if (!template) continue;
-
-        // Fetch location if applicable
-        let locationData: {
-          name: string;
-          address: string | null;
-          arrivalInstructions: string | null;
-        } | null = null;
-        if (session.locationId) {
-          locationData = await fetchLocation(db, session.locationId);
-        }
-
-        // Build confirmation link from token
-        const confirmationLink = session.confirmationToken
-          ? `/api/confirm/${session.confirmationToken}`
-          : null;
-
-        const sessionValue = session.amount !== null ? parseFloat(session.amount) : null;
-
-        // Look up pre-fetched video link for online sessions.
-        // Falls back to null when no room exists yet (auto-creation may
-        // not have fired) or when APP_URL is not configured.
-        const sessionModality = session.modality ?? 'in_person';
-        const videoLink =
-          sessionModality === 'online' ? (videoLinkMap.get(session.id) ?? null) : null;
 
         eventsToSend.push({
           name: 'whatsapp/reminder.send',
@@ -442,16 +375,9 @@ export async function dispatchReminders(deps: DispatcherDeps): Promise<{
             patientFullName: patientData.fullName,
             psychologistDisplayName: psych.displayName,
             sessionStartAt: session.startAt.toISOString(),
-            sessionDurationMinutes: session.durationMinutes,
             sessionModality,
             videoLink,
-            confirmationLink,
-            sessionValue,
-            locationName: locationData?.name ?? null,
-            locationAddress: locationData?.address ?? null,
-            locationArrivalInstructions: locationData?.arrivalInstructions ?? null,
-            contentSid: template.contentSid,
-            templateBody: template.body,
+            contentSid,
           },
         });
       }

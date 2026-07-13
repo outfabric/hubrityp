@@ -171,7 +171,6 @@ describe('sendTemplateReplyImpl — approved template', () => {
     expect(callArgs.templateKey).toBe('lembrete_24h');
     expect(callArgs.contentSid).toBe('HX_content_sid_001');
     expect(callArgs.variables).toEqual({ nome_paciente: 'Maria' });
-    expect(callArgs.bodyRendered).toBe('Ola, Maria! Sua sessao e amanha.');
 
     // Verify persisted in DB
     const messages = await runAsService(async (db) => {
@@ -257,13 +256,19 @@ describe('sendTemplateReplyImpl — renderTemplate called correctly', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    // The persisted body should be the rendered version
+    // The persisted body should be the rendered version (rendered locally for
+    // the inbox timeline; the Content send itself carries named variables only).
     expect(result.message.body).toBe('Ola, Maria! Sua sessao com Dra. Ana e em 15/06 as 14:00.');
 
-    // The adapter should receive the rendered body
+    // The adapter receives the named variables, not a rendered body.
     const callArgs = (deps.sendTemplate as ReturnType<typeof vi.fn>).mock
       .calls[0]![0] as SendTemplateInput;
-    expect(callArgs.bodyRendered).toBe('Ola, Maria! Sua sessao com Dra. Ana e em 15/06 as 14:00.');
+    expect(callArgs.variables).toEqual({
+      nome_paciente: 'Maria',
+      nome_psicologo: 'Dra. Ana',
+      data: '15/06',
+      hora: '14:00',
+    });
   });
 
   it('rejects when a required variable is missing', async () => {

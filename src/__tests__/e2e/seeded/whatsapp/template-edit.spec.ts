@@ -5,9 +5,9 @@ import { readSeedState, STORAGE_STATE_PATH } from '../setup/seed-state';
  * @whatsapp -- Template editing flow E2E test.
  *
  * Flow:
- *   1. Pre-seed: insert whatsapp_account + 6 templates via direct SQL
+ *   1. Pre-seed: insert whatsapp_account + 5 templates via direct SQL
  *   2. Navigate to /configuracoes/lembretes/templates
- *   3. Verify 6 template cards appear
+ *   3. Verify 5 template cards appear
  *   4. Click "Lembrete 24h" card
  *   5. Verify edit page opens with body in textarea
  *   6. Edit body (append text)
@@ -29,7 +29,6 @@ const WHATSAPP_ACCOUNT_ID = '00000000-0000-4000-8000-000000000050';
 const TEMPLATE_KEYS = [
   'lembrete_24h',
   'lembrete_2h',
-  'confirmacao_recebida',
   'cancelamento_aviso',
   'link_video',
   'termo_consentimento',
@@ -40,8 +39,6 @@ const DEFAULT_BODIES: Record<string, string> = {
     'Ola, {nome_paciente}! Lembrando da sua sessao com {nome_psicologo} amanha, {data} ({dia_semana}), as {hora}. Duracao: {duracao_min} min.',
   lembrete_2h:
     'Ola, {nome_paciente}! Sua sessao com {nome_psicologo} e em 2 horas, as {hora} ({dia_semana}).',
-  confirmacao_recebida:
-    'Obrigado, {nome_paciente}! Sua presenca na sessao com {nome_psicologo} esta confirmada.',
   cancelamento_aviso:
     'Ola, {nome_paciente}. Informamos que sua sessao com {nome_psicologo} em {data}, as {hora}, foi cancelada.',
   link_video:
@@ -55,7 +52,6 @@ const DEFAULT_BODIES: Record<string, string> = {
 const TEMPLATE_LABELS: Record<string, string> = {
   lembrete_24h: 'Lembrete 24h',
   lembrete_2h: 'Lembrete 2h',
-  confirmacao_recebida: 'Confirmação recebida',
   cancelamento_aviso: 'Aviso de cancelamento',
   link_video: 'Link de vídeo',
   termo_consentimento: 'Termo de consentimento',
@@ -91,7 +87,7 @@ test.describe('@whatsapp template editing', () => {
         display_name = EXCLUDED.display_name;
     `;
 
-    // Insert 6 default templates with 'approved' status
+    // Insert 5 default templates with 'approved' status
     for (const key of TEMPLATE_KEYS) {
       const body = DEFAULT_BODIES[key] ?? '';
       await db.sql`
@@ -112,14 +108,14 @@ test.describe('@whatsapp template editing', () => {
     }
   });
 
-  test('lists 6 template cards with correct names', async ({ page }) => {
+  test('lists 5 template cards with correct names', async ({ page }) => {
     await page.goto('/configuracoes/lembretes/templates');
 
     // Verify page title
     await expect(page.getByTestId('templates-page-title')).toBeVisible();
     await expect(page.getByTestId('templates-page-title')).toHaveText('Templates de Mensagem');
 
-    // Verify 6 template cards appear
+    // Verify 5 template cards appear
     for (const key of TEMPLATE_KEYS) {
       const card = page.getByTestId(`template-card-${key}`);
       await expect(card).toBeVisible({ timeout: 10000 });

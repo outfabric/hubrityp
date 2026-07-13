@@ -23,7 +23,7 @@ async function seedAuthUser(userId: string): Promise<void> {
 }
 
 /**
- * Seed the 6 default templates for a user using the same logic as
+ * Seed the 5 default templates for a user using the same logic as
  * `seedDefaultTemplates` but exercising raw inserts so we can test
  * the function independently.
  */
@@ -49,11 +49,6 @@ async function seedTemplatesViaInsert(userId: string): Promise<void> {
       templateKey: 'lembrete_2h',
       body: 'Olá, {nome_paciente}! Sua sessão com {nome_psicologo} é em 2 horas, às {hora} ({dia_semana}). Confirme: {link_confirmacao}',
       variables: ['nome_paciente', 'nome_psicologo', 'hora', 'dia_semana', 'link_confirmacao'],
-    },
-    {
-      templateKey: 'confirmacao_recebida',
-      body: 'Obrigado, {nome_paciente}! Sua presença na sessão com {nome_psicologo} está confirmada. Valor: {valor}',
-      variables: ['nome_paciente', 'nome_psicologo', 'valor'],
     },
     {
       templateKey: 'cancelamento_aviso',
@@ -103,7 +98,7 @@ afterEach(async () => {
 // ---------------------------------------------------------------------------
 
 describe('seedDefaultTemplates — data correctness', () => {
-  it('seeds 6 templates with correct template_keys and is_default=true', async () => {
+  it('seeds 5 templates with correct template_keys and is_default=true', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
 
@@ -120,12 +115,11 @@ describe('seedDefaultTemplates — data correctness', () => {
         .orderBy(asc(messageTemplates.templateKey));
     });
 
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(5);
 
     const keys = rows.map((r) => r.templateKey);
     expect(keys).toEqual([
       'cancelamento_aviso',
-      'confirmacao_recebida',
       'lembrete_24h',
       'lembrete_2h',
       'link_video',
@@ -202,16 +196,16 @@ describe('seedDefaultTemplates — data correctness', () => {
       return db.select().from(messageTemplates).where(eq(messageTemplates.userId, userId));
     });
 
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(5);
   });
 });
 
 // ---------------------------------------------------------------------------
-// list — returns all 6 templates ordered by template_key
+// list — returns all 5 templates ordered by template_key
 // ---------------------------------------------------------------------------
 
 describe('message_templates — list', () => {
-  it('list returns all 6 templates ordered by template_key ASC', async () => {
+  it('list returns all 5 templates ordered by template_key ASC', async () => {
     const userId = randomUUID();
     await seedAuthUser(userId);
     await seedTemplatesViaInsert(userId);
@@ -231,7 +225,7 @@ describe('message_templates — list', () => {
         .orderBy(asc(messageTemplates.templateKey));
     });
 
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(5);
 
     // Verify ordering by template_key ASC
     const keys = rows.map((r) => r.templateKey);

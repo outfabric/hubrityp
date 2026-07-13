@@ -19,6 +19,7 @@ import {
   whatsappAccounts,
   whatsappMessages,
 } from '@/shared/db/schema/whatsapp/tables';
+import { serverEnv } from '@/shared/env';
 
 import { runAsService } from '../setup/run-as-service';
 
@@ -176,12 +177,9 @@ describe('cancellation-notice-sender — processCancellationNotice()', () => {
     await seedWhatsappAccount(userId);
     await seedPatient(userId, patientId);
     await seedSession(userId, sessionId, { patientId });
-    await seedTemplate(
-      userId,
-      'cancelamento_aviso',
-      'Ola {nome_paciente}, sua sessao de {data} as {hora} com {nome_psicologo} foi cancelada.',
-      'HX_cancel_sid_001',
-    );
+    // NOTE: no message_templates row is seeded — the cancellation sender now
+    // resolves the Content SID from serverEnv via the platform template
+    // contract, not from message_templates.
 
     const eventData = buildCancelledEvent({
       userId,
@@ -209,17 +207,28 @@ describe('cancellation-notice-sender — processCancellationNotice()', () => {
     expect(msg.status).toBe('sent');
     expect(msg.bspMessageId).toBe('SM_cancel_001');
     expect(msg.templateKey).toBe('cancelamento_aviso');
+    // Template send — no rendered body persisted (design D9).
+    expect(msg.body).toBeNull();
     expect(msg.direction).toBe('outbound');
     expect(msg.userId).toBe(userId);
     expect(msg.patientId).toBe(patientId);
 
-    // Verify sendTemplate was called
+    // Verify sendTemplate was called with the env Content SID + named variables.
     expect(sendTemplate).toHaveBeenCalledOnce();
     const callArgs = (sendTemplate as ReturnType<typeof vi.fn>).mock
       .calls[0]![0] as SendTemplateInput;
     expect(callArgs.to).toBe('+5511988887777');
-    expect(callArgs.contentSid).toBe('HX_cancel_sid_001');
+    expect(callArgs.contentSid).toBe(serverEnv.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO);
     expect(callArgs.templateKey).toBe('cancelamento_aviso');
+    // Session start 2026-06-15T14:00:00Z → 11:00 in America/Sao_Paulo.
+    expect(callArgs.variables).toEqual({
+      first_name: 'Maria',
+      professional_name: 'Dra. Teste',
+      date: '15/06/2026',
+      time: '11:00',
+    });
+    expect(callArgs).not.toHaveProperty('bodyRendered');
+    expect(callArgs).not.toHaveProperty('consentFooter');
   });
 
   it('does NOT send when patient cancels (cancelled_by = patient)', async () => {

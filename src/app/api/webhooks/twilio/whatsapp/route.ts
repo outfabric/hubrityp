@@ -1,61 +1,13 @@
 import { type NextRequest } from 'next/server';
 
 import { inngest, WHATSAPP_EVENTS } from '@/modules/whatsapp/inngest/client';
+import { classifyPayload } from '@/modules/whatsapp/lib/classify-webhook-payload';
 import { sendFreeText } from '@/modules/whatsapp/server/adapters/twilio-bsp';
 import { validateTwilioSignature } from '@/modules/whatsapp/server/adapters/twilio-signature';
 import { processInboundAutoReply } from '@/modules/whatsapp/server/auto-reply-inbound';
 import { db } from '@/shared/db/client';
 import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/** Button text values sent by Twilio Quick Reply buttons. */
-const BUTTON_CONFIRM = 'Confirmar';
-const BUTTON_CANCEL = 'Nao posso comparecer';
-
-/** PARAR regex — exact match only (trimmed, case-insensitive). */
-function isStopCommand(body: string): boolean {
-  return body.trim().toUpperCase() === 'PARAR';
-}
-
-// ---------------------------------------------------------------------------
-// Webhook payload classification
-// ---------------------------------------------------------------------------
-
-type WebhookType =
-  | { type: 'status_update' }
-  | { type: 'button_confirm' }
-  | { type: 'button_cancel' }
-  | { type: 'stop_command' }
-  | { type: 'inbound_text' };
-
-function classifyPayload(params: Record<string, string>): WebhookType {
-  // Status callbacks include a MessageStatus field
-  if (params.MessageStatus) {
-    return { type: 'status_update' };
-  }
-
-  // Button replies: Twilio sends ButtonText for quick reply buttons
-  const buttonText = params.ButtonText;
-  if (buttonText === BUTTON_CONFIRM) {
-    return { type: 'button_confirm' };
-  }
-  if (buttonText === BUTTON_CANCEL) {
-    return { type: 'button_cancel' };
-  }
-
-  // Check for PARAR stop command in the Body field
-  const body = params.Body ?? '';
-  if (body.length > 0 && isStopCommand(body)) {
-    return { type: 'stop_command' };
-  }
-
-  // Default: generic inbound text message
-  return { type: 'inbound_text' };
-}
 
 // ---------------------------------------------------------------------------
 // Inngest event emission helpers

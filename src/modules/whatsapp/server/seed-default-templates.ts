@@ -3,9 +3,9 @@ import 'server-only';
 import { eq, sql as dsql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { resolvePlatformContentSid } from '@/modules/whatsapp/lib/reminders/platform-template-contract';
 import { db } from '@/shared/db/client';
 import { messageTemplates } from '@/shared/db/schema/whatsapp/tables';
-import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
 // ---------------------------------------------------------------------------
@@ -44,11 +44,6 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
     variables: ['nome_paciente', 'nome_psicologo', 'hora', 'dia_semana', 'link_confirmacao'],
   },
   {
-    templateKey: 'confirmacao_recebida',
-    body: 'Obrigado, {nome_paciente}! Sua presença na sessão com {nome_psicologo} está confirmada. Valor: {valor}',
-    variables: ['nome_paciente', 'nome_psicologo', 'valor'],
-  },
-  {
     templateKey: 'cancelamento_aviso',
     body: 'Olá, {nome_paciente}. Informamos que sua sessão com {nome_psicologo} em {data}, às {hora}, foi cancelada.',
     variables: ['nome_paciente', 'nome_psicologo', 'data', 'hora'],
@@ -70,42 +65,21 @@ const DEFAULT_TEMPLATES: readonly DefaultTemplate[] = [
 //
 // In the shared-number model the platform registers the reminder templates
 // once in the shared Twilio WABA. Every psychologist reuses the same approved
-// Content SIDs, so seeding stamps each reminder template with its platform SID
-// (`metaTemplateId`) and marks it `approved` — that is what lets the reminders
-// dispatcher send immediately after provisioning (`fetchTemplate` returns the
-// `contentSid` only when `metaTemplateId` is non-null).
-//
-// `termo_consentimento` is NOT a reminder template and has no platform SID; it
-// stays `pending` with a null `metaTemplateId`.
+// Content SIDs, so seeding stamps each platform-owned reminder template with
+// its Content SID (`metaTemplateId`) and marks it `approved` for display and
+// history. The send path resolves the Content SID directly from `serverEnv`
+// via the contract, so a template row is not required to dispatch. The SID
+// resolver lives in `platform-template-contract` (the single source of truth
+// for the four platform templates); templates without a platform SID (e.g.
+// `termo_consentimento`) stay `pending` with a null SID.
 // ---------------------------------------------------------------------------
-
-/**
- * Returns the platform Content SID for a reminder `templateKey`, or `null` for
- * templates that are not seeded with a platform SID (e.g. `termo_consentimento`).
- */
-function resolvePlatformContentSid(templateKey: string): string | null {
-  switch (templateKey) {
-    case 'lembrete_24h':
-      return serverEnv.TWILIO_CONTENT_SID_LEMBRETE_24H;
-    case 'lembrete_2h':
-      return serverEnv.TWILIO_CONTENT_SID_LEMBRETE_2H;
-    case 'link_video':
-      return serverEnv.TWILIO_CONTENT_SID_LINK_VIDEO;
-    case 'confirmacao_recebida':
-      return serverEnv.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA;
-    case 'cancelamento_aviso':
-      return serverEnv.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO;
-    default:
-      return null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Seeds the 6 default message templates for a psychologist.
+ * Seeds the 5 default message templates for a psychologist.
  *
  * @internal Only call from completeTwilioConnectionImpl after auth.
  *
@@ -133,7 +107,7 @@ export async function seedDefaultTemplates(userId: string): Promise<void> {
     return;
   }
 
-  // Insert all 6 default templates in a transaction. Reminder templates are
+  // Insert all 5 default templates in a transaction. Reminder templates are
   // stamped with the platform Content SID + `approved`; non-reminder templates
   // (e.g. `termo_consentimento`) stay `pending` with a null SID.
   await db.transaction(async (tx) => {

@@ -81,16 +81,9 @@ function buildEventData(overrides: Partial<ReminderSendEventData> = {}): Reminde
     patientFullName: 'Maria Silva',
     psychologistDisplayName: 'Dra. Teste',
     sessionStartAt: '2026-06-15T14:00:00.000Z',
-    sessionDurationMinutes: 50,
     sessionModality: 'in_person',
     videoLink: null,
-    confirmationLink: null,
-    sessionValue: null,
-    locationName: null,
-    locationAddress: null,
-    locationArrivalInstructions: null,
     contentSid: 'HX_content_sid_001',
-    templateBody: 'Ola {nome_paciente}, lembrete da sua sessao em {data} as {hora}.',
     ...overrides,
   };
 }
@@ -166,15 +159,28 @@ describe('reminder-sender — processReminderSend()', () => {
     expect(msg.idempotencyKey).toBe(eventData.idempotencyKey);
     expect(msg.direction).toBe('outbound');
     expect(msg.templateKey).toBe('lembrete_24h');
+    // Template send — no rendered body persisted (design D9).
+    expect(msg.body).toBeNull();
     expect(msg.userId).toBe(userId);
     expect(msg.patientId).toBe(patientId);
 
-    // Verify sendTemplate was called with correct args
+    // Verify sendTemplate was called with the Content SID + named variables
+    // (no body / consent footer params).
     expect(sendTemplate).toHaveBeenCalledOnce();
     const callArgs = (sendTemplate as ReturnType<typeof vi.fn>).mock
       .calls[0]![0] as SendTemplateInput;
     expect(callArgs.to).toBe('+5511988887777');
     expect(callArgs.contentSid).toBe('HX_content_sid_001');
+    expect(callArgs.templateKey).toBe('lembrete_24h');
+    expect(callArgs.variables).toEqual({
+      first_name: 'Maria',
+      professional_name: 'Dra. Teste',
+      date: '15/06/2026',
+      time: '11:00',
+    });
+    expect(callArgs).not.toHaveProperty('body');
+    expect(callArgs).not.toHaveProperty('bodyRendered');
+    expect(callArgs).not.toHaveProperty('consentFooter');
   });
 
   it('INVALID_PHONE error results in status=unable_to_send without retry', async () => {
@@ -204,6 +210,8 @@ describe('reminder-sender — processReminderSend()', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]!.status).toBe('unable_to_send');
     expect(messages[0]!.errorReason).toContain('INVALID_PHONE');
+    // Non-retriable failure still persists no rendered body (design D9).
+    expect(messages[0]!.body).toBeNull();
   });
 
   it('BLOCKED_BY_USER error results in status=unable_to_send without retry', async () => {
@@ -283,7 +291,7 @@ describe('reminder-sender — processReminderSend()', () => {
     expect(sendTemplate).not.toHaveBeenCalled();
   });
 
-  it('adds consent footer on first message to a patient', async () => {
+  it('builds session_link into variables for a video reminder', async () => {
     const userId = randomUUID();
     const patientId = randomUUID();
     const sessionId = randomUUID();
@@ -291,47 +299,14 @@ describe('reminder-sender — processReminderSend()', () => {
     await seedPatient(userId, patientId);
     await seedSession(userId, sessionId, { patientId });
 
-    const eventData = buildEventData({ userId, patientId, sessionId });
-    const sendTemplate = mockSendTemplateSuccess();
-
-    const db = await getServiceDb();
-    const deps: SenderDeps = { db, sendTemplate };
-
-    await processReminderSend(eventData, deps);
-
-    // Verify consent footer was included
-    const callArgs = (sendTemplate as ReturnType<typeof vi.fn>).mock
-      .calls[0]![0] as SendTemplateInput;
-    expect(callArgs.consentFooter).toBeDefined();
-    expect(callArgs.consentFooter).toContain('PARAR');
-  });
-
-  it('omits consent footer on second message to the same patient', async () => {
-    const userId = randomUUID();
-    const patientId = randomUUID();
-    const sessionId1 = randomUUID();
-    const sessionId2 = randomUUID();
-    await seedAuthUser(userId);
-    await seedPatient(userId, patientId);
-    await seedSession(userId, sessionId1, { patientId });
-    await seedSession(userId, sessionId2, { patientId });
-
-    // First message — insert a prior outbound message
-    await runAsService(async (sdb) => {
-      await sdb.insert(whatsappMessages).values({
-        userId,
-        patientId,
-        sessionId: sessionId1,
-        direction: 'outbound',
-        status: 'sent',
-      });
-    });
-
-    // Now send a second message
     const eventData = buildEventData({
       userId,
       patientId,
-      sessionId: sessionId2,
+      sessionId,
+      kind: 'video',
+      templateKey: 'link_video',
+      sessionModality: 'online',
+      videoLink: 'https://app.hubrity.com/v/abc123',
     });
     const sendTemplate = mockSendTemplateSuccess();
 
@@ -340,10 +315,15 @@ describe('reminder-sender — processReminderSend()', () => {
 
     await processReminderSend(eventData, deps);
 
-    // Verify consent footer was NOT included
     const callArgs = (sendTemplate as ReturnType<typeof vi.fn>).mock
       .calls[0]![0] as SendTemplateInput;
-    expect(callArgs.consentFooter).toBeUndefined();
+    expect(callArgs.variables).toEqual({
+      first_name: 'Maria',
+      professional_name: 'Dra. Teste',
+      date: '15/06/2026',
+      time: '11:00',
+      session_link: 'https://app.hubrity.com/v/abc123',
+    });
   });
 });
 

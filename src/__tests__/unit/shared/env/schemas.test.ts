@@ -25,13 +25,12 @@ const parsedClient = {
   NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED: false,
 };
 
-// The five platform Content SIDs are required server-only vars — the server env
+// The four platform Content SIDs are required server-only vars — the server env
 // fails to parse when any is missing.
 const validContentSids = {
   TWILIO_CONTENT_SID_LEMBRETE_24H: 'HX24h',
   TWILIO_CONTENT_SID_LEMBRETE_2H: 'HX2h',
   TWILIO_CONTENT_SID_LINK_VIDEO: 'HXvideo',
-  TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXconfirm',
   TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXcancel',
 };
 
@@ -60,7 +59,6 @@ const CONTENT_SID_KEYS = [
   'TWILIO_CONTENT_SID_LEMBRETE_24H',
   'TWILIO_CONTENT_SID_LEMBRETE_2H',
   'TWILIO_CONTENT_SID_LINK_VIDEO',
-  'TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA',
   'TWILIO_CONTENT_SID_CANCELAMENTO_AVISO',
 ] as const;
 
@@ -178,13 +176,27 @@ describe('serverEnvSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('parses the five platform Content SIDs when present', () => {
+  it('parses the four platform Content SIDs when present', () => {
     const parsed = serverEnvSchema.parse(validServer);
     expect(parsed.TWILIO_CONTENT_SID_LEMBRETE_24H).toBe('HX24h');
     expect(parsed.TWILIO_CONTENT_SID_LEMBRETE_2H).toBe('HX2h');
     expect(parsed.TWILIO_CONTENT_SID_LINK_VIDEO).toBe('HXvideo');
-    expect(parsed.TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA).toBe('HXconfirm');
     expect(parsed.TWILIO_CONTENT_SID_CANCELAMENTO_AVISO).toBe('HXcancel');
+  });
+
+  it('no longer knows the removed TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA var', () => {
+    // The confirmation ack is a free-form message in the MVP, not a platform
+    // Content template — its SID var was deleted. Providing it must not be
+    // required, and the unknown key is stripped rather than surfaced.
+    const withRemoved = {
+      ...validServer,
+      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXconfirm',
+    };
+    const parsed = serverEnvSchema.parse(withRemoved) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA');
+
+    // And omitting it entirely still parses — it is not required.
+    expect(serverEnvSchema.safeParse(validServer).success).toBe(true);
   });
 
   it.each(CONTENT_SID_KEYS)('fails boot validation when %s is missing', (key) => {

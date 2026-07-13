@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { clientEnv } from '@/shared/env/client';
+
 // ---------------------------------------------------------------------------
 // Tab definitions
 // ---------------------------------------------------------------------------
@@ -51,13 +53,22 @@ const TABS: TabDefinition[] = [
 export function LembretesTabs() {
   const pathname = usePathname();
 
+  // The "Templates" tab edits the platform-managed WhatsApp templates, which
+  // are frozen during the shared-number reminders MVP. It is fully hidden
+  // (not disabled / "Em breve") while the connection UI flag is off. The
+  // underlying `/configuracoes/lembretes/templates*` routes stay reachable by
+  // direct URL — this is visual-only gating.
+  const visibleTabs = TABS.filter(
+    (tab) => tab.slug !== 'templates' || clientEnv.NEXT_PUBLIC_WHATSAPP_CONNECTION_UI_ENABLED,
+  );
+
   return (
     <nav
       data-testid="lembretes-tabs"
       className="overflow-x-auto [-webkit-overflow-scrolling:touch]"
     >
       <div className="flex">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const isActive = tab.prefixMatch ? pathname.startsWith(tab.href) : pathname === tab.href;
 
           return (

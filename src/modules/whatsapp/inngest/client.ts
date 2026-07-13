@@ -17,7 +17,14 @@ import { serverEnv } from '@/shared/env';
 // Event data types
 // ---------------------------------------------------------------------------
 
-/** Data payload for the `whatsapp/reminder.send` fan-out event. */
+/**
+ * Data payload for the `whatsapp/reminder.send` fan-out event.
+ *
+ * Slimmed for the platform Content template contract: the sender resolves the
+ * named `contentVariables` from identity/timing fields via
+ * `buildContentVariables`, so the event no longer carries a template body,
+ * confirmation link, session value, location, or duration (design D2).
+ */
 export interface ReminderSendEventData {
   /** Psychologist's auth.users.id */
   userId: string;
@@ -31,38 +38,24 @@ export interface ReminderSendEventData {
   idempotencyKey: string;
   /** WhatsApp account ID for the psychologist */
   whatsappAccountId: string;
-  /** Template key to use (e.g., 'lembrete_24h') */
+  /** Platform template key (e.g., 'lembrete_24h') */
   templateKey: string;
   /** Patient phone in E.164 format */
   patientPhone: string;
   /** Patient first name */
   patientFirstName: string;
-  /** Patient full name */
+  /** Patient full name — `first_name` is derived from it by the contract */
   patientFullName: string;
-  /** Psychologist display name */
+  /** Psychologist display name — maps to `professional_name` */
   psychologistDisplayName: string;
-  /** Session start time (ISO string) */
+  /** Session start time (ISO string) — resolves `date`/`time` in BRT */
   sessionStartAt: string;
-  /** Session duration in minutes */
-  sessionDurationMinutes: number;
   /** Session modality ('in_person' | 'online') */
   sessionModality: string;
-  /** Video link (nullable, only for online sessions) */
+  /** Video link (nullable, only for online sessions) — maps to `session_link` */
   videoLink: string | null;
-  /** Confirmation link (nullable) */
-  confirmationLink: string | null;
-  /** Session value (nullable) */
-  sessionValue: number | null;
-  /** Location name (nullable) */
-  locationName: string | null;
-  /** Location address (nullable) */
-  locationAddress: string | null;
-  /** Location arrival instructions (nullable) */
-  locationArrivalInstructions: string | null;
-  /** Twilio Content SID for the template */
+  /** Platform Twilio Content SID resolved from `serverEnv` */
   contentSid: string;
-  /** Template body text with placeholders */
-  templateBody: string;
 }
 
 /** Data payload for `whatsapp/status.updated` — Twilio status webhook. */

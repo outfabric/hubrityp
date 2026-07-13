@@ -122,7 +122,6 @@ jobs:
           TWILIO_CONTENT_SID_LEMBRETE_24H: HXci24h
           TWILIO_CONTENT_SID_LEMBRETE_2H: HXci2h
           TWILIO_CONTENT_SID_LINK_VIDEO: HXcivideo
-          TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: HXciconfirm
           TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: HXcicancel
           LOG_LEVEL: silent
         run: npm run build
@@ -201,7 +200,6 @@ jobs:
           TWILIO_CONTENT_SID_LEMBRETE_24H: HXci24h
           TWILIO_CONTENT_SID_LEMBRETE_2H: HXci2h
           TWILIO_CONTENT_SID_LINK_VIDEO: HXcivideo
-          TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: HXciconfirm
           TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: HXcicancel
           LOG_LEVEL: silent
         run: npm run build

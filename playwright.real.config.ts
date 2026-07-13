@@ -225,7 +225,6 @@ export default defineConfig({
       TWILIO_CONTENT_SID_LEMBRETE_24H: 'HXreal24h',
       TWILIO_CONTENT_SID_LEMBRETE_2H: 'HXreal2h',
       TWILIO_CONTENT_SID_LINK_VIDEO: 'HXrealvideo',
-      TWILIO_CONTENT_SID_CONFIRMACAO_RECEBIDA: 'HXrealconfirm',
       TWILIO_CONTENT_SID_CANCELAMENTO_AVISO: 'HXrealcancel',
       LOG_LEVEL: 'silent',
       NODE_ENV: 'production',

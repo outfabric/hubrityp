@@ -66,18 +66,16 @@ function isTwilioRestException(err: unknown): err is RestException {
 export interface SendTemplateInput {
   /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
   to: string;
-  /** Psychologist's whatsapp_account.id — used only for logging/tracing. */
-  fromAccountId: string;
-  /** Template key (e.g., "lembrete_24h") — used for logging/tracing. */
+  /** Template key (e.g., "lembrete_24h") — used for logging/tracing only. */
   templateKey: string;
-  /** Twilio Content SID (the `metaTemplateId` from message_templates). */
+  /** Platform Twilio Content SID resolved from `serverEnv`. */
   contentSid: string;
-  /** Key-value pairs injected into the template placeholders. */
+  /**
+   * Named `contentVariables` for the Content template — the exact keys declared
+   * in Twilio's Content Template Builder (e.g. `first_name`, `date`). Serialized
+   * to JSON and sent as `contentVariables`.
+   */
   variables: Record<string, string>;
-  /** Pre-rendered body text — used as fallback `body` for non-template sends. */
-  bodyRendered: string;
-  /** Optional LGPD consent footer appended to the body. */
-  consentFooter?: string;
 }
 
 export interface SendTemplateSuccess {
@@ -93,17 +91,6 @@ export type SendTemplateResult =
 // Implementation
 // ---------------------------------------------------------------------------
 
-/**
- * Sends a WhatsApp template message through Twilio's Messages API.
- *
- * When a `contentSid` is provided, the message is sent as a template message
- * using `contentSid` + `contentVariables`. The `bodyRendered` (with optional
- * `consentFooter`) is passed as the `body` parameter — Twilio uses it as
- * fallback text for non-WhatsApp channels.
- *
- * Error codes from Twilio are mapped to typed `TwilioSendError` variants
- * (see `TWILIO_ERROR_MAP`).
- */
 // ---------------------------------------------------------------------------
 // Free-text messaging (within 24h session window)
 // ---------------------------------------------------------------------------
@@ -199,9 +186,17 @@ export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTe
 // Template messaging
 // ---------------------------------------------------------------------------
 
+/**
+ * Sends a WhatsApp Content (template) message through Twilio's Messages API.
+ *
+ * A pre-approved Content template is addressed by `contentSid` and filled with
+ * named `contentVariables`. No `body` is sent alongside `contentSid` — Twilio
+ * ignores it for Content sends, and the LGPD consent footer applies to
+ * free-form outbound messages only (design D9). Error codes from Twilio are
+ * mapped to typed `TwilioSendError` variants (see `TWILIO_ERROR_MAP`).
+ */
 export async function sendTemplate(input: SendTemplateInput): Promise<SendTemplateResult> {
-  const { to, fromAccountId, templateKey, contentSid, variables, bodyRendered, consentFooter } =
-    input;
+  const { to, templateKey, contentSid, variables } = input;
 
   const accountSid = serverEnv.TWILIO_ACCOUNT_SID;
   const authToken = serverEnv.TWILIO_AUTH_TOKEN;
@@ -224,16 +219,12 @@ export async function sendTemplate(input: SendTemplateInput): Promise<SendTempla
 
   const client = twilio(accountSid, authToken);
 
-  // Build body: rendered text + optional LGPD consent footer
-  const body = consentFooter ? `${bodyRendered}\n\n${consentFooter}` : bodyRendered;
-
   try {
     const message = await client.messages.create({
       to: `whatsapp:${to}`,
       from: `whatsapp:${fromNumber}`,
       contentSid,
       contentVariables: JSON.stringify(variables),
-      body,
     });
 
     logger.info(
@@ -260,7 +251,6 @@ export async function sendTemplate(input: SendTemplateInput): Promise<SendTempla
       {
         event: 'whatsapp_template_send_failed',
         templateKey,
-        fromAccountId,
         errorCode: sendError.code,
         twilioCode: sendError.twilioCode,
       },

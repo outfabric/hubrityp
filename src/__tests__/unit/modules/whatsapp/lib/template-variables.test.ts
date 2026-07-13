@@ -32,6 +32,14 @@ describe('TEMPLATE_VARIABLES — dictionary', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it('never references the removed confirmacao_recebida key in applicableTemplates', () => {
+    for (const variable of TEMPLATE_VARIABLES) {
+      expect(variable.applicableTemplates as readonly string[]).not.toContain(
+        'confirmacao_recebida',
+      );
+    }
+  });
+
   it('contains the expected set of variable keys', () => {
     const keys = TEMPLATE_VARIABLES.map((v) => v.key);
     expect(keys).toEqual(
