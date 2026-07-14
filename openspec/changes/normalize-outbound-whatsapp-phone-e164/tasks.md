@@ -1,8 +1,8 @@
 ## 1. E.164 normalization helper
 
-- [ ] 1.1 Create `src/modules/whatsapp/lib/phone-number-e164.ts` exporting a pure `toE164(raw: string): string | null` that strips every non-digit, re-prefixes a single `+`, and returns the result only if it matches the E.164 shape (reuse the `/^\+[1-9]\d{6,14}$/` regex from `phone-number-schema.ts` as the shared source of truth); returns `null` otherwise.
-- [ ] 1.2 Export `toE164` from the whatsapp module barrel only if an external consumer needs it; otherwise keep it internal to `lib/` (the adapter imports it by relative path).
-- [ ] 1.3 **Unit test** `src/__tests__/unit/modules/whatsapp/lib/phone-number-e164.test.ts` (new) covering: masked BR → E.164 (`+55 86 99578-3867` → `+5586995783867`); already-E.164 is idempotent (`+5586995783867` → `+5586995783867`); values with stray formatting/`whatsapp:` fragments strip to a single `+` and digits; un-normalizable inputs return `null` (empty string, too few digits, leading zero after `+`, letters-only).
+- [x] 1.1 Create `src/modules/whatsapp/lib/phone-number-e164.ts` exporting a pure `toE164(raw: string): string | null` that strips every non-digit, re-prefixes a single `+`, and returns the result only if it matches the E.164 shape (reuse the `/^\+[1-9]\d{6,14}$/` regex from `phone-number-schema.ts` as the shared source of truth); returns `null` otherwise.
+- [x] 1.2 Export `toE164` from the whatsapp module barrel only if an external consumer needs it; otherwise keep it internal to `lib/` (the adapter imports it by relative path).
+- [x] 1.3 **Unit test** `src/__tests__/unit/modules/whatsapp/lib/phone-number-e164.test.ts` (new) covering: masked BR → E.164 (`+55 86 99578-3867` → `+5586995783867`); already-E.164 is idempotent (`+5586995783867` → `+5586995783867`); values with stray formatting/`whatsapp:` fragments strip to a single `+` and digits; un-normalizable inputs return `null` (empty string, too few digits, leading zero after `+`, letters-only).
 
 ## 2. Normalize at the Twilio adapter boundary and update tests
 
