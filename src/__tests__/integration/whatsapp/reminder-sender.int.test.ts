@@ -6,15 +6,35 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReminderSendEventData } from '@/modules/whatsapp/inngest/client';
 import { processReminderSend, type SenderDeps } from '@/modules/whatsapp/inngest/reminder-sender';
 import { generateIdempotencyKey } from '@/modules/whatsapp/lib/reminders/idempotency-key';
-import type {
-  SendTemplateInput,
-  SendTemplateResult,
+import {
+  sendTemplate as realSendTemplate,
+  type SendTemplateInput,
+  type SendTemplateResult,
 } from '@/modules/whatsapp/server/adapters/twilio-bsp';
 import { sessions } from '@/shared/db/schema/agenda/tables';
 import { patients } from '@/shared/db/schema/patients/tables';
 import { messageTemplates, whatsappMessages } from '@/shared/db/schema/whatsapp/tables';
 
 import { runAsService } from '../setup/run-as-service';
+
+// ---------------------------------------------------------------------------
+// Twilio SDK mock
+// ---------------------------------------------------------------------------
+//
+// Most tests inject a fake `sendTemplate` via `SenderDeps`. The masked-number
+// chain test below instead injects the REAL adapter so its E.164 normalization
+// boundary is actually exercised — only Twilio's `messages.create` network call
+// is stubbed here.
+
+const { messagesCreate, twilioFactory } = vi.hoisted(() => {
+  const messagesCreate = vi.fn();
+  return {
+    messagesCreate,
+    twilioFactory: vi.fn(() => ({ messages: { create: messagesCreate } })),
+  };
+});
+
+vi.mock('twilio', () => ({ default: twilioFactory }));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -289,6 +309,50 @@ describe('reminder-sender — processReminderSend()', () => {
     expect(result.status).toBe('skipped');
     // sendTemplate should NOT have been called
     expect(sendTemplate).not.toHaveBeenCalled();
+  });
+
+  it('normalizes a masked patients.phone to E.164 through the real adapter (chain yields sent, not INVALID_PHONE)', async () => {
+    const userId = randomUUID();
+    const patientId = randomUUID();
+    const sessionId = randomUUID();
+    await seedAuthUser(userId);
+    // The patient's ONLY number is the masked patients.phone (no reminder_phone).
+    // This is exactly the shape that produced Twilio 21211 in the incident.
+    await seedPatient(userId, patientId, { phone: '+55 86 99578-3867', reminderPhone: null });
+    await seedSession(userId, sessionId, { patientId });
+
+    messagesCreate.mockReset();
+    messagesCreate.mockResolvedValue({ sid: 'SM_masked_chain_001', status: 'queued' });
+
+    const eventData = buildEventData({
+      userId,
+      patientId,
+      sessionId,
+      patientPhone: '+55 86 99578-3867',
+    });
+
+    const db = await getServiceDb();
+    // Inject the REAL adapter — only Twilio's network call is stubbed, so the
+    // adapter's E.164 normalization boundary is genuinely exercised.
+    const deps: SenderDeps = { db, sendTemplate: realSendTemplate };
+
+    const result = await processReminderSend(eventData, deps);
+
+    expect(result.status).toBe('sent');
+
+    // Proof the fix works end-to-end: Twilio was addressed with a strict E.164
+    // number, not the masked DB value that triggered INVALID_PHONE (21211).
+    expect(messagesCreate).toHaveBeenCalledOnce();
+    const twilioPayload = messagesCreate.mock.calls[0]![0] as Record<string, unknown>;
+    expect(twilioPayload.to).toBe('whatsapp:+5586995783867');
+
+    const messages = await runAsService(async (sdb) => {
+      return sdb.select().from(whatsappMessages).where(eq(whatsappMessages.sessionId, sessionId));
+    });
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]!.status).toBe('sent');
+    expect(messages[0]!.bspMessageId).toBe('SM_masked_chain_001');
   });
 
   it('builds session_link into variables for a video reminder', async () => {

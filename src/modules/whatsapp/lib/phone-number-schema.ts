@@ -14,13 +14,19 @@ import { z } from 'zod';
 // ---------------------------------------------------------------------------
 
 /**
- * Validates an E.164 phone number: starts with `+`, followed by 7-15 digits
- * where the first digit is non-zero.
+ * E.164 shape: `+`, a non-zero leading digit, then 6-14 more digits
+ * (7-15 digits total). Single source of truth reused by `toE164()`.
  *
  * The minimum of 7 digits ensures that a bare country code (e.g. "+55")
  * is rejected — a valid phone number requires country code + subscriber number.
  */
-export const phoneNumberSchema = z.string().regex(/^\+[1-9]\d{6,14}$/, {
+export const E164_REGEX = /^\+[1-9]\d{6,14}$/;
+
+/**
+ * Validates an E.164 phone number: starts with `+`, followed by 7-15 digits
+ * where the first digit is non-zero.
+ */
+export const phoneNumberSchema = z.string().regex(E164_REGEX, {
   message: 'Telefone inválido. Use o formato +55 (DD) NNNNN-NNNN.',
 });
 

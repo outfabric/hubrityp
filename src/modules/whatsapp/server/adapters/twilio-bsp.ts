@@ -3,6 +3,7 @@ import 'server-only';
 import twilio from 'twilio';
 import type RestException from 'twilio/lib/base/RestException';
 
+import { toE164 } from '@/modules/whatsapp/lib/phone-number-e164';
 import { serverEnv } from '@/shared/env';
 import { logger } from '@/shared/lib/logger';
 
@@ -64,7 +65,7 @@ function isTwilioRestException(err: unknown): err is RestException {
 // ---------------------------------------------------------------------------
 
 export interface SendTemplateInput {
-  /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
+  /** Recipient phone — E.164 or masked BR format. Normalized to E.164 internally. */
   to: string;
   /** Template key (e.g., "lembrete_24h") — used for logging/tracing only. */
   templateKey: string;
@@ -96,7 +97,7 @@ export type SendTemplateResult =
 // ---------------------------------------------------------------------------
 
 export interface SendFreeTextInput {
-  /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
+  /** Recipient phone — E.164 or masked BR format. Normalized to E.164 internally. */
   to: string;
   /** The free-text message body. */
   body: string;
@@ -122,6 +123,18 @@ export type SendFreeTextResult =
 export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTextResult> {
   const { to, body } = input;
 
+  const normalized = toE164(to);
+  if (!normalized) {
+    return {
+      ok: false,
+      error: {
+        code: 'INVALID_PHONE',
+        twilioCode: undefined,
+        message: 'Phone number cannot be normalized to E.164',
+      },
+    };
+  }
+
   const accountSid = serverEnv.TWILIO_ACCOUNT_SID;
   const authToken = serverEnv.TWILIO_AUTH_TOKEN;
   const fromNumber = serverEnv.TWILIO_WHATSAPP_FROM;
@@ -145,7 +158,7 @@ export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTe
 
   try {
     const message = await client.messages.create({
-      to: `whatsapp:${to}`,
+      to: `whatsapp:${normalized}`,
       from: `whatsapp:${fromNumber}`,
       body,
     });
@@ -198,6 +211,18 @@ export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTe
 export async function sendTemplate(input: SendTemplateInput): Promise<SendTemplateResult> {
   const { to, templateKey, contentSid, variables } = input;
 
+  const normalized = toE164(to);
+  if (!normalized) {
+    return {
+      ok: false,
+      error: {
+        code: 'INVALID_PHONE',
+        twilioCode: undefined,
+        message: 'Phone number cannot be normalized to E.164',
+      },
+    };
+  }
+
   const accountSid = serverEnv.TWILIO_ACCOUNT_SID;
   const authToken = serverEnv.TWILIO_AUTH_TOKEN;
   const fromNumber = serverEnv.TWILIO_WHATSAPP_FROM;
@@ -221,7 +246,7 @@ export async function sendTemplate(input: SendTemplateInput): Promise<SendTempla
 
   try {
     const message = await client.messages.create({
-      to: `whatsapp:${to}`,
+      to: `whatsapp:${normalized}`,
       from: `whatsapp:${fromNumber}`,
       contentSid,
       contentVariables: JSON.stringify(variables),

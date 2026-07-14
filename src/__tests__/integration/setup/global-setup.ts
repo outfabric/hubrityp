@@ -45,6 +45,10 @@ export default async function globalSetup() {
   // Handler to authenticate `X-Twilio-Signature`. Optional in the env schema,
   // so this only affects tests that exercise the Route Handler directly.
   process.env.TWILIO_AUTH_TOKEN ??= 'integration-twilio-auth-token';
+  // Twilio account SID — required by the real BSP adapter so the reminder-sender
+  // chain test (masked patients.phone → E.164) reaches `messages.create` instead
+  // of short-circuiting on missing credentials.
+  process.env.TWILIO_ACCOUNT_SID ??= 'ACintegrationtestaccountsid';
   process.env.TWILIO_WEBHOOK_URL ??= 'https://example.com/api/webhooks/twilio/whatsapp';
 
   return async () => {

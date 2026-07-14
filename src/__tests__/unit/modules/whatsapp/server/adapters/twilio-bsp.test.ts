@@ -152,3 +152,103 @@ describe('sendTemplate — missing credentials', () => {
     expect(messagesCreate).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// E.164 normalization — sendTemplate
+// ---------------------------------------------------------------------------
+
+describe('sendTemplate — E.164 normalization', () => {
+  it('normalizes a masked BR number before calling Twilio', async () => {
+    messagesCreate.mockResolvedValue({ sid: 'SM_masked_001', status: 'queued' });
+
+    const { sendTemplate } = await importAdapter();
+    const result = await sendTemplate({
+      ...BASE_INPUT,
+      to: '+55 86 99578-3867',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(messagesCreate).toHaveBeenCalledOnce();
+    const payload = messagesCreate.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.to).toBe('whatsapp:+5586995783867');
+  });
+
+  it('passes through an already-E.164 number unchanged', async () => {
+    messagesCreate.mockResolvedValue({ sid: 'SM_e164_001', status: 'queued' });
+
+    const { sendTemplate } = await importAdapter();
+    const result = await sendTemplate({
+      ...BASE_INPUT,
+      to: '+5586995783867',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(messagesCreate).toHaveBeenCalledOnce();
+    const payload = messagesCreate.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.to).toBe('whatsapp:+5586995783867');
+  });
+
+  it('returns INVALID_PHONE without calling Twilio for un-normalizable input', async () => {
+    const { sendTemplate } = await importAdapter();
+    const result = await sendTemplate({
+      ...BASE_INPUT,
+      to: 'not-a-phone',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe('INVALID_PHONE');
+    expect(result.error.twilioCode).toBeUndefined();
+    expect(messagesCreate).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E.164 normalization — sendFreeText
+// ---------------------------------------------------------------------------
+
+describe('sendFreeText — E.164 normalization', () => {
+  it('normalizes a masked BR number before calling Twilio', async () => {
+    messagesCreate.mockResolvedValue({ sid: 'SM_ft_masked_001', status: 'queued' });
+
+    const { sendFreeText } = await importAdapter();
+    const result = await sendFreeText({
+      to: '+55 86 99578-3867',
+      body: 'Hello',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(messagesCreate).toHaveBeenCalledOnce();
+    const payload = messagesCreate.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.to).toBe('whatsapp:+5586995783867');
+  });
+
+  it('passes through an already-E.164 number unchanged', async () => {
+    messagesCreate.mockResolvedValue({ sid: 'SM_ft_e164_001', status: 'queued' });
+
+    const { sendFreeText } = await importAdapter();
+    const result = await sendFreeText({
+      to: '+5586995783867',
+      body: 'Hello',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(messagesCreate).toHaveBeenCalledOnce();
+    const payload = messagesCreate.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.to).toBe('whatsapp:+5586995783867');
+  });
+
+  it('returns INVALID_PHONE without calling Twilio for un-normalizable input', async () => {
+    const { sendFreeText } = await importAdapter();
+    const result = await sendFreeText({
+      to: 'not-a-phone',
+      body: 'Hello',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe('INVALID_PHONE');
+    expect(result.error.twilioCode).toBeUndefined();
+    expect(messagesCreate).not.toHaveBeenCalled();
+  });
+});

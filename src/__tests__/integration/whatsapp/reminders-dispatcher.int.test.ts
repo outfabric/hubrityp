@@ -171,7 +171,11 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     await seedProfile(userId);
     await seedWhatsappAccount(userId);
     await seedReminderSettings(userId);
-    await seedPatient(userId, patientId);
+    // Seed the patient with the masked `patients.phone` format (`+55 DD NNNNN-NNNN`)
+    // that triggered the incident. The dispatcher forwards the number verbatim
+    // into the fan-out payload — E.164 normalization is the adapter's job (D1) —
+    // so the masked value must survive unchanged onto `ev.data.patientPhone`.
+    await seedPatient(userId, patientId, { phone: '+55 86 99578-3867' });
 
     // Session 24 hours from "now", but "now" is set to 24h before session
     // so the early reminder is due. Dates are pinned far in the future so the
@@ -215,7 +219,8 @@ describe('reminders-dispatcher — dispatchReminders()', () => {
     expect(ev.data.patientId).toBe(patientId);
     expect(ev.data.kind).toBe('early');
     expect(ev.data.templateKey).toBe('lembrete_24h');
-    expect(ev.data.patientPhone).toBe('+5511988887777');
+    // Masked format forwarded verbatim — the dispatcher does not normalize.
+    expect(ev.data.patientPhone).toBe('+55 86 99578-3867');
     // Content SID comes from serverEnv, not from message_templates.
     expect(ev.data.contentSid).toBe(serverEnv.TWILIO_CONTENT_SID_LEMBRETE_24H);
     expect(ev.data.idempotencyKey).toBe(generateIdempotencyKey(sessionId, 'early'));

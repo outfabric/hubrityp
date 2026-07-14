@@ -1,0 +1,15 @@
+## 1. E.164 normalization helper
+
+- [x] 1.1 Create `src/modules/whatsapp/lib/phone-number-e164.ts` exporting a pure `toE164(raw: string): string | null` that strips every non-digit, re-prefixes a single `+`, and returns the result only if it matches the E.164 shape (reuse the `/^\+[1-9]\d{6,14}$/` regex from `phone-number-schema.ts` as the shared source of truth); returns `null` otherwise.
+- [x] 1.2 Export `toE164` from the whatsapp module barrel only if an external consumer needs it; otherwise keep it internal to `lib/` (the adapter imports it by relative path).
+- [x] 1.3 **Unit test** `src/__tests__/unit/modules/whatsapp/lib/phone-number-e164.test.ts` (new) covering: masked BR → E.164 (`+55 86 99578-3867` → `+5586995783867`); already-E.164 is idempotent (`+5586995783867` → `+5586995783867`); values with stray formatting/`whatsapp:` fragments strip to a single `+` and digits; un-normalizable inputs return `null` (empty string, too few digits, leading zero after `+`, letters-only).
+
+## 2. Normalize at the Twilio adapter boundary and update tests
+
+- [x] 2.1 In `src/modules/whatsapp/server/adapters/twilio-bsp.ts` `sendTemplate`, call `toE164(to)` before building the address; on `null`, return `{ ok: false, error: { code: 'INVALID_PHONE', twilioCode: undefined, message: ... } }` WITHOUT constructing the Twilio client or calling `messages.create`; otherwise use the normalized value in `to: \`whatsapp:${normalized}\``.
+- [x] 2.2 Apply the identical normalization + short-circuit in `sendFreeText` (same file), so the free-text auto-reply and confirmation-ack paths are covered.
+- [x] 2.3 **Unit test** update `src/__tests__/unit/modules/whatsapp/server/adapters/twilio-bsp.test.ts` (existing) to add, for both `sendTemplate` and `sendFreeText`, with the Twilio SDK `messages.create` mocked: (a) masked input results in `messages.create` being called with `to: 'whatsapp:+5586995783867'`; (b) already-E.164 input is passed through unchanged; (c) un-normalizable input returns `INVALID_PHONE` and asserts `messages.create` was **never** called. Keep the existing Twilio-error-mapping tests (`21211`, `21610`) green.
+- [x] 2.4 **Integration test** update `src/__tests__/integration/whatsapp/reminder-sender.int.test.ts` (existing): add a case seeding a patient whose only number is `patients.phone` in masked format (no `reminder_phone`), run `processReminderSend` with the BSP adapter's `messages.create` mocked, and assert the mock received an E.164 `to` and a `whatsapp_messages` row with `status = 'sent'` is written — proving the dispatcher→sender→adapter chain no longer produces `INVALID_PHONE` for masked numbers.
+- [x] 2.5 **Integration test** update `src/__tests__/integration/whatsapp/reminders-dispatcher.int.test.ts` (existing) only if it currently seeds patients with E.164 numbers exclusively: add/adjust one seeded patient to use the masked `patients.phone` format so the fan-out payload path is exercised with the format that triggered the incident. If dispatcher coverage does not touch number formatting, note that here and rely on 3.1 instead (avoid a redundant assertion).
+
+
