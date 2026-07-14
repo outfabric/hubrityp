@@ -65,7 +65,7 @@ function isTwilioRestException(err: unknown): err is RestException {
 // ---------------------------------------------------------------------------
 
 export interface SendTemplateInput {
-  /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
+  /** Recipient phone — E.164 or masked BR format. Normalized to E.164 internally. */
   to: string;
   /** Template key (e.g., "lembrete_24h") — used for logging/tracing only. */
   templateKey: string;
@@ -97,7 +97,7 @@ export type SendTemplateResult =
 // ---------------------------------------------------------------------------
 
 export interface SendFreeTextInput {
-  /** Recipient phone in E.164 format (e.g., "+5511999998888"). */
+  /** Recipient phone — E.164 or masked BR format. Normalized to E.164 internally. */
   to: string;
   /** The free-text message body. */
   body: string;
@@ -130,7 +130,7 @@ export async function sendFreeText(input: SendFreeTextInput): Promise<SendFreeTe
       error: {
         code: 'INVALID_PHONE',
         twilioCode: undefined,
-        message: `Cannot normalize "${to}" to E.164`,
+        message: 'Phone number cannot be normalized to E.164',
       },
     };
   }
@@ -218,7 +218,7 @@ export async function sendTemplate(input: SendTemplateInput): Promise<SendTempla
       error: {
         code: 'INVALID_PHONE',
         twilioCode: undefined,
-        message: `Cannot normalize "${to}" to E.164`,
+        message: 'Phone number cannot be normalized to E.164',
       },
     };
   }
